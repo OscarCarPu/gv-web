@@ -1,0 +1,2 @@
+up:
+	bun run dev
