@@ -1,0 +1,45 @@
+@import "tailwindcss";
+@plugin "flowbite/plugin";
+@custom-variant dark (&);
+@source "../../node_modules/flowbite-svelte/dist";
+
+@theme {
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-bg: #0f172a;
+  --color-bg-light: #1e293b;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+
+/* BASE STYLES */ 
+
+.container {
+    @apply mx-auto max-w-screen-xl;
+
+    & > h1 {
+        @apply text-center text-3xl font-bold;
+    }
+}
+
+main {
+    @apply bg-bg text-text w-full py-8 min-h-screen;
+}
+
+/* DATE NAVIGATION */
+
+.date-navigation {
+    @apply flex items-center gap-4 mx-auto w-fit bg-bg-light rounded-lg px-5 py-3 mt-6;
+
+    & > p {
+        @apply text-center text-lg font-medium cursor-pointer;
+        min-width: 14rem;
+    }
+
+    & > button {
+        @apply flex-shrink-0 text-text-muted hover:text-text transition-colors text-lg;
+    }
+}
+

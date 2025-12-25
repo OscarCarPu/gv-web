@@ -53,6 +53,10 @@
 		"vitest-browser-svelte": "^2.0.1"
 	},
 	"dependencies": {
+		"@fortawesome/fontawesome-free": "^7.1.0",
+		"flowbite": "^4.0.1",
+		"flowbite-svelte": "^1.31.0",
+		"http-status-codes": "^2.3.0",
 		"zod": "^4.2.1"
 	}
 }
