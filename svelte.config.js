@@ -5,8 +5,9 @@ const config = {
   kit: {
     adapter: adapter(),
     alias: {
-      $domains: 'src/lib/domains',
-      $shared: 'src/lib/shared'
+      $shared: 'src/lib/shared',
+      $habits: 'src/lib/domains/habits',
+      $styles: 'src/styles'
     }
   }
 };
