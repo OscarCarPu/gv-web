@@ -5,13 +5,13 @@ import {
   HabitLogSchema,
   PaginatedHabitsSchema,
   PaginatedLogsSchema,
-  TodayStatsListSchema,
+  DayStatsListSchema,
   HabitHistorySchema
 } from './habits.schemas';
 import type {
   Habit,
   HabitLog,
-  HabitTodayStats,
+  HabitDayStats,
   HabitHistory,
   PaginatedResponse,
   CreateHabitInput,
@@ -25,8 +25,9 @@ export const habitsApi = {
     return fetchAPI(`/habits?page=${page}&page_size=${pageSize}`, PaginatedHabitsSchema);
   },
 
-  async getToday(): Promise<HabitTodayStats[]> {
-    return fetchAPI('/habits/today', TodayStatsListSchema);
+  async getDay(date?: string): Promise<HabitDayStats[]> {
+    const query = date ? `?target_date=${date}` : '';
+    return fetchAPI(`/habits/daily${query}`, DayStatsListSchema);
   },
 
   async getById(id: number): Promise<Habit> {

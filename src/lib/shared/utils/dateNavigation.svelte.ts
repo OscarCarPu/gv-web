@@ -1,9 +1,9 @@
-import { page } from "$app/state";
 import { SvelteDate } from "svelte/reactivity";
 
-export function createDateNavigation() {
-  const dateParam = page.url.searchParams.get('date');
-  const date = new SvelteDate(dateParam ?? Date.now());
+export type DateNavigation = ReturnType<typeof createDateNavigation>;
+
+export function createDateNavigation(initialDate?: Date) {
+  const date = new SvelteDate(initialDate ?? Date.now());
 
   const formatter = new Intl.DateTimeFormat('es-ES', {
     year: 'numeric',

@@ -81,22 +81,23 @@ export interface UpdateLogInput {
   value?: string;
 }
 
-export interface HabitTodayStats {
+export interface HabitDayStats {
   id: number;
   name: string;
   value_type: ValueType;
   unit: string | null;
   frequency: TargetFrequency;
-  target_value: string | null;
+  target_value: number | null;
   comparison_type: ComparisonType | null;
   is_required: boolean;
   color: string;
   icon: string;
   current_streak: number;
   longest_streak: number;
-  average_value: string | null;
-  average_completion_rate: string;
-  current_period_value: string | null;
+  average_value: number | null;
+  average_completion_rate: number;
+  current_period_value: number | null;
+  date_value: number | null;
 }
 
 export interface PaginatedResponse<T> {

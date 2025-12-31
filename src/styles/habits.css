@@ -5,5 +5,13 @@
 }
 
 .habit-card {
-    @apply flex items-center p-4 border border-text-muted/20 rounded-lg bg-bg-light;
+    @apply flex flex-col items-center justify-center p-4 border border-text-muted/20 rounded-lg bg-bg-light;
+
+    & > .habit-title {
+        @apply text-xl font-semibold text-center;
+    }
+
+    & > .habit-value {
+        @apply text-3xl font-bold mt-2;
+    }
 }

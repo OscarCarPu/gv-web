@@ -40,22 +40,23 @@ export const HabitLogSchema = z.object({
   updated_at: z.string()
 });
 
-export const HabitTodayStatsSchema = z.object({
+export const HabitDayStatsSchema = z.object({
   id: z.number(),
   name: z.string(),
   value_type: ValueTypeSchema,
   unit: z.string().nullable(),
   frequency: TargetFrequencySchema,
-  target_value: z.string().nullable(),
+  target_value: z.coerce.number().nullable(),
   comparison_type: ComparisonTypeSchema.nullable(),
   is_required: z.boolean(),
   color: z.string(),
   icon: z.string(),
   current_streak: z.number(),
   longest_streak: z.number(),
-  average_value: z.string().nullable(),
-  average_completion_rate: z.string(),
-  current_period_value: z.string().nullable()
+  average_value: z.coerce.number().nullable(),
+  average_completion_rate: z.coerce.number(),
+  current_period_value: z.coerce.number().nullable(),
+  date_value: z.coerce.number().nullable()
 });
 
 export const PaginatedHabitsSchema = z.object({
@@ -86,4 +87,4 @@ export const HabitHistorySchema = z.object({
   periods: z.array(HistoryPeriodSchema)
 });
 
-export const TodayStatsListSchema = z.array(HabitTodayStatsSchema);
+export const DayStatsListSchema = z.array(HabitDayStatsSchema);
