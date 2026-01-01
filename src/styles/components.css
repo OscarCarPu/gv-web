@@ -1,0 +1,25 @@
+@reference "./app.css";
+
+.toggle {
+    @apply relative w-14 h-8 rounded-full transition-colors cursor-default;
+
+    &.on {
+        @apply bg-success;
+
+        .knob {
+            @apply translate-x-7;
+        }
+    }
+
+    &.off {
+        @apply bg-text-muted/30;
+
+        .knob {
+            @apply translate-x-1;
+        }
+    }
+
+    .knob {
+        @apply absolute top-1 w-6 h-6 rounded-full bg-white transition-transform;
+    }
+}

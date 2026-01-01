@@ -85,13 +85,15 @@ export interface HabitDayStats {
   unit: string | null;
   frequency: TargetFrequency;
   target_value: number | null;
+  target_min: number | null;
+  target_max: number | null;
   comparison_type: ComparisonType | null;
   is_required: boolean;
   icon: string;
   current_streak: number;
   longest_streak: number;
   average_value: number | null;
-  average_completion_rate: number;
+  average_completion_rate: number | null;
   current_period_value: number | null;
   date_value: number | null;
 }

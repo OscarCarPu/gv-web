@@ -46,13 +46,15 @@ export const HabitDayStatsSchema = z.object({
   unit: z.string().nullable(),
   frequency: TargetFrequencySchema,
   target_value: z.coerce.number().nullable(),
+  target_min: z.coerce.number().nullable(),
+  target_max: z.coerce.number().nullable(),
   comparison_type: ComparisonTypeSchema.nullable(),
   is_required: z.boolean(),
   icon: z.string(),
   current_streak: z.number(),
   longest_streak: z.number(),
   average_value: z.coerce.number().nullable(),
-  average_completion_rate: z.coerce.number(),
+  average_completion_rate: z.coerce.number().nullable(),
   current_period_value: z.coerce.number().nullable(),
   date_value: z.coerce.number().nullable()
 });
