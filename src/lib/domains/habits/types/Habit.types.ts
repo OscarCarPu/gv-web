@@ -22,7 +22,6 @@ export interface Habit {
   start_date: string | null;
   end_date: string | null;
   is_required: boolean;
-  color: string;
   icon: string;
   created_at: string;
   updated_at: string;
@@ -41,7 +40,6 @@ export interface CreateHabitInput {
   start_date?: string | null;
   end_date?: string | null;
   is_required?: boolean;
-  color?: string;
   icon?: string;
 }
 
@@ -58,7 +56,6 @@ export interface UpdateHabitInput {
   start_date?: string | null;
   end_date?: string | null;
   is_required?: boolean;
-  color?: string;
   icon?: string;
 }
 
@@ -90,7 +87,6 @@ export interface HabitDayStats {
   target_value: number | null;
   comparison_type: ComparisonType | null;
   is_required: boolean;
-  color: string;
   icon: string;
   current_streak: number;
   longest_streak: number;

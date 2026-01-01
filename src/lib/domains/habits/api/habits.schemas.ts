@@ -25,7 +25,6 @@ export const HabitSchema = z.object({
   start_date: z.string().nullable(),
   end_date: z.string().nullable(),
   is_required: z.boolean(),
-  color: z.string(),
   icon: z.string(),
   created_at: z.string(),
   updated_at: z.string()
@@ -49,7 +48,6 @@ export const HabitDayStatsSchema = z.object({
   target_value: z.coerce.number().nullable(),
   comparison_type: ComparisonTypeSchema.nullable(),
   is_required: z.boolean(),
-  color: z.string(),
   icon: z.string(),
   current_streak: z.number(),
   longest_streak: z.number(),
