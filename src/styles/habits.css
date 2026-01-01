@@ -1,17 +1,103 @@
 @reference "./app.css";
 
 .habit-list {
-    @apply grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 mt-6;
+    @apply grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4 mt-6;
 }
 
+/* HABIT CARD */
+
 .habit-card {
-    @apply flex flex-col items-center justify-center p-4 border border-text-muted/20 rounded-lg bg-bg-light;
+    @apply relative flex flex-col items-center p-4 border border-text-muted/20 rounded-lg bg-bg-light gap-2;
 
-    & > .habit-title {
-        @apply text-xl font-semibold text-center;
+    &.habit-card--required {
+        @apply border-2 border-info;
+    }
+}
+
+.habit-card__streak {
+    @apply absolute top-2 left-2 flex items-center gap-1 text-xs font-medium text-orange-400;
+}
+
+.habit-card__required-badge {
+    @apply absolute top-2 right-2 text-xs font-medium px-2 py-0.5 rounded-full bg-info/20 text-info;
+}
+
+.habit-card__header {
+    @apply flex items-center gap-2 mt-4;
+}
+
+.habit-card__icon {
+    @apply text-xl text-text-muted;
+}
+
+.habit-card__title {
+    @apply text-lg font-semibold text-center;
+}
+
+.habit-card__frequency {
+    @apply text-sm text-text-muted capitalize;
+}
+
+.habit-card__value {
+    @apply text-3xl font-bold mt-2;
+}
+
+.habit-card__unit {
+    @apply text-lg font-normal text-text-muted ml-1;
+}
+
+/* TOGGLE SWITCH */
+
+.habit-card__toggle {
+    @apply relative w-14 h-8 rounded-full mt-2 transition-colors cursor-default;
+
+    &.habit-card__toggle--on {
+        @apply bg-success;
     }
 
-    & > .habit-value {
-        @apply text-3xl font-bold mt-2;
+    &.habit-card__toggle--off {
+        @apply bg-text-muted/30;
     }
+}
+
+.habit-card__toggle-knob {
+    @apply absolute top-1 w-6 h-6 rounded-full bg-white transition-transform;
+
+    .habit-card__toggle--on > & {
+        @apply translate-x-7;
+    }
+
+    .habit-card__toggle--off > & {
+        @apply translate-x-1;
+    }
+}
+
+/* PROGRESS BAR */
+
+.habit-card__progress-container {
+    @apply w-full mt-3;
+}
+
+.habit-card__progress {
+    @apply w-full h-2 rounded-full bg-text-muted/20 overflow-hidden;
+}
+
+.habit-card__progress-bar {
+    @apply h-full rounded-full transition-all;
+
+    &.habit-card__progress-bar--success {
+        @apply bg-success;
+    }
+
+    &.habit-card__progress-bar--info {
+        @apply bg-info;
+    }
+
+    &.habit-card__progress-bar--danger {
+        @apply bg-danger;
+    }
+}
+
+.habit-card__target {
+    @apply text-sm text-text-muted mt-1 text-center;
 }

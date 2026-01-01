@@ -10,6 +10,9 @@
   --color-bg-light: #1e293b;
   --color-text: #f1f5f9;
   --color-text-muted: #94a3b8;
+  --color-success: #22c55e;
+  --color-info: #3b82f6;
+  --color-danger: #ef4444;
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 
