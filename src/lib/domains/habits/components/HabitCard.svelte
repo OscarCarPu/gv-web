@@ -52,9 +52,14 @@
 		}
 
 		if (habit.target_value === null) return false;
-		const isLimitType =
-			habit.comparison_type === 'less_than' || habit.comparison_type === 'less_equal_than';
-		return isLimitType && current > habit.target_value;
+
+		if (habit.comparison_type === 'less_than') {
+			return current < habit.target_value;
+		}
+		if (habit.comparison_type === 'less_equal_than') {
+			return current <= habit.target_value;
+		}
+		return false;
 	}
 
 	function getProgressBarColor(): string {
@@ -65,23 +70,48 @@
 
 	function formatFrequency(freq: string): string {
 		const map: Record<string, string> = {
-			daily: 'Daily',
-			weekly: 'Weekly',
-			monthly: 'Monthly',
+			daily: 'Diario',
+			weekly: 'Semanal',
+			monthly: 'Mensal',
 		};
 		return map[freq] ?? freq;
 	}
 
-	function getComparisonSymbol(): string {
+	function getComparisonString(): string {
+		if (habit.comparison_type === 'in_range') {
+			return (
+				habit.target_min +
+				' ' +
+				habit.unit +
+				' ≤ ' +
+				habit.current_period_value +
+				' ' +
+				habit.unit +
+				' ≤ ' +
+				habit.target_max +
+				' ' +
+				habit.unit
+			);
+		}
 		const symbols: Record<string, string> = {
 			equals: '=',
 			greater_than: '>',
 			greater_equal_than: '≥',
 			less_than: '<',
 			less_equal_than: '≤',
-			in_range: '≤',
 		};
-		return symbols[habit.comparison_type ?? ''] ?? '≥';
+
+		return (
+			habit.current_period_value +
+			' ' +
+			habit.unit +
+			' ' +
+			symbols[habit.comparison_type ?? ''] +
+			' ' +
+			habit.target_value +
+			' ' +
+			habit.unit
+		);
 	}
 
 	const isRangeType = $derived(habit.comparison_type === 'in_range');
@@ -137,27 +167,17 @@
 				></div>
 			</div>
 			<p class="target">
-				{#if isRangeType}
-					{habit.target_min} ≤ {habit.current_period_value ?? 0} ≤ {habit.target_max}{habit.unit
-						? ` ${habit.unit}`
-						: ''}
-				{:else}
-					{habit.current_period_value ?? 0}
-					{getComparisonSymbol()}
-					{habit.target_value}{habit.unit ? ` ${habit.unit}` : ''}
-				{/if}
+				{getComparisonString()}
 			</p>
 		</div>
 	{/if}
 
-	{#if (habit.average_completion_rate !== null && habit.average_completion_rate > 0) || habit.average_value !== null}
-		<div class="stats">
-			{#if habit.average_completion_rate !== null && habit.average_completion_rate > 0}
-				<span>Avg: {Math.round(habit.average_completion_rate)}%</span>
-			{/if}
-			{#if habit.average_value !== null}
-				<span>Avg: {habit.average_value}{habit.unit ? ` ${habit.unit}` : ''}</span>
-			{/if}
-		</div>
-	{/if}
+	<div class="stats">
+		{#if habit.average_completion_rate !== null && habit.average_completion_rate > 0}
+			<span>Avg: {Math.round(habit.average_completion_rate)}%</span>
+		{/if}
+		{#if habit.average_value !== null}
+			<span>Avg: {habit.average_value}{habit.unit ? ` ${habit.unit}` : ''}</span>
+		{/if}
+	</div>
 </div>
