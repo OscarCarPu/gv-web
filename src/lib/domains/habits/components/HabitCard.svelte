@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { HabitDayStats } from '$habits/types/Habit.types';
-	import { enhance } from '$app/forms';
+	import { habitsApi } from '$habits/api/habits.api';
 
 	let {
 		habit,
@@ -135,6 +135,21 @@
 			optimisticValue = null;
 		}
 	});
+
+	async function toggleBoolean() {
+		const newValue = habit.date_value === 1 ? 0 : 1;
+		optimisticValue = newValue;
+
+		try {
+			await habitsApi.upsertLog(habit.id, {
+				log_date: currentDate,
+				value: String(newValue),
+			});
+			onRefresh?.();
+		} catch {
+			optimisticValue = null;
+		}
+	}
 </script>
 
 <div class="habit-card" class:required={habit.is_required}>
@@ -162,31 +177,11 @@
 	<span class="frequency">{formatFrequency(habit.frequency)}</span>
 
 	{#if isBoolean}
-		<form
-			method="POST"
-			action="?/toggleBoolean"
-			use:enhance={() => {
-				optimisticValue = habit.date_value === 1 ? 0 : 1;
-
-				return async ({ result }) => {
-					if (result.type === 'success') {
-						await onRefresh?.();
-					} else {
-						// Revert on failure
-						optimisticValue = null;
-					}
-				};
-			}}
-		>
-			<input type="hidden" name="habitId" value={habit.id} />
-			<input type="hidden" name="logDate" value={currentDate} />
-			<input type="hidden" name="currentValue" value={habit.date_value ?? 0} />
-			<button type="submit" class="toggle-button" title="Toggle">
-				<div class="toggle" class:on={isToggleOn} class:off={!isToggleOn}>
-					<div class="knob"></div>
-				</div></button
-			>
-		</form>
+		<button type="button" class="toggle-button" title="Toggle" onclick={toggleBoolean}>
+			<div class="toggle" class:on={isToggleOn} class:off={!isToggleOn}>
+				<div class="knob"></div>
+			</div>
+		</button>
 	{:else}
 		<div class="value">
 			{habit.date_value ?? '-'}
