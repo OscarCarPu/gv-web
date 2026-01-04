@@ -7,10 +7,18 @@
 	let { data }: { data: { habits: HabitDayStats[] } } = $props();
 	let fetchedHabits: HabitDayStats[] | null = $state(null);
 	let habits = $derived(fetchedHabits ?? data.habits);
+	let currentDate = $state(new Date().toISOString().split('T')[0]);
 
 	function handleDateChange(date: Date) {
 		const dateStr = date.toISOString().split('T')[0];
+		currentDate = dateStr;
 		habitsApi.getDay(dateStr).then((newHabits) => {
+			fetchedHabits = newHabits;
+		});
+	}
+
+	function refreshCurrentDate() {
+		habitsApi.getDay(currentDate).then((newHabits) => {
 			fetchedHabits = newHabits;
 		});
 	}
@@ -22,12 +30,11 @@
 
 <div class="container">
 	<h1>Habitos</h1>
-	<!-- DateNavigation -->
 	<DateNavigation onDateChange={handleDateChange} />
-	<!-- Habit List -->
+
 	<div class="habit-list">
 		{#each habits as habit (habit.id)}
-			<HabitCard {habit} />
+			<HabitCard {habit} {currentDate} onRefresh={refreshCurrentDate} />
 		{/each}
 	</div>
 </div>

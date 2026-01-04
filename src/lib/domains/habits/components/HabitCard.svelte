@@ -1,7 +1,16 @@
 <script lang="ts">
 	import type { HabitDayStats } from '$habits/types/Habit.types';
+	import { enhance } from '$app/forms';
 
-	let { habit }: { habit: HabitDayStats } = $props();
+	let {
+		habit,
+		currentDate = new Date().toISOString().split('T')[0],
+		onRefresh,
+	}: {
+		habit: HabitDayStats;
+		currentDate?: string;
+		onRefresh?: () => void;
+	} = $props();
 
 	function getProgressPercentage(): number {
 		const current = habit.current_period_value ?? 0;
@@ -78,21 +87,21 @@
 	}
 
 	function getComparisonString(): string {
+		const unit = habit.unit ? ` ${habit.unit}` : '';
+		
 		if (habit.comparison_type === 'in_range') {
 			return (
 				habit.target_min +
-				' ' +
-				habit.unit +
+				unit +
 				' ≤ ' +
 				habit.current_period_value +
-				' ' +
-				habit.unit +
+				unit +
 				' ≤ ' +
 				habit.target_max +
-				' ' +
-				habit.unit
+				unit
 			);
 		}
+		
 		const symbols: Record<string, string> = {
 			equals: '=',
 			greater_than: '>',
@@ -103,14 +112,12 @@
 
 		return (
 			habit.current_period_value +
-			' ' +
-			habit.unit +
+			unit +
 			' ' +
 			symbols[habit.comparison_type ?? ''] +
 			' ' +
 			habit.target_value +
-			' ' +
-			habit.unit
+			unit
 		);
 	}
 
@@ -118,7 +125,16 @@
 	const hasTarget = $derived(habit.target_value !== null || isRangeType);
 
 	const isBoolean = $derived(habit.value_type === 'boolean');
-	const isToggleOn = $derived(isBoolean && habit.date_value === 1);
+	let optimisticValue: number | null = $state(null);
+	const displayValue = $derived(optimisticValue ?? habit.date_value);
+	const isToggleOn = $derived(isBoolean && displayValue === 1);
+
+	// Clear optimistic value when server data matches expectation
+	$effect(() => {
+		if (optimisticValue !== null && habit.date_value === optimisticValue) {
+			optimisticValue = null;
+		}
+	});
 </script>
 
 <div class="habit-card" class:required={habit.is_required}>
@@ -146,9 +162,31 @@
 	<span class="frequency">{formatFrequency(habit.frequency)}</span>
 
 	{#if isBoolean}
-		<div class="toggle" class:on={isToggleOn} class:off={!isToggleOn}>
-			<div class="knob"></div>
-		</div>
+		<form
+			method="POST"
+			action="?/toggleBoolean"
+			use:enhance={() => {
+				optimisticValue = habit.date_value === 1 ? 0 : 1;
+
+				return async ({ result }) => {
+					if (result.type === 'success') {
+						await onRefresh?.();
+					} else {
+						// Revert on failure
+						optimisticValue = null;
+					}
+				};
+			}}
+		>
+			<input type="hidden" name="habitId" value={habit.id} />
+			<input type="hidden" name="logDate" value={currentDate} />
+			<input type="hidden" name="currentValue" value={habit.date_value ?? 0} />
+			<button type="submit" class="toggle-button" title="Toggle">
+				<div class="toggle" class:on={isToggleOn} class:off={!isToggleOn}>
+					<div class="knob"></div>
+				</div></button
+			>
+		</form>
 	{:else}
 		<div class="value">
 			{habit.date_value ?? '-'}
