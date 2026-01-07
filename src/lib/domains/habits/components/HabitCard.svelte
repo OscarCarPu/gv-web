@@ -88,7 +88,7 @@
 
 	function getComparisonString(): string {
 		const unit = habit.unit ? ` ${habit.unit}` : '';
-		
+
 		if (habit.comparison_type === 'in_range') {
 			return (
 				habit.target_min +
@@ -101,7 +101,7 @@
 				unit
 			);
 		}
-		
+
 		const symbols: Record<string, string> = {
 			equals: '=',
 			greater_than: '>',
@@ -126,8 +126,11 @@
 
 	const isBoolean = $derived(habit.value_type === 'boolean');
 	let optimisticValue: number | null = $state(null);
-	const displayValue = $derived(optimisticValue ?? habit.date_value);
+	const displayValue = $derived(optimisticValue ?? habit.date_value ?? 0);
 	const isToggleOn = $derived(isBoolean && displayValue === 1);
+
+	const smallStep = $derived(habit.small_step ?? 1);
+	const bigStep = $derived(habit.big_step ?? 5);
 
 	// Clear optimistic value when server data matches expectation
 	$effect(() => {
@@ -138,6 +141,40 @@
 
 	async function toggleBoolean() {
 		const newValue = habit.date_value === 1 ? 0 : 1;
+		optimisticValue = newValue;
+
+		try {
+			await habitsApi.upsertLog(habit.id, {
+				log_date: currentDate,
+				value: String(newValue),
+			});
+			onRefresh?.();
+		} catch {
+			optimisticValue = null;
+		}
+	}
+
+	async function adjustValue(amount: number) {
+		const current = optimisticValue ?? habit.date_value ?? 0;
+		optimisticValue = Math.round((current + amount) * 100) / 100;
+
+		try {
+			await habitsApi.modifyLog(habit.id, {
+				log_date: currentDate,
+				value: String(amount),
+			});
+			onRefresh?.();
+		} catch {
+			optimisticValue = null;
+		}
+	}
+
+	async function handleManualInput(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const newValue = parseFloat(input.value);
+
+		if (isNaN(newValue)) return;
+
 		optimisticValue = newValue;
 
 		try {
@@ -183,11 +220,29 @@
 			</div>
 		</button>
 	{:else}
-		<div class="value">
-			{habit.date_value ?? '-'}
-			{#if habit.unit}
-				<span class="unit">{habit.unit}</span>
-			{/if}
+		<div class="value-controls">
+			<button type="button" onclick={() => adjustValue(-bigStep)} title="-{bigStep}">
+				<i class="fa-solid fa-minus"></i>
+				<span>{bigStep}</span>
+			</button>
+			<button type="button" onclick={() => adjustValue(-smallStep)} title="-{smallStep}">
+				<i class="fa-solid fa-minus"></i>
+				<span>{smallStep}</span>
+			</button>
+			<div class="value-input">
+				<input type="number" value={displayValue} onchange={handleManualInput} />
+				{#if habit.unit}
+					<span class="unit">{habit.unit}</span>
+				{/if}
+			</div>
+			<button type="button" onclick={() => adjustValue(smallStep)} title="+{smallStep}">
+				<i class="fa-solid fa-plus"></i>
+				<span>{smallStep}</span>
+			</button>
+			<button type="button" onclick={() => adjustValue(bigStep)} title="+{bigStep}">
+				<i class="fa-solid fa-plus"></i>
+				<span>{bigStep}</span>
+			</button>
 		</div>
 	{/if}
 

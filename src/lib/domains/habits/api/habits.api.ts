@@ -106,5 +106,12 @@ export const habitsApi = {
     await fetchAPI(`/habits/${habitId}/logs/${logId}`, z.void(), {
       method: 'DELETE'
     });
+  },
+
+  async modifyLog(habitId: number, input: CreateLogInput): Promise<HabitLog> {
+    return fetchAPI(`/habits/${habitId}/logs/modify`, HabitLogSchema, {
+      method: 'POST',
+      body: JSON.stringify(input)
+    });
   }
 };

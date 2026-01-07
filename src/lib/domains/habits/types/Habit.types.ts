@@ -23,6 +23,8 @@ export interface Habit {
   end_date: string | null;
   is_required: boolean;
   icon: string;
+  big_step: string | null;
+  small_step: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +43,8 @@ export interface CreateHabitInput {
   end_date?: string | null;
   is_required?: boolean;
   icon?: string;
+  big_step?: string | null;
+  small_step?: string | null;
 }
 
 export interface UpdateHabitInput {
@@ -57,6 +61,8 @@ export interface UpdateHabitInput {
   end_date?: string | null;
   is_required?: boolean;
   icon?: string;
+  big_step?: string | null;
+  small_step?: string | null;
 }
 
 export interface HabitLog {
@@ -96,6 +102,8 @@ export interface HabitDayStats {
   average_completion_rate: number | null;
   current_period_value: number | null;
   date_value: number | null;
+  small_step: number | null;
+  big_step: number | null;
 }
 
 export interface PaginatedResponse<T> {

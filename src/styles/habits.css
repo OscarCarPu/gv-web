@@ -35,10 +35,6 @@
         @apply text-sm text-text-muted capitalize;
     }
 
-    .value {
-        @apply text-3xl font-bold mt-2;
-    }
-
     .unit {
         @apply text-lg font-normal text-text-muted ml-1;
     }
@@ -65,5 +61,38 @@
 
     .target {
         @apply text-sm text-text-muted mt-1 text-center;
+    }
+
+    .value-controls {
+        @apply flex items-center justify-center gap-2 mt-2 w-full;
+
+        button {
+            @apply flex flex-col items-center justify-center w-9 h-10 rounded text-text-muted;
+            @apply hover:bg-text-muted/10 active:bg-text-muted/20;
+
+            span {
+                @apply text-[10px] opacity-70;
+            }
+        }
+
+        .value-input {
+            @apply flex flex-col items-center mx-2;
+
+            input {
+                @apply w-24 text-xl font-bold text-center bg-transparent border-none focus:outline-none p-0;
+                -moz-appearance: textfield;
+                appearance: textfield;
+
+                &::-webkit-outer-spin-button,
+                &::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+            }
+
+            .unit {
+                @apply text-xs text-text-muted;
+            }
+        }
     }
 }

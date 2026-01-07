@@ -26,6 +26,8 @@ export const HabitSchema = z.object({
   end_date: z.string().nullable(),
   is_required: z.boolean(),
   icon: z.string(),
+  big_step: z.string().nullable(),
+  small_step: z.string().nullable(),
   created_at: z.string(),
   updated_at: z.string()
 });
@@ -56,7 +58,9 @@ export const HabitDayStatsSchema = z.object({
   average_value: z.coerce.number().nullable(),
   average_completion_rate: z.coerce.number().nullable(),
   current_period_value: z.coerce.number().nullable(),
-  date_value: z.coerce.number().nullable()
+  date_value: z.coerce.number().nullable(),
+  big_step: z.coerce.number().nullable(),
+  small_step: z.coerce.number().nullable()
 });
 
 export const PaginatedHabitsSchema = z.object({
