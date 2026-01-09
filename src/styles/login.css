@@ -1,0 +1,49 @@
+@reference "./app.css";
+
+.login-container {
+  @apply flex items-center justify-center min-h-screen px-4;
+
+  form {
+    @apply bg-bg-light rounded-xl p-8 w-full max-w-sm shadow-lg;
+
+    h1 {
+      @apply text-2xl font-bold text-center text-text mb-2;
+    }
+
+    .subtitle {
+      @apply text-text-muted text-center text-sm mb-6;
+    }
+
+    .error-message {
+      @apply bg-danger/20 text-danger text-sm px-4 py-2 rounded-lg mb-4 text-center;
+    }
+
+    .form-group {
+      @apply mb-4;
+
+      input {
+        @apply w-full bg-bg border border-text-muted/30 rounded-lg px-4 py-3 text-text placeholder-text-muted/50 focus:outline-none focus:border-primary transition-colors;
+
+        &:disabled {
+          @apply opacity-50 cursor-not-allowed;
+        }
+      }
+
+      input[name="code"] {
+        @apply text-center text-2xl tracking-widest font-mono;
+      }
+    }
+
+    button[type="submit"] {
+      @apply w-full bg-primary hover:bg-primary/80 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2;
+
+      &:disabled {
+        @apply opacity-50 cursor-not-allowed hover:bg-primary;
+      }
+    }
+
+    .back-link {
+      @apply flex items-center justify-center gap-2 text-text-muted hover:text-text text-sm mt-4 transition-colors;
+    }
+  }
+}

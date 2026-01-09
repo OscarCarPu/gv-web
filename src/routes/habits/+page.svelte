@@ -1,13 +1,18 @@
 <script lang="ts">
 	import type { HabitDayStats } from '$habits/types/Habit.types';
 	import { habitsApi } from '$habits/api/habits.api';
+	import { authStore } from '$shared/stores/auth';
 	import HabitCard from '$habits/components/HabitCard.svelte';
 	import DateNavigation from '$shared/components/DateNavigation.svelte';
 
-	let { data }: { data: { habits: HabitDayStats[] } } = $props();
+	let { data }: { data: { habits: HabitDayStats[]; token?: string } } = $props();
 	let fetchedHabits: HabitDayStats[] | null = $state(null);
 	let habits = $derived(fetchedHabits ?? data.habits);
 	let currentDate = $state(new Date().toISOString().split('T')[0]);
+
+	$effect(() => {
+		authStore.setToken(data.token);
+	});
 
 	function handleDateChange(date: Date) {
 		const dateStr = date.toISOString().split('T')[0];

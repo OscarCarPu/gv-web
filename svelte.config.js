@@ -7,8 +7,12 @@ const config = {
     alias: {
       $shared: 'src/lib/shared',
       $habits: 'src/lib/domains/habits',
+      $auth: 'src/lib/domains/auth',
       $styles: 'src/styles'
     }
+  },
+  csrf: {
+    trustedOrigins: ['http://localhost:5173']
   }
 };
 

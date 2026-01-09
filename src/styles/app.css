@@ -46,3 +46,13 @@ main {
     }
 }
 
+/* LOGOUT BUTTON */
+
+.logout-btn {
+    @apply fixed top-4 right-4 z-50;
+
+    & > button {
+        @apply bg-bg-light border-none text-text-muted px-3 py-2 rounded-lg cursor-pointer transition-all hover:bg-danger hover:text-white;
+    }
+}
+

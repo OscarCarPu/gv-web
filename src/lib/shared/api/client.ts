@@ -1,18 +1,27 @@
 import { z } from 'zod';
 import { env } from '$lib/config/env';
+import { getToken } from '$shared/stores/auth';
 
 export async function fetchAPI<T>(
   endpoint: string,
   schema: z.ZodType<T>,
   options?: RequestInit
 ): Promise<T> {
+  const token = getToken();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-API-Key': env.API_KEY,
+    ...(options?.headers as Record<string, string>)
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${env.API_URL}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': env.API_KEY,
-      ...options?.headers
-    },
-    ...options
+    ...options,
+    headers
   });
 
   if (!response.ok) {
