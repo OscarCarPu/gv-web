@@ -26,4 +26,4 @@ jobs:
             ./ $TARGET_DIR
 
           cd $TARGET_DIR
-          make deploy
+          make up
