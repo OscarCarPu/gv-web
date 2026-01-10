@@ -1,6 +1,9 @@
 dev:
 	bun run dev
 
+include .env
+export $(shell sed 's/=.*//' .env)
+
 deploy:
 	bun install --frozen-lockfile
 	bun run build 
