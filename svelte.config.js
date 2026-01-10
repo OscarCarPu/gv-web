@@ -1,7 +1,11 @@
 import adapter from '@sveltejs/adapter-auto';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+const web_url = process.env.WEB_URL || 'http://localhost:5173';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
+  preprocess: vitePreprocess(),
   kit: {
     adapter: adapter(),
     alias: {
@@ -12,7 +16,7 @@ const config = {
     }
   },
   csrf: {
-    trustedOrigins: ['http://localhost:5173']
+    trustedOrigins: [web_url]
   }
 };
 
