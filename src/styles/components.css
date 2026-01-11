@@ -1,7 +1,7 @@
 @reference "./app.css";
 
 .toggle {
-    @apply relative w-14 h-8 rounded-full transition-colors cursor-default;
+    @apply relative w-20 h-8 rounded-full transition-colors cursor-default;
 
     &.on {
         @apply bg-success;
