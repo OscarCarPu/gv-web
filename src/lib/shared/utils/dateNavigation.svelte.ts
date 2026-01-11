@@ -6,9 +6,10 @@ export function createDateNavigation(initialDate?: Date) {
   const date = new SvelteDate(initialDate ?? Date.now());
 
   const formatter = new Intl.DateTimeFormat('es-ES', {
-    year: 'numeric',
-    month: 'long',
+    weekday: 'long',
     day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   });
 
   return {
