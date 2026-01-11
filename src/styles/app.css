@@ -38,7 +38,7 @@ main {
 
     & > p {
         @apply text-center text-lg font-medium cursor-pointer;
-        min-width: 14rem;
+        min-width: 17rem;
     }
 
     & > button {
