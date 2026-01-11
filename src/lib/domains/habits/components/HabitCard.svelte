@@ -63,10 +63,16 @@
 		if (habit.target_value === null) return false;
 
 		if (habit.comparison_type === 'less_than') {
-			return current < habit.target_value;
+			return current >= habit.target_value;
 		}
 		if (habit.comparison_type === 'less_equal_than') {
+			return current > habit.target_value;
+		}
+		if (habit.comparison_type === 'greater_than') {
 			return current <= habit.target_value;
+		}
+		if (habit.comparison_type === 'greater_equal_than') {
+			return current < habit.target_value;
 		}
 		return false;
 	}
