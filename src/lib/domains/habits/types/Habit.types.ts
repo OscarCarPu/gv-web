@@ -21,7 +21,8 @@ export interface Habit {
   comparison_type: ComparisonType | null;
   start_date: string | null;
   end_date: string | null;
-  is_required: boolean;
+  default_value: number | null;
+  streak_strict: boolean;
   icon: string;
   big_step: string | null;
   small_step: string | null;
@@ -41,7 +42,8 @@ export interface CreateHabitInput {
   comparison_type?: ComparisonType | null;
   start_date?: string | null;
   end_date?: string | null;
-  is_required?: boolean;
+  default_value?: number | null;
+  streak_strict?: boolean;
   icon?: string;
   big_step?: string | null;
   small_step?: string | null;
@@ -59,7 +61,8 @@ export interface UpdateHabitInput {
   comparison_type?: ComparisonType | null;
   start_date?: string | null;
   end_date?: string | null;
-  is_required?: boolean;
+  default_value?: number | null;
+  streak_strict?: boolean;
   icon?: string;
   big_step?: string | null;
   small_step?: string | null;
@@ -94,7 +97,9 @@ export interface HabitDayStats {
   target_min: number | null;
   target_max: number | null;
   comparison_type: ComparisonType | null;
-  is_required: boolean;
+  description: string | null;
+  default_value: number | null;
+  streak_strict: boolean;
   icon: string;
   current_streak: number;
   longest_streak: number;

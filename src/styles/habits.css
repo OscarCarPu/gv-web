@@ -7,16 +7,22 @@
 .habit-card {
     @apply relative flex flex-col items-center p-5 border border-text-muted/20 rounded-lg bg-bg-light gap-2;
 
-    &.required {
-        @apply border-2 border-info;
+    &.strict {
+        @apply border-2 border-orange-500;
     }
 
     .streak {
         @apply absolute top-2 left-2 flex items-center gap-1 text-xs font-medium text-orange-400;
     }
 
-    .required-badge {
-        @apply absolute top-2 right-2 text-xs font-medium px-2 py-0.5 rounded-full bg-info/20 text-info;
+    .strict-badge {
+        @apply absolute top-2 right-2 text-xs font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-600;
+    }
+    .description {
+        @apply text-sm text-text-muted mb-2 text-center;
+    }
+    .default-value {
+        @apply text-xs text-text-muted mb-1 text-center;
     }
 
     .header {

@@ -24,7 +24,8 @@ export const HabitSchema = z.object({
   comparison_type: ComparisonTypeSchema.nullable(),
   start_date: z.string().nullable(),
   end_date: z.string().nullable(),
-  is_required: z.boolean(),
+  default_value: z.coerce.number().nullable(),
+  streak_strict: z.boolean(),
   icon: z.string(),
   big_step: z.string().nullable(),
   small_step: z.string().nullable(),
@@ -44,6 +45,7 @@ export const HabitLogSchema = z.object({
 export const HabitDayStatsSchema = z.object({
   id: z.number(),
   name: z.string(),
+  description: z.string().nullable(),
   value_type: ValueTypeSchema,
   unit: z.string().nullable(),
   frequency: TargetFrequencySchema,
@@ -51,10 +53,11 @@ export const HabitDayStatsSchema = z.object({
   target_min: z.coerce.number().nullable(),
   target_max: z.coerce.number().nullable(),
   comparison_type: ComparisonTypeSchema.nullable(),
-  is_required: z.boolean(),
+  default_value: z.coerce.number().nullable(),
+  streak_strict: z.boolean(),
   icon: z.string(),
-  current_streak: z.number(),
-  longest_streak: z.number(),
+  current_streak: z.number().nullable(),
+  longest_streak: z.number().nullable(),
   average_value: z.coerce.number().nullable(),
   average_completion_rate: z.coerce.number().nullable(),
   current_period_value: z.coerce.number().nullable(),
@@ -79,16 +82,5 @@ export const PaginatedLogsSchema = z.object({
   total_pages: z.number()
 });
 
-export const HistoryPeriodSchema = z.object({
-  period_start: z.string(),
-  period_end: z.string(),
-  total_value: z.string()
-});
-
-export const HabitHistorySchema = z.object({
-  habit_id: z.number(),
-  time_period: z.string(),
-  periods: z.array(HistoryPeriodSchema)
-});
 
 export const DayStatsListSchema = z.array(HabitDayStatsSchema);

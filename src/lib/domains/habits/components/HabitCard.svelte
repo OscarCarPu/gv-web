@@ -195,7 +195,7 @@
 	}
 </script>
 
-<div class="habit-card" class:required={habit.is_required}>
+<div class="habit-card" class:strict={habit.streak_strict}>
 	{#if habit.current_streak > 0 || habit.longest_streak > 0}
 		<div class="streak">
 			<i class="fa-solid fa-fire"></i>
@@ -206,8 +206,14 @@
 		</div>
 	{/if}
 
-	{#if habit.is_required}
-		<span class="required-badge">Required</span>
+	{#if habit.streak_strict}
+		<span class="strict-badge">Strict Streak</span>
+	{/if}
+	{#if habit.description}
+		<div class="description">{habit.description}</div>
+	{/if}
+	{#if habit.default_value !== null}
+		<div class="default-value">Default: {habit.default_value}{habit.unit ? ` ${habit.unit}` : ''}</div>
 	{/if}
 
 	<div class="header">
@@ -262,6 +268,12 @@
 			</div>
 			<p class="target">
 				{getComparisonString()}
+			</p>
+		</div>
+	{:else}
+		<div class="progress-container">
+			<p class="target">
+				{habit.current_period_value}{habit.unit ? ` ${habit.unit}` : ''}
 			</p>
 		</div>
 	{/if}

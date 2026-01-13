@@ -54,19 +54,6 @@ export const habitsApi = {
     });
   },
 
-  async getHistory(
-    habitId: number,
-    startDate?: string,
-    endDate?: string,
-    timePeriod?: string
-  ): Promise<HabitHistory> {
-    const params = new URLSearchParams();
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
-    if (timePeriod) params.append('time_period', timePeriod);
-    const query = params.toString() ? `?${params.toString()}` : '';
-    return fetchAPI(`/habits/${habitId}/history${query}`, HabitHistorySchema);
-  },
 
   async getLogs(
     habitId: number,
