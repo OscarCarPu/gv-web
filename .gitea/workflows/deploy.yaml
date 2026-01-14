@@ -16,14 +16,7 @@ jobs:
           export PATH="$PATH:/home/ocp/.bun/bin"
           TARGET_DIR="/home/ocp/docker/gv/gv-web"
 
-          mkdir -p $TARGET_DIR
-          rsync -avz --delete \
-            --filter=':- .gitignore' \
-            --exclude='.git' \
-            --exclude='.gitea' \
-            --exclude='node_modules' \
-            --exclude='build' \
-            ./ $TARGET_DIR
 
           cd $TARGET_DIR
+          git pull
           make up
