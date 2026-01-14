@@ -6,13 +6,11 @@ import {
   PaginatedHabitsSchema,
   PaginatedLogsSchema,
   DayStatsListSchema,
-  HabitHistorySchema
 } from './habits.schemas';
 import type {
   Habit,
   HabitLog,
   HabitDayStats,
-  HabitHistory,
   PaginatedResponse,
   CreateHabitInput,
   UpdateHabitInput,
