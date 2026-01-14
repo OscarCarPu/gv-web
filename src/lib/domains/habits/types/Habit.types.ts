@@ -118,15 +118,3 @@ export interface PaginatedResponse<T> {
   page_size: number;
   total_pages: number;
 }
-
-export interface HistoryPeriod {
-  period_start: string;
-  period_end: string;
-  total_value: string;
-}
-
-export interface HabitHistory {
-  habit_id: number;
-  time_period: string;
-  periods: HistoryPeriod[];
-}
