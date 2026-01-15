@@ -209,12 +209,6 @@
 	{#if habit.streak_strict}
 		<span class="strict-badge">Strict Streak</span>
 	{/if}
-	{#if habit.description}
-		<div class="description">{habit.description}</div>
-	{/if}
-	{#if habit.default_value !== null}
-		<div class="default-value">Default: {habit.default_value}{habit.unit ? ` ${habit.unit}` : ''}</div>
-	{/if}
 
 	<div class="header">
 		{#if habit.icon}
@@ -223,7 +217,13 @@
 		<h2 class="title">{habit.name}</h2>
 	</div>
 
-	<span class="frequency">{formatFrequency(habit.frequency)}</span>
+	<div class="description">
+		{habit.description || ''}
+	</div>
+
+	<span class="frequency">
+		{formatFrequency(habit.frequency)}
+	</span>
 
 	{#if isBoolean}
 		<button type="button" class="toggle-button" title="Toggle" onclick={toggleBoolean}>
@@ -258,32 +258,37 @@
 		</div>
 	{/if}
 
-	{#if hasTarget}
-		<div class="progress-container">
-			<div class="progress">
-				<div
-					class="progress-bar {getProgressBarColor()}"
-					style="width: {getProgressPercentage()}%"
-				></div>
+	<div class="footer-section">
+		{#if hasTarget}
+			<div class="progress-container">
+				<div class="progress">
+					<div
+						class="progress-bar {getProgressBarColor()}"
+						style="width: {getProgressPercentage()}%"
+					></div>
+				</div>
+				<p class="target">
+					{getComparisonString()}
+				</p>
 			</div>
-			<p class="target">
-				{getComparisonString()}
-			</p>
-		</div>
-	{:else}
-		<div class="progress-container">
-			<p class="target">
-				{habit.current_period_value}{habit.unit ? ` ${habit.unit}` : ''}
-			</p>
-		</div>
-	{/if}
+		{:else}
+			<div class="progress-container">
+				<p class="target">
+					{habit.current_period_value}{habit.unit ? ` ${habit.unit}` : ''}
+				</p>
+			</div>
+		{/if}
 
-	<div class="stats">
-		{#if habit.average_completion_rate !== null && habit.average_completion_rate > 0}
-			<span>Avg: {Math.round(habit.average_completion_rate)}%</span>
-		{/if}
-		{#if habit.average_value !== null}
-			<span>Avg: {habit.average_value}{habit.unit ? ` ${habit.unit}` : ''}</span>
-		{/if}
+		<div class="stats">
+			{#if habit.default_value !== null}
+				<span>Def: {habit.default_value}{habit.unit ? ` ${habit.unit}` : ''}</span>
+			{/if}
+			{#if habit.average_completion_rate !== null && habit.average_completion_rate > 0}
+				<span>Avg: {Math.round(habit.average_completion_rate)}%</span>
+			{/if}
+			{#if habit.average_value !== null}
+				<span>Avg: {habit.average_value}{habit.unit ? ` ${habit.unit}` : ''}</span>
+			{/if}
+		</div>
 	</div>
 </div>
