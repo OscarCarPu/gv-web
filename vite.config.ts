@@ -1,5 +1,4 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-// @ts-expect-error - tailwindcss/vite types not fully compatible
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 

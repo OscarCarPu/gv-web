@@ -1,3 +1,5 @@
+<!-- TODO: Login will be reimplemented in the future -->
+<!--
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import '$styles/login.css';
@@ -50,3 +52,4 @@
 		</button>
 	</form>
 </div>
+-->

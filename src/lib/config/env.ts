@@ -1,4 +1,3 @@
 export const env = {
-  API_URL: import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1',
-  API_KEY: import.meta.env.VITE_API_KEY || '1234'
+  API_URL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
 };

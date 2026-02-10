@@ -7,57 +7,20 @@
 .habit-card {
     @apply relative flex flex-col justify-between items-center p-5 border border-text-muted/20 rounded-lg bg-bg-light gap-1 h-full;
 
-    &.strict {
-        @apply border-2 border-orange-500;
-    }
-
-    .streak {
-        @apply absolute top-2 left-2 flex items-center gap-1 text-xs font-medium text-orange-400;
-    }
-
-    .strict-badge {
-        @apply absolute top-2 right-2 text-xs font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-600;
-    }
-
-    .header {
-        @apply flex items-center justify-center gap-2 mt-4 h-8 w-full;
-    }
-
-    .icon {
-        @apply text-xl text-text-muted;
-    }
-
     .title {
         @apply text-lg font-semibold text-center line-clamp-1;
     }
 
     .description {
-        @apply text-sm text-text-muted text-center h-10 w-full flex items-center justify-center mb-1 leading-tight;
+        @apply text-sm text-text-muted text-center w-full flex items-center justify-center mb-1 leading-tight;
         @apply overflow-hidden text-ellipsis line-clamp-2;
     }
 
-    .frequency {
-        @apply text-sm text-text-muted capitalize mb-2;
-    }
-
-    .toggle-button {
-        @apply flex items-center justify-center mt-2 h-14 w-full;
-    }
-    
     .value-controls {
-        @apply flex items-center justify-center gap-2 mt-2 w-full h-14;
-
-        button {
-            @apply flex flex-col items-center justify-center w-9 h-10 rounded text-text-muted;
-            @apply hover:bg-text-muted/10 active:bg-text-muted/20;
-
-            span {
-                @apply text-[10px] opacity-70;
-            }
-        }
+        @apply flex items-center justify-center gap-2 mt-2 w-full;
 
         .value-input {
-            @apply flex flex-col items-center mx-2;
+            @apply flex flex-col items-center;
 
             input {
                 @apply w-24 text-xl font-bold text-center bg-transparent border-none focus:outline-none p-0;
@@ -70,33 +33,6 @@
                     margin: 0;
                 }
             }
-
-            .unit {
-                @apply text-xs text-text-muted;
-            }
         }
-    }
-    .footer-section {
-        @apply w-full mt-auto;
-    }
-
-    .progress-container {
-        @apply w-full mt-2;
-    }
-
-    .progress {
-        @apply w-full h-2 rounded-full bg-text-muted/20 overflow-hidden;
-    }
-
-    .progress-bar {
-        @apply h-full rounded-full transition-all;
-    }
-
-    .target {
-        @apply text-sm text-text-muted mt-1 text-center h-5;
-    }
-
-    .stats {
-        @apply flex justify-center gap-4 text-xs text-text-muted mt-2 pt-2 border-t border-text-muted/10 w-full;
     }
 }

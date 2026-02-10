@@ -1,3 +1,5 @@
+<!-- TODO: 2FA will be reimplemented in the future -->
+<!--
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { enhance } from '$app/forms';
@@ -71,3 +73,4 @@
 		</a>
 	</form>
 </div>
+-->

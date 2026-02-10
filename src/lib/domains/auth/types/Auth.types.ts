@@ -1,11 +1,12 @@
-export interface LoginResponse {
-  temp_token: string;
-}
-
-export interface Verify2FAResponse {
-  access_token: string;
-}
-
-export interface AuthError {
-  message: string;
-}
+// TODO: Auth types will be reimplemented in the future
+// export interface LoginResponse {
+//   temp_token: string;
+// }
+//
+// export interface Verify2FAResponse {
+//   access_token: string;
+// }
+//
+// export interface AuthError {
+//   message: string;
+// }
