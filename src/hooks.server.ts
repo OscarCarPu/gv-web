@@ -25,6 +25,7 @@
 // }
 
 import type { Handle } from '@sveltejs/kit';
+import { env } from '$lib/config/env';
 
 export const handle: Handle = async ({ event, resolve }) => {
   // TODO: Auth middleware will be reimplemented
@@ -58,10 +59,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   const response = await resolve(event);
 
-  const apiUrlStr = process.env.VITE_API_URL || 'http://localhost:8080';
-  let apiOrigin = apiUrlStr;
+  let apiOrigin = env.API_URL;
   try {
-    apiOrigin = new URL(apiUrlStr).origin;
+    apiOrigin = new URL(env.API_URL).origin;
   } catch (e) {
     console.warn('Invalid API URL for CSP');
   }

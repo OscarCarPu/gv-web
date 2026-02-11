@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { browser } from '$app/environment';
 import { env } from '$lib/config/env';
 
 export async function fetchAPI<T>(
@@ -6,12 +7,13 @@ export async function fetchAPI<T>(
   schema: z.ZodType<T>,
   options?: RequestInit
 ): Promise<T> {
+  const baseUrl = browser ? env.API_URL : env.SERVER_API_URL;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options?.headers as Record<string, string>)
   };
 
-  const response = await fetch(`${env.API_URL}${endpoint}`, {
+  const response = await fetch(`${baseUrl}${endpoint}`, {
     ...options,
     headers
   });
