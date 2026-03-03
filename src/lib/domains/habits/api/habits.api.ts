@@ -11,22 +11,24 @@ import type {
 } from '../types/Habit.types';
 
 export const habitsApi = {
-  async getHabits(date?: string): Promise<HabitWithLog[]> {
+  async getHabits(date?: string, token?: string): Promise<HabitWithLog[]> {
     const query = date ? `?date=${date}` : '';
-    return fetchAPI(`/habits${query}`, HabitWithLogListSchema);
+    return fetchAPI(`/habits${query}`, HabitWithLogListSchema, { token });
   },
 
-  async createHabit(input: CreateHabitRequest): Promise<{ id: number; name: string; description: string | null }> {
+  async createHabit(input: CreateHabitRequest, token?: string): Promise<{ id: number; name: string; description: string | null }> {
     return fetchAPI('/habits', CreateHabitResponseSchema, {
       method: 'POST',
-      body: JSON.stringify(input)
+      body: JSON.stringify(input),
+      token
     });
   },
 
-  async logHabit(input: LogUpsertRequest): Promise<{ status: string }> {
+  async logHabit(input: LogUpsertRequest, token?: string): Promise<{ status: string }> {
     return fetchAPI('/habits/log', LogUpsertResponseSchema, {
       method: 'POST',
-      body: JSON.stringify(input)
+      body: JSON.stringify(input),
+      token
     });
   }
 };

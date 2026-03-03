@@ -1,5 +1,3 @@
-<!-- TODO: 2FA will be reimplemented in the future -->
-<!--
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { enhance } from '$app/forms';
@@ -25,7 +23,7 @@
 <div class="login-container">
 	<form
 		method="POST"
-		action="/login?/verify2fa"
+		action="?/verify2fa"
 		use:enhance={() => {
 			isLoading = true;
 			return async ({ update }) => {
@@ -73,4 +71,3 @@
 		</a>
 	</form>
 </div>
--->

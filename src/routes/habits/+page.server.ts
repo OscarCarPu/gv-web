@@ -1,9 +1,10 @@
 import { habitsApi } from '$habits/api/habits.api';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ cookies }) => {
   try {
-    const habits = await habitsApi.getHabits();
+    const token = cookies.get('session');
+    const habits = await habitsApi.getHabits(undefined, token);
     return { habits };
   } catch (error) {
     console.error('Failed to load habits:', error);

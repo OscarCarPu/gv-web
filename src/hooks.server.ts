@@ -1,61 +1,60 @@
-// TODO: Auth will be reimplemented in the future
-// import { redirect, type Handle, json } from '@sveltejs/kit';
-// import { StatusCodes } from 'http-status-codes';
-//
-// const PUBLIC_ROUTES = ['/login', '/login/2fa'];
-// const AUTH_ONLY_ROUTES = ['/logout'];
-//
-// function isValidJWT(token: string): boolean {
-//   try {
-//     const parts = token.split('.');
-//     if (parts.length !== 3) return false;
-//
-//     const payload = JSON.parse(atob(parts[1]));
-//
-//     // Check expiration
-//     if (payload.exp) {
-//       const now = Math.floor(Date.now() / 1000);
-//       if (payload.exp < now) return false;
-//     }
-//
-//     return true;
-//   } catch {
-//     return false;
-//   }
-// }
-
-import type { Handle } from '@sveltejs/kit';
+import { redirect, type Handle, json } from '@sveltejs/kit';
+import { StatusCodes } from 'http-status-codes';
 import { env } from '$lib/config/env';
 
+const PUBLIC_ROUTES = ['/login', '/login/2fa'];
+const AUTH_ONLY_ROUTES = ['/logout'];
+
+function isValidJWT(token: string): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+
+    const payload = JSON.parse(atob(parts[1]));
+
+    // Check expiration
+    if (payload.exp) {
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp < now) return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
-  // TODO: Auth middleware will be reimplemented
-  // const { pathname } = event.url;
-  // let token = event.cookies.get('session');
-  // if (!token) {
-  //   const authHeader = event.request.headers.get('Authorization');
-  //   if (authHeader && authHeader.startsWith('Bearer ')) {
-  //     token = authHeader.split(' ')[1];
-  //   }
-  // }
-  // const isPublicRoute = PUBLIC_ROUTES.some(
-  //   (route) => pathname === route || pathname.startsWith(`${route}/`)
-  // );
-  // const isAuthOnlyRoute = AUTH_ONLY_ROUTES.some(
-  //   (route) => pathname === route || pathname.startsWith(`${route}/`)
-  // );
-  // const validSession = token && isValidJWT(token);
-  // if (!validSession && !isPublicRoute) {
-  //   const isApiRequest = pathname.startsWith('/api') ||
-  //     event.request.headers.get('accept')?.includes('application/json');
-  //   if (isApiRequest) {
-  //     return json({ error: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
-  //   } else {
-  //     redirect(StatusCodes.SEE_OTHER, '/login');
-  //   }
-  // }
-  // if (validSession && isPublicRoute && !isAuthOnlyRoute) {
-  //   redirect(StatusCodes.SEE_OTHER, '/habits');
-  // }
+  const { pathname } = event.url;
+  let token = event.cookies.get('session');
+  if (!token) {
+    const authHeader = event.request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+  }
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+  const isAuthOnlyRoute = AUTH_ONLY_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+  const validSession = token && isValidJWT(token);
+  if (validSession) {
+    event.locals.token = token;
+  }
+  if (!validSession && !isPublicRoute) {
+    const isApiRequest = pathname.startsWith('/api') ||
+      event.request.headers.get('accept')?.includes('application/json');
+    if (isApiRequest) {
+      return json({ error: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
+    } else {
+      redirect(StatusCodes.SEE_OTHER, '/login');
+    }
+  }
+  if (validSession && isPublicRoute && !isAuthOnlyRoute) {
+    redirect(StatusCodes.SEE_OTHER, '/habits');
+  }
 
   const response = await resolve(event);
 

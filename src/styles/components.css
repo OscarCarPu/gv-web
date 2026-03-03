@@ -1,5 +1,13 @@
 @reference "./app.css";
 
+.app-header {
+    @apply absolute top-0 right-0 p-2 z-10;
+
+    .logout-btn {
+        @apply text-text-muted hover:text-danger transition-colors text-lg p-2;
+    }
+}
+
 .toggle {
     @apply relative w-14 h-8 rounded-full transition-colors cursor-default;
 

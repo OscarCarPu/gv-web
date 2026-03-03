@@ -4,9 +4,14 @@ services:
       context: .
       args:
         - VITE_API_URL=${VITE_API_URL}
-        - WEB_URL=${WEB_URL}
     ports:
       - "3000:3000"
     env_file:
       - .env
+    networks:
+      - gv
     restart: unless-stopped
+
+networks:
+  gv:
+    external: true
