@@ -1,7 +1,23 @@
 @reference "./app.css";
 
 .app-header {
-    @apply absolute top-0 right-0 p-2 z-10;
+    @apply flex items-center justify-between px-4 py-2 bg-bg-light z-10;
+
+    .app-nav {
+        @apply flex gap-1;
+    }
+
+    .nav-link {
+        @apply px-4 py-2 text-text-muted rounded-t transition-colors font-medium;
+
+        &:hover {
+            @apply text-text;
+        }
+
+        &.active {
+            @apply text-text border-b-2 border-primary;
+        }
+    }
 
     .logout-btn {
         @apply text-text-muted hover:text-danger transition-colors text-lg p-2;

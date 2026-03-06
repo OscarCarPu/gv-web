@@ -2,7 +2,7 @@ up:
 	docker compose up -d --build
 
 up-dev:
-	bun --env-file=.env run dev
+	API_URL=http://localhost:8080 bun --env-file=.env run dev
 
 deploy:
 	git checkout main
