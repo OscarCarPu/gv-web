@@ -47,9 +47,9 @@
 	<h1>Tareas</h1>
 
 	<div class="task-timer-panel">
-		<button class="task-selector">
+		<div class="task-selector">
 			{selectedTask ?? 'Seleccionar Tarea'}
-		</button>
+		</div>
 
 		<div class="timer-row">
 			<div class="time-entries">
@@ -58,7 +58,7 @@
 					<span class="time-separator">-</span>
 					<TimePicker value={entry.end} onchange={(v) => entry.end = v} />
 				{/each}
-				<button class="btn-primary" onclick={addTimeEntry}>Agregar</button>
+				<button class="btn-primary" onclick={addTimeEntry}><i class="fa-solid fa-plus"></i> Agregar</button>
 			</div>
 
 			<div class="timer-controls">

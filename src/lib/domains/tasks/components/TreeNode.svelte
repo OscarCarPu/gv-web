@@ -72,7 +72,7 @@
 					{/if}
 				</div>
 			</div>
-			<button class="btn-primary">Iniciar</button>
+			<button class="btn-primary"><i class="fa-solid fa-play"></i> Iniciar</button>
 		</div>
 	{/if}
 {/snippet}

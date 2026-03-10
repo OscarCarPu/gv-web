@@ -50,5 +50,5 @@
 			<span class="task-time"><i class="fa-regular fa-clock"></i> {formattedTime()}</span>
 		</div>
 	</div>
-	<button class="btn-primary" onclick={onstart}>Iniciar</button>
+	<button class="btn-primary" onclick={onstart}><i class="fa-solid fa-play"></i> Iniciar</button>
 </div>

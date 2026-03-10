@@ -44,7 +44,7 @@ export const actions = {
         maxAge: 60 * 60 * 24 * 30 // 30 days
       });
 
-      redirect(StatusCodes.SEE_OTHER, '/habits');
+      redirect(StatusCodes.SEE_OTHER, '/tasks');
     } catch (error) {
       if (error instanceof Response || (error as { status?: number })?.status === StatusCodes.SEE_OTHER) {
         throw error;

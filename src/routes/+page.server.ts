@@ -3,5 +3,5 @@ import type { PageServerLoad } from "./$types";
 import { StatusCodes } from "http-status-codes";
 
 export const load: PageServerLoad = () => {
-  redirect(StatusCodes.PERMANENT_REDIRECT, "/habits");
+  redirect(StatusCodes.PERMANENT_REDIRECT, "/tasks");
 }
