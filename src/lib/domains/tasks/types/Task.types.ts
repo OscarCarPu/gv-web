@@ -111,6 +111,18 @@ export interface TaskDetailResponse {
     time_spent: number;
 }
 
+export interface TaskFullResponse {
+    id: number;
+    project_id: number | null;
+    name: string;
+    description: string | null;
+    due_at: string | null;
+    started_at: string | null;
+    finished_at: string | null;
+    time_spent: number;
+    todos: TodoResponse[];
+}
+
 export interface TaskTimeEntriesResponse {
     task: TaskDetailResponse;
     time_entries: TimeEntryResponse[];

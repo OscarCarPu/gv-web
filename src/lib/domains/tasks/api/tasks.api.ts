@@ -2,8 +2,10 @@ import { fetchAPI } from '$lib/shared/api/client';
 import {
 	ProjectResponseSchema,
 	ProjectResponseListSchema,
+	ProjectDetailResponseSchema,
 	ProjectChildrenResponseSchema,
 	TaskResponseSchema,
+	TaskFullResponseSchema,
 	TaskTimeEntriesResponseSchema,
 	TodoResponseSchema,
 	TimeEntryResponseSchema,
@@ -12,10 +14,12 @@ import {
 } from './tasks.schemas';
 import type {
 	ProjectResponse,
+	ProjectDetailResponse,
 	ProjectChildrenResponse,
 	CreateProjectRequest,
 	UpdateProjectRequest,
 	TaskResponse,
+	TaskFullResponse,
 	TaskTimeEntriesResponse,
 	CreateTaskRequest,
 	UpdateTaskRequest,
@@ -34,6 +38,10 @@ export const tasksApi = {
 
 	async getRootProjects(token?: string): Promise<ProjectResponse[]> {
 		return fetchAPI('/tasks/projects', ProjectResponseListSchema, { token });
+	},
+
+	async getProject(id: number, token?: string): Promise<ProjectDetailResponse> {
+		return fetchAPI(`/tasks/projects/${id}`, ProjectDetailResponseSchema, { token });
 	},
 
 	async getProjectChildren(id: number, token?: string): Promise<ProjectChildrenResponse> {
@@ -57,6 +65,10 @@ export const tasksApi = {
 	},
 
 	// --- Tasks ---
+
+	async getTask(id: number, token?: string): Promise<TaskFullResponse> {
+		return fetchAPI(`/tasks/tasks/${id}`, TaskFullResponseSchema, { token });
+	},
 
 	async createTask(input: CreateTaskRequest, token?: string): Promise<TaskResponse> {
 		return fetchAPI('/tasks/tasks', TaskResponseSchema, {

@@ -61,6 +61,18 @@ export const TaskDetailResponseSchema = z.object({
 	time_spent: z.number()
 });
 
+export const TaskFullResponseSchema = z.object({
+	id: z.number(),
+	project_id: z.number().nullable(),
+	name: z.string(),
+	description: z.string().nullable(),
+	due_at: z.string().nullable(),
+	started_at: z.string().nullable(),
+	finished_at: z.string().nullable(),
+	time_spent: z.number(),
+	todos: z.array(TodoResponseSchema)
+});
+
 // --- Composite schemas ---
 
 export const ProjectChildNodeSchema = z.object({
