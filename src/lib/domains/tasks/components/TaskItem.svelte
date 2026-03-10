@@ -4,9 +4,10 @@
 	interface Props {
 		task: TaskByDueDateResponse;
 		onstart?: () => void;
+		isTimerRunning?: boolean;
 	}
 
-	let { task, onstart }: Props = $props();
+	let { task, onstart, isTimerRunning = false }: Props = $props();
 
 	const isStarted = $derived(task.started_at !== null);
 
@@ -50,5 +51,8 @@
 			<span class="task-time"><i class="fa-regular fa-clock"></i> {formattedTime()}</span>
 		</div>
 	</div>
-	<button class="btn-primary" onclick={onstart}><i class="fa-solid fa-play"></i> Iniciar</button>
+	<button class="btn-primary" onclick={onstart}>
+		<i class="fa-solid {isTimerRunning ? 'fa-arrow-right' : 'fa-play'}"></i>
+		{isTimerRunning ? 'Asignar' : 'Iniciar'}
+	</button>
 </div>

@@ -5,6 +5,10 @@
 
     .task-selector {
         @apply w-full text-center text-lg font-medium text-text-muted bg-bg rounded-lg px-4 py-3 border border-text-muted/20 cursor-default;
+
+        &.active {
+            @apply text-text;
+        }
     }
 
     .running {

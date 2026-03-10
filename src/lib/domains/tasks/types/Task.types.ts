@@ -83,6 +83,7 @@ export interface UpdateTodoRequest {
 }
 
 export interface UpdateTimeEntryRequest {
+    task_id?: number | null;
     started_at?: string | null;
     finished_at?: string | null;
     comment?: string | null;

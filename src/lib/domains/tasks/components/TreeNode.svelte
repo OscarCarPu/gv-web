@@ -3,9 +3,11 @@
 
 	interface Props {
 		nodes: ActiveTreeNode[];
+		onstart?: (taskId: number, taskName: string, projectName?: string) => void;
+		isTimerRunning?: boolean;
 	}
 
-	let { nodes }: Props = $props();
+	let { nodes, onstart, isTimerRunning = false }: Props = $props();
 
 	let expandedIds: Set<number> = $state(new Set());
 
@@ -72,7 +74,10 @@
 					{/if}
 				</div>
 			</div>
-			<button class="btn-primary"><i class="fa-solid fa-play"></i> Iniciar</button>
+			<button class="btn-primary" onclick={() => onstart?.(node.id, node.name, parentProjectName)}>
+				<i class="fa-solid {isTimerRunning ? 'fa-arrow-right' : 'fa-play'}"></i>
+				{isTimerRunning ? 'Asignar' : 'Iniciar'}
+			</button>
 		</div>
 	{/if}
 {/snippet}

@@ -2,37 +2,16 @@
 	import TimePicker from '$lib/shared/components/TimePicker.svelte';
 	import TaskItem from '$lib/domains/tasks/components/TaskItem.svelte';
 	import TreeNode from '$lib/domains/tasks/components/TreeNode.svelte';
+	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 
 	let { data } = $props();
 
-	let selectedTask: string | null = $state(null);
-	let isRunning = $state(false);
-	let elapsedSeconds = $state(0);
-	let timerInterval: ReturnType<typeof setInterval> | null = $state(null);
+	const timer = createTaskTimer();
 
 	// Placeholder time entries
 	let timeEntries = $state([
 		{ id: 1, start: '00:00', end: '00:30' }
 	]);
-
-	const formattedTime = $derived(() => {
-		const h = Math.floor(elapsedSeconds / 3600).toString().padStart(2, '0');
-		const m = Math.floor((elapsedSeconds % 3600) / 60).toString().padStart(2, '0');
-		const s = (elapsedSeconds % 60).toString().padStart(2, '0');
-		return `${h}:${m}:${s}`;
-	});
-
-	function toggleTimer() {
-		if (isRunning) {
-			if (timerInterval) clearInterval(timerInterval);
-			timerInterval = null;
-		} else {
-			timerInterval = setInterval(() => {
-				elapsedSeconds++;
-			}, 1000);
-		}
-		isRunning = !isRunning;
-	}
 
 	function addTimeEntry() {
 		timeEntries = [...timeEntries, { id: Date.now(), start: '', end: '' }];
@@ -47,8 +26,8 @@
 	<h1>Tareas</h1>
 
 	<div class="task-timer-panel">
-		<div class="task-selector">
-			{selectedTask ?? 'Seleccionar Tarea'}
+		<div class="task-selector" class:active={timer.selectedTaskDisplay !== null}>
+			{timer.selectedTaskDisplay ?? 'Seleccionar Tarea'}
 		</div>
 
 		<div class="timer-row">
@@ -62,11 +41,18 @@
 			</div>
 
 			<div class="timer-controls">
-				<span class="timer-display">{formattedTime()}</span>
-				<button class="btn-primary" class:running={isRunning} onclick={toggleTimer}>
-					<i class="fa-solid {isRunning ? 'fa-pause' : 'fa-play'}"></i>
-					{isRunning ? 'Pausar' : 'Iniciar'}
-				</button>
+				<span class="timer-display">{timer.formattedTime}</span>
+				{#if timer.isRunning}
+					<button class="btn-primary running" onclick={timer.stopTimer}>
+						<i class="fa-solid fa-stop"></i>
+						Stop
+					</button>
+				{:else}
+					<button class="btn-primary" onclick={timer.startTimer}>
+						<i class="fa-solid fa-play"></i>
+						Iniciar
+					</button>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -76,7 +62,7 @@
 			<h2>Próximas a vencer</h2>
 			<div class="task-list">
 				{#each data.tasksByDueDate as task (task.id)}
-					<TaskItem {task} onstart={() => console.log('Start task', task.id)} />
+					<TaskItem {task} onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)} isTimerRunning={timer.isRunning} />
 				{/each}
 			</div>
 		</div>
@@ -84,7 +70,7 @@
 		<div class="tasks-section">
 			<h2>Proyectos activos</h2>
 			<div class="task-list">
-				<TreeNode nodes={data.activeTree} />
+				<TreeNode nodes={data.activeTree} onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)} isTimerRunning={timer.isRunning} />
 			</div>
 		</div>
 	</div>
