@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { fetchAPI } from '$lib/shared/api/client';
 import {
   HabitWithLogListSchema,
@@ -28,6 +29,13 @@ export const habitsApi = {
     return fetchAPI('/habits/log', LogUpsertResponseSchema, {
       method: 'POST',
       body: JSON.stringify(input),
+      token
+    });
+  },
+
+  async deleteHabit(id: number, token?: string): Promise<void> {
+    return fetchAPI(`/habits/${id}`, z.void(), {
+      method: 'DELETE',
       token
     });
   }

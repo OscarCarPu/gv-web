@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { fetchAPI } from '$lib/shared/api/client';
 import {
 	ProjectResponseSchema,
@@ -64,6 +65,13 @@ export const tasksApi = {
 		});
 	},
 
+	async deleteProject(id: number, token?: string): Promise<void> {
+		return fetchAPI(`/tasks/projects/${id}`, z.void(), {
+			method: 'DELETE',
+			token
+		});
+	},
+
 	// --- Tasks ---
 
 	async getTask(id: number, token?: string): Promise<TaskFullResponse> {
@@ -82,6 +90,13 @@ export const tasksApi = {
 		return fetchAPI(`/tasks/tasks/${id}`, TaskResponseSchema, {
 			method: 'PATCH',
 			body: JSON.stringify(input),
+			token
+		});
+	},
+
+	async deleteTask(id: number, token?: string): Promise<void> {
+		return fetchAPI(`/tasks/tasks/${id}`, z.void(), {
+			method: 'DELETE',
 			token
 		});
 	},
@@ -112,6 +127,13 @@ export const tasksApi = {
 		});
 	},
 
+	async deleteTodo(id: number, token?: string): Promise<void> {
+		return fetchAPI(`/tasks/todos/${id}`, z.void(), {
+			method: 'DELETE',
+			token
+		});
+	},
+
 	// --- Time Entries ---
 
 	async createTimeEntry(input: CreateTimeEntryRequest, token?: string): Promise<TimeEntryResponse> {
@@ -126,6 +148,13 @@ export const tasksApi = {
 		return fetchAPI(`/tasks/time-entries/${id}`, TimeEntryResponseSchema, {
 			method: 'PATCH',
 			body: JSON.stringify(input),
+			token
+		});
+	},
+
+	async deleteTimeEntry(id: number, token?: string): Promise<void> {
+		return fetchAPI(`/tasks/time-entries/${id}`, z.void(), {
+			method: 'DELETE',
 			token
 		});
 	},

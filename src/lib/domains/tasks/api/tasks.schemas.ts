@@ -99,7 +99,9 @@ export const TaskTimeEntriesResponseSchema = z.object({
 	time_entries: z.array(TimeEntryResponseSchema)
 });
 
-export const ActiveTreeNodeSchema: z.ZodType = z.lazy(() =>
+import type { ActiveTreeNode } from '../types/Task.types';
+
+export const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
 	z.object({
 		id: z.number(),
 		type: z.string(),
