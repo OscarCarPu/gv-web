@@ -40,8 +40,7 @@
 					<i class="fa-solid fa-chevron-right tree-chevron" class:expanded></i>
 				{/if}
 				<i class="fa-solid fa-folder tree-folder-icon"></i>
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<span class="task-name-btn" onclick={(e) => { e.stopPropagation(); ondetail?.(node.id, 'project'); }} onkeydown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); ondetail?.(node.id, 'project'); } }}>{node.name}</span>
+				<span class="task-name-btn" onclick={(e) => { e.stopPropagation(); ondetail?.(node.id, 'project'); }} onkeydown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); ondetail?.(node.id, 'project'); } }} role="button" tabindex="0">{node.name}</span>
 				{#if node.due_at}
 					<span class="tree-project-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
 				{/if}

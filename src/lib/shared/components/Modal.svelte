@@ -17,10 +17,8 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="modal-backdrop" onclick={onclose}>
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="modal-card" onclick={(e) => e.stopPropagation()}>
+	<div class="modal-backdrop" onclick={onclose} onkeydown={(e) => { if (e.key === 'Escape') onclose?.(); }} role="button" tabindex="-1">
+		<div class="modal-card" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="dialog" tabindex="-1">
 			{@render children()}
 		</div>
 	</div>

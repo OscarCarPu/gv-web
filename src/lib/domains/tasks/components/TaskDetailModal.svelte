@@ -113,13 +113,13 @@
 			</div>
 
 			<div class="detail-field">
-				<label>Todos</label>
+				<span class="label">Todos</span>
 				<div class="todo-list">
 					{#each todos as todo (todo.id)}
 						<div class="todo-item">
 							<input type="checkbox" checked={todo.is_done} onchange={() => toggleTodo(todo)} />
 							<span class:line-through={todo.is_done}>{todo.name}</span>
-							<button class="btn-danger btn-sm ml-auto" onclick={() => deleteTodo(todo.id)}>
+							<button class="btn-danger btn-sm ml-auto" onclick={() => deleteTodo(todo.id)} aria-label="Delete todo">
 								<i class="fa-solid fa-trash"></i>
 							</button>
 						</div>

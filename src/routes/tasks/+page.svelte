@@ -39,8 +39,12 @@
 		return null;
 	}
 
+	let lastHandledEntryId: number | null = null;
+
 	$effect(() => {
 		if (data.activeTimeEntry && !timer.isRunning) {
+			if (data.activeTimeEntry.id === lastHandledEntryId) return;
+			lastHandledEntryId = data.activeTimeEntry.id;
 			const entry = data.activeTimeEntry;
 			const dueDateTask = data.tasksByDueDate.find((t) => t.id === entry.task_id);
 			if (dueDateTask) {
