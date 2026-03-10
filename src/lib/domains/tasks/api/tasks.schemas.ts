@@ -96,6 +96,22 @@ export const ActiveTreeNodeSchema: z.ZodType = z.lazy(() =>
 	})
 );
 
+// --- Query schemas ---
+
+export const TaskByDueDateResponseSchema = z.object({
+	id: z.number(),
+	name: z.string(),
+	description: z.string().nullable(),
+	due_at: z.string().nullable(),
+	started_at: z.string().nullable(),
+	time_spent: z.number(),
+	project_id: z.number().nullable(),
+	project_name: z.string().nullable(),
+	project_due_at: z.string().nullable()
+});
+
+export const TaskByDueDateResponseListSchema = z.array(TaskByDueDateResponseSchema);
+
 // --- List schemas ---
 
 export const ProjectResponseListSchema = z.array(ProjectResponseSchema);

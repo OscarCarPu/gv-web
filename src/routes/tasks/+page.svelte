@@ -1,5 +1,8 @@
 <script lang="ts">
 	import TimePicker from '$lib/shared/components/TimePicker.svelte';
+	import TaskItem from '$lib/domains/tasks/components/TaskItem.svelte';
+
+	let { data } = $props();
 
 	let selectedTask: string | null = $state(null);
 	let isRunning = $state(false);
@@ -64,6 +67,21 @@
 					{isRunning ? 'Pausar' : 'Iniciar'}
 				</button>
 			</div>
+		</div>
+	</div>
+
+	<div class="tasks-content">
+		<div class="tasks-section">
+			<h2>Próximas a vencer</h2>
+			<div class="task-list">
+				{#each data.tasksByDueDate as task (task.id)}
+					<TaskItem {task} onstart={() => console.log('Start task', task.id)} />
+				{/each}
+			</div>
+		</div>
+
+		<div class="tasks-section">
+			<!-- Placeholder for future content -->
 		</div>
 	</div>
 </div>

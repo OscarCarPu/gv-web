@@ -32,3 +32,63 @@
         min-width: 7rem;
     }
 }
+
+.tasks-content {
+    @apply grid grid-cols-2 gap-6 mt-3;
+}
+
+.tasks-section {
+    @apply bg-bg-light rounded-lg px-3 py-5;
+
+    & > h2 {
+        @apply text-lg font-semibold mb-4 text-center;
+    }
+}
+
+.task-list {
+    @apply flex flex-col gap-2;
+}
+
+.task-item {
+    @apply flex items-center justify-between gap-4 bg-bg rounded-lg px-4 py-3;
+}
+
+.task-info {
+    @apply flex flex-col gap-1 min-w-0;
+
+    .task-name {
+        @apply font-bold text-text;
+    }
+
+    .task-project {
+        @apply text-sm text-text-muted;
+
+        .task-project-due {
+            @apply text-xs ml-1;
+        }
+    }
+
+    .task-description {
+        @apply text-sm text-text-muted truncate;
+    }
+}
+
+.task-meta {
+    @apply flex items-center gap-3 text-xs mt-1;
+
+    .task-status {
+        @apply px-2 py-0.5 rounded-full bg-text-muted/20 text-text-muted;
+
+        &.started {
+            @apply bg-primary/20 text-primary;
+        }
+    }
+
+    .task-due {
+        @apply text-text-muted;
+    }
+
+    .task-time {
+        @apply text-text-muted;
+    }
+}

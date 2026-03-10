@@ -88,6 +88,18 @@ export interface UpdateTimeEntryRequest {
     comment?: string | null;
 }
 
+export interface TaskByDueDateResponse {
+    id: number;
+    name: string;
+    description: string | null;
+    due_at: string | null;
+    started_at: string | null;
+    time_spent: number;
+    project_id: number | null;
+    project_name: string | null;
+    project_due_at: string | null;
+}
+
 export interface TaskDetailResponse {
     id: number;
     project_id: number | null;

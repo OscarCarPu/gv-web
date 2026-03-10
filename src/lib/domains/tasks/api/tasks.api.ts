@@ -7,7 +7,8 @@ import {
 	TaskTimeEntriesResponseSchema,
 	TodoResponseSchema,
 	TimeEntryResponseSchema,
-	ActiveTreeNodeListSchema
+	ActiveTreeNodeListSchema,
+	TaskByDueDateResponseListSchema
 } from './tasks.schemas';
 import type {
 	ProjectResponse,
@@ -24,7 +25,8 @@ import type {
 	TimeEntryResponse,
 	CreateTimeEntryRequest,
 	UpdateTimeEntryRequest,
-	ActiveTreeNode
+	ActiveTreeNode,
+	TaskByDueDateResponse
 } from '../types/Task.types';
 
 export const tasksApi = {
@@ -74,6 +76,10 @@ export const tasksApi = {
 
 	async getTaskTimeEntries(id: number, token?: string): Promise<TaskTimeEntriesResponse> {
 		return fetchAPI(`/tasks/tasks/${id}/time-entries`, TaskTimeEntriesResponseSchema, { token });
+	},
+
+	async getTasksByDueDate(token?: string): Promise<TaskByDueDateResponse[]> {
+		return fetchAPI('/tasks/tasks/by-due-date', TaskByDueDateResponseListSchema, { token });
 	},
 
 	// --- Todos ---
