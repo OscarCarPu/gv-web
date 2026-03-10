@@ -1,38 +1,54 @@
-# sv
+# gv-web
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+SvelteKit frontend for **GV** — a personal productivity app with habit tracking and task/time management.
 
-## Creating a project
+## Tech Stack
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **SvelteKit 2** + **Svelte 5** (runes API)
+- **Tailwind CSS 4** (Vite plugin, custom dark theme)
+- **Zod 4** for runtime validation
+- **Flowbite Svelte** for UI primitives
+- **FontAwesome** icons
+- **TypeScript**
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Getting Started
 
-# create a new project in my-app
-npx sv create my-app
-```
+### Prerequisites
 
-## Developing
+- [Bun](https://bun.sh/) runtime
+- A running instance of the GV API
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Environment
 
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
+Copy `.env.example` and adjust values:
 
 ```sh
-npm run build
+cp .env.example .env
 ```
 
-You can preview the production build with `npm run preview`.
+| Variable | Purpose |
+|---|---|
+| `VITE_API_URL` | API URL used by the browser (e.g. `http://localhost:8080`) |
+| `API_URL` | API URL used by the server / Docker (e.g. `http://gv-api:8080`) |
+| `ORIGIN` | Public URL of this app for CSRF (e.g. `http://localhost:3000`) |
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+### Development
+
+```sh
+bun install
+bun run dev
+```
+
+### Docker
+
+```sh
+make up
+```
+
+## Documentation
+
+See the [`docs/`](docs/) folder for detailed documentation:
+
+- [Architecture](docs/architecture.md) — tech stack, project structure, API layer, auth, styling
+- [Habits](docs/habits.md) — habit tracking feature
+- [Tasks](docs/tasks.md) — task/time management feature
