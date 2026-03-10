@@ -7,7 +7,7 @@ export const HabitWithLogSchema = z.object({
   log_value: z.number().nullable()
 });
 
-export const HabitWithLogListSchema = z.array(HabitWithLogSchema);
+export const HabitWithLogListSchema = z.array(HabitWithLogSchema).nullable().transform(v => v ?? []);
 
 export const CreateHabitResponseSchema = z.object({
   id: z.number(),

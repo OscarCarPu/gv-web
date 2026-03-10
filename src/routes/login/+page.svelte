@@ -7,7 +7,7 @@
 </script>
 
 <svelte:head>
-	<title>Login</title>
+	<title>Iniciar Sesión</title>
 </svelte:head>
 
 <div class="login-container">
@@ -22,7 +22,7 @@
 			};
 		}}
 	>
-		<h1>Private Access</h1>
+		<h1>Acceso Privado</h1>
 
 		{#if form?.message}
 			<p class="error-message">{form.message}</p>
@@ -32,7 +32,7 @@
 			<input
 				type="password"
 				name="password"
-				placeholder="Password"
+				placeholder="Contraseña"
 				required
 				disabled={isLoading}
 				autocomplete="current-password"
@@ -42,9 +42,9 @@
 		<button type="submit" disabled={isLoading}>
 			{#if isLoading}
 				<i class="fas fa-spinner fa-spin"></i>
-				Verifying...
+				Verificando...
 			{:else}
-				Next
+				Siguiente
 				<i class="fas fa-arrow-right"></i>
 			{/if}
 		</button>

@@ -23,7 +23,7 @@
             @apply flex flex-col items-center;
 
             input {
-                @apply w-24 text-xl font-bold text-center bg-transparent border-none focus:outline-none p-0;
+                @apply text-center bg-transparent border-none focus:outline-none w-24 text-xl font-bold p-0;
                 -moz-appearance: textfield;
                 appearance: textfield;
 

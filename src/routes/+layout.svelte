@@ -16,8 +16,8 @@
 {#if data.token}
 	<header class="app-header">
 		<nav class="app-nav">
-			<a href="/habits" class="nav-link" class:active={page.url.pathname.startsWith('/habits')}>Habits</a>
-			<a href="/tasks" class="nav-link" class:active={page.url.pathname.startsWith('/tasks')}>Tasks</a>
+			<a href="/habits" class="nav-link" class:active={page.url.pathname.startsWith('/habits')}>Hábitos</a>
+			<a href="/tasks" class="nav-link" class:active={page.url.pathname.startsWith('/tasks')}>Tareas</a>
 		</nav>
 		<form method="POST" action="/logout" use:enhance>
 			<button type="submit" class="logout-btn" title="Logout">

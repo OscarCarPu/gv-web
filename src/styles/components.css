@@ -24,6 +24,14 @@
     }
 }
 
+.btn-primary {
+    @apply flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-white font-medium cursor-pointer hover:bg-primary/80 transition-colors;
+}
+
+.input-transparent {
+    @apply text-center bg-transparent border-none focus:outline-none;
+}
+
 .toggle {
     @apply relative w-14 h-8 rounded-full transition-colors cursor-default;
 
