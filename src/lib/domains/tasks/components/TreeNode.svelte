@@ -4,10 +4,11 @@
 	interface Props {
 		nodes: ActiveTreeNode[];
 		onstart?: (taskId: number, taskName: string, projectName?: string) => void;
+		ontoggle?: (id: number, type: 'project' | 'task', action: 'start' | 'finish') => void;
 		isTimerRunning?: boolean;
 	}
 
-	let { nodes, onstart, isTimerRunning = false }: Props = $props();
+	let { nodes, onstart, ontoggle, isTimerRunning = false }: Props = $props();
 
 	let expandedIds: Set<number> = $state(new Set());
 
@@ -32,16 +33,19 @@
 	{@const isStarted = node.started_at != null}
 
 	{#if isProject}
-		<button class="tree-project-row" onclick={() => hasChildren && toggle(node.id)} disabled={!hasChildren}>
-			{#if hasChildren}
-				<i class="fa-solid fa-chevron-right tree-chevron" class:expanded></i>
-			{/if}
-			<i class="fa-solid fa-folder tree-folder-icon"></i>
-			<span class="tree-project-name">{node.name}</span>
-			{#if node.due_at}
-				<span class="tree-project-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
-			{/if}
-		</button>
+		<div class="tree-project-wrapper">
+			<button class="tree-project-row" onclick={() => hasChildren && toggle(node.id)} disabled={!hasChildren}>
+				{#if hasChildren}
+					<i class="fa-solid fa-chevron-right tree-chevron" class:expanded></i>
+				{/if}
+				<i class="fa-solid fa-folder tree-folder-icon"></i>
+				<span class="tree-project-name">{node.name}</span>
+				{#if node.due_at}
+					<span class="tree-project-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
+				{/if}
+			</button>
+			<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'project', 'finish')}>Acabar</button>
+		</div>
 
 		{#if expanded && hasChildren}
 			<div class="tree-children">
@@ -74,10 +78,17 @@
 					{/if}
 				</div>
 			</div>
-			<button class="btn-primary" onclick={() => onstart?.(node.id, node.name, parentProjectName)}>
-				<i class="fa-solid {isTimerRunning ? 'fa-arrow-right' : 'fa-play'}"></i>
-				{isTimerRunning ? 'Asignar' : 'Iniciar'}
-			</button>
+			<div class="task-actions">
+				{#if isStarted}
+					<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'finish')}>Acabar</button>
+				{:else}
+					<button class="btn-primary btn-start btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'start')}>Empezar</button>
+				{/if}
+				<button class="btn-primary" onclick={() => onstart?.(node.id, node.name, parentProjectName)}>
+					<i class="fa-solid {isTimerRunning ? 'fa-arrow-right' : 'fa-play'}"></i>
+					{isTimerRunning ? 'Asignar' : 'Iniciar'}
+				</button>
+			</div>
 		</div>
 	{/if}
 {/snippet}

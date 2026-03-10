@@ -125,6 +125,22 @@
     @apply text-sm text-primary;
 }
 
+.task-actions {
+    @apply flex items-center gap-2 shrink-0;
+}
+
+.btn-start {
+    @apply bg-success text-white hover:bg-success/80;
+}
+
+.btn-sm {
+    @apply text-xs px-2 py-1;
+}
+
+.tree-project-wrapper {
+    @apply flex items-center gap-2;
+}
+
 .tree-children {
     @apply flex flex-col gap-2 mt-1;
     margin-left: 0.75rem;

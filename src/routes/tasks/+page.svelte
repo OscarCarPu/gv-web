@@ -1,12 +1,35 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import TimePicker from '$lib/shared/components/TimePicker.svelte';
 	import TaskItem from '$lib/domains/tasks/components/TaskItem.svelte';
 	import TreeNode from '$lib/domains/tasks/components/TreeNode.svelte';
 	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
+	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 
 	let { data } = $props();
 
 	const timer = createTaskTimer();
+
+	async function handleTaskToggle(taskId: number, action: 'start' | 'finish') {
+		const now = new Date().toISOString();
+		if (action === 'start') {
+			await tasksApi.updateTask(taskId, { started_at: now });
+		} else {
+			await tasksApi.updateTask(taskId, { finished_at: now });
+		}
+		await invalidateAll();
+	}
+
+	async function handleTreeToggle(id: number, type: 'project' | 'task', action: 'start' | 'finish') {
+		const now = new Date().toISOString();
+		const payload = action === 'start' ? { started_at: now } : { finished_at: now };
+		if (type === 'project') {
+			await tasksApi.updateProject(id, payload);
+		} else {
+			await tasksApi.updateTask(id, payload);
+		}
+		await invalidateAll();
+	}
 
 	// Placeholder time entries
 	let timeEntries = $state([
@@ -62,7 +85,7 @@
 			<h2>Próximas a vencer</h2>
 			<div class="task-list">
 				{#each data.tasksByDueDate as task (task.id)}
-					<TaskItem {task} onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)} isTimerRunning={timer.isRunning} />
+					<TaskItem {task} onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)} ontoggle={handleTaskToggle} isTimerRunning={timer.isRunning} />
 				{/each}
 			</div>
 		</div>
@@ -70,7 +93,7 @@
 		<div class="tasks-section">
 			<h2>Proyectos activos</h2>
 			<div class="task-list">
-				<TreeNode nodes={data.activeTree} onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)} isTimerRunning={timer.isRunning} />
+				<TreeNode nodes={data.activeTree} onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)} ontoggle={handleTreeToggle} isTimerRunning={timer.isRunning} />
 			</div>
 		</div>
 	</div>
