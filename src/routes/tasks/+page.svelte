@@ -5,10 +5,40 @@
 	import TreeNode from '$lib/domains/tasks/components/TreeNode.svelte';
 	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
+	import type { ActiveTreeNode } from '$lib/domains/tasks/types/Task.types';
 
 	let { data } = $props();
 
 	const timer = createTaskTimer();
+
+	function findTaskInTree(nodes: ActiveTreeNode[], taskId: number, parentProjectName?: string): { name: string; projectName?: string } | null {
+		for (const node of nodes) {
+			if (node.type === 'task' && node.id === taskId) {
+				return { name: node.name, projectName: parentProjectName };
+			}
+			if (node.children) {
+				const projectName = node.type === 'project' ? node.name : parentProjectName;
+				const found = findTaskInTree(node.children, taskId, projectName);
+				if (found) return found;
+			}
+		}
+		return null;
+	}
+
+	$effect(() => {
+		if (data.activeTimeEntry && !timer.isRunning) {
+			const entry = data.activeTimeEntry;
+			const dueDateTask = data.tasksByDueDate.find((t) => t.id === entry.task_id);
+			if (dueDateTask) {
+				timer.restore(entry.id, entry.task_id, entry.started_at, dueDateTask.name, dueDateTask.project_name);
+			} else {
+				const treeTask = findTaskInTree(data.activeTree, entry.task_id);
+				if (treeTask) {
+					timer.restore(entry.id, entry.task_id, entry.started_at, treeTask.name, treeTask.projectName);
+				}
+			}
+		}
+	});
 
 	async function handleTaskToggle(taskId: number, action: 'start' | 'finish') {
 		const now = new Date().toISOString();

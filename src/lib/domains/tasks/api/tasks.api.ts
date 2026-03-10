@@ -152,6 +152,10 @@ export const tasksApi = {
 		});
 	},
 
+	async getActiveTimeEntry(token?: string): Promise<TimeEntryResponse> {
+		return fetchAPI('/tasks/time-entries/active', TimeEntryResponseSchema, { token });
+	},
+
 	async deleteTimeEntry(id: number, token?: string): Promise<void> {
 		return fetchAPI(`/tasks/time-entries/${id}`, z.void(), {
 			method: 'DELETE',

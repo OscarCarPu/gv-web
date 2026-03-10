@@ -73,6 +73,14 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		}
 	}
 
+	function restore(timeEntryId: number, taskId: number, startedAt: string, taskName: string, projectName?: string | null) {
+		selectedTaskId = taskId;
+		selectedTaskDisplay = projectName ? `${taskName} - ${projectName}` : taskName;
+		activeTimeEntryId = timeEntryId;
+		elapsedSeconds = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+		startTimer();
+	}
+
 	function formatTime(seconds: number): string {
 		const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
 		const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
@@ -89,7 +97,8 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		get formattedTime() { return formatTime(elapsedSeconds); },
 		startTimer,
 		stopTimer,
-		handleTaskStart
+		handleTaskStart,
+		restore
 	};
 }
 
