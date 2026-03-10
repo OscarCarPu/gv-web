@@ -3,6 +3,8 @@
 	import TimePicker from '$lib/shared/components/TimePicker.svelte';
 	import TaskItem from '$lib/domains/tasks/components/TaskItem.svelte';
 	import TreeNode from '$lib/domains/tasks/components/TreeNode.svelte';
+	import TaskDetailModal from '$lib/domains/tasks/components/TaskDetailModal.svelte';
+	import ProjectDetailModal from '$lib/domains/tasks/components/ProjectDetailModal.svelte';
 	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import type { ActiveTreeNode } from '$lib/domains/tasks/types/Task.types';
@@ -10,6 +12,18 @@
 	let { data } = $props();
 
 	const timer = createTaskTimer();
+
+	let selectedTaskId = $state<number | null>(null);
+	let selectedProjectId = $state<number | null>(null);
+
+	function openTaskDetail(id: number) {
+		selectedTaskId = id;
+	}
+
+	function openDetail(id: number, type: 'project' | 'task') {
+		if (type === 'project') selectedProjectId = id;
+		else selectedTaskId = id;
+	}
 
 	function findTaskInTree(nodes: ActiveTreeNode[], taskId: number, parentProjectName?: string): { name: string; projectName?: string } | null {
 		for (const node of nodes) {
@@ -115,7 +129,7 @@
 			<h2>Próximas a vencer</h2>
 			<div class="task-list">
 				{#each data.tasksByDueDate as task (task.id)}
-					<TaskItem {task} onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)} ontoggle={handleTaskToggle} isTimerRunning={timer.isRunning} />
+					<TaskItem {task} onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)} ontoggle={handleTaskToggle} ondetail={openTaskDetail} isTimerRunning={timer.isRunning} />
 				{/each}
 			</div>
 		</div>
@@ -123,8 +137,11 @@
 		<div class="tasks-section">
 			<h2>Proyectos activos</h2>
 			<div class="task-list">
-				<TreeNode nodes={data.activeTree} onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)} ontoggle={handleTreeToggle} isTimerRunning={timer.isRunning} />
+				<TreeNode nodes={data.activeTree} onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)} ontoggle={handleTreeToggle} ondetail={openDetail} isTimerRunning={timer.isRunning} />
 			</div>
 		</div>
 	</div>
 </div>
+
+<TaskDetailModal taskId={selectedTaskId} onclose={() => selectedTaskId = null} />
+<ProjectDetailModal projectId={selectedProjectId} onclose={() => selectedProjectId = null} />

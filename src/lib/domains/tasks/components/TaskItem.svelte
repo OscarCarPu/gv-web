@@ -5,10 +5,11 @@
 		task: TaskByDueDateResponse;
 		onstart?: () => void;
 		ontoggle?: (taskId: number, action: 'start' | 'finish') => void;
+		ondetail?: (taskId: number) => void;
 		isTimerRunning?: boolean;
 	}
 
-	let { task, onstart, ontoggle, isTimerRunning = false }: Props = $props();
+	let { task, onstart, ontoggle, ondetail, isTimerRunning = false }: Props = $props();
 
 	const isStarted = $derived(task.started_at !== null);
 
@@ -30,7 +31,7 @@
 
 <div class="task-item">
 	<div class="task-info">
-		<span class="task-name">{task.name}</span>
+		<button class="task-name-btn" onclick={() => ondetail?.(task.id)}>{task.name}</button>
 		{#if task.project_name}
 			<span class="task-project">
 				{task.project_name}

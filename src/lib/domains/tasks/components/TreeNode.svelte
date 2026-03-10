@@ -5,10 +5,11 @@
 		nodes: ActiveTreeNode[];
 		onstart?: (taskId: number, taskName: string, projectName?: string) => void;
 		ontoggle?: (id: number, type: 'project' | 'task', action: 'start' | 'finish') => void;
+		ondetail?: (id: number, type: 'project' | 'task') => void;
 		isTimerRunning?: boolean;
 	}
 
-	let { nodes, onstart, ontoggle, isTimerRunning = false }: Props = $props();
+	let { nodes, onstart, ontoggle, ondetail, isTimerRunning = false }: Props = $props();
 
 	let expandedIds: Set<number> = $state(new Set());
 
@@ -39,7 +40,8 @@
 					<i class="fa-solid fa-chevron-right tree-chevron" class:expanded></i>
 				{/if}
 				<i class="fa-solid fa-folder tree-folder-icon"></i>
-				<span class="tree-project-name">{node.name}</span>
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<span class="task-name-btn" onclick={(e) => { e.stopPropagation(); ondetail?.(node.id, 'project'); }} onkeydown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); ondetail?.(node.id, 'project'); } }}>{node.name}</span>
 				{#if node.due_at}
 					<span class="tree-project-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
 				{/if}
@@ -57,7 +59,7 @@
 	{:else}
 		<div class="task-item">
 			<div class="task-info">
-				<span class="task-name">{node.name}</span>
+				<button class="task-name-btn" onclick={() => ondetail?.(node.id, 'task')}>{node.name}</button>
 				{#if parentProjectName}
 					<span class="task-project">
 						{parentProjectName}
