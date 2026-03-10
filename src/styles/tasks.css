@@ -92,3 +92,38 @@
         @apply text-text-muted;
     }
 }
+
+.tree-project-row {
+    @apply flex items-center gap-2 w-full bg-bg rounded-lg px-4 py-3 border-none cursor-pointer text-left;
+
+    &:disabled {
+        @apply cursor-default;
+    }
+}
+
+.tree-project-name {
+    @apply font-bold text-text;
+}
+
+.tree-project-due {
+    @apply text-xs text-text-muted ml-auto;
+}
+
+.tree-chevron {
+    @apply text-xs text-text-muted transition-transform duration-200;
+
+    &.expanded {
+        transform: rotate(90deg);
+    }
+}
+
+.tree-folder-icon {
+    @apply text-sm text-primary;
+}
+
+.tree-children {
+    @apply flex flex-col gap-2 mt-1;
+    margin-left: 0.75rem;
+    padding-left: 0.75rem;
+    border-left: 2px solid var(--color-primary);
+}

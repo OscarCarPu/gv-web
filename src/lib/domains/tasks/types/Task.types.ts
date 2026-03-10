@@ -150,5 +150,8 @@ export interface ActiveTreeNode {
     id: number;
     type: string;
     name: string;
+    description?: string | null;
+    due_at?: string | null;
+    started_at?: string | null;
     children?: ActiveTreeNode[];
 }

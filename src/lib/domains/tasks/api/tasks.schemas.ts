@@ -92,6 +92,9 @@ export const ActiveTreeNodeSchema: z.ZodType = z.lazy(() =>
 		id: z.number(),
 		type: z.string(),
 		name: z.string(),
+		description: z.string().nullable().optional(),
+		due_at: z.string().nullable().optional(),
+		started_at: z.string().nullable().optional(),
 		children: z.array(ActiveTreeNodeSchema).optional()
 	})
 );

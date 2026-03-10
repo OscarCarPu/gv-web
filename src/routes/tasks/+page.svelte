@@ -1,6 +1,7 @@
 <script lang="ts">
 	import TimePicker from '$lib/shared/components/TimePicker.svelte';
 	import TaskItem from '$lib/domains/tasks/components/TaskItem.svelte';
+	import TreeNode from '$lib/domains/tasks/components/TreeNode.svelte';
 
 	let { data } = $props();
 
@@ -81,7 +82,10 @@
 		</div>
 
 		<div class="tasks-section">
-			<!-- Placeholder for future content -->
+			<h2>Proyectos activos</h2>
+			<div class="task-list">
+				<TreeNode nodes={data.activeTree} />
+			</div>
 		</div>
 	</div>
 </div>
