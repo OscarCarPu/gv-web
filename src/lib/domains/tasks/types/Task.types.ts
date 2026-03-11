@@ -159,6 +159,11 @@ export interface ProjectChildrenResponse {
     children: ProjectChildNode[];
 }
 
+export interface TimeEntrySummaryResponse {
+    today: number;
+    week: number;
+}
+
 export interface ActiveTreeNode {
     id: number;
     type: string;

@@ -113,6 +113,13 @@ export const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
 	})
 );
 
+// --- Summary schemas ---
+
+export const TimeEntrySummaryResponseSchema = z.object({
+	today: z.number(),
+	week: z.number()
+});
+
 // --- Query schemas ---
 
 export const TaskByDueDateResponseSchema = z.object({

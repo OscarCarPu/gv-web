@@ -7,11 +7,25 @@
 	import ProjectDetailModal from '$lib/domains/tasks/components/ProjectDetailModal.svelte';
 	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
-	import type { ActiveTreeNode } from '$lib/domains/tasks/types/Task.types';
+	import type { ActiveTreeNode, TimeEntrySummaryResponse } from '$lib/domains/tasks/types/Task.types';
 
 	let { data } = $props();
 
 	const timer = createTaskTimer();
+
+	let summaryOverride = $state<TimeEntrySummaryResponse | null>(null);
+	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
+
+	function formatTime(seconds: number): string {
+		const h = Math.floor(seconds / 3600);
+		const m = Math.floor((seconds % 3600) / 60);
+		return m > 0 ? `${h}h ${m}m` : `${h}h`;
+	}
+
+	async function handleStop() {
+		await timer.stopTimer();
+		summaryOverride = await tasksApi.getTimeEntrySummary();
+	}
 
 	let selectedTaskId = $state<number | null>(null);
 	let selectedProjectId = $state<number | null>(null);
@@ -114,7 +128,7 @@
 			<div class="timer-controls">
 				<span class="timer-display">{timer.formattedTime}</span>
 				{#if timer.isRunning}
-					<button class="btn-primary running" onclick={timer.stopTimer}>
+					<button class="btn-primary running" onclick={handleStop}>
 						<i class="fa-solid fa-stop"></i>
 						Stop
 					</button>
@@ -124,6 +138,23 @@
 						Iniciar
 					</button>
 				{/if}
+			</div>
+		</div>
+
+		<div class="time-summary">
+			<div class="summary-item" class:completed={summary.today >= 43200}>
+				<span class="summary-label">Hoy</span>
+				<div class="summary-bar-track">
+					<div class="summary-bar-fill" style="width: {Math.min(summary.today / 43200 * 100, 100)}%"></div>
+				</div>
+				<span class="summary-value">{formatTime(summary.today)} / 12h</span>
+			</div>
+			<div class="summary-item" class:completed={summary.week >= 342000}>
+				<span class="summary-label">Semana</span>
+				<div class="summary-bar-track">
+					<div class="summary-bar-fill" style="width: {Math.min(summary.week / 342000 * 100, 100)}%"></div>
+				</div>
+				<span class="summary-value">{formatTime(summary.week)} / 95h</span>
 			</div>
 		</div>
 	</div>

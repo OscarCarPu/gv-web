@@ -35,6 +35,34 @@
         @apply text-2xl font-mono font-bold text-text tabular-nums;
         min-width: 7rem;
     }
+
+    .time-summary {
+        @apply flex items-center gap-6 w-full;
+    }
+
+    .summary-item {
+        @apply flex items-center gap-2 flex-1;
+    }
+
+    .summary-label {
+        @apply text-sm font-medium text-text-muted whitespace-nowrap;
+    }
+
+    .summary-bar-track {
+        @apply flex-1 h-2 bg-bg rounded-full overflow-hidden;
+    }
+
+    .summary-bar-fill {
+        @apply h-full bg-primary rounded-full transition-all duration-300;
+    }
+
+    .summary-item.completed .summary-bar-fill {
+        @apply bg-success;
+    }
+
+    .summary-value {
+        @apply text-sm font-mono text-text tabular-nums whitespace-nowrap;
+    }
 }
 
 .tasks-content {

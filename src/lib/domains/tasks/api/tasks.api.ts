@@ -11,7 +11,8 @@ import {
 	TodoResponseSchema,
 	TimeEntryResponseSchema,
 	ActiveTreeNodeListSchema,
-	TaskByDueDateResponseListSchema
+	TaskByDueDateResponseListSchema,
+	TimeEntrySummaryResponseSchema
 } from './tasks.schemas';
 import type {
 	ProjectResponse,
@@ -31,7 +32,8 @@ import type {
 	CreateTimeEntryRequest,
 	UpdateTimeEntryRequest,
 	ActiveTreeNode,
-	TaskByDueDateResponse
+	TaskByDueDateResponse,
+	TimeEntrySummaryResponse
 } from '../types/Task.types';
 
 export const tasksApi = {
@@ -161,6 +163,12 @@ export const tasksApi = {
 			method: 'DELETE',
 			token
 		});
+	},
+
+	// --- Summary ---
+
+	async getTimeEntrySummary(token?: string): Promise<TimeEntrySummaryResponse> {
+		return fetchAPI('/tasks/time-entries/summary', TimeEntrySummaryResponseSchema, { token });
 	},
 
 	// --- Tree ---
