@@ -21,10 +21,14 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	let isRunning = $state(false);
 	let elapsedSeconds = $state(0);
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
+	let startedAt: number | null = null;
 
 	function startTimer() {
+		if (startedAt === null) {
+			startedAt = Date.now();
+		}
 		timerInterval = setInterval(() => {
-			elapsedSeconds++;
+			elapsedSeconds = Math.floor((Date.now() - startedAt!) / 1000);
 		}, 1000);
 		isRunning = true;
 	}
@@ -41,6 +45,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 
 		isRunning = false;
 		elapsedSeconds = 0;
+		startedAt = null;
 		selectedTaskId = null;
 		selectedTaskDisplay = null;
 		activeTimeEntryId = null;
@@ -52,10 +57,11 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		if (!isRunning) {
 			selectedTaskId = taskId;
 			selectedTaskDisplay = display;
+			startedAt = Date.now();
 			startTimer();
 			const entry = await api.createTimeEntry({
 				task_id: taskId,
-				started_at: new Date().toISOString()
+				started_at: new Date(startedAt).toISOString()
 			});
 			activeTimeEntryId = entry.id;
 		} else if (!activeTimeEntryId) {
@@ -63,7 +69,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 			selectedTaskDisplay = display;
 			const entry = await api.createTimeEntry({
 				task_id: taskId,
-				started_at: new Date(Date.now() - elapsedSeconds * 1000).toISOString()
+				started_at: new Date(startedAt!).toISOString()
 			});
 			activeTimeEntryId = entry.id;
 		} else {
@@ -73,11 +79,12 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		}
 	}
 
-	function restore(timeEntryId: number, taskId: number, startedAt: string, taskName: string, projectName?: string | null) {
+	function restore(timeEntryId: number, taskId: number, entryStartedAt: string, taskName: string, projectName?: string | null) {
 		selectedTaskId = taskId;
 		selectedTaskDisplay = projectName ? `${taskName} - ${projectName}` : taskName;
 		activeTimeEntryId = timeEntryId;
-		elapsedSeconds = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+		startedAt = new Date(entryStartedAt).getTime();
+		elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
 		startTimer();
 	}
 
