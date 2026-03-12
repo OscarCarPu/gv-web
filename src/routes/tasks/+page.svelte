@@ -149,12 +149,12 @@
 				</div>
 				<span class="summary-value">{formatTime(summary.today)} / 12h</span>
 			</div>
-			<div class="summary-item" class:completed={summary.week >= 342000}>
+			<div class="summary-item" class:completed={summary.week >= 360000}>
 				<span class="summary-label">Semana</span>
 				<div class="summary-bar-track">
-					<div class="summary-bar-fill" style="width: {Math.min(summary.week / 342000 * 100, 100)}%"></div>
+					<div class="summary-bar-fill" style="width: {Math.min(summary.week / 360000 * 100, 100)}%"></div>
 				</div>
-				<span class="summary-value">{formatTime(summary.week)} / 95h</span>
+				<span class="summary-value">{formatTime(summary.week)} / 100h</span>
 			</div>
 		</div>
 	</div>
