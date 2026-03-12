@@ -4,10 +4,15 @@
     @apply flex flex-col items-center gap-4 w-full max-w-3xl mx-auto bg-bg-light rounded-lg px-6 py-5 mt-6;
 
     .task-selector {
-        @apply w-full text-center text-lg font-medium text-text-muted bg-bg rounded-lg px-4 py-3 border border-text-muted/20 cursor-default;
+        @apply w-full text-center text-lg font-medium text-text-muted bg-bg rounded-lg px-4 py-3 border border-text-muted/20 cursor-default appearance-none;
+        font: inherit;
 
         &.active {
-            @apply text-text;
+            @apply text-text cursor-pointer;
+        }
+
+        &:disabled {
+            @apply cursor-default;
         }
     }
 

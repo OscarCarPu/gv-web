@@ -111,9 +111,9 @@
 	<h1>Tareas</h1>
 
 	<div class="task-timer-panel">
-		<div class="task-selector" class:active={timer.selectedTaskDisplay !== null}>
+		<button class="task-selector" class:active={timer.selectedTaskDisplay !== null} onclick={() => { if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId); }} disabled={!timer.selectedTaskId}>
 			{timer.selectedTaskDisplay ?? 'Seleccionar Tarea'}
-		</div>
+		</button>
 
 		<div class="timer-row">
 			<div class="time-entries">
