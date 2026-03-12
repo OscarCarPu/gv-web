@@ -36,7 +36,7 @@
 		if (taskId != null) {
 			tasksApi.getTask(taskId).then((t) => {
 				task = t;
-				todos = [...t.todos];
+				todos = sortTodos([...t.todos]);
 				name = t.name;
 				description = t.description ?? '';
 				dueAt = toLocalDatetime(t.due_at);
@@ -69,9 +69,13 @@
 		onclose();
 	}
 
+	function sortTodos(list: TodoResponse[]): TodoResponse[] {
+		return list.sort((a, b) => Number(a.is_done) - Number(b.is_done));
+	}
+
 	async function toggleTodo(todo: TodoResponse) {
 		const updated = await tasksApi.updateTodo(todo.id, { is_done: !todo.is_done });
-		todos = todos.map((t) => (t.id === updated.id ? updated : t));
+		todos = sortTodos(todos.map((t) => (t.id === updated.id ? updated : t)));
 	}
 
 	async function deleteTodo(id: number) {
