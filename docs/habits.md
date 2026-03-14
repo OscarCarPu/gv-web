@@ -15,6 +15,10 @@ Date-based habit tracking. View habits as cards, log numeric values per day.
 | `description` | string \| null | Optional description |
 | `log_value` | number \| null | Logged value for the selected date (`null` if unlogged) |
 
+## Floating Reminder
+
+A fixed-position note in the top-right corner displaying "Limpiar dientes" with a tooth icon. Uses the shared `FloatingReminder` component (`src/lib/shared/components/FloatingReminder.svelte`). Always visible — not day-dependent.
+
 ## UI Layout
 
 ```

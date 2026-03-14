@@ -64,6 +64,22 @@ A pair of number inputs for hours and minutes:
 | CRUD | `/todos` | Todo/subtask management |
 | CRUD | `/time-entries` | Time entry management |
 
+## Floating Reminder
+
+A fixed-position note in the top-right corner showing today's cleaning task, determined by day of week:
+
+| Day | Reminder |
+|---|---|
+| Mon | Limpiar cocina |
+| Tue | Limpiar baño/cuartucho |
+| Wed | Limpiar salón |
+| Thu | Limpiar habitación |
+| Fri | Limpiar entrada e invitados |
+| Sat | Limpiar gatos y {ventanas, sofá, nevera, ...} |
+| Sun | Limpiar coche |
+
+Uses the shared `FloatingReminder` component (`src/lib/shared/components/FloatingReminder.svelte`) with a broom icon. The day-of-week mapping is defined inline in the page component via `new Date().getDay()`.
+
 ## Current State
 
 The tasks UI is a scaffold. Current limitations:

@@ -5,6 +5,7 @@
 	import TreeNode from '$lib/domains/tasks/components/TreeNode.svelte';
 	import TaskDetailModal from '$lib/domains/tasks/components/TaskDetailModal.svelte';
 	import ProjectDetailModal from '$lib/domains/tasks/components/ProjectDetailModal.svelte';
+	import FloatingReminder from '$lib/shared/components/FloatingReminder.svelte';
 	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import type { ActiveTreeNode, TimeEntrySummaryResponse } from '$lib/domains/tasks/types/Task.types';
@@ -94,6 +95,17 @@
 	}
 
 	// Placeholder time entries
+	const dailyReminders: Record<number, string> = {
+		1: 'Limpiar cocina',
+		2: 'Limpiar baño/cuartucho',
+		3: 'Limpiar salón',
+		4: 'Limpiar habitación',
+		5: 'Limpiar entrada e invitados',
+		6: 'Limpiar gatos y {ventanas, sofá, nevera, ...}',
+		0: 'Limpiar coche'
+	};
+	const todayReminder = dailyReminders[new Date().getDay()];
+
 	let timeEntries = $state([
 		{ id: 1, start: '00:00', end: '00:30' }
 	]);
@@ -108,6 +120,7 @@
 </svelte:head>
 
 <div class="container">
+	<FloatingReminder icon="fa-solid fa-broom" text={todayReminder} />
 	<h1>Tareas</h1>
 
 	<div class="task-timer-panel">

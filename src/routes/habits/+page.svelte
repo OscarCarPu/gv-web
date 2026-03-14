@@ -3,6 +3,7 @@
 	import { habitsApi } from '$habits/api/habits.api';
 	import HabitCard from '$habits/components/HabitCard.svelte';
 	import DateNavigation from '$shared/components/DateNavigation.svelte';
+	import FloatingReminder from '$shared/components/FloatingReminder.svelte';
 
 	let { data }: { data: { habits: HabitWithLog[] } } = $props();
 	let fetchedHabits: HabitWithLog[] | null = $state(null);
@@ -29,6 +30,7 @@
 </svelte:head>
 
 <div class="container">
+	<FloatingReminder icon="fa-solid fa-tooth" text="Limpiar dientes" />
 	<h1>Habitos</h1>
 	<DateNavigation onDateChange={handleDateChange} />
 
