@@ -1,4 +1,4 @@
-.PHONY: up up-dev deploy coverage
+.PHONY: up up-dev coverage
 
 # Colors
 CYAN=\033[0;36m
@@ -12,12 +12,6 @@ up:
 up-dev:
 	rm -rf .svelte-kit
 	API_URL=http://localhost:8080 bun --env-file=.env run svelte-kit sync && API_URL=http://localhost:8080 bun --env-file=.env run dev
-
-deploy:
-	git checkout main
-	git merge develop
-	git push
-	git checkout develop
 
 coverage:
 	@printf "$(CYAN)>>> Running tests with coverage...$(NC)\n"

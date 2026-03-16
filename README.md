@@ -45,6 +45,15 @@ bun run dev
 make up
 ```
 
+## Deployment
+
+Deployments are automated via **Gitea Actions**. When code is pushed to the `main` branch, the workflow at `.gitea/workflows/deploy.yml` runs on the server and:
+
+1. Pulls the latest code from `main`
+2. Runs `make up` to rebuild and restart the Docker containers
+
+To deploy, merge `develop` into `main` and push — the workflow handles the rest.
+
 ## Coverage
 
 | File | Coverage |
