@@ -45,6 +45,26 @@ bun run dev
 make up
 ```
 
+## Coverage
+
+| File | Coverage |
+| :--- | :---: |
+| `src/lib/config/env.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| `src/lib/domains/auth/schemas/auth.schemas.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| `src/lib/domains/auth/types/Auth.types.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| `src/lib/domains/habits/api/habits.api.ts` | ![83.33%](https://img.shields.io/badge/83.33%25-brightgreen) |
+| `src/lib/domains/habits/api/habits.schemas.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| `src/lib/domains/habits/types/Habit.types.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| `src/lib/domains/tasks/api/tasks.api.ts` | ![27.27%](https://img.shields.io/badge/27.27%25-red) |
+| `src/lib/domains/tasks/api/tasks.schemas.ts` | ![94.11%](https://img.shields.io/badge/94.11%25-brightgreen) |
+| `src/lib/domains/tasks/taskTimer.svelte.ts` | ![88.88%](https://img.shields.io/badge/88.88%25-brightgreen) |
+| `src/lib/domains/tasks/types/Task.types.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| `src/lib/index.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| `src/lib/shared/api/client.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| `src/lib/shared/stores/auth.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| `src/lib/shared/utils/dateNavigation.svelte.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
+| **Total** | ![81.53%](https://img.shields.io/badge/81.53%25-brightgreen) |
+
 ## Documentation
 
 See the [`docs/`](docs/) folder for detailed documentation:
