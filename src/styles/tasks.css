@@ -61,6 +61,14 @@
         @apply h-full bg-primary rounded-full transition-all duration-300;
     }
 
+    .summary-item.danger .summary-bar-fill {
+        @apply bg-danger;
+    }
+
+    .summary-item.warning .summary-bar-fill {
+        @apply bg-warning;
+    }
+
     .summary-item.completed .summary-bar-fill {
         @apply bg-success;
     }

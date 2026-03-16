@@ -155,19 +155,19 @@
 		</div>
 
 		<div class="time-summary">
-			<div class="summary-item" class:completed={summary.today >= 43200}>
+			<div class="summary-item" class:danger={summary.today < 36000} class:warning={summary.today >= 36000 && summary.today <= 39600} class:completed={summary.today > 39600}>
 				<span class="summary-label">Hoy</span>
 				<div class="summary-bar-track">
 					<div class="summary-bar-fill" style="width: {Math.min(summary.today / 43200 * 100, 100)}%"></div>
 				</div>
 				<span class="summary-value">{formatTime(summary.today)} / 12h</span>
 			</div>
-			<div class="summary-item" class:completed={summary.week >= 360000}>
+			<div class="summary-item" class:completed={summary.week >= 324000}>
 				<span class="summary-label">Semana</span>
 				<div class="summary-bar-track">
-					<div class="summary-bar-fill" style="width: {Math.min(summary.week / 360000 * 100, 100)}%"></div>
+					<div class="summary-bar-fill" style="width: {Math.min(summary.week / 324000 * 100, 100)}%"></div>
 				</div>
-				<span class="summary-value">{formatTime(summary.week)} / 100h</span>
+				<span class="summary-value">{formatTime(summary.week)} / 90h</span>
 			</div>
 		</div>
 	</div>
