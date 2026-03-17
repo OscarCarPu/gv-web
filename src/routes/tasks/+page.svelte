@@ -8,6 +8,7 @@
 	import FloatingReminder from '$lib/shared/components/FloatingReminder.svelte';
 	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
+	import StartedAtEditor from '$lib/domains/tasks/components/StartedAtEditor.svelte';
 	import type { ActiveTreeNode, TimeEntrySummaryResponse } from '$lib/domains/tasks/types/Task.types';
 
 	let { data } = $props();
@@ -26,6 +27,10 @@
 	async function handleStop() {
 		await timer.stopTimer();
 		summaryOverride = await tasksApi.getTimeEntrySummary();
+	}
+
+	async function handleStartedAtChange(newDate: Date) {
+		await timer.updateStartedAt(newDate);
 	}
 
 	let selectedTaskId = $state<number | null>(null);
@@ -139,7 +144,19 @@
 			</div>
 
 			<div class="timer-controls">
-				<span class="timer-display">{timer.formattedTime}</span>
+				<span
+					id="timer-display-trigger"
+					class="timer-display"
+					class:clickable={timer.isRunning}
+				>
+					{timer.formattedTime}
+				</span>
+				{#if timer.isRunning && timer.startedAtDate}
+					<StartedAtEditor
+						startedAt={timer.startedAtDate}
+						onchange={handleStartedAtChange}
+					/>
+				{/if}
 				{#if timer.isRunning}
 					<button class="btn-primary running" onclick={handleStop}>
 						<i class="fa-solid fa-stop"></i>

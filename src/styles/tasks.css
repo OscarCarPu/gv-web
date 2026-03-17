@@ -39,6 +39,10 @@
     .timer-display {
         @apply text-2xl font-mono font-bold text-text tabular-nums;
         min-width: 7rem;
+
+        &.clickable {
+            @apply cursor-pointer hover:text-primary transition-colors duration-200;
+        }
     }
 
     .time-summary {
@@ -79,7 +83,7 @@
 }
 
 .tasks-content {
-    @apply grid grid-cols-2 gap-6 mt-3;
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-6 mt-3;
 }
 
 .tasks-section {

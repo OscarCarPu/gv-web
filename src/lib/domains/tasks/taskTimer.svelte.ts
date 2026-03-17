@@ -95,6 +95,15 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		return `${h}:${m}:${s}`;
 	}
 
+	async function updateStartedAt(newStartedAt: Date) {
+		if (!activeTimeEntryId) return;
+		if (newStartedAt.getTime() > Date.now()) return;
+		const iso = newStartedAt.toISOString();
+		await api.updateTimeEntry(activeTimeEntryId, { started_at: iso });
+		startedAt = newStartedAt.getTime();
+		elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+	}
+
 	return {
 		get selectedTaskId() { return selectedTaskId; },
 		get selectedTaskDisplay() { return selectedTaskDisplay; },
@@ -102,10 +111,12 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		get isRunning() { return isRunning; },
 		get elapsedSeconds() { return elapsedSeconds; },
 		get formattedTime() { return formatTime(elapsedSeconds); },
+		get startedAtDate() { return startedAt ? new Date(startedAt) : null; },
 		startTimer,
 		stopTimer,
 		handleTaskStart,
-		restore
+		restore,
+		updateStartedAt,
 	};
 }
 
