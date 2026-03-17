@@ -4,7 +4,14 @@ export const HabitWithLogSchema = z.object({
   id: z.number(),
   name: z.string(),
   description: z.string().nullable(),
-  log_value: z.number().nullable()
+  log_value: z.number().nullable(),
+  frequency: z.string(),
+  target_min: z.number().nullable(),
+  target_max: z.number().nullable(),
+  recording_required: z.boolean(),
+  period_value: z.number(),
+  current_streak: z.number(),
+  longest_streak: z.number()
 });
 
 export const HabitWithLogListSchema = z.array(HabitWithLogSchema).nullable().transform(v => v ?? []);
@@ -12,7 +19,11 @@ export const HabitWithLogListSchema = z.array(HabitWithLogSchema).nullable().tra
 export const CreateHabitResponseSchema = z.object({
   id: z.number(),
   name: z.string(),
-  description: z.string().nullable()
+  description: z.string().nullable(),
+  frequency: z.string(),
+  target_min: z.number().nullable(),
+  target_max: z.number().nullable(),
+  recording_required: z.boolean()
 });
 
 export const LogUpsertResponseSchema = z.object({

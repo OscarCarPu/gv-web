@@ -3,11 +3,22 @@ export interface HabitWithLog {
   name: string;
   description: string | null;
   log_value: number | null;
+  frequency: string;
+  target_min: number | null;
+  target_max: number | null;
+  recording_required: boolean;
+  period_value: number;
+  current_streak: number;
+  longest_streak: number;
 }
 
 export interface CreateHabitRequest {
   name: string;
   description?: string | null;
+  frequency?: string;
+  target_min?: number | null;
+  target_max?: number | null;
+  recording_required?: boolean;
 }
 
 export interface LogUpsertRequest {

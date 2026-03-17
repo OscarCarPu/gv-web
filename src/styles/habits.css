@@ -7,8 +7,16 @@
 .habit-card {
     @apply relative flex flex-col justify-between items-center p-5 border border-text-muted/20 rounded-lg bg-bg-light gap-1 h-full;
 
+    .habit-header {
+        @apply flex items-center gap-2 justify-center w-full;
+    }
+
     .title {
         @apply text-lg font-semibold text-center line-clamp-1;
+    }
+
+    .frequency-badge {
+        @apply text-xs font-medium px-2 py-0.5 rounded-full bg-secondary/15 text-secondary shrink-0;
     }
 
     .description {
@@ -18,6 +26,11 @@
 
     .value-controls {
         @apply flex items-center justify-center gap-2 mt-2 w-full;
+
+        .adjust-btn {
+            @apply w-8 h-8 flex items-center justify-center rounded-full border border-text-muted/30 text-text-muted
+                   hover:border-primary hover:text-primary transition-colors cursor-pointer bg-transparent text-sm;
+        }
 
         .value-input {
             @apply flex flex-col items-center;
@@ -32,6 +45,46 @@
                     -webkit-appearance: none;
                     margin: 0;
                 }
+            }
+        }
+    }
+
+    .progress-section {
+        @apply flex items-center gap-2 w-full mt-2;
+
+        .progress-bar {
+            @apply flex-1 h-2 rounded-full bg-text-muted/15 overflow-hidden;
+
+            .progress-fill {
+                @apply h-full rounded-full bg-primary transition-all duration-300;
+            }
+
+            &.met .progress-fill {
+                @apply bg-green-500;
+            }
+
+            &.exceeded .progress-fill {
+                @apply bg-red-500;
+            }
+        }
+
+        .progress-text {
+            @apply text-xs font-medium text-text-muted shrink-0;
+        }
+    }
+
+    .streaks {
+        @apply flex items-center gap-4 mt-2 text-sm;
+
+        .streak {
+            @apply flex items-center gap-1 text-text-muted;
+
+            &.current.active {
+                @apply text-orange-400;
+            }
+
+            &.longest {
+                @apply text-text-muted/60 text-xs;
             }
         }
     }
