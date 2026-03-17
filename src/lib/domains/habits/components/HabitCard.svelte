@@ -127,6 +127,8 @@
 			</div>
 			<span class="progress-text">{progressText}</span>
 		</div>
+	{:else if habit.frequency !== 'daily'}
+		<span class="period-value">{habit.frequency}: {optimisticPeriodValue}</span>
 	{/if}
 
 	{#if hasTarget}

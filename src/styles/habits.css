@@ -49,6 +49,10 @@
         }
     }
 
+    .period-value {
+        @apply text-xs font-medium text-text-muted mt-2;
+    }
+
     .progress-section {
         @apply flex items-center gap-2 w-full mt-2;
 

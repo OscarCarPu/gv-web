@@ -65,6 +65,7 @@ Each card displays:
 - **Description** — shown below the name if present
 - **Value controls** — +/- buttons and a numeric input for the current day's log value
 - **Progress bar** — shown only for habits with targets (see below)
+- **Period value** — for non-daily habits without targets, shows the accumulated period value (e.g. "weekly: 5")
 - **Streaks** — shown only for habits with targets: current streak (fire icon) and longest streak (trophy icon)
 
 ### Optimistic Updates
