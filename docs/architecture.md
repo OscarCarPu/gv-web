@@ -103,6 +103,15 @@ Defined in `src/styles/app.css` inside the `@theme` block:
 - `--color-success`, `--color-info`, `--color-danger` — semantic colors
 - `--font-sans` — Inter font stack
 
+### Responsive Design
+
+The app uses a single custom breakpoint — `desktop` at 1000px — instead of Tailwind's default set. All default breakpoints (`sm`, `md`, `lg`, `xl`, `2xl`) are disabled.
+
+- **Below 1000px:** Mobile/split-screen layout (single column). This is the default when two apps are placed side by side on a standard 1920px display (~960px each).
+- **1000px and above:** Desktop/full-screen layout (multi-column). Habits show 3 columns; tasks show 2 columns.
+
+Usage in CSS: `desktop:grid-cols-3`, `desktop:flex-row`, etc.
+
 ### Per-Feature CSS
 
 Feature CSS files (e.g. `habits.css`, `tasks.css`) use `@reference "./app.css"` to access theme tokens without duplicating Tailwind's output. Component `<style>` blocks follow the same pattern.

@@ -15,13 +15,19 @@
   --color-danger: #ef4444;
   --color-warning: #eab308;
   --font-sans: 'Inter', system-ui, sans-serif;
+  --breakpoint-desktop: 1000px;
+  --breakpoint-sm: initial;
+  --breakpoint-md: initial;
+  --breakpoint-lg: initial;
+  --breakpoint-xl: initial;
+  --breakpoint-2xl: initial;
 }
 
 
 /* BASE STYLES */
 
 .container {
-    @apply mx-auto px-4;
+    @apply w-full max-w-none px-[10%];
 
     & > h1 {
         @apply text-center text-3xl font-bold;

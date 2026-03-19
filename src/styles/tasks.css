@@ -83,7 +83,7 @@
 }
 
 .tasks-content {
-    @apply grid grid-cols-1 sm:grid-cols-2 gap-6 mt-3;
+    @apply grid grid-cols-1 desktop:grid-cols-2 gap-6 mt-3;
 }
 
 .tasks-section {
