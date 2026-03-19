@@ -112,11 +112,25 @@
 	const todayReminder = dailyReminders[new Date().getDay()];
 
 	let timeEntries = $state([
-		{ id: 1, start: '00:00', end: '00:30' }
+		{ id: 1, start: '10:00', end: '11:00' }
 	]);
 
-	function addTimeEntry() {
-		timeEntries = [...timeEntries, { id: Date.now(), start: '', end: '' }];
+	async function submitTimeEntry() {
+		if (!timer.activeTimeEntryId) return;
+		const entry = timeEntries[0];
+		if (!entry.start || !entry.end) return;
+		const today = new Date();
+		const [startH, startM] = entry.start.split(':').map(Number);
+		const [endH, endM] = entry.end.split(':').map(Number);
+		const startedAt = new Date(today.getFullYear(), today.getMonth(), today.getDate(), startH, startM, 0);
+		const finishedAt = new Date(today.getFullYear(), today.getMonth(), today.getDate(), endH, endM, 0);
+		await tasksApi.updateTimeEntry(timer.activeTimeEntryId, {
+			started_at: startedAt.toISOString(),
+			finished_at: finishedAt.toISOString()
+		});
+		timer.reset();
+		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
+		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
 </script>
 
@@ -140,7 +154,7 @@
 					<span class="time-separator">-</span>
 					<TimePicker value={entry.end} onchange={(v) => entry.end = v} />
 				{/each}
-				<button class="btn-primary" onclick={addTimeEntry}><i class="fa-solid fa-plus"></i> Agregar</button>
+				<button class="btn-primary" onclick={submitTimeEntry} disabled={!timer.activeTimeEntryId}><i class="fa-solid fa-plus"></i> Agregar</button>
 			</div>
 
 			<div class="timer-controls">

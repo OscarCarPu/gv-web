@@ -104,6 +104,17 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
 	}
 
+	function reset() {
+		if (timerInterval) clearInterval(timerInterval);
+		timerInterval = null;
+		isRunning = false;
+		elapsedSeconds = 0;
+		startedAt = null;
+		selectedTaskId = null;
+		selectedTaskDisplay = null;
+		activeTimeEntryId = null;
+	}
+
 	return {
 		get selectedTaskId() { return selectedTaskId; },
 		get selectedTaskDisplay() { return selectedTaskDisplay; },
@@ -117,6 +128,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		handleTaskStart,
 		restore,
 		updateStartedAt,
+		reset,
 	};
 }
 

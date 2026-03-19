@@ -164,6 +164,38 @@ describe('createTaskTimer', () => {
 		});
 	});
 
+	describe('reset', () => {
+		it('should clear all state without calling the API', async () => {
+			const timer = createTaskTimer(api);
+			await timer.handleTaskStart(1, 'Task 1', 'Project A');
+			vi.advanceTimersByTime(5000);
+
+			expect(timer.isRunning).toBe(true);
+			expect(timer.activeTimeEntryId).toBe(42);
+
+			api.updateTimeEntry.mockClear();
+			timer.reset();
+
+			expect(timer.isRunning).toBe(false);
+			expect(timer.elapsedSeconds).toBe(0);
+			expect(timer.selectedTaskId).toBeNull();
+			expect(timer.selectedTaskDisplay).toBeNull();
+			expect(timer.activeTimeEntryId).toBeNull();
+			expect(api.updateTimeEntry).not.toHaveBeenCalled();
+		});
+
+		it('should stop the interval so elapsed seconds no longer increment', async () => {
+			const timer = createTaskTimer(api);
+			await timer.handleTaskStart(1, 'Task 1');
+			vi.advanceTimersByTime(3000);
+			expect(timer.elapsedSeconds).toBe(3);
+
+			timer.reset();
+			vi.advanceTimersByTime(5000);
+			expect(timer.elapsedSeconds).toBe(0);
+		});
+	});
+
 	describe('full flow', () => {
 		it('start timer → assign task → reassign → stop', async () => {
 			api.createTimeEntry.mockResolvedValueOnce({ id: 77 });
