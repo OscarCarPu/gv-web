@@ -29,3 +29,9 @@ export const CreateHabitResponseSchema = z.object({
 export const LogUpsertResponseSchema = z.object({
   status: z.string()
 });
+
+export const HabitHistorySchema = z.object({
+  start_at: z.string(),
+  end_at: z.string(),
+  data: z.array(z.object({ date: z.string(), value: z.number() }))
+});

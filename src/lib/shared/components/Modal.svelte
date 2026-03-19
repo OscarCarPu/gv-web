@@ -5,9 +5,10 @@
 		open: boolean;
 		onclose: () => void;
 		children: Snippet;
+		wide?: boolean;
 	}
 
-	let { open, onclose, children }: Props = $props();
+	let { open, onclose, children, wide = false }: Props = $props();
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') onclose();
@@ -18,7 +19,7 @@
 
 {#if open}
 	<div class="modal-backdrop" onclick={onclose} onkeydown={(e) => { if (e.key === 'Escape') onclose?.(); }} role="button" tabindex="-1">
-		<div class="modal-card" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="dialog" tabindex="-1">
+		<div class="modal-card" class:modal-card-wide={wide} onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="dialog" tabindex="-1">
 			{@render children()}
 		</div>
 	</div>

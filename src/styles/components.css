@@ -60,3 +60,37 @@
         @apply absolute top-1 w-6 h-6 rounded-full bg-white transition-transform;
     }
 }
+
+.bottom-sheet-backdrop {
+    @apply fixed inset-0 bg-black/50 z-50;
+}
+
+.bottom-sheet {
+    @apply fixed bottom-0 left-0 right-0 z-50 bg-bg-light rounded-t-2xl p-6 pb-8;
+    max-height: 60vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-text-muted) transparent;
+    animation: slide-up 0.25s ease-out;
+
+    &.slide-down {
+        animation: slide-down 0.15s ease-in forwards;
+    }
+}
+
+.bottom-sheet-close {
+    @apply absolute top-4 right-4 w-8 h-8 flex items-center justify-center
+           rounded-full text-text-muted hover:text-text
+           transition-colors cursor-pointer bg-transparent border-none text-lg;
+}
+
+@keyframes slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+@keyframes slide-down {
+    from { transform: translateY(0); }
+    to { transform: translateY(100%); }
+}
+

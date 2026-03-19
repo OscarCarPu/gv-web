@@ -61,8 +61,10 @@ A fixed-position note in the top-right corner displaying "Limpiar dientes" with 
 Each card displays:
 
 - **Name** — habit title
+- **Recording required flag** — small orange flag icon shown next to the name when `recording_required` is `true`
 - **Frequency badge** — shown next to the name for non-daily habits (`weekly`, `monthly`)
 - **Description** — shown below the name if present
+- **History button** — chart icon in the top-right corner, opens the history bottom sheet (see [chart.md](chart.md))
 - **Value controls** — +/- buttons and a numeric input for the current day's log value
 - **Progress bar** — shown only for habits with targets (see below)
 - **Period value** — for non-daily habits without targets, shows the accumulated period value (e.g. "weekly: 5")
@@ -119,6 +121,7 @@ Shown only for habits with targets. Two indicators:
 | `POST` | `/habits` | Create a new habit |
 | `POST` | `/habits/log` | Log a value for a habit on a date |
 | `DELETE` | `/habits/{id}` | Delete a habit and its logs |
+| `GET` | `/habits/{id}/history?frequency=&start_at=&end_at=` | Fetch aggregated history (see [chart.md](chart.md)) |
 
 ## User Flow
 

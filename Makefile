@@ -1,4 +1,4 @@
-.PHONY: up up-dev coverage
+.PHONY: up up-dev test-coverage test
 
 # Colors
 CYAN=\033[0;36m
@@ -13,9 +13,13 @@ up-dev:
 	rm -rf .svelte-kit
 	API_URL=http://localhost:8080 bun --env-file=.env run svelte-kit sync && API_URL=http://localhost:8080 bun --env-file=.env run dev
 
-coverage:
+test-coverage:
 	@printf "$(CYAN)>>> Running tests with coverage...$(NC)\n"
 	@bun run vitest run --coverage
 	@printf "$(YELLOW)>>> Updating README with coverage table...$(NC)\n"
 	@uv run scripts/coverage.py
 	@printf "$(GREEN)>>> Coverage report updated$(NC)\n"
+
+test:
+	@printf "$(CYAN)>>> Running tests...$(NC)\n"
+	@bun run vitest

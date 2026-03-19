@@ -26,3 +26,14 @@ export interface LogUpsertRequest {
   date: string;
   value: number;
 }
+
+export interface HabitHistoryEntry {
+  date: string;
+  value: number;
+}
+
+export interface HabitHistoryResponse {
+  start_at: string;
+  end_at: string;
+  data: HabitHistoryEntry[];
+}

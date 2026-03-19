@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { HabitWithLog } from '$habits/types/Habit.types';
 	import { habitsApi } from '$habits/api/habits.api';
+	import HabitHistoryModal from './HabitHistoryModal.svelte';
 
 	let {
 		habit,
@@ -13,6 +14,7 @@
 	} = $props();
 
 	let optimisticValue: number | null = $state(null);
+	let showHistory = $state(false);
 	const displayValue = $derived(optimisticValue ?? habit.log_value ?? 0);
 
 	const hasTarget = $derived(habit.target_min !== null || habit.target_max !== null);
@@ -97,8 +99,14 @@
 </script>
 
 <div class="habit-card">
+	<button class="history-btn" onclick={() => showHistory = !showHistory} aria-label="Ver historial">
+		<i class="fa-solid fa-chart-line"></i>
+	</button>
 	<div class="habit-header">
 		<h2 class="title">{habit.name}</h2>
+		{#if habit.recording_required}
+			<i class="fa-solid fa-flag required-flag"></i>
+		{/if}
 		{#if habit.frequency !== 'daily'}
 			<span class="frequency-badge">{habit.frequency}</span>
 		{/if}
@@ -142,3 +150,5 @@
 		</div>
 	{/if}
 </div>
+
+<HabitHistoryModal {habit} open={showHistory} onclose={() => showHistory = false} />
