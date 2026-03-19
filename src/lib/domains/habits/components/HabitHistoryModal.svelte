@@ -64,11 +64,9 @@
 			if (endAt) params.end_at = endAt;
 			const response = await habitsApi.getHistory(habit.id, params);
 			data = response.data;
-			if (!initialFetchDone) {
-				startAt = response.start_at;
-				endAt = response.end_at;
-				initialFetchDone = true;
-			}
+			startAt = response.start_at;
+			endAt = response.end_at;
+			initialFetchDone = true;
 		} catch {
 			data = [];
 		} finally {
@@ -76,10 +74,12 @@
 		}
 	}
 
+	function onDateChange() {
+		fetchHistory();
+	}
+
 	$effect(() => {
 		if (open) {
-			void startAt;
-			void endAt;
 			void frequency;
 			fetchHistory();
 		} else {
@@ -105,9 +105,9 @@
 			{/each}
 		</div>
 		<div class="history-dates">
-			<input type="date" bind:value={startAt} />
+			<input type="date" bind:value={startAt} onchange={onDateChange} />
 			<span class="date-separator">—</span>
-			<input type="date" bind:value={endAt} />
+			<input type="date" bind:value={endAt} onchange={onDateChange} />
 		</div>
 	</div>
 
