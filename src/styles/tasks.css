@@ -67,7 +67,11 @@
     }
 
     .time-summary {
-        @apply flex items-center gap-6 w-full;
+        @apply flex flex-wrap items-center gap-6 w-full;
+    }
+
+    .summary-pace {
+        @apply w-full text-center text-sm font-mono text-text-muted tabular-nums;
     }
 
     .summary-item {

@@ -19,6 +19,24 @@
 	let commentExpanded = $state(false);
 	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
 
+	let weekTargetTooltip = $derived.by(() => {
+		const remaining = 324000 - summary.week;
+		if (remaining <= 0) return 'Meta alcanzada ✓';
+
+		const now = new Date();
+		const jsDay = now.getDay(); // 0=Sun, 1=Mon...6=Sat
+		const day = jsDay === 0 ? 7 : jsDay; // 1=Mon...7=Sun
+		const fractionToday = (24 - now.getHours() - now.getMinutes() / 60) / 24;
+		const remainingFullDays = 7 - day; // days after today through Sunday
+		const totalDays = fractionToday + remainingFullDays;
+
+		if (totalDays <= 0) return 'Meta alcanzada ✓';
+
+		const perDay = remaining / totalDays;
+		const today = perDay * fractionToday;
+		return `${formatTime(Math.round(perDay))}/día · ${formatTime(Math.round(today))} hoy`;
+	});
+
 	function formatTime(seconds: number): string {
 		const h = Math.floor(seconds / 3600);
 		const m = Math.floor((seconds % 3600) / 60);
@@ -226,6 +244,7 @@
 				</div>
 				<span class="summary-value">{formatTime(summary.week)} / 90h</span>
 			</div>
+			<span class="summary-pace">{weekTargetTooltip}</span>
 		</div>
 	</div>
 
