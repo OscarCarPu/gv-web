@@ -4,10 +4,12 @@ import type { TaskTimerApi } from '$lib/domains/tasks/taskTimer.svelte';
 function createMockApi(): TaskTimerApi & {
 	createTimeEntry: ReturnType<typeof vi.fn>;
 	updateTimeEntry: ReturnType<typeof vi.fn>;
+	deleteTimeEntry: ReturnType<typeof vi.fn>;
 } {
 	return {
 		createTimeEntry: vi.fn().mockResolvedValue({ id: 42 }),
-		updateTimeEntry: vi.fn().mockResolvedValue({})
+		updateTimeEntry: vi.fn().mockResolvedValue({}),
+		deleteTimeEntry: vi.fn().mockResolvedValue(undefined)
 	};
 }
 

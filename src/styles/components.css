@@ -33,6 +33,14 @@
     @apply flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-white font-medium cursor-pointer hover:bg-primary/80 transition-colors;
 }
 
+.btn-cancel {
+    @apply flex items-center justify-center w-9 h-9 rounded-lg bg-danger/15 text-danger font-medium cursor-pointer hover:bg-danger/30 transition-colors border-none;
+}
+
+.btn-cancel:disabled {
+    @apply opacity-30 cursor-default;
+}
+
 .input-transparent {
     @apply text-center bg-transparent border-none focus:outline-none;
 }

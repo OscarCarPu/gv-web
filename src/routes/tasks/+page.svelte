@@ -31,6 +31,13 @@
 		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
 
+	async function handleCancel() {
+		await timer.cancelTimer();
+		commentExpanded = false;
+		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
+		summaryOverride = await tasksApi.getTimeEntrySummary();
+	}
+
 	async function handleStartedAtChange(newDate: Date) {
 		await timer.updateStartedAt(newDate);
 	}
@@ -148,12 +155,13 @@
 
 	<div class="task-timer-panel">
 		<div class="task-header">
-			<button class="task-selector" class:active={timer.selectedTaskDisplay !== null} onclick={() => { if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId); }} disabled={!timer.selectedTaskId}>
-				{timer.selectedTaskDisplay ?? 'Seleccionar Tarea'}
-			</button>
 			<button class="comment-toggle" class:has-comment={timer.comment.length > 0} onclick={() => { commentExpanded = !commentExpanded }} title="Comentario">
 				<i class="fa-solid fa-comment"></i>
 			</button>
+			<button class="task-selector" class:active={timer.selectedTaskDisplay !== null} onclick={() => { if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId); }} disabled={!timer.selectedTaskId}>
+				{timer.selectedTaskDisplay ?? 'Seleccionar Tarea'}
+			</button>
+			<button class="btn-cancel" onclick={handleCancel} disabled={!timer.activeTimeEntryId} title="Cancelar entrada"><i class="fa-solid fa-xmark"></i></button>
 		</div>
 		{#if commentExpanded || timer.comment.length > 0}
 			<input

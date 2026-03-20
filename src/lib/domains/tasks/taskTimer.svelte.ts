@@ -4,6 +4,7 @@ import type { CreateTimeEntryRequest, UpdateTimeEntryRequest } from '$lib/domain
 export interface TaskTimerApi {
 	createTimeEntry: (input: CreateTimeEntryRequest) => Promise<{ id: number }>;
 	updateTimeEntry: (id: number, input: UpdateTimeEntryRequest) => Promise<unknown>;
+	deleteTimeEntry: (id: number) => Promise<void>;
 }
 
 export interface TaskTimerState {
@@ -109,6 +110,23 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
 	}
 
+	async function cancelTimer() {
+		if (timerInterval) clearInterval(timerInterval);
+		timerInterval = null;
+
+		if (activeTimeEntryId) {
+			await api.deleteTimeEntry(activeTimeEntryId);
+		}
+
+		isRunning = false;
+		elapsedSeconds = 0;
+		startedAt = null;
+		selectedTaskId = null;
+		selectedTaskDisplay = null;
+		activeTimeEntryId = null;
+		comment = '';
+	}
+
 	function reset() {
 		if (timerInterval) clearInterval(timerInterval);
 		timerInterval = null;
@@ -136,6 +154,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		handleTaskStart,
 		restore,
 		updateStartedAt,
+		cancelTimer,
 		reset,
 	};
 }
