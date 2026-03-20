@@ -3,8 +3,12 @@
 .task-timer-panel {
     @apply flex flex-col items-center gap-4 w-full max-w-3xl mx-auto bg-bg-light rounded-lg px-6 py-5 mt-6;
 
+    .task-header {
+        @apply flex items-center gap-2 w-full;
+    }
+
     .task-selector {
-        @apply w-full text-center text-lg font-medium text-text-muted bg-bg rounded-lg px-4 py-3 border border-text-muted/20 cursor-default appearance-none;
+        @apply flex-1 text-center text-lg font-medium text-text-muted bg-bg rounded-lg px-4 py-3 border border-text-muted/20 cursor-default appearance-none;
         font: inherit;
 
         &.active {
@@ -13,6 +17,23 @@
 
         &:disabled {
             @apply cursor-default;
+        }
+    }
+
+    .comment-toggle {
+        @apply bg-transparent border-none text-text-muted cursor-pointer p-2 rounded-lg hover:text-text transition-colors duration-200;
+
+        &.has-comment {
+            @apply text-primary;
+        }
+    }
+
+    .comment-input {
+        @apply w-full bg-bg border-none rounded-lg px-4 py-2 text-sm text-text placeholder-text-muted/60;
+        outline: none;
+
+        &:focus {
+            @apply ring-1 ring-primary/40;
         }
     }
 

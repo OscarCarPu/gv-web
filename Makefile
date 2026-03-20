@@ -1,11 +1,5 @@
 .PHONY: up up-dev test-coverage test
 
-# Colors
-CYAN=\033[0;36m
-YELLOW=\033[0;33m
-GREEN=\033[0;32m
-NC=\033[0m
-
 up:
 	docker compose up -d --build
 
@@ -14,12 +8,8 @@ up-dev:
 	API_URL=http://localhost:8080 bun --env-file=.env run svelte-kit sync && API_URL=http://localhost:8080 bun --env-file=.env run dev
 
 test-coverage:
-	@printf "$(CYAN)>>> Running tests with coverage...$(NC)\n"
-	@bun run vitest run --coverage
-	@printf "$(YELLOW)>>> Updating README with coverage table...$(NC)\n"
-	@uv run scripts/coverage.py
-	@printf "$(GREEN)>>> Coverage report updated$(NC)\n"
+	bun run vitest run --coverage
+	uv run scripts/coverage.py
 
 test:
-	@printf "$(CYAN)>>> Running tests...$(NC)\n"
-	@bun run vitest
+	bun run test:unit -- --run && bun run test:e2e

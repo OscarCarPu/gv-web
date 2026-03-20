@@ -20,6 +20,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	let activeTimeEntryId: number | null = $state(null);
 	let isRunning = $state(false);
 	let elapsedSeconds = $state(0);
+	let comment = $state('');
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 	let startedAt: number | null = null;
 
@@ -39,7 +40,8 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 
 		if (activeTimeEntryId) {
 			await api.updateTimeEntry(activeTimeEntryId, {
-				finished_at: new Date().toISOString()
+				finished_at: new Date().toISOString(),
+				comment: comment || null
 			});
 		}
 
@@ -49,6 +51,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		selectedTaskId = null;
 		selectedTaskDisplay = null;
 		activeTimeEntryId = null;
+		comment = '';
 	}
 
 	async function handleTaskStart(taskId: number, taskName: string, projectName?: string | null) {
@@ -61,7 +64,8 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 			startTimer();
 			const entry = await api.createTimeEntry({
 				task_id: taskId,
-				started_at: new Date(startedAt).toISOString()
+				started_at: new Date(startedAt).toISOString(),
+				comment: comment || null
 			});
 			activeTimeEntryId = entry.id;
 		} else if (!activeTimeEntryId) {
@@ -69,7 +73,8 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 			selectedTaskDisplay = display;
 			const entry = await api.createTimeEntry({
 				task_id: taskId,
-				started_at: new Date(startedAt!).toISOString()
+				started_at: new Date(startedAt!).toISOString(),
+				comment: comment || null
 			});
 			activeTimeEntryId = entry.id;
 		} else {
@@ -113,6 +118,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		selectedTaskId = null;
 		selectedTaskDisplay = null;
 		activeTimeEntryId = null;
+		comment = '';
 	}
 
 	return {
@@ -123,6 +129,8 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		get elapsedSeconds() { return elapsedSeconds; },
 		get formattedTime() { return formatTime(elapsedSeconds); },
 		get startedAtDate() { return startedAt ? new Date(startedAt) : null; },
+		get comment() { return comment; },
+		setComment(value: string) { comment = value; },
 		startTimer,
 		stopTimer,
 		handleTaskStart,

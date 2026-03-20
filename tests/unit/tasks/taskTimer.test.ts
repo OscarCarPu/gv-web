@@ -88,7 +88,8 @@ describe('createTaskTimer', () => {
 			await timer.stopTimer();
 
 			expect(api.updateTimeEntry).toHaveBeenCalledWith(42, {
-				finished_at: '2026-03-10T10:00:10.000Z'
+				finished_at: '2026-03-10T10:00:10.000Z',
+				comment: null
 			});
 			expect(timer.isRunning).toBe(false);
 			expect(timer.elapsedSeconds).toBe(0);
@@ -109,7 +110,8 @@ describe('createTaskTimer', () => {
 			expect(timer.activeTimeEntryId).toBe(42);
 			expect(api.createTimeEntry).toHaveBeenCalledWith({
 				task_id: 1,
-				started_at: '2026-03-10T10:00:00.000Z'
+				started_at: '2026-03-10T10:00:00.000Z',
+				comment: null
 			});
 		});
 
@@ -142,7 +144,8 @@ describe('createTaskTimer', () => {
 			expect(timer.activeTimeEntryId).toBe(42);
 			expect(api.createTimeEntry).toHaveBeenCalledWith({
 				task_id: 5,
-				started_at: '2026-03-10T10:00:00.000Z'
+				started_at: '2026-03-10T10:00:00.000Z',
+				comment: null
 			});
 		});
 	});
@@ -213,7 +216,8 @@ describe('createTaskTimer', () => {
 			expect(timer.activeTimeEntryId).toBe(77);
 			expect(api.createTimeEntry).toHaveBeenCalledWith({
 				task_id: 10,
-				started_at: '2026-03-10T10:00:00.000Z'
+				started_at: '2026-03-10T10:00:00.000Z',
+				comment: null
 			});
 
 			// 3. Reassign to another task
@@ -225,7 +229,8 @@ describe('createTaskTimer', () => {
 			vi.setSystemTime(new Date('2026-03-10T10:05:00.000Z'));
 			await timer.stopTimer();
 			expect(api.updateTimeEntry).toHaveBeenCalledWith(77, {
-				finished_at: '2026-03-10T10:05:00.000Z'
+				finished_at: '2026-03-10T10:05:00.000Z',
+				comment: null
 			});
 			expect(timer.isRunning).toBe(false);
 			expect(timer.elapsedSeconds).toBe(0);

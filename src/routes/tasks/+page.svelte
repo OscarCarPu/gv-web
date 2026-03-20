@@ -16,6 +16,7 @@
 	const timer = createTaskTimer();
 
 	let summaryOverride = $state<TimeEntrySummaryResponse | null>(null);
+	let commentExpanded = $state(false);
 	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
 
 	function formatTime(seconds: number): string {
@@ -26,6 +27,7 @@
 
 	async function handleStop() {
 		await timer.stopTimer();
+		commentExpanded = false;
 		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
 
@@ -126,9 +128,11 @@
 		const finishedAt = new Date(today.getFullYear(), today.getMonth(), today.getDate(), endH, endM, 0);
 		await tasksApi.updateTimeEntry(timer.activeTimeEntryId, {
 			started_at: startedAt.toISOString(),
-			finished_at: finishedAt.toISOString()
+			finished_at: finishedAt.toISOString(),
+			comment: timer.comment || null
 		});
 		timer.reset();
+		commentExpanded = false;
 		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
 		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
@@ -143,9 +147,23 @@
 	<h1>Tareas</h1>
 
 	<div class="task-timer-panel">
-		<button class="task-selector" class:active={timer.selectedTaskDisplay !== null} onclick={() => { if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId); }} disabled={!timer.selectedTaskId}>
-			{timer.selectedTaskDisplay ?? 'Seleccionar Tarea'}
-		</button>
+		<div class="task-header">
+			<button class="task-selector" class:active={timer.selectedTaskDisplay !== null} onclick={() => { if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId); }} disabled={!timer.selectedTaskId}>
+				{timer.selectedTaskDisplay ?? 'Seleccionar Tarea'}
+			</button>
+			<button class="comment-toggle" class:has-comment={timer.comment.length > 0} onclick={() => { commentExpanded = !commentExpanded }} title="Comentario">
+				<i class="fa-solid fa-comment"></i>
+			</button>
+		</div>
+		{#if commentExpanded || timer.comment.length > 0}
+			<input
+				class="comment-input"
+				type="text"
+				placeholder="Comentario..."
+				value={timer.comment}
+				oninput={(e) => timer.setComment(e.currentTarget.value)}
+			/>
+		{/if}
 
 		<div class="timer-row">
 			<div class="time-entries">
