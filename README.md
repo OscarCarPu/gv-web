@@ -66,13 +66,13 @@ To deploy, merge `develop` into `main` and push — the workflow handles the res
 | `src/lib/domains/habits/types/Habit.types.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
 | `src/lib/domains/tasks/api/tasks.api.ts` | ![27.27%](https://img.shields.io/badge/27.27%25-red) |
 | `src/lib/domains/tasks/api/tasks.schemas.ts` | ![94.11%](https://img.shields.io/badge/94.11%25-brightgreen) |
-| `src/lib/domains/tasks/taskTimer.svelte.ts` | ![81.15%](https://img.shields.io/badge/81.15%25-brightgreen) |
+| `src/lib/domains/tasks/taskTimer.svelte.ts` | ![79.72%](https://img.shields.io/badge/79.72%25-brightgreen) |
 | `src/lib/domains/tasks/types/Task.types.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
 | `src/lib/index.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
 | `src/lib/shared/api/client.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
 | `src/lib/shared/stores/auth.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
 | `src/lib/shared/utils/dateNavigation.svelte.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| **Total** | ![75.65%](https://img.shields.io/badge/75.65%25-brightgreen) |
+| **Total** | ![75.15%](https://img.shields.io/badge/75.15%25-brightgreen) |
 
 ## Documentation
 

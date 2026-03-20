@@ -13,3 +13,6 @@ test-coverage:
 
 test:
 	bun run test:unit -- --run && bun run test:e2e
+
+down:
+	docker compose down -v

@@ -1,0 +1,88 @@
+<script lang="ts">
+	import type { ActiveTreeNode } from '$lib/domains/tasks/types/Task.types';
+	import TreeNodeItem from './TreeNodeItem.svelte';
+	import { getContext } from 'svelte';
+
+	interface Props {
+		node: ActiveTreeNode;
+		parentProjectName?: string;
+		parentProjectDueAt?: string | null;
+		onstart?: (taskId: number, taskName: string, projectName?: string) => void;
+		ontoggle?: (id: number, type: 'project' | 'task', action: 'start' | 'finish') => void;
+		ondetail?: (id: number, type: 'project' | 'task') => void;
+		isTimerRunning?: boolean;
+	}
+
+	let { node, parentProjectName, parentProjectDueAt, onstart, ontoggle, ondetail, isTimerRunning = false }: Props = $props();
+
+	const { isExpanded, toggle, formatDate } = getContext<{
+		isExpanded: (id: number) => boolean;
+		toggle: (id: number) => void;
+		formatDate: (dateStr: string) => string;
+	}>('tree-state');
+
+	const isProject = $derived(node.type === 'project');
+	const hasChildren = $derived(node.children != null && node.children.length > 0);
+	const expanded = $derived(isExpanded(node.id));
+	const isStarted = $derived(node.started_at != null);
+</script>
+
+{#if isProject}
+	<div class="tree-project-wrapper">
+		<button class="tree-project-row" onclick={() => hasChildren && toggle(node.id)} disabled={!hasChildren}>
+			{#if hasChildren}
+				<i class="fa-solid fa-chevron-right tree-chevron" class:expanded></i>
+			{/if}
+			<i class="fa-solid fa-folder tree-folder-icon"></i>
+			<span class="task-name-btn" onclick={(e) => { e.stopPropagation(); ondetail?.(node.id, 'project'); }} onkeydown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); ondetail?.(node.id, 'project'); } }} role="button" tabindex="0">{node.name}</span>
+			{#if node.due_at}
+				<span class="tree-project-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
+			{/if}
+		</button>
+		<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'project', 'finish')}>Acabar</button>
+	</div>
+
+	{#if expanded && hasChildren}
+		<div class="tree-children">
+			{#each node.children! as child (`${child.type}-${child.id}`)}
+				<TreeNodeItem node={child} parentProjectName={node.name} parentProjectDueAt={node.due_at} {onstart} {ontoggle} {ondetail} {isTimerRunning} />
+			{/each}
+		</div>
+	{/if}
+{:else}
+	<div class="task-item">
+		<div class="task-info">
+			<button class="task-name-btn" onclick={() => ondetail?.(node.id, 'task')}>{node.name}</button>
+			{#if parentProjectName}
+				<span class="task-project">
+					{parentProjectName}
+					{#if parentProjectDueAt}
+						<span class="task-project-due"><i class="fa-regular fa-calendar"></i> {formatDate(parentProjectDueAt)}</span>
+					{/if}
+				</span>
+			{/if}
+			{#if node.description}
+				<span class="task-description">{node.description}</span>
+			{/if}
+			<div class="task-meta">
+				<span class="task-status" class:started={isStarted}>
+					{isStarted ? 'En progreso' : 'Pendiente'}
+				</span>
+				{#if node.due_at}
+					<span class="task-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
+				{/if}
+			</div>
+		</div>
+		<div class="task-actions">
+			{#if isStarted}
+				<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'finish')}>Acabar</button>
+			{:else}
+				<button class="btn-primary btn-start btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'start')}>Empezar</button>
+			{/if}
+			<button class="btn-primary" onclick={() => onstart?.(node.id, node.name, parentProjectName)}>
+				<i class="fa-solid {isTimerRunning ? 'fa-arrow-right' : 'fa-play'}"></i>
+				{isTimerRunning ? 'Asignar' : 'Iniciar'}
+			</button>
+		</div>
+	</div>
+{/if}
