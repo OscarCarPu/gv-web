@@ -102,3 +102,42 @@
     to { transform: translateY(100%); }
 }
 
+.history-controls {
+    @apply flex items-center gap-3 mt-4;
+
+    .frequency-toggle {
+        @apply flex gap-1;
+
+        button {
+            @apply w-8 h-8 flex items-center justify-center rounded-lg
+                   border border-text-muted/20 bg-transparent text-text-muted
+                   cursor-pointer transition-colors text-sm;
+
+            &.active {
+                @apply bg-primary text-white border-primary;
+            }
+        }
+    }
+
+    .history-dates {
+        @apply flex items-center gap-2;
+
+        input[type="date"] {
+            @apply bg-bg border border-text-muted/20 rounded-lg px-2 py-1.5 text-text text-sm;
+            color-scheme: dark;
+        }
+
+        .date-separator {
+            @apply text-text-muted text-sm;
+        }
+    }
+}
+
+.history-empty {
+    @apply text-center text-text-muted py-8;
+}
+
+.chart-container {
+    @apply mt-4;
+}
+
