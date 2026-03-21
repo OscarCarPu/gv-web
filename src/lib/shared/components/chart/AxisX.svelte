@@ -3,9 +3,36 @@
 
 	const { width, height, xScale, custom } = getContext('LayerCake') as Record<string, any>;
 
-	$: innerTicks = $xScale.ticks ? $xScale.ticks(5) : $xScale.domain();
+	const { data: layerData } = getContext('LayerCake') as Record<string, any>;
+
+	$: freq = $custom?.frequency ?? 'daily';
 	$: domain = $xScale.domain();
-	$: ticks = mergeBoundary(innerTicks, domain);
+	$: ticks = computeTicks(freq, $layerData, domain);
+
+	function computeTicks(f: string, dataPoints: any[], dom: Date[]): Date[] {
+		if (f === 'weekly' || f === 'monthly') {
+			// Use actual data points as ticks — they are already period-aligned (Mondays / 1st)
+			const pts = dataPoints.map((d: any) => d.date as Date);
+			return thin(pts, dom);
+		}
+		const inner = $xScale.ticks ? $xScale.ticks(5) : dom;
+		return mergeBoundary(inner, dom);
+	}
+
+	/** Keep at most ~6 evenly-spaced ticks from a potentially long list */
+	function thin(pts: Date[], dom: Date[]): Date[] {
+		if (pts.length <= 7) return pts;
+		const step = Math.ceil(pts.length / 6);
+		const result: Date[] = [];
+		for (let i = 0; i < pts.length; i += step) {
+			result.push(pts[i]);
+		}
+		// Always include the last point
+		if (result[result.length - 1]?.getTime() !== pts[pts.length - 1]?.getTime()) {
+			result.push(pts[pts.length - 1]);
+		}
+		return result;
+	}
 
 	function mergeBoundary(inner: Date[], [start, end]: Date[]): Date[] {
 		const minGap = ($xScale(end) - $xScale(start)) * 0.08;
@@ -17,7 +44,6 @@
 		if (endFar) result.push(end);
 		return result;
 	}
-	$: freq = $custom?.frequency ?? 'daily';
 
 	const monthNames = [
 		'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',

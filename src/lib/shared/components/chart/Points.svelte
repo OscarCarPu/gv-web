@@ -10,11 +10,16 @@
 		'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 	];
 
+	function getISOWeek(d: Date): number {
+		const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+		date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+		const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+		return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+	}
+
 	function formatDate(d: Date, freq: string): string {
 		if (freq === 'monthly') return monthNames[d.getMonth()];
-		if (freq === 'weekly') {
-			return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-		}
+		if (freq === 'weekly') return `Sem. ${getISOWeek(d)}`;
 		return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
 	}
 </script>
