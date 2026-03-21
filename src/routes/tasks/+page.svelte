@@ -26,7 +26,10 @@
 		const now = new Date();
 		const jsDay = now.getDay(); // 0=Sun, 1=Mon...6=Sat
 		const day = jsDay === 0 ? 7 : jsDay; // 1=Mon...7=Sun
-		const fractionToday = (24 - now.getHours() - now.getMinutes() / 60) / 24;
+		const wakingHoursPerDay = 17; // 7am–midnight
+		const currentHour = now.getHours() + now.getMinutes() / 60;
+		const wakingHoursLeft = Math.max(0, 24 - currentHour);
+		const fractionToday = Math.min(wakingHoursLeft, wakingHoursPerDay) / wakingHoursPerDay;
 		const remainingFullDays = 7 - day; // days after today through Sunday
 		const totalDays = fractionToday + remainingFullDays;
 
