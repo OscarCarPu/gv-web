@@ -30,7 +30,7 @@ src/
 │   │   └── tasks/             # api/, types/, components/
 │   ├── shared/                # Reusable cross-domain code
 │   │   ├── api/               # fetchAPI() client
-│   │   ├── components/        # Shared UI (Modal, FloatingReminder, etc.)
+│   │   ├── components/        # Shared UI (Modal, FloatingReminder, Chart, etc.)
 │   │   ├── stores/            # Svelte stores
 │   │   └── utils/             # Utility functions
 │   └── config/                # Environment config (env.ts)

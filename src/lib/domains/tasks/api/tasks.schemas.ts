@@ -136,6 +136,14 @@ export const TaskByDueDateResponseSchema = z.object({
 
 export const TaskByDueDateResponseListSchema = z.array(TaskByDueDateResponseSchema);
 
+// --- History schemas ---
+
+export const TimeEntryHistoryResponseSchema = z.object({
+	start_at: z.string(),
+	end_at: z.string(),
+	data: z.array(z.object({ date: z.string(), value: z.number() }))
+});
+
 // --- List schemas ---
 
 export const ProjectResponseListSchema = z.array(ProjectResponseSchema);

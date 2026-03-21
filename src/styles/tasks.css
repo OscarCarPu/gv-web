@@ -70,8 +70,16 @@
         @apply flex flex-wrap items-center gap-6 w-full;
     }
 
+    .summary-actions {
+        @apply w-full flex items-center justify-center gap-3;
+    }
+
+    .summary-actions .btn-icon {
+        @apply bg-transparent border-none text-text-muted cursor-pointer p-1 rounded hover:text-primary;
+    }
+
     .summary-pace {
-        @apply w-full text-center text-sm font-mono text-text-muted tabular-nums;
+        @apply text-sm font-mono text-text-muted tabular-nums;
     }
 
     .summary-item {

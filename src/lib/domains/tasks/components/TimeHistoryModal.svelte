@@ -3,8 +3,8 @@
 	import { LayerCake, Svg } from 'layercake';
 
 	import BottomSheet from '$shared/components/BottomSheet.svelte';
-	import { habitsApi } from '$habits/api/habits.api';
-	import type { HabitWithLog, HabitHistoryEntry } from '$habits/types/Habit.types';
+	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
+	import type { TimeEntryHistoryEntry } from '$lib/domains/tasks/types/Task.types';
 	import Line from '$shared/components/chart/Line.svelte';
 	import Area from '$shared/components/chart/Area.svelte';
 	import AxisX from '$shared/components/chart/AxisX.svelte';
@@ -12,24 +12,23 @@
 	import Points from '$shared/components/chart/Points.svelte';
 
 	let {
-		habit,
 		open,
 		onclose,
 	}: {
-		habit: HabitWithLog;
 		open: boolean;
 		onclose: () => void;
 	} = $props();
 
-	function toDateStr(d: Date): string {
-		return d.toISOString().split('T')[0];
+	function formatHours(v: number): string {
+		const h = Math.floor(v);
+		const m = Math.round((v - h) * 60);
+		return m > 0 ? `${h}h ${m}m` : `${h}h`;
 	}
 
 	let startAt = $state('');
 	let endAt = $state('');
-	let frequencyOverride: string | null = $state(null);
-	const frequency = $derived(frequencyOverride ?? habit.frequency);
-	let data: HabitHistoryEntry[] = $state([]);
+	let frequency = $state('daily');
+	let data: TimeEntryHistoryEntry[] = $state([]);
 	let loading = $state(false);
 	let initialFetchDone = $state(false);
 
@@ -62,7 +61,7 @@
 			const params: Record<string, string> = { frequency };
 			if (startAt) params.start_at = startAt;
 			if (endAt) params.end_at = endAt;
-			const response = await habitsApi.getHistory(habit.id, params);
+			const response = await tasksApi.getTimeEntryHistory(params);
 			data = response.data;
 			startAt = response.start_at;
 			endAt = response.end_at;
@@ -89,14 +88,14 @@
 </script>
 
 <BottomSheet {open} {onclose}>
-	<h3 class="modal-title">{habit.name}</h3>
+	<h3 class="modal-title">Historial de tiempo</h3>
 
 	<div class="history-controls">
 		<div class="frequency-toggle">
 			{#each frequencies as f}
 				<button
 					class:active={frequency === f.value}
-					onclick={() => frequencyOverride = f.value}
+					onclick={() => frequency = f.value}
 					type="button"
 					aria-label={f.value}
 				>
@@ -106,7 +105,7 @@
 		</div>
 		<div class="history-dates">
 			<input type="date" bind:value={startAt} onchange={onDateChange} />
-			<span class="date-separator">—</span>
+			<span class="date-separator">&mdash;</span>
 			<input type="date" bind:value={endAt} onchange={onDateChange} />
 		</div>
 	</div>
@@ -114,7 +113,7 @@
 	{#if loading}
 		<div class="history-empty">Cargando...</div>
 	{:else if chartData.length === 0}
-		<div class="history-empty">Sin datos para este período</div>
+		<div class="history-empty">Sin datos para este periodo</div>
 	{:else}
 		<div class="chart-container" style="width: 100%; height: 250px;">
 			<LayerCake
@@ -124,7 +123,7 @@
 				xScale={scaleTime()}
 				yDomain={yDomain}
 				padding={{ top: 10, right: 15, bottom: 30, left: 40 }}
-				custom={{ frequency }}
+				custom={{ frequency, formatValue: formatHours }}
 			>
 				<Svg>
 					<AxisY />

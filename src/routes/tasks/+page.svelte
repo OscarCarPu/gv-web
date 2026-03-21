@@ -9,6 +9,7 @@
 	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import StartedAtEditor from '$lib/domains/tasks/components/StartedAtEditor.svelte';
+	import TimeHistoryModal from '$lib/domains/tasks/components/TimeHistoryModal.svelte';
 	import type { ActiveTreeNode, TimeEntrySummaryResponse } from '$lib/domains/tasks/types/Task.types';
 
 	let { data } = $props();
@@ -17,6 +18,7 @@
 
 	let summaryOverride = $state<TimeEntrySummaryResponse | null>(null);
 	let commentExpanded = $state(false);
+	let showTimeHistory = $state(false);
 	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
 
 	let weekTargetTooltip = $derived.by(() => {
@@ -247,7 +249,12 @@
 				</div>
 				<span class="summary-value">{formatTime(summary.week)} / 90h</span>
 			</div>
-			<span class="summary-pace">{weekTargetTooltip}</span>
+			<div class="summary-actions">
+				<span class="summary-pace">{weekTargetTooltip}</span>
+				<button class="btn-icon" onclick={() => showTimeHistory = true} aria-label="Ver historial">
+					<i class="fa-solid fa-chart-line"></i>
+				</button>
+			</div>
 		</div>
 	</div>
 
@@ -272,3 +279,4 @@
 
 <TaskDetailModal taskId={selectedTaskId} onclose={() => selectedTaskId = null} />
 <ProjectDetailModal projectId={selectedProjectId} onclose={() => selectedProjectId = null} />
+<TimeHistoryModal open={showTimeHistory} onclose={() => showTimeHistory = false} />

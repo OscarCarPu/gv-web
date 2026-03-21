@@ -34,6 +34,8 @@ Project (hierarchical via parent_id)
 │  HH:MM ─ HH:MM                     │  ← Time entry row (TimePicker pairs)
 │  HH:MM ─ HH:MM                     │
 ├─────────────────────────────────────┤
+│  Hoy: ██░░  Semana: ████░░  [📊]   │  ← Summary bars + history button
+├─────────────────────────────────────┤
 │  00:12:34          [▶ Play]         │  ← Timer display + controls
 └─────────────────────────────────────┘
 ```
@@ -54,11 +56,32 @@ A pair of number inputs for hours and minutes:
 - **Pause** button (red/danger) pauses the timer
 - Display format: `HH:MM:SS`
 
+## Time History
+
+### TimeHistoryModal
+
+Opens from a chart icon button next to the Hoy/Semana summary bars. Reuses the shared chart components (`Line`, `Area`, `AxisX`, `AxisY`, `Points`) from `$shared/components/chart/`.
+
+**Controls:**
+- Frequency toggle (daily/weekly/monthly)
+- Date range picker (start and end date inputs)
+
+**Display:**
+- Y-axis shows decimal hours
+- Tooltips show formatted hours (e.g., "10h 30m") via the `formatValue: formatHours` custom prop
+
+**Data flow:**
+1. Calls `tasksApi.getTimeEntryHistory({ frequency, start_at, end_at })`
+2. API returns `{ start_at, end_at, data: [{ date, value }] }`
+3. Data is mapped to `{ date: Date, value: number }` for LayerCake
+
 ## API Endpoints
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | `GET` | `/tasks/tree` | Fetch active project/task tree |
+| `GET` | `/tasks/time-entries/summary` | Today + week time totals |
+| `GET` | `/tasks/time-entries/history` | Aggregated time history (daily/weekly/monthly) |
 | CRUD | `/projects` | Project management |
 | CRUD | `/tasks` | Task management |
 | CRUD | `/todos` | Todo/subtask management |

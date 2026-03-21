@@ -2,14 +2,14 @@
 
 ## Overview
 
-SVG chart system built on [LayerCake](https://layercake.graphics/) for rendering habit history data. Used inside `HabitHistoryModal`, which opens from the habit card's chart icon button.
+SVG chart system built on [LayerCake](https://layercake.graphics/) for rendering time-series history data. Used inside `HabitHistoryModal` (habit card chart icon) and `TimeHistoryModal` (task summary chart icon).
 
 The chart renders time-series data as a line with a filled area below, interactive hover points with tooltips, and frequency-aware axis labels.
 
 ## Architecture
 
 ```
-HabitHistoryModal
+HabitHistoryModal / TimeHistoryModal
 ├── LayerCake (data, scales, padding, custom props)
 │   └── Svg
 │       ├── AxisY    — horizontal grid lines + value labels
@@ -19,9 +19,9 @@ HabitHistoryModal
 │       └── Points   — interactive circles with hover tooltips
 ```
 
-All chart sub-components live in `src/lib/domains/habits/components/chart/` and access shared state (data, scales, accessors) via LayerCake's Svelte context (`getContext('LayerCake')`).
+All chart sub-components live in `src/lib/shared/components/chart/` and access shared state (data, scales, accessors) via LayerCake's Svelte context (`getContext('LayerCake')`).
 
-Custom props (like `frequency`) are passed through LayerCake's `custom` prop and accessed as `$custom.frequency`.
+Custom props (like `frequency` and `formatValue`) are passed through LayerCake's `custom` prop and accessed as `$custom.frequency`, `$custom.formatValue`, etc.
 
 ## Components
 
@@ -69,6 +69,8 @@ This ensures the hover target is large enough for both mouse and touch input.
 
 The date format in the tooltip matches the frequency (month name for monthly, `dd mon` otherwise).
 
+**`formatValue` support** — Points accepts an optional `formatValue` function via LayerCake's `custom` prop. When provided in `custom={{ frequency, formatValue }}`, it formats the tooltip value. Default is `String(v)`. The time history modal passes `formatValue: formatHours` which formats `10.5` as `10h 30m`.
+
 ## Y-Domain
 
 The Y-axis range is computed dynamically from the data with 10% margin:
@@ -82,13 +84,17 @@ This prevents the line from touching the top/bottom edges while keeping 0 as the
 
 ## Data Flow
 
-1. `HabitHistoryModal` calls `habitsApi.getHistory()` which returns `HabitHistoryResponse`:
+1. **Habits:** `HabitHistoryModal` calls `habitsApi.getHistory()` which returns `HabitHistoryResponse`:
    ```typescript
    { start_at: string, end_at: string, data: { date: string, value: number }[] }
    ```
-2. `data` entries are mapped to `{ date: Date, value: number }` for LayerCake
-3. LayerCake provides `xScale` (d3 `scaleTime`) and `yScale` (linear, from `yDomain`) via context
-4. Each chart component reads `$data`, `$xGet`, `$yGet`, etc. from context and renders SVG elements
+2. **Tasks:** `TimeHistoryModal` calls `tasksApi.getTimeEntryHistory()` which returns the same shape:
+   ```typescript
+   { start_at: string, end_at: string, data: { date: string, value: number }[] }
+   ```
+3. `data` entries are mapped to `{ date: Date, value: number }` for LayerCake
+4. LayerCake provides `xScale` (d3 `scaleTime`) and `yScale` (linear, from `yDomain`) via context
+5. Each chart component reads `$data`, `$xGet`, `$yGet`, etc. from context and renders SVG elements
 
 ## Styling
 

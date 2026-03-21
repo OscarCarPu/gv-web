@@ -173,3 +173,14 @@ export interface ActiveTreeNode {
     started_at?: string | null;
     children?: ActiveTreeNode[];
 }
+
+export interface TimeEntryHistoryEntry {
+    date: string;
+    value: number;
+}
+
+export interface TimeEntryHistoryResponse {
+    start_at: string;
+    end_at: string;
+    data: TimeEntryHistoryEntry[];
+}

@@ -12,7 +12,8 @@ import {
 	TimeEntryResponseSchema,
 	ActiveTreeNodeListSchema,
 	TaskByDueDateResponseListSchema,
-	TimeEntrySummaryResponseSchema
+	TimeEntrySummaryResponseSchema,
+	TimeEntryHistoryResponseSchema
 } from './tasks.schemas';
 import type {
 	ProjectResponse,
@@ -33,7 +34,8 @@ import type {
 	UpdateTimeEntryRequest,
 	ActiveTreeNode,
 	TaskByDueDateResponse,
-	TimeEntrySummaryResponse
+	TimeEntrySummaryResponse,
+	TimeEntryHistoryResponse
 } from '../types/Task.types';
 
 export const tasksApi = {
@@ -169,6 +171,17 @@ export const tasksApi = {
 
 	async getTimeEntrySummary(token?: string): Promise<TimeEntrySummaryResponse> {
 		return fetchAPI('/tasks/time-entries/summary', TimeEntrySummaryResponseSchema, { token });
+	},
+
+	async getTimeEntryHistory(
+		params: { frequency: string; start_at?: string; end_at?: string },
+		token?: string
+	): Promise<TimeEntryHistoryResponse> {
+		const query = new URLSearchParams();
+		query.set('frequency', params.frequency);
+		if (params.start_at) query.set('start_at', params.start_at);
+		if (params.end_at) query.set('end_at', params.end_at);
+		return fetchAPI(`/tasks/time-entries/history?${query}`, TimeEntryHistoryResponseSchema, { token });
 	},
 
 	// --- Tree ---
