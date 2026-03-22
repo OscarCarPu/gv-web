@@ -37,6 +37,10 @@
 
 		if (totalDays <= 0) return 'Meta alcanzada ✓';
 
+		if (remainingFullDays === 0) {
+			return `${formatTime(Math.round(remaining))} hoy`;
+		}
+
 		const perDay = remaining / totalDays;
 		const today = perDay * fractionToday;
 		return `${formatTime(Math.round(perDay))}/día · ${formatTime(Math.round(today))} hoy`;
