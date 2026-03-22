@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import TimePicker from '$lib/shared/components/TimePicker.svelte';
 	import TaskItem from '$lib/domains/tasks/components/TaskItem.svelte';
 	import TreeNode from '$lib/domains/tasks/components/TreeNode.svelte';
-	import TaskDetailModal from '$lib/domains/tasks/components/TaskDetailModal.svelte';
-	import ProjectDetailModal from '$lib/domains/tasks/components/ProjectDetailModal.svelte';
+	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
+	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
 	import FloatingReminder from '$lib/shared/components/FloatingReminder.svelte';
 	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
@@ -66,14 +66,15 @@
 	}
 
 	let selectedTaskId = $state<number | null>(null);
-	let selectedProjectId = $state<number | null>(null);
+	let showCreate = $state(false);
+	let createMode = $state<'task' | 'project'>('task');
 
 	function openTaskDetail(id: number) {
 		selectedTaskId = id;
 	}
 
 	function openDetail(id: number, type: 'project' | 'task') {
-		if (type === 'project') selectedProjectId = id;
+		if (type === 'project') goto(`/tasks/projects/${id}`);
 		else selectedTaskId = id;
 	}
 
@@ -260,7 +261,12 @@
 
 	<div class="tasks-content">
 		<div class="tasks-section">
-			<h2>Próximas a vencer</h2>
+			<div class="section-header">
+				<h2>Próximas a vencer</h2>
+				<button class="btn-primary btn-sm" onclick={() => { createMode = 'task'; showCreate = true; }}>
+					<i class="fa-solid fa-plus"></i> Tarea
+				</button>
+			</div>
 			<div class="task-list">
 				{#each data.tasksByDueDate as task (task.id)}
 					<TaskItem {task} onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)} ontoggle={handleTaskToggle} ondetail={openTaskDetail} isTimerRunning={timer.isRunning} />
@@ -269,7 +275,12 @@
 		</div>
 
 		<div class="tasks-section">
-			<h2>Proyectos activos</h2>
+			<div class="section-header">
+				<h2>Proyectos activos</h2>
+				<button class="btn-primary btn-sm" onclick={() => { createMode = 'project'; showCreate = true; }}>
+					<i class="fa-solid fa-plus"></i> Proyecto
+				</button>
+			</div>
 			<div class="task-list">
 				<TreeNode nodes={data.activeTree} onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)} ontoggle={handleTreeToggle} ondetail={openDetail} isTimerRunning={timer.isRunning} />
 			</div>
@@ -277,6 +288,6 @@
 	</div>
 </div>
 
-<TaskDetailModal taskId={selectedTaskId} onclose={() => selectedTaskId = null} />
-<ProjectDetailModal projectId={selectedProjectId} onclose={() => selectedProjectId = null} />
+<TaskBottomSheet taskId={selectedTaskId} onclose={() => selectedTaskId = null} />
+<CreateBottomSheet open={showCreate} onclose={() => showCreate = false} mode={createMode} />
 <TimeHistoryModal open={showTimeHistory} onclose={() => showTimeHistory = false} />

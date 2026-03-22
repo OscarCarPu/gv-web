@@ -127,6 +127,14 @@
     }
 }
 
+.section-header {
+    @apply flex items-center justify-between mb-4 px-1;
+
+    & > h2 {
+        @apply text-lg font-semibold;
+    }
+}
+
 .task-list {
     @apply flex flex-col gap-2;
 }
@@ -302,4 +310,166 @@
 
 .btn-danger {
     @apply bg-danger text-white hover:bg-danger/80 px-5 py-2 rounded-lg font-medium cursor-pointer border-none;
+}
+
+/* Task BottomSheet */
+
+.detail-title-row {
+    @apply flex items-center gap-3;
+}
+
+.detail-title-row .modal-title {
+    @apply flex-1;
+}
+
+.project-link-inline {
+    @apply flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-bg text-primary text-xs font-medium
+           cursor-pointer border border-primary/20 hover:bg-primary/10 transition-colors whitespace-nowrap;
+}
+
+
+.detail-inline-row {
+    @apply flex items-end gap-3;
+}
+
+.detail-info-row {
+    @apply flex items-center justify-around;
+}
+
+.detail-info-item {
+    @apply flex flex-col items-center gap-1;
+}
+
+.detail-info-label {
+    @apply text-xs text-text-muted font-medium;
+}
+
+.detail-info-value {
+    @apply text-base text-text font-semibold;
+}
+
+.detail-field select {
+    @apply bg-bg border border-text-muted/20 rounded-lg px-3 py-2 text-text;
+    color-scheme: dark;
+}
+
+
+.btn-action-sm {
+    @apply text-xs px-3 py-1.5 rounded-lg font-medium cursor-pointer border-none transition-colors
+           bg-primary/15 text-primary hover:bg-primary/25;
+
+    &.btn-start {
+        @apply bg-success/15 text-success hover:bg-success/25;
+    }
+}
+
+.start-now-toggle {
+    @apply flex items-center gap-3 text-sm text-text font-medium cursor-pointer
+           bg-transparent border-none p-0;
+}
+
+.start-now-switch {
+    @apply relative w-10 h-5 rounded-full bg-text-muted/30 transition-colors;
+
+    &.active {
+        @apply bg-success;
+
+        .start-now-knob {
+            @apply translate-x-5;
+        }
+    }
+}
+
+.start-now-knob {
+    @apply absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform;
+}
+
+/* Create BottomSheet */
+
+.create-mode-toggle {
+    @apply flex gap-1 mt-3 p-1 bg-bg rounded-lg;
+
+    & button {
+        @apply flex-1 py-2 rounded-lg text-sm font-medium cursor-pointer
+               bg-transparent border-none text-text-muted transition-colors;
+
+        &.active {
+            @apply bg-primary text-white;
+        }
+    }
+}
+
+/* Project Page */
+
+.project-nav {
+    @apply flex items-center gap-4 mt-2 max-w-5xl mx-auto;
+}
+
+.back-link {
+    @apply flex items-center gap-2 text-text-muted hover:text-text transition-colors text-sm font-medium;
+}
+
+.project-detail-card {
+    @apply bg-bg-light rounded-lg px-6 py-5 mt-4 max-w-5xl mx-auto;
+}
+
+.project-children-section {
+    @apply bg-bg-light rounded-lg px-4 py-5 mt-4 max-w-5xl mx-auto;
+}
+
+.project-children-header {
+    @apply flex items-center justify-between mb-4;
+
+    & h2 {
+        @apply text-lg font-semibold;
+    }
+}
+
+.project-children-actions {
+    @apply flex items-center gap-2;
+}
+
+.project-children-empty {
+    @apply text-center text-text-muted py-6;
+}
+
+.project-children-list {
+    @apply flex flex-col gap-2;
+}
+
+.project-child-row {
+    @apply flex items-center gap-3 w-full bg-bg rounded-lg px-4 py-3 text-left
+           border-none cursor-pointer hover:bg-bg/80 transition-colors text-text no-underline;
+}
+
+.child-name {
+    @apply font-medium text-text flex-1;
+}
+
+.child-due {
+    @apply text-xs text-text-muted;
+}
+
+.child-time {
+    @apply text-xs text-text-muted;
+}
+
+.child-status {
+    @apply text-xs px-2 py-0.5 rounded-full bg-text-muted/20 text-text-muted;
+
+    &.started {
+        @apply bg-primary/20 text-primary;
+    }
+
+    &.finished {
+        @apply bg-success/20 text-success;
+    }
+}
+
+.child-chevron {
+    @apply text-xs text-text-muted;
+}
+
+.child-task-icon {
+    @apply text-sm text-text-muted;
 }

@@ -20,6 +20,7 @@ src/
 │   ├── login/                 # /login, /login/2fa
 │   ├── habits/                # /habits
 │   ├── tasks/                 # /tasks
+│   │   └── projects/[id]/     # /tasks/projects/:id (project detail)
 │   ├── logout/                # /logout
 │   ├── +layout.server.ts      # Root layout server load
 │   └── +layout.svelte         # Root layout (nav, global styles)
@@ -30,9 +31,9 @@ src/
 │   │   └── tasks/             # api/, types/, components/
 │   ├── shared/                # Reusable cross-domain code
 │   │   ├── api/               # fetchAPI() client
-│   │   ├── components/        # Shared UI (Modal, FloatingReminder, Chart, etc.)
+│   │   ├── components/        # Shared UI (Modal, BottomSheet, FloatingReminder, Chart, etc.)
 │   │   ├── stores/            # Svelte stores
-│   │   └── utils/             # Utility functions
+│   │   └── utils/             # Utility functions (datetime.ts, etc.)
 │   └── config/                # Environment config (env.ts)
 ├── styles/                    # Global and per-feature CSS
 │   ├── app.css                # Tailwind imports, @theme tokens, base styles
@@ -51,6 +52,7 @@ src/
 | `/login/2fa` | Two-factor authentication |
 | `/habits` | Habit tracking (default after login) |
 | `/tasks` | Task/time management |
+| `/tasks/projects/[id]` | Project detail and children |
 | `/logout` | Session termination |
 
 ## API Layer

@@ -74,7 +74,11 @@
 }
 
 .bottom-sheet {
-    @apply fixed bottom-0 left-0 right-0 z-50 bg-bg-light rounded-t-2xl p-6 pb-8;
+    @apply fixed bottom-0 left-0 right-0 z-50 bg-bg-light rounded-t-2xl py-6 pb-8 px-6;
+
+    &.bottom-sheet-constrained > *:not(.bottom-sheet-close) {
+        @apply max-w-5xl mx-auto;
+    }
     max-height: 60vh;
     overflow-y: auto;
     scrollbar-width: thin;

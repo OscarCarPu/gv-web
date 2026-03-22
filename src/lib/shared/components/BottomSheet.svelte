@@ -4,10 +4,11 @@
 	interface Props {
 		open: boolean;
 		onclose: () => void;
+		constrained?: boolean;
 		children: Snippet;
 	}
 
-	let { open, onclose, children }: Props = $props();
+	let { open, onclose, constrained = false, children }: Props = $props();
 
 	let closing = $state(false);
 	let visible = $state(false);
@@ -39,6 +40,7 @@
 	<div class="bottom-sheet-backdrop" onclick={close} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') close(); }} role="button" tabindex="-1">
 		<div
 			class="bottom-sheet"
+			class:bottom-sheet-constrained={constrained}
 			class:slide-down={closing}
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}

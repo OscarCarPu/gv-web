@@ -2,7 +2,7 @@
 
 ## Overview
 
-Task time tracking — select a task, log time entries (start/end), and run a live timer.
+Task and project management with time tracking. Hierarchical project/task structure, live timer, time entry logging, and CRUD for projects, tasks, and todos.
 
 ## Data Model
 
@@ -10,104 +10,179 @@ Task time tracking — select a task, log time entries (start/end), and run a li
 
 ```
 Project (hierarchical via parent_id)
-└── Task (belongs to a project)
+└── Task (belongs to a project via project_id, nullable)
     ├── Todo (subtask, boolean completion)
     └── TimeEntry (started_at, finished_at, comment)
 ```
 
-### Key Types
+### Key Types (`src/lib/domains/tasks/types/Task.types.ts`)
 
-| Type | Description |
+| Type | Key Fields |
 |---|---|
-| `Project` | id, name, parent_id (nullable for top-level) |
-| `Task` | id, name, project_id |
-| `Todo` | id, task_id, description, completed |
-| `TimeEntry` | id, task_id, started_at, finished_at, comment |
-| `ActiveTreeNode` | Recursive tree structure with `children: ActiveTreeNode[]` |
+| `ProjectResponse` | id, name, description, due_at, parent_id, started_at, finished_at |
+| `ProjectDetailResponse` | Same + time_spent (aggregated) |
+| `ProjectChildrenResponse` | project + children[] (mixed tasks and sub-projects) |
+| `TaskResponse` | id, name, description, due_at, project_id, started_at, finished_at |
+| `TaskFullResponse` | Same + time_spent, todos[] |
+| `TodoResponse` | id, task_id, name, is_done |
+| `TimeEntryResponse` | id, task_id, started_at, finished_at, comment |
+| `ActiveTreeNode` | Recursive tree: id, type, name, children[] |
+| `TaskByDueDateResponse` | Task with project_name, project_due_at for due-date list |
 
-## UI Layout
+## Routes
+
+| Route | Purpose |
+|---|---|
+| `/tasks` | Main page — timer, due-date list, active project tree |
+| `/tasks/projects/[id]` | Project detail — edit project, view/create children |
+
+## UI Components
+
+### Tasks Page (`/tasks`)
 
 ```
 ┌─────────────────────────────────────┐
-│  [Select task...]                   │  ← Task selector button
-├─────────────────────────────────────┤
-│  HH:MM ─ HH:MM                     │  ← Time entry row (TimePicker pairs)
-│  HH:MM ─ HH:MM                     │
-├─────────────────────────────────────┤
-│  Hoy: ██░░  Semana: ████░░  [📊]   │  ← Summary bars + history button
-├─────────────────────────────────────┤
-│  00:12:34          [▶ Play]         │  ← Timer display + controls
+│  [💬] [Select task...        ] [✕]  │  ← Timer header
+│  [Comment input]                    │
+│  HH:MM ─ HH:MM  [+ Agregar]        │  ← Time entry row
+│  00:12:34  [Started at]  [▶ Play]   │  ← Timer controls
+│  Hoy: ██░░  Semana: ████░░  [📊]   │  ← Summary bars
+├────────────────┬────────────────────┤
+│ Próximas a     │ Proyectos activos  │
+│ vencer    [+]  │              [+]   │
+│                │                    │
+│ Task items     │ Tree view          │
+│ (click→sheet)  │ (proj→navigate,    │
+│                │  task→sheet)       │
+└────────────────┴────────────────────┘
+```
+
+- **"+" buttons**: Open CreateBottomSheet in task or project mode
+- **Task click**: Opens TaskBottomSheet (half-modal)
+- **Project click**: Navigates to `/tasks/projects/{id}`
+
+### TaskBottomSheet (`src/lib/domains/tasks/components/TaskBottomSheet.svelte`)
+
+Half-modal (BottomSheet) for viewing/editing a task.
+
+```
+┌─────────────────────────────────────┐
+│ [📁 Project] Detalle de tarea   [✕] │  ← Title row with project link
+│                                     │
+│ Nombre: [____________]              │
+│ Fecha límite: [datetime-local]      │
+│ Descripción: [textarea]             │
+│                                     │
+│   Inicio         Fin      Tiempo    │  ← Info row (read-only)
+│   22 mar 2026  [Finalizar]  12h 30m │
+│                                     │
+│ Todos:                              │
+│ ☑ Todo 1  ☐ Todo 2  [+ Agregar]    │
+│                                     │
+│              [Eliminar] [Guardar]    │
 └─────────────────────────────────────┘
 ```
 
-## TimePicker Component
+- **Project link**: Inline chip at title level, navigates to project page
+- **started_at / finished_at**: Read-only display when set. "Empezar"/"Finalizar" button when null — PATCHes to `now()`
+- **Todos**: Checkbox toggle, delete, add new
 
-A pair of number inputs for hours and minutes:
+### CreateBottomSheet (`src/lib/domains/tasks/components/CreateBottomSheet.svelte`)
 
-- **Hours**: 0–23
-- **Minutes**: 0–59
-- Colon separator between inputs
-- Native spinner chrome hidden via CSS
+Half-modal for creating tasks and projects.
 
-## Timer
+- **Mode toggle**: Tarea / Proyecto (segmented control)
+- **Fields**: Nombre, Descripción, Fecha límite + Proyecto/Proyecto padre selector (same row)
+- **"Empezar ya" toggle**: When active, PATCHes `started_at: now()` after creation
+- **Prefill**: When opened from a project page, project_id/parent_id are pre-selected for both modes
 
-- Client-side `setInterval` updates the elapsed time display every second
-- **Play** button (blue) starts the timer
-- **Pause** button (red/danger) pauses the timer
-- Display format: `HH:MM:SS`
+### Project Page (`/tasks/projects/[id]`)
+
+Full page for project management.
+
+```
+┌─────────────────────────────────────┐
+│ ← Tareas   ← Proyecto padre        │  ← Navigation
+├─────────────────────────────────────┤
+│ Nombre: [____________]              │
+│ Fecha límite: [datetime-local]      │
+│ Descripción: [textarea]             │
+│                                     │
+│   Inicio         Fin      Tiempo    │
+│   22 mar 2026  [Finalizar]  12h 30m │
+│                                     │
+│              [Eliminar] [Guardar]    │
+├─────────────────────────────────────┤
+│ Hijos              [+ Tarea] [+ SP] │
+│ 📁 Sub-project X → (navigate)      │
+│ ✓ Task 1         → (open sheet)    │
+│ ✓ Task 2         → (open sheet)    │
+└─────────────────────────────────────┘
+```
+
+- **ESC key**: Navigates back to `/tasks` (unless a BottomSheet is open)
+- **Children list**: Sub-projects link to their own page, tasks open TaskBottomSheet
+- **Create buttons**: Open CreateBottomSheet with prefilled project context
+
+### BottomSheet (`src/lib/shared/components/BottomSheet.svelte`)
+
+Shared half-modal component sliding up from bottom (max 60vh).
+
+- `constrained` prop: When true, caps content at `max-w-5xl` (used by TaskBottomSheet and CreateBottomSheet, not by TimeHistoryModal)
+
+## Timer (`src/lib/domains/tasks/taskTimer.svelte.ts`)
+
+Client-side timer state using Svelte runes:
+
+- Tracks selected task, elapsed time, active time entry ID
+- `startTimer` / `stopTimer` / `cancelTimer` / `restore` / `updateStartedAt`
+- Syncs with API: creates/updates/deletes time entries
+- Restores active time entry on page load via `$effect`
 
 ## Time History
 
 ### TimeHistoryModal
 
-Opens from a chart icon button next to the Hoy/Semana summary bars. Reuses the shared chart components (`Line`, `Area`, `AxisX`, `AxisY`, `Points`) from `$shared/components/chart/`.
+Opens from chart icon on summary bars. Uses shared chart components (LayerCake).
 
-**Controls:**
 - Frequency toggle (daily/weekly/monthly)
-- Date range picker (start and end date inputs)
+- Date range picker
+- Calls `tasksApi.getTimeEntryHistory()`
 
-**Display:**
-- Y-axis shows decimal hours
-- Tooltips show formatted hours (e.g., "10h 30m") via the `formatValue: formatHours` custom prop
+## Shared Utilities
 
-**Data flow:**
-1. Calls `tasksApi.getTimeEntryHistory({ frequency, start_at, end_at })`
-2. API returns `{ start_at, end_at, data: [{ date, value }] }`
-3. Data is mapped to `{ date: Date, value: number }` for LayerCake
+### `src/lib/shared/utils/datetime.ts`
+
+| Function | Description |
+|---|---|
+| `toLocalDatetime(iso)` | ISO string → `datetime-local` input value |
+| `toISOString(local)` | `datetime-local` value → ISO string (or null) |
+| `formatTime(seconds)` | Seconds → "Xh Xm" display |
+| `formatDateShort(dateStr)` | Date → "22 mar" (short, for lists) |
+| `formatDateFull(iso)` | Date → "22 mar 2026, 14:30" (full, for detail views) |
 
 ## API Endpoints
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| `GET` | `/tasks/tree` | Fetch active project/task tree |
-| `GET` | `/tasks/time-entries/summary` | Today + week time totals |
-| `GET` | `/tasks/time-entries/history` | Aggregated time history (daily/weekly/monthly) |
-| CRUD | `/projects` | Project management |
-| CRUD | `/tasks` | Task management |
-| CRUD | `/todos` | Todo/subtask management |
-| CRUD | `/time-entries` | Time entry management |
+| `GET` | `/tasks/tree` | Active project/task tree |
+| `GET` | `/tasks/tasks/by-due-date` | Tasks sorted by due date |
+| `GET` | `/tasks/projects` | Root projects list |
+| `GET` | `/tasks/projects/{id}` | Project detail with time_spent |
+| `GET` | `/tasks/projects/{id}/children` | Project + child tasks/sub-projects |
+| `POST` | `/tasks/projects` | Create project |
+| `PATCH` | `/tasks/projects/{id}` | Update project |
+| `DELETE` | `/tasks/projects/{id}` | Delete project |
+| `GET` | `/tasks/tasks/{id}` | Task detail with todos |
+| `POST` | `/tasks/tasks` | Create task |
+| `PATCH` | `/tasks/tasks/{id}` | Update task |
+| `DELETE` | `/tasks/tasks/{id}` | Delete task |
+| CRUD | `/tasks/todos` | Todo management |
+| CRUD | `/tasks/time-entries` | Time entry management |
+| `GET` | `/tasks/time-entries/active` | Currently running time entry |
+| `GET` | `/tasks/time-entries/summary` | Today + week totals |
+| `GET` | `/tasks/time-entries/history` | Aggregated history (daily/weekly/monthly) |
 
 ## Floating Reminder
 
-A fixed-position note in the top-right corner showing today's cleaning task, determined by day of week:
-
-| Day | Reminder |
-|---|---|
-| Mon | Limpiar cocina |
-| Tue | Limpiar baño/cuartucho |
-| Wed | Limpiar salón |
-| Thu | Limpiar habitación |
-| Fri | Limpiar entrada e invitados |
-| Sat | Limpiar gatos y {ventanas, sofá, nevera, ...} |
-| Sun | Limpiar coche |
-
-Uses the shared `FloatingReminder` component (`src/lib/shared/components/FloatingReminder.svelte`) with a broom icon. The day-of-week mapping is defined inline in the page component via `new Date().getDay()`.
-
-## Current State
-
-The tasks UI is a scaffold. Current limitations:
-
-- Task selector is not yet functional (no dropdown/modal to pick tasks)
-- Timer is client-side only — not persisted to the backend
-- Time entries are not yet synced with the API
-- Todo management is not yet implemented in the UI
+Fixed-position note (top-right) showing today's cleaning task by day of week. Uses `FloatingReminder` component with a broom icon.
