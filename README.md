@@ -81,3 +81,7 @@ See the [`docs/`](docs/) folder for detailed documentation:
 - [Architecture](docs/architecture.md) — tech stack, project structure, API layer, auth, styling
 - [Habits](docs/habits.md) — habit tracking feature
 - [Tasks](docs/tasks.md) — task/time management feature
+
+## Development Approach
+
+The foundation of this project — the structure, basic patterns, and integrations — was built manually. After that, all visual design and code is done by [Claude Code](https://claude.com/claude-code).
