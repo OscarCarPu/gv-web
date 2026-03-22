@@ -1,3 +1,8 @@
+export interface ProjectListItem {
+    id: number;
+    name: string;
+}
+
 export interface CreateProjectRequest {
     name: string;
     description?: string | null;

@@ -3,7 +3,7 @@
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { toISOString } from '$lib/shared/utils/datetime';
-	import type { ProjectResponse } from '$lib/domains/tasks/types/Task.types';
+	import type { ProjectListItem } from '$lib/domains/tasks/types/Task.types';
 
 	interface Props {
 		open: boolean;
@@ -21,7 +21,7 @@
 	let startNow = $state(false);
 	let selectedProjectId = $state<number | null>(null);
 	let selectedParentId = $state<number | null>(null);
-	let projects = $state<ProjectResponse[]>([]);
+	let projects = $state<ProjectListItem[]>([]);
 	let currentMode = $state<'task' | 'project'>('task');
 
 	$effect(() => {
@@ -33,7 +33,7 @@
 			startNow = false;
 			selectedProjectId = prefillProjectId ?? prefillParentId ?? null;
 			selectedParentId = prefillParentId ?? prefillProjectId ?? null;
-			tasksApi.getRootProjects().then((p) => projects = p);
+			tasksApi.listProjectsFast().then((p) => projects = p);
 		}
 	});
 

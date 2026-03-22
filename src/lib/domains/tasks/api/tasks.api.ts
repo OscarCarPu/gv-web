@@ -3,6 +3,7 @@ import { fetchAPI } from '$lib/shared/api/client';
 import {
 	ProjectResponseSchema,
 	ProjectResponseListSchema,
+	ProjectListItemListSchema,
 	ProjectDetailResponseSchema,
 	ProjectChildrenResponseSchema,
 	TaskResponseSchema,
@@ -16,6 +17,7 @@ import {
 	TimeEntryHistoryResponseSchema
 } from './tasks.schemas';
 import type {
+	ProjectListItem,
 	ProjectResponse,
 	ProjectDetailResponse,
 	ProjectChildrenResponse,
@@ -40,6 +42,10 @@ import type {
 
 export const tasksApi = {
 	// --- Projects ---
+
+	async listProjectsFast(token?: string): Promise<ProjectListItem[]> {
+		return fetchAPI('/tasks/projects/list-fast', ProjectListItemListSchema, { token });
+	},
 
 	async getRootProjects(token?: string): Promise<ProjectResponse[]> {
 		return fetchAPI('/tasks/projects', ProjectResponseListSchema, { token });

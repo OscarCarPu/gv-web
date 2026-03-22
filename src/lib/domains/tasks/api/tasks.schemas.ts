@@ -146,5 +146,11 @@ export const TimeEntryHistoryResponseSchema = z.object({
 
 // --- List schemas ---
 
+export const ProjectListItemSchema = z.object({
+	id: z.number(),
+	name: z.string()
+});
+
+export const ProjectListItemListSchema = z.array(ProjectListItemSchema);
 export const ProjectResponseListSchema = z.array(ProjectResponseSchema);
 export const ActiveTreeNodeListSchema = z.array(ActiveTreeNodeSchema);
