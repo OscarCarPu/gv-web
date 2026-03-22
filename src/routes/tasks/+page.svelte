@@ -105,11 +105,11 @@
 			const entry = data.activeTimeEntry;
 			const dueDateTask = data.tasksByDueDate.find((t) => t.id === entry.task_id);
 			if (dueDateTask) {
-				timer.restore(entry.id, entry.task_id, entry.started_at, dueDateTask.name, dueDateTask.project_name);
+				timer.restore(entry.id, entry.task_id, entry.started_at, dueDateTask.name, dueDateTask.project_name, entry.comment);
 			} else {
 				const treeTask = findTaskInTree(data.activeTree, entry.task_id);
 				if (treeTask) {
-					timer.restore(entry.id, entry.task_id, entry.started_at, treeTask.name, treeTask.projectName);
+					timer.restore(entry.id, entry.task_id, entry.started_at, treeTask.name, treeTask.projectName, entry.comment);
 				}
 			}
 		}

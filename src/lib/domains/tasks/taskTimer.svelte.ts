@@ -24,6 +24,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	let comment = $state('');
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 	let startedAt: number | null = null;
+	let commentTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	function startTimer() {
 		if (startedAt === null) {
@@ -38,6 +39,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	async function stopTimer() {
 		if (timerInterval) clearInterval(timerInterval);
 		timerInterval = null;
+		if (commentTimeout) { clearTimeout(commentTimeout); commentTimeout = null; }
 
 		if (activeTimeEntryId) {
 			await api.updateTimeEntry(activeTimeEntryId, {
@@ -85,12 +87,13 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		}
 	}
 
-	function restore(timeEntryId: number, taskId: number, entryStartedAt: string, taskName: string, projectName?: string | null) {
+	function restore(timeEntryId: number, taskId: number, entryStartedAt: string, taskName: string, projectName?: string | null, entryComment?: string | null) {
 		selectedTaskId = taskId;
 		selectedTaskDisplay = projectName ? `${taskName} - ${projectName}` : taskName;
 		activeTimeEntryId = timeEntryId;
 		startedAt = new Date(entryStartedAt).getTime();
 		elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+		comment = entryComment ?? '';
 		startTimer();
 	}
 
@@ -113,6 +116,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	async function cancelTimer() {
 		if (timerInterval) clearInterval(timerInterval);
 		timerInterval = null;
+		if (commentTimeout) { clearTimeout(commentTimeout); commentTimeout = null; }
 
 		if (activeTimeEntryId) {
 			await api.deleteTimeEntry(activeTimeEntryId);
@@ -130,6 +134,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	function reset() {
 		if (timerInterval) clearInterval(timerInterval);
 		timerInterval = null;
+		if (commentTimeout) { clearTimeout(commentTimeout); commentTimeout = null; }
 		isRunning = false;
 		elapsedSeconds = 0;
 		startedAt = null;
@@ -148,7 +153,17 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		get formattedTime() { return formatTime(elapsedSeconds); },
 		get startedAtDate() { return startedAt ? new Date(startedAt) : null; },
 		get comment() { return comment; },
-		setComment(value: string) { comment = value; },
+		setComment(value: string) {
+			comment = value;
+			if (activeTimeEntryId) {
+				if (commentTimeout) clearTimeout(commentTimeout);
+				commentTimeout = setTimeout(() => {
+					if (activeTimeEntryId) {
+						api.updateTimeEntry(activeTimeEntryId, { comment: comment || null });
+					}
+				}, 500);
+			}
+		},
 		startTimer,
 		stopTimer,
 		handleTaskStart,
