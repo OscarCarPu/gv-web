@@ -35,22 +35,39 @@
 		const now = new Date();
 		const jsDay = now.getDay(); // 0=Sun, 1=Mon...6=Sat
 		const day = jsDay === 0 ? 7 : jsDay; // 1=Mon...7=Sun
-		const wakingHoursPerDay = 17; // 7am–midnight
 		const currentHour = now.getHours() + now.getMinutes() / 60;
 		const wakingHoursLeft = Math.max(0, 24 - currentHour);
-		const fractionToday = Math.min(wakingHoursLeft, wakingHoursPerDay) / wakingHoursPerDay;
-		const remainingFullDays = 7 - day; // days after today through Sunday
-		const totalDays = fractionToday + remainingFullDays;
 
-		if (totalDays <= 0) return 'Meta alcanzada ✓';
+		const isWeekendDay = (d: number) => d >= 6; // 6=Sat, 7=Sun
+		const wakingHours = (d: number) => isWeekendDay(d) ? 12 : 17;
+
+		// Uniform calculation (all days equal, 17h)
+		const uniformWaking = 17;
+		const uniformFractionToday = Math.min(wakingHoursLeft, uniformWaking) / uniformWaking;
+		const remainingFullDays = 7 - day;
+		const uniformTotalDays = uniformFractionToday + remainingFullDays;
+
+		// Weighted calculation (weekdays=17h, weekends=12h)
+		const todayWaking = wakingHours(day);
+		const weightedToday = Math.min(wakingHoursLeft, todayWaking);
+		let weightedTotal = weightedToday;
+		for (let d = day + 1; d <= 7; d++) {
+			weightedTotal += wakingHours(d);
+		}
+
+		if (uniformTotalDays <= 0) return 'Meta alcanzada ✓';
 
 		if (remainingFullDays === 0) {
 			return `${formatTime(Math.round(remaining))} hoy`;
 		}
 
-		const perDay = remaining / totalDays;
-		const today = perDay * fractionToday;
-		return `${formatTime(Math.round(perDay))}/día · ${formatTime(Math.round(today))} hoy`;
+		const uniformPerDay = remaining / uniformTotalDays;
+		const uniformToday = uniformPerDay * uniformFractionToday;
+
+		const weightedTodayShare = remaining * (weightedToday / weightedTotal);
+		const weightedPerDay = remaining * (wakingHours(day) / weightedTotal);
+
+		return `${formatTime(Math.round(uniformPerDay))}/día · ${formatTime(Math.round(uniformToday))} hoy | ${formatTime(Math.round(weightedPerDay))}/día · ${formatTime(Math.round(weightedTodayShare))} hoy`;
 	});
 
 	function formatTime(seconds: number): string {
