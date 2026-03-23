@@ -65,9 +65,10 @@
 		const uniformToday = uniformPerDay * uniformFractionToday;
 
 		const weightedTodayShare = remaining * (weightedToday / weightedTotal);
-		const weightedPerDay = remaining * (wakingHours(day) / weightedTotal);
+		const weightedPerDayWeekday = remaining * (17 / weightedTotal);
+		const weightedPerDayWeekend = remaining * (12 / weightedTotal);
 
-		return `${formatTime(Math.round(uniformPerDay))}/día · ${formatTime(Math.round(uniformToday))} hoy | ${formatTime(Math.round(weightedPerDay))}/día · ${formatTime(Math.round(weightedTodayShare))} hoy`;
+		return `${formatTime(Math.round(uniformPerDay))}/día · ${formatTime(Math.round(uniformToday))} hoy | ${formatTime(Math.round(weightedPerDayWeekday))} L-V · ${formatTime(Math.round(weightedPerDayWeekend))} S-D · ${formatTime(Math.round(weightedTodayShare))} hoy`;
 	});
 
 	function formatTime(seconds: number): string {
