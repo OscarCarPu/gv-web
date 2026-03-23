@@ -21,6 +21,13 @@
 	let showTimeHistory = $state(false);
 	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
 
+	let isWeekend = $derived.by(() => {
+		const day = new Date().getDay();
+		return day === 0 || day === 6;
+	});
+	let dailyTarget = $derived(isWeekend ? 28800 : 43200);
+	let dailyTargetLabel = $derived(isWeekend ? '8h' : '12h');
+
 	let weekTargetTooltip = $derived.by(() => {
 		const remaining = 288000 - summary.week;
 		if (remaining <= 0) return 'Meta alcanzada ✓';
@@ -240,12 +247,12 @@
 		</div>
 
 		<div class="time-summary">
-			<div class="summary-item" class:danger={summary.today < 36000} class:warning={summary.today >= 36000 && summary.today <= 39600} class:completed={summary.today > 39600}>
+			<div class="summary-item" class:danger={summary.today < dailyTarget * 5/6} class:warning={summary.today >= dailyTarget * 5/6 && summary.today <= dailyTarget * 11/12} class:completed={summary.today > dailyTarget * 11/12}>
 				<span class="summary-label">Hoy</span>
 				<div class="summary-bar-track">
-					<div class="summary-bar-fill" style="width: {Math.min(summary.today / 43200 * 100, 100)}%"></div>
+					<div class="summary-bar-fill" style="width: {Math.min(summary.today / dailyTarget * 100, 100)}%"></div>
 				</div>
-				<span class="summary-value">{formatTime(summary.today)} / 12h</span>
+				<span class="summary-value">{formatTime(summary.today)} / {dailyTargetLabel}</span>
 			</div>
 			<div class="summary-item" class:completed={summary.week >= 288000}>
 				<span class="summary-label">Semana</span>
