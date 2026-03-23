@@ -22,7 +22,7 @@
 	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
 
 	let weekTargetTooltip = $derived.by(() => {
-		const remaining = 324000 - summary.week;
+		const remaining = 288000 - summary.week;
 		if (remaining <= 0) return 'Meta alcanzada ✓';
 
 		const now = new Date();
@@ -247,12 +247,12 @@
 				</div>
 				<span class="summary-value">{formatTime(summary.today)} / 12h</span>
 			</div>
-			<div class="summary-item" class:completed={summary.week >= 324000}>
+			<div class="summary-item" class:completed={summary.week >= 288000}>
 				<span class="summary-label">Semana</span>
 				<div class="summary-bar-track">
-					<div class="summary-bar-fill" style="width: {Math.min(summary.week / 324000 * 100, 100)}%"></div>
+					<div class="summary-bar-fill" style="width: {Math.min(summary.week / 288000 * 100, 100)}%"></div>
 				</div>
-				<span class="summary-value">{formatTime(summary.week)} / 90h</span>
+				<span class="summary-value">{formatTime(summary.week)} / 80h</span>
 			</div>
 			<div class="summary-actions">
 				<span class="summary-pace">{weekTargetTooltip}</span>
