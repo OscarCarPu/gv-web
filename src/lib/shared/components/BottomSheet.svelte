@@ -17,6 +17,12 @@
 		if (open) {
 			visible = true;
 			closing = false;
+		} else if (visible && !closing) {
+			closing = true;
+			setTimeout(() => {
+				closing = false;
+				visible = false;
+			}, 250);
 		}
 	});
 
