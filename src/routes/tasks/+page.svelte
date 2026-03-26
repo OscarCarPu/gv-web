@@ -97,6 +97,7 @@
 	let selectedTaskId = $state<number | null>(null);
 	let showCreate = $state(false);
 	let createMode = $state<'task' | 'project'>('task');
+	let createPrefillProjectId = $state<number | null>(null);
 
 	function openTaskDetail(id: number) {
 		selectedTaskId = id;
@@ -292,7 +293,7 @@
 		<div class="tasks-section">
 			<div class="section-header">
 				<h2>Próximas a vencer</h2>
-				<button class="btn-primary btn-sm" onclick={() => { createMode = 'task'; showCreate = true; }}>
+				<button class="btn-primary btn-sm" onclick={() => { createMode = 'task'; createPrefillProjectId = null; showCreate = true; }}>
 					<i class="fa-solid fa-plus"></i> Tarea
 				</button>
 			</div>
@@ -306,17 +307,17 @@
 		<div class="tasks-section">
 			<div class="section-header">
 				<h2>Proyectos activos</h2>
-				<button class="btn-primary btn-sm" onclick={() => { createMode = 'project'; showCreate = true; }}>
+				<button class="btn-primary btn-sm" onclick={() => { createMode = 'project'; createPrefillProjectId = null; showCreate = true; }}>
 					<i class="fa-solid fa-plus"></i> Proyecto
 				</button>
 			</div>
 			<div class="task-list">
-				<TreeNode nodes={data.activeTree} onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)} ontoggle={handleTreeToggle} ondetail={openDetail} isTimerRunning={timer.isRunning} />
+				<TreeNode nodes={data.activeTree} onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)} ontoggle={handleTreeToggle} ondetail={openDetail} oncreatetask={(projectId) => { createMode = 'task'; createPrefillProjectId = projectId; showCreate = true; }} isTimerRunning={timer.isRunning} />
 			</div>
 		</div>
 	</div>
 </div>
 
 <TaskBottomSheet taskId={selectedTaskId} onclose={() => selectedTaskId = null} />
-<CreateBottomSheet open={showCreate} onclose={() => showCreate = false} mode={createMode} />
+<CreateBottomSheet open={showCreate} onclose={() => { showCreate = false; createPrefillProjectId = null; }} mode={createMode} prefillProjectId={createPrefillProjectId} />
 <TimeHistoryModal open={showTimeHistory} onclose={() => showTimeHistory = false} />

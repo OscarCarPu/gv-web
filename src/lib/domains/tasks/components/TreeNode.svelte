@@ -8,10 +8,11 @@
 		onstart?: (taskId: number, taskName: string, projectName?: string) => void;
 		ontoggle?: (id: number, type: 'project' | 'task', action: 'start' | 'finish') => void;
 		ondetail?: (id: number, type: 'project' | 'task') => void;
+		oncreatetask?: (projectId: number) => void;
 		isTimerRunning?: boolean;
 	}
 
-	let { nodes, onstart, ontoggle, ondetail, isTimerRunning = false }: Props = $props();
+	let { nodes, onstart, ontoggle, ondetail, oncreatetask, isTimerRunning = false }: Props = $props();
 
 	let expandedIds: Set<number> = $state(new Set());
 
@@ -36,5 +37,5 @@
 </script>
 
 {#each nodes as node (`${node.type}-${node.id}`)}
-	<TreeNodeItem {node} {onstart} {ontoggle} {ondetail} {isTimerRunning} />
+	<TreeNodeItem {node} {onstart} {ontoggle} {ondetail} {oncreatetask} {isTimerRunning} />
 {/each}

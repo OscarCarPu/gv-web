@@ -10,10 +10,11 @@
 		onstart?: (taskId: number, taskName: string, projectName?: string) => void;
 		ontoggle?: (id: number, type: 'project' | 'task', action: 'start' | 'finish') => void;
 		ondetail?: (id: number, type: 'project' | 'task') => void;
+		oncreatetask?: (projectId: number) => void;
 		isTimerRunning?: boolean;
 	}
 
-	let { node, parentProjectName, parentProjectDueAt, onstart, ontoggle, ondetail, isTimerRunning = false }: Props = $props();
+	let { node, parentProjectName, parentProjectDueAt, onstart, ontoggle, ondetail, oncreatetask, isTimerRunning = false }: Props = $props();
 
 	const { isExpanded, toggle, formatDate } = getContext<{
 		isExpanded: (id: number) => boolean;
@@ -29,7 +30,7 @@
 
 {#if isProject}
 	<div class="tree-project-wrapper">
-		<button class="tree-project-row" onclick={() => hasChildren && toggle(node.id)} disabled={!hasChildren}>
+		<button class="tree-project-row" onclick={() => hasChildren && toggle(node.id)}>
 			{#if hasChildren}
 				<i class="fa-solid fa-chevron-right tree-chevron" class:expanded></i>
 			{/if}
@@ -39,13 +40,14 @@
 				<span class="tree-project-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
 			{/if}
 		</button>
+		<button class="btn-primary btn-sm" onclick={() => oncreatetask?.(node.id)} title="Agregar tarea"><i class="fa-solid fa-plus"></i></button>
 		<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'project', 'finish')}>Acabar</button>
 	</div>
 
 	{#if expanded && hasChildren}
 		<div class="tree-children">
 			{#each node.children! as child (`${child.type}-${child.id}`)}
-				<TreeNodeItem node={child} parentProjectName={node.name} parentProjectDueAt={node.due_at} {onstart} {ontoggle} {ondetail} {isTimerRunning} />
+				<TreeNodeItem node={child} parentProjectName={node.name} parentProjectDueAt={node.due_at} {onstart} {ontoggle} {ondetail} {oncreatetask} {isTimerRunning} />
 			{/each}
 		</div>
 	{/if}

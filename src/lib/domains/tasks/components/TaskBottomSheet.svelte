@@ -72,8 +72,8 @@
 	async function remove() {
 		if (taskId == null) return;
 		await tasksApi.deleteTask(taskId);
-		await invalidateAll();
 		onclose();
+		await invalidateAll();
 	}
 
 	function sortTodos(list: TodoResponse[]): TodoResponse[] {

@@ -62,8 +62,8 @@
 			}
 		}
 
-		await invalidateAll();
 		onclose();
+		await invalidateAll();
 	}
 </script>
 
