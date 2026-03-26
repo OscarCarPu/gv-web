@@ -52,57 +52,26 @@
 	}
 </script>
 
-<div class="time-pill">
-	<input
-		type="number"
-		min="0"
-		max="23"
-		step="1"
-		placeholder="HH"
-		value={hours}
-		oninput={onHoursInput}
-	/>
-	<span class="colon">:</span>
-	<input
-		type="number"
-		min="0"
-		max="59"
-		step="1"
-		placeholder="MM"
-		value={minutes}
-		oninput={onMinutesInput}
-	/>
+<div class="pill-container">
+	<div class="pill-time">
+		<input
+			type="number"
+			min="0"
+			max="23"
+			step="1"
+			placeholder="HH"
+			value={hours}
+			oninput={onHoursInput}
+		/>
+		<span class="colon">:</span>
+		<input
+			type="number"
+			min="0"
+			max="59"
+			step="1"
+			placeholder="MM"
+			value={minutes}
+			oninput={onMinutesInput}
+		/>
+	</div>
 </div>
-
-<style>
-	@reference "../../../styles/app.css";
-
-	.time-pill {
-		@apply flex items-center gap-1 bg-bg rounded-lg px-2.5 py-2 border border-text-muted/20;
-
-		&:focus-within {
-			@apply border-text-muted/40;
-		}
-
-		input {
-			@apply text-center bg-transparent border-none focus:outline-none text-sm font-mono text-text p-0;
-			width: 2.5ch;
-			-moz-appearance: textfield;
-			appearance: textfield;
-
-			&::-webkit-outer-spin-button,
-			&::-webkit-inner-spin-button {
-				-webkit-appearance: none;
-				margin: 0;
-			}
-
-			&::placeholder {
-				@apply text-text-muted/30;
-			}
-		}
-
-		.colon {
-			@apply text-text-muted font-mono text-sm;
-		}
-	}
-</style>

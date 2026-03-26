@@ -48,7 +48,7 @@
 			style="pointer-events: none; transition: r 0.15s ease;"
 		/>
 		{#if isHovered}
-			{@const fmt = $custom?.formatValue ?? ((v) => String(v))}
+			{@const fmt = $custom?.formatValue ?? ((v: number) => String(v))}
 			{@const label = `${fmt(point.value)} · ${formatDate(point.date, $custom?.frequency ?? 'daily')}`}
 			{@const textWidth = label.length * 6.5 + 16}
 			<g transform="translate({cx}, {cy - 16})" style="pointer-events: none;">

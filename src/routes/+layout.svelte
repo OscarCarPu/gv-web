@@ -5,6 +5,7 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 	import { setClientToken } from '$lib/shared/api/client';
+	import ToastContainer from '$lib/shared/components/ToastContainer.svelte';
 
 	let { data, children } = $props();
 
@@ -30,3 +31,5 @@
 <main>
 	{@render children()}
 </main>
+
+<ToastContainer />

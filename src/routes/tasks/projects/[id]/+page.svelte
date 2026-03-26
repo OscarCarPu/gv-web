@@ -5,6 +5,8 @@
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
 	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
+	import ConfirmDialog from '$lib/shared/components/ConfirmDialog.svelte';
+	import { addToast } from '$lib/shared/stores/toast.svelte';
 
 	let { data } = $props();
 
@@ -18,6 +20,8 @@
 	let selectedTaskId = $state<number | null>(null);
 	let showCreate = $state(false);
 	let createMode = $state<'task' | 'project'>('task');
+	let saving = $state(false);
+	let confirmDelete = $state(false);
 
 	$effect(() => {
 		if (project) {
@@ -29,31 +33,54 @@
 
 	async function save() {
 		if (!project) return;
-		await tasksApi.updateProject(project.id, {
-			name,
-			description: description || null,
-			due_at: toISOString(dueAt)
-		});
-		await invalidateAll();
+		saving = true;
+		try {
+			await tasksApi.updateProject(project.id, {
+				name,
+				description: description || null,
+				due_at: toISOString(dueAt)
+			});
+			await invalidateAll();
+		} catch {
+			addToast('Error al guardar proyecto', 'error');
+		} finally {
+			saving = false;
+		}
 	}
 
 	async function setStarted() {
 		if (!project) return;
-		await tasksApi.updateProject(project.id, { started_at: new Date().toISOString() });
-		await invalidateAll();
+		try {
+			await tasksApi.updateProject(project.id, { started_at: new Date().toISOString() });
+			await invalidateAll();
+		} catch {
+			addToast('Error al iniciar proyecto', 'error');
+		}
 	}
 
 	async function setFinished() {
 		if (!project) return;
-		await tasksApi.updateProject(project.id, { finished_at: new Date().toISOString() });
-		await invalidateAll();
+		try {
+			await tasksApi.updateProject(project.id, { finished_at: new Date().toISOString() });
+			await invalidateAll();
+		} catch {
+			addToast('Error al finalizar proyecto', 'error');
+		}
 	}
 
 	async function remove() {
 		if (!project) return;
-		await tasksApi.deleteProject(project.id);
-		await invalidateAll();
-		goto('/tasks');
+		saving = true;
+		try {
+			await tasksApi.deleteProject(project.id);
+			await invalidateAll();
+			goto('/tasks');
+		} catch {
+			addToast('Error al eliminar proyecto', 'error');
+		} finally {
+			saving = false;
+			confirmDelete = false;
+		}
 	}
 
 	function openCreateTask() {
@@ -96,12 +123,12 @@
 		<div class="project-detail-card">
 			<div class="detail-form">
 				<div class="detail-inline-row">
-					<div class="detail-field" style="flex:1">
+					<div class="detail-field flex-1">
 						<label for="project-name">Nombre</label>
 						<input id="project-name" type="text" bind:value={name} />
 					</div>
 					<div class="detail-field">
-						<label>Fecha límite</label>
+						<label for="dtp-project-due">Fecha límite</label>
 						<DatetimePicker bind:value={dueAt} id="project-due" />
 					</div>
 				</div>
@@ -135,8 +162,8 @@
 				</div>
 
 				<div class="detail-actions">
-					<button class="btn-danger" onclick={remove}>Eliminar</button>
-					<button class="btn-primary" onclick={save}>Guardar</button>
+					<button class="btn-danger mr-auto" onclick={() => confirmDelete = true} disabled={saving}>Eliminar</button>
+					<button class="btn-primary" onclick={save} disabled={saving}>Guardar</button>
 				</div>
 			</div>
 		</div>
@@ -205,4 +232,12 @@
 	mode={createMode}
 	prefillProjectId={createMode === 'task' ? project?.id : null}
 	prefillParentId={createMode === 'project' ? project?.id : null}
+/>
+
+<ConfirmDialog
+	open={confirmDelete}
+	title="Eliminar proyecto"
+	message="Se eliminarán todas las tareas y sub-proyectos."
+	onconfirm={remove}
+	oncancel={() => confirmDelete = false}
 />

@@ -30,16 +30,18 @@
 
 {#if isProject}
 	<div class="tree-project-wrapper">
-		<button class="tree-project-row" onclick={() => hasChildren && toggle(node.id)}>
+		<div class="tree-project-row">
 			{#if hasChildren}
-				<i class="fa-solid fa-chevron-right tree-chevron" class:expanded></i>
+				<button class="tree-chevron-btn" onclick={() => toggle(node.id)} aria-label="Expandir">
+					<i class="fa-solid fa-chevron-right tree-chevron" class:expanded></i>
+				</button>
 			{/if}
 			<i class="fa-solid fa-folder tree-folder-icon"></i>
-			<span class="task-name-btn" onclick={(e) => { e.stopPropagation(); ondetail?.(node.id, 'project'); }} onkeydown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); ondetail?.(node.id, 'project'); } }} role="button" tabindex="0">{node.name}</span>
+			<button class="task-name-btn" onclick={() => ondetail?.(node.id, 'project')}>{node.name}</button>
 			{#if node.due_at}
 				<span class="tree-project-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
 			{/if}
-		</button>
+		</div>
 		<button class="btn-primary btn-sm" onclick={() => oncreatetask?.(node.id)} title="Agregar tarea"><i class="fa-solid fa-plus"></i></button>
 		<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'project', 'finish')}>Acabar</button>
 	</div>

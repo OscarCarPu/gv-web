@@ -4,6 +4,7 @@
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { toISOString } from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
+	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import type { ProjectListItem } from '$lib/domains/tasks/types/Task.types';
 
 	interface Props {
@@ -24,6 +25,8 @@
 	let selectedParentId = $state<number | null>(null);
 	let projects = $state<ProjectListItem[]>([]);
 	let currentMode = $state<'task' | 'project'>('task');
+	let saving = $state(false);
+	let nameError = $state(false);
 
 	$effect(() => {
 		if (open) {
@@ -32,6 +35,7 @@
 			description = '';
 			dueAt = '';
 			startNow = false;
+			nameError = false;
 			selectedProjectId = prefillProjectId ?? prefillParentId ?? null;
 			selectedParentId = prefillParentId ?? prefillProjectId ?? null;
 			tasksApi.listProjectsFast().then((p) => projects = p);
@@ -39,32 +43,42 @@
 	});
 
 	async function create() {
-		if (!name.trim()) return;
-
-		if (currentMode === 'task') {
-			const created = await tasksApi.createTask({
-				name: name.trim(),
-				description: description || null,
-				due_at: toISOString(dueAt),
-				project_id: selectedProjectId
-			});
-			if (startNow) {
-				await tasksApi.updateTask(created.id, { started_at: new Date().toISOString() });
-			}
-		} else {
-			const created = await tasksApi.createProject({
-				name: name.trim(),
-				description: description || null,
-				due_at: toISOString(dueAt),
-				parent_id: selectedParentId
-			});
-			if (startNow) {
-				await tasksApi.updateProject(created.id, { started_at: new Date().toISOString() });
-			}
+		if (!name.trim()) {
+			nameError = true;
+			return;
 		}
 
-		onclose();
-		await invalidateAll();
+		saving = true;
+		try {
+			if (currentMode === 'task') {
+				const created = await tasksApi.createTask({
+					name: name.trim(),
+					description: description || null,
+					due_at: toISOString(dueAt),
+					project_id: selectedProjectId
+				});
+				if (startNow) {
+					await tasksApi.updateTask(created.id, { started_at: new Date().toISOString() });
+				}
+			} else {
+				const created = await tasksApi.createProject({
+					name: name.trim(),
+					description: description || null,
+					due_at: toISOString(dueAt),
+					parent_id: selectedParentId
+				});
+				if (startNow) {
+					await tasksApi.updateProject(created.id, { started_at: new Date().toISOString() });
+				}
+			}
+
+			onclose();
+			await invalidateAll();
+		} catch {
+			addToast('Error al crear', 'error');
+		} finally {
+			saving = false;
+		}
 	}
 </script>
 
@@ -79,7 +93,7 @@
 	<div class="detail-form">
 		<div class="detail-field">
 			<label for="create-name">Nombre</label>
-			<input id="create-name" type="text" bind:value={name} onkeydown={(e) => e.key === 'Enter' && create()} />
+			<input id="create-name" type="text" bind:value={name} class:field-error={nameError} oninput={() => nameError = false} onkeydown={(e) => e.key === 'Enter' && create()} />
 		</div>
 		<div class="detail-field">
 			<label for="create-desc">Descripción</label>
@@ -88,12 +102,12 @@
 
 		<div class="detail-inline-row">
 			<div class="detail-field">
-				<label>Fecha límite</label>
+				<label for="dtp-create-due">Fecha límite</label>
 				<DatetimePicker bind:value={dueAt} id="create-due" />
 			</div>
 
 			{#if currentMode === 'task'}
-				<div class="detail-field" style="flex:1">
+				<div class="detail-field flex-1">
 					<label for="create-project">Proyecto</label>
 					<select id="create-project" bind:value={selectedProjectId}>
 						<option value={null}>Sin proyecto</option>
@@ -103,7 +117,7 @@
 					</select>
 				</div>
 			{:else}
-				<div class="detail-field" style="flex:1">
+				<div class="detail-field flex-1">
 					<label for="create-parent">Proyecto padre</label>
 					<select id="create-parent" bind:value={selectedParentId}>
 						<option value={null}>Raíz</option>
@@ -123,7 +137,7 @@
 		</button>
 
 		<div class="detail-actions">
-			<button class="btn-primary" onclick={create}>Crear</button>
+			<button class="btn-primary" onclick={create} disabled={saving}>Crear</button>
 		</div>
 	</div>
 </BottomSheet>

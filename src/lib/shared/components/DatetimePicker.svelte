@@ -71,13 +71,13 @@
 	}
 </script>
 
-<div class="datetime-pill">
+<div class="pill-container">
 	<button type="button" class="pill-date" id={triggerId}>
 		{displayDate}
 	</button>
 	<span class="pill-divider"></span>
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="pill-time" onclick={(e) => e.stopPropagation()}>
+	<div class="pill-time" onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
 		<input
 			type="number" min="0" max="23" step="1"
 			placeholder="HH" value={hours}
@@ -104,58 +104,3 @@
 		/>
 	</Popover>
 </div>
-
-<style>
-	@reference "../../../styles/app.css";
-
-	.datetime-pill {
-		@apply flex items-center bg-bg border border-text-muted/20 rounded-lg overflow-hidden;
-
-		&:focus-within {
-			@apply border-text-muted/40;
-		}
-	}
-
-	.pill-date {
-		@apply bg-transparent border-none text-text text-sm px-3 py-2 cursor-pointer text-left flex-1;
-
-		&:hover {
-			@apply bg-text-muted/5;
-		}
-	}
-
-	.pill-divider {
-		@apply w-px self-stretch bg-text-muted/20;
-	}
-
-	.pill-time {
-		@apply flex items-center gap-1 px-2.5 py-2;
-
-		input {
-			@apply text-center bg-transparent border-none focus:outline-none
-			       text-sm font-mono text-text p-0;
-			width: 2.5ch;
-			-moz-appearance: textfield;
-			appearance: textfield;
-
-			&::-webkit-outer-spin-button,
-			&::-webkit-inner-spin-button {
-				-webkit-appearance: none;
-				margin: 0;
-			}
-
-			&::placeholder {
-				@apply text-text-muted/30;
-			}
-		}
-
-		.colon {
-			@apply text-text-muted font-mono text-sm;
-		}
-	}
-
-	.pill-clear {
-		@apply bg-transparent border-none text-text-muted cursor-pointer pr-2.5 pl-0 py-2
-		       hover:text-danger transition-colors text-xs;
-	}
-</style>

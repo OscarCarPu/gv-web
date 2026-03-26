@@ -6,7 +6,13 @@
 }
 
 .habit-card {
-    @apply relative flex flex-col justify-between items-center p-5 border border-text-muted/20 rounded-lg bg-bg-light gap-1 h-full;
+    @apply relative flex flex-col justify-between items-center p-5 rounded-xl bg-bg-light gap-1 h-full transition-all duration-200;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
 
     .history-btn {
         @apply absolute top-2 right-2 w-7 h-7 flex items-center justify-center
@@ -23,7 +29,7 @@
     }
 
     .required-flag {
-        @apply text-xs text-orange-400;
+        @apply text-xs text-warning;
     }
 
     .frequency-badge {
@@ -39,7 +45,7 @@
         @apply flex items-center justify-center gap-2 mt-2 w-full;
 
         .adjust-btn {
-            @apply w-8 h-8 flex items-center justify-center rounded-full border border-text-muted/30 text-text-muted
+            @apply w-10 h-10 flex items-center justify-center rounded-full border border-text-muted/30 text-text-muted
                    hover:border-primary hover:text-primary transition-colors cursor-pointer bg-transparent text-sm;
         }
 
@@ -67,22 +73,6 @@
     .progress-section {
         @apply flex items-center gap-2 w-full mt-2;
 
-        .progress-bar {
-            @apply flex-1 h-2 rounded-full bg-text-muted/15 overflow-hidden;
-
-            .progress-fill {
-                @apply h-full rounded-full bg-primary transition-all duration-300;
-            }
-
-            &.met .progress-fill {
-                @apply bg-green-500;
-            }
-
-            &.exceeded .progress-fill {
-                @apply bg-red-500;
-            }
-        }
-
         .progress-text {
             @apply text-xs font-medium text-text-muted shrink-0;
         }
@@ -95,7 +85,7 @@
             @apply flex items-center gap-1 text-text-muted;
 
             &.current.active {
-                @apply text-orange-400;
+                @apply text-warning;
             }
 
             &.longest {

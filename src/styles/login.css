@@ -4,7 +4,9 @@
   @apply flex items-center justify-center min-h-screen px-4;
 
   form {
-    @apply bg-bg-light rounded-xl p-8 w-full max-w-sm shadow-lg;
+    @apply bg-bg-light rounded-xl p-8 w-full max-w-sm;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
 
     h1 {
       @apply text-2xl font-bold text-center text-text mb-2;

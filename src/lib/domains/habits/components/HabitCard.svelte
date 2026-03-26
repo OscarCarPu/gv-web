@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { HabitWithLog } from '$habits/types/Habit.types';
 	import { habitsApi } from '$habits/api/habits.api';
+	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import HabitHistoryModal from './HabitHistoryModal.svelte';
 
 	let {
@@ -87,6 +88,7 @@
 			onRefresh?.();
 		} catch {
 			optimisticValue = null;
+			addToast('Error al registrar valor', 'error');
 		}
 	}
 
@@ -130,7 +132,7 @@
 
 	{#if hasTarget}
 		<div class="progress-section">
-			<div class="progress-bar" class:met={targetMet} class:exceeded={exceeded}>
+			<div class="progress-track" class:met={targetMet} class:exceeded={exceeded}>
 				<div class="progress-fill" style="width: {progressPct}%"></div>
 			</div>
 			<span class="progress-text">{progressText}</span>

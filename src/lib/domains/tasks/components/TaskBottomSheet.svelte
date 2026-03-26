@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
+	import ConfirmDialog from '$lib/shared/components/ConfirmDialog.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { toLocalDatetime, toISOString, formatTime, formatDateFull } from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
+	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import type { TaskFullResponse, TodoResponse } from '$lib/domains/tasks/types/Task.types';
 
 	interface Props {
@@ -20,6 +22,10 @@
 	let dueAt = $state('');
 	let newTodoName = $state('');
 	let projectName = $state<string | null>(null);
+	let saving = $state(false);
+	let nameError = $state(false);
+	let confirmDelete = $state(false);
+	let confirmDeleteTodoId = $state<number | null>(null);
 
 	async function loadTask() {
 		if (taskId == null) return;
@@ -39,6 +45,7 @@
 	$effect(() => {
 		if (taskId != null) {
 			projectName = null;
+			nameError = false;
 			loadTask();
 		} else {
 			task = null;
@@ -47,34 +54,61 @@
 
 	async function setStarted() {
 		if (taskId == null) return;
-		await tasksApi.updateTask(taskId, { started_at: new Date().toISOString() });
-		await loadTask();
-		await invalidateAll();
+		try {
+			await tasksApi.updateTask(taskId, { started_at: new Date().toISOString() });
+			await loadTask();
+			await invalidateAll();
+		} catch {
+			addToast('Error al iniciar tarea', 'error');
+		}
 	}
 
 	async function setFinished() {
 		if (taskId == null) return;
-		await tasksApi.updateTask(taskId, { finished_at: new Date().toISOString() });
-		await loadTask();
-		await invalidateAll();
+		try {
+			await tasksApi.updateTask(taskId, { finished_at: new Date().toISOString() });
+			await loadTask();
+			await invalidateAll();
+		} catch {
+			addToast('Error al finalizar tarea', 'error');
+		}
 	}
 
 	async function save() {
 		if (taskId == null) return;
-		await tasksApi.updateTask(taskId, {
-			name,
-			description: description || null,
-			due_at: toISOString(dueAt)
-		});
-		await invalidateAll();
-		onclose();
+		if (!name.trim()) {
+			nameError = true;
+			return;
+		}
+		saving = true;
+		try {
+			await tasksApi.updateTask(taskId, {
+				name,
+				description: description || null,
+				due_at: toISOString(dueAt)
+			});
+			await invalidateAll();
+			onclose();
+		} catch {
+			addToast('Error al guardar tarea', 'error');
+		} finally {
+			saving = false;
+		}
 	}
 
 	async function remove() {
 		if (taskId == null) return;
-		await tasksApi.deleteTask(taskId);
-		onclose();
-		await invalidateAll();
+		saving = true;
+		try {
+			await tasksApi.deleteTask(taskId);
+			onclose();
+			await invalidateAll();
+		} catch {
+			addToast('Error al eliminar tarea', 'error');
+		} finally {
+			saving = false;
+			confirmDelete = false;
+		}
 	}
 
 	function sortTodos(list: TodoResponse[]): TodoResponse[] {
@@ -82,20 +116,34 @@
 	}
 
 	async function toggleTodo(todo: TodoResponse) {
-		const updated = await tasksApi.updateTodo(todo.id, { is_done: !todo.is_done });
-		todos = sortTodos(todos.map((t) => (t.id === updated.id ? updated : t)));
+		try {
+			const updated = await tasksApi.updateTodo(todo.id, { is_done: !todo.is_done });
+			todos = sortTodos(todos.map((t) => (t.id === updated.id ? updated : t)));
+		} catch {
+			addToast('Error al actualizar todo', 'error');
+		}
 	}
 
 	async function deleteTodo(id: number) {
-		await tasksApi.deleteTodo(id);
-		todos = todos.filter((t) => t.id !== id);
+		try {
+			await tasksApi.deleteTodo(id);
+			todos = todos.filter((t) => t.id !== id);
+		} catch {
+			addToast('Error al eliminar todo', 'error');
+		} finally {
+			confirmDeleteTodoId = null;
+		}
 	}
 
 	async function addTodo() {
 		if (!newTodoName.trim() || taskId == null) return;
-		const created = await tasksApi.createTodo({ task_id: taskId, name: newTodoName.trim() });
-		todos = [...todos, created];
-		newTodoName = '';
+		try {
+			const created = await tasksApi.createTodo({ task_id: taskId, name: newTodoName.trim() });
+			todos = [...todos, created];
+			newTodoName = '';
+		} catch {
+			addToast('Error al agregar todo', 'error');
+		}
 	}
 
 	function goToProject() {
@@ -120,12 +168,12 @@
 
 		<div class="detail-form">
 			<div class="detail-inline-row">
-				<div class="detail-field" style="flex:1">
+				<div class="detail-field flex-1">
 					<label for="task-name">Nombre</label>
-					<input id="task-name" type="text" bind:value={name} />
+					<input id="task-name" type="text" bind:value={name} class:field-error={nameError} oninput={() => nameError = false} />
 				</div>
 				<div class="detail-field">
-					<label>Fecha límite</label>
+					<label for="dtp-task-due">Fecha límite</label>
 					<DatetimePicker bind:value={dueAt} id="task-due" />
 				</div>
 			</div>
@@ -166,7 +214,7 @@
 						<div class="todo-item">
 							<input type="checkbox" checked={todo.is_done} onchange={() => toggleTodo(todo)} />
 							<span class:line-through={todo.is_done}>{todo.name}</span>
-							<button class="btn-danger btn-sm ml-auto" onclick={() => deleteTodo(todo.id)} aria-label="Delete todo">
+							<button class="btn-danger btn-sm ml-auto" onclick={() => confirmDeleteTodoId = todo.id} aria-label="Delete todo">
 								<i class="fa-solid fa-trash"></i>
 							</button>
 						</div>
@@ -179,9 +227,25 @@
 			</div>
 
 			<div class="detail-actions">
-				<button class="btn-danger" onclick={remove}>Eliminar</button>
-				<button class="btn-primary" onclick={save}>Guardar</button>
+				<button class="btn-danger mr-auto" onclick={() => confirmDelete = true} disabled={saving}>Eliminar</button>
+				<button class="btn-primary" onclick={save} disabled={saving}>Guardar</button>
 			</div>
 		</div>
 	{/if}
 </BottomSheet>
+
+<ConfirmDialog
+	open={confirmDelete}
+	title="Eliminar tarea"
+	message="Esta acción no se puede deshacer."
+	onconfirm={remove}
+	oncancel={() => confirmDelete = false}
+/>
+
+<ConfirmDialog
+	open={confirmDeleteTodoId != null}
+	title="Eliminar todo"
+	message="Se eliminará este todo."
+	onconfirm={() => { if (confirmDeleteTodoId != null) deleteTodo(confirmDeleteTodoId); }}
+	oncancel={() => confirmDeleteTodoId = null}
+/>

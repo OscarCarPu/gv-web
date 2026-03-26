@@ -268,15 +268,15 @@
 		<div class="time-summary">
 			<div class="summary-item" class:danger={summary.today < dailyTarget * 5/6} class:warning={summary.today >= dailyTarget * 5/6 && summary.today <= dailyTarget * 11/12} class:completed={summary.today > dailyTarget * 11/12}>
 				<span class="summary-label">Hoy</span>
-				<div class="summary-bar-track">
-					<div class="summary-bar-fill" style="width: {Math.min(summary.today / dailyTarget * 100, 100)}%"></div>
+				<div class="progress-track bg-bg">
+					<div class="progress-fill" style="width: {Math.min(summary.today / dailyTarget * 100, 100)}%"></div>
 				</div>
 				<span class="summary-value">{formatTime(summary.today)} / {dailyTargetLabel}</span>
 			</div>
 			<div class="summary-item" class:completed={summary.week >= 288000}>
 				<span class="summary-label">Semana</span>
-				<div class="summary-bar-track">
-					<div class="summary-bar-fill" style="width: {Math.min(summary.week / 288000 * 100, 100)}%"></div>
+				<div class="progress-track bg-bg">
+					<div class="progress-fill" style="width: {Math.min(summary.week / 288000 * 100, 100)}%"></div>
 				</div>
 				<span class="summary-value">{formatTime(summary.week)} / 80h</span>
 			</div>

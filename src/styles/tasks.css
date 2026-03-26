@@ -1,7 +1,9 @@
 @reference "./app.css";
 
 .task-timer-panel {
-    @apply flex flex-col items-center gap-4 w-full max-w-3xl mx-auto bg-bg-light rounded-lg px-6 py-5 mt-6;
+    @apply flex flex-col items-center gap-4 w-full max-w-3xl mx-auto bg-bg-light rounded-xl px-6 py-5 mt-6;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 
     .task-header {
         @apply flex items-center gap-2 w-full;
@@ -29,7 +31,7 @@
     }
 
     .comment-input {
-        @apply w-full bg-bg border-none rounded-lg px-4 py-2 text-sm text-text placeholder-text-muted/60;
+        @apply w-full bg-bg border-none rounded-lg px-4 py-2 text-sm text-text placeholder-text-muted/50;
         outline: none;
 
         &:focus {
@@ -58,8 +60,7 @@
     }
 
     .timer-display {
-        @apply text-2xl font-mono font-bold text-text tabular-nums;
-        min-width: 7rem;
+        @apply text-2xl font-mono font-bold text-text tabular-nums min-w-28;
 
         &.clickable {
             @apply cursor-pointer hover:text-primary transition-colors duration-200;
@@ -90,26 +91,6 @@
         @apply text-sm font-medium text-text-muted whitespace-nowrap;
     }
 
-    .summary-bar-track {
-        @apply flex-1 h-2 bg-bg rounded-full overflow-hidden;
-    }
-
-    .summary-bar-fill {
-        @apply h-full bg-primary rounded-full transition-all duration-300;
-    }
-
-    .summary-item.danger .summary-bar-fill {
-        @apply bg-danger;
-    }
-
-    .summary-item.warning .summary-bar-fill {
-        @apply bg-warning;
-    }
-
-    .summary-item.completed .summary-bar-fill {
-        @apply bg-success;
-    }
-
     .summary-value {
         @apply text-sm font-mono text-text tabular-nums whitespace-nowrap;
     }
@@ -120,7 +101,8 @@
 }
 
 .tasks-section {
-    @apply bg-bg-light rounded-lg px-3 py-5;
+    @apply bg-bg-light rounded-xl px-3 py-5;
+    border: 1px solid rgba(255, 255, 255, 0.06);
 
     & > h2 {
         @apply text-lg font-semibold mb-4 text-center;
@@ -140,7 +122,13 @@
 }
 
 .task-item {
-    @apply flex items-center justify-between gap-4 bg-bg rounded-lg px-4 py-3;
+    @apply flex items-center justify-between gap-4 bg-bg rounded-lg px-4 py-3 transition-colors;
+    border: 1px solid transparent;
+
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.04);
+        @apply bg-bg/80;
+    }
 }
 
 .task-info {
@@ -184,11 +172,11 @@
 }
 
 .tree-project-row {
-    @apply flex items-center gap-2 w-full bg-bg rounded-lg px-4 py-3 border-none cursor-pointer text-left;
+    @apply flex items-center gap-2 w-full bg-bg rounded-lg px-4 py-3 border-none text-left;
+}
 
-    &:disabled {
-        @apply cursor-default;
-    }
+.tree-chevron-btn {
+    @apply bg-transparent border-none cursor-pointer p-1 text-text-muted hover:text-text transition-colors;
 }
 
 .tree-project-name {
@@ -215,41 +203,17 @@
     @apply flex items-center gap-2 shrink-0;
 }
 
-.btn-start {
-    @apply bg-success text-white hover:bg-success/80;
-}
-
-.btn-sm {
-    @apply text-xs px-2 py-1;
-}
 
 .tree-project-wrapper {
     @apply flex items-center gap-2;
 }
 
 .tree-children {
-    @apply flex flex-col gap-2 mt-1;
-    margin-left: 0.75rem;
-    padding-left: 0.75rem;
-    border-left: 2px solid var(--color-primary);
+    @apply flex flex-col gap-2 mt-1 ml-3 pl-3 border-l-2 border-l-primary;
 }
 
 .task-name-btn {
     @apply font-bold text-text cursor-pointer bg-transparent border-none hover:underline text-left p-0;
-}
-
-.modal-backdrop {
-    @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50;
-}
-
-.modal-card {
-    @apply bg-bg-light rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-text-muted) transparent;
-}
-
-.modal-title {
-    @apply text-2xl font-bold text-center;
 }
 
 .detail-form {
@@ -264,7 +228,8 @@
     }
 
     & input, & textarea {
-        @apply bg-bg border border-text-muted/20 rounded-lg px-3 py-2 text-text;
+        @apply bg-bg border border-text-muted/20 rounded-lg px-3 py-2 text-sm text-text leading-normal
+               focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-colors;
     }
 }
 
@@ -308,10 +273,6 @@
     @apply flex items-center gap-3 mt-4 justify-end;
 }
 
-.btn-danger {
-    @apply bg-danger text-white hover:bg-danger/80 px-5 py-2 rounded-lg font-medium cursor-pointer border-none;
-}
-
 /* Task BottomSheet */
 
 .detail-title-row {
@@ -349,19 +310,11 @@
 }
 
 .detail-field select {
-    @apply bg-bg border border-text-muted/20 rounded-lg px-3 py-2 text-text;
+    @apply bg-bg border border-text-muted/20 rounded-lg px-3 py-2 text-text
+           focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-colors;
     color-scheme: dark;
 }
 
-
-.btn-action-sm {
-    @apply text-xs px-3 py-1.5 rounded-lg font-medium cursor-pointer border-none transition-colors
-           bg-primary/15 text-primary hover:bg-primary/25;
-
-    &.btn-start {
-        @apply bg-success/15 text-success hover:bg-success/25;
-    }
-}
 
 .start-now-toggle {
     @apply flex items-center gap-3 text-sm text-text font-medium cursor-pointer
@@ -410,11 +363,13 @@
 }
 
 .project-detail-card {
-    @apply bg-bg-light rounded-lg px-6 py-5 mt-4 max-w-5xl mx-auto;
+    @apply bg-bg-light rounded-xl px-6 py-5 mt-4 max-w-5xl mx-auto;
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .project-children-section {
-    @apply bg-bg-light rounded-lg px-4 py-5 mt-4 max-w-5xl mx-auto;
+    @apply bg-bg-light rounded-xl px-4 py-5 mt-4 max-w-5xl mx-auto;
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .project-children-header {

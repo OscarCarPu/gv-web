@@ -3,6 +3,7 @@
 	import { LayerCake, Svg } from 'layercake';
 
 	import BottomSheet from '$shared/components/BottomSheet.svelte';
+	import HistoryControls from '$shared/components/HistoryControls.svelte';
 	import { habitsApi } from '$habits/api/habits.api';
 	import type { HabitWithLog, HabitHistoryEntry } from '$habits/types/Habit.types';
 	import Line from '$shared/components/chart/Line.svelte';
@@ -40,8 +41,8 @@
 		}))
 	);
 
-	const yDomain = $derived.by(() => {
-		if (chartData.length === 0) return [0, null];
+	const yDomain = $derived.by((): [number, number] => {
+		if (chartData.length === 0) return [0, 1];
 		const values = chartData.map((d) => d.value);
 		const min = Math.min(...values);
 		const max = Math.max(...values);
@@ -74,10 +75,6 @@
 		}
 	}
 
-	function onDateChange() {
-		fetchHistory();
-	}
-
 	$effect(() => {
 		if (open) {
 			void frequency;
@@ -91,30 +88,26 @@
 <BottomSheet {open} {onclose}>
 	<h3 class="modal-title">{habit.name}</h3>
 
-	<div class="history-controls">
-		<div class="frequency-toggle">
-			{#each frequencies as f}
-				<button
-					class:active={frequency === f.value}
-					onclick={() => frequencyOverride = f.value}
-					type="button"
-					aria-label={f.value}
-				>
-					<i class={f.icon}></i>
-				</button>
-			{/each}
-		</div>
-		<div class="history-dates">
-			<input type="date" bind:value={startAt} onchange={onDateChange} />
-			<span class="date-separator">—</span>
-			<input type="date" bind:value={endAt} onchange={onDateChange} />
-		</div>
-	</div>
+	<HistoryControls
+		{frequencies}
+		{frequency}
+		bind:startAt
+		bind:endAt
+		onfrequencychange={(v) => frequencyOverride = v}
+		ondatechange={fetchHistory}
+	/>
 
 	{#if loading}
-		<div class="history-empty">Cargando...</div>
+		<div class="history-loading">
+			<div class="spinner"></div>
+			Cargando...
+		</div>
 	{:else if chartData.length === 0}
-		<div class="history-empty">Sin datos para este período</div>
+		<div class="history-empty">
+			<i class="fa-solid fa-chart-line text-2xl"></i>
+			<span>Sin datos para este período</span>
+			<span class="text-sm">Prueba ajustar las fechas</span>
+		</div>
 	{:else}
 		<div class="chart-container" style="width: 100%; height: 250px;">
 			<LayerCake
