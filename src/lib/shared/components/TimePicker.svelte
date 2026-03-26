@@ -52,7 +52,7 @@
 	}
 </script>
 
-<div class="time-picker">
+<div class="time-pill">
 	<input
 		type="number"
 		min="0"
@@ -77,12 +77,16 @@
 <style>
 	@reference "../../../styles/app.css";
 
-	.time-picker {
-		@apply flex items-center bg-bg rounded-lg px-3 py-2 border border-text-muted/20;
+	.time-pill {
+		@apply flex items-center gap-1 bg-bg rounded-lg px-2.5 py-2 border border-text-muted/20;
+
+		&:focus-within {
+			@apply border-text-muted/40;
+		}
 
 		input {
 			@apply text-center bg-transparent border-none focus:outline-none text-sm font-mono text-text p-0;
-			width: 2ch;
+			width: 2.5ch;
 			-moz-appearance: textfield;
 			appearance: textfield;
 
@@ -90,6 +94,10 @@
 			&::-webkit-inner-spin-button {
 				-webkit-appearance: none;
 				margin: 0;
+			}
+
+			&::placeholder {
+				@apply text-text-muted/30;
 			}
 		}
 

@@ -266,11 +266,6 @@
     & input, & textarea {
         @apply bg-bg border border-text-muted/20 rounded-lg px-3 py-2 text-text;
     }
-
-    & input[type="datetime-local"] {
-        @apply text-sm px-2 py-1.5;
-        color-scheme: dark;
-    }
 }
 
 .todo-list {

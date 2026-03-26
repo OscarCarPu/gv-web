@@ -50,9 +50,10 @@
 </script>
 
 <Popover triggeredBy="#timer-display-trigger" trigger="click" class="started-at-popover">
-	<div class="started-at-editor" onfocusout={handleFocusOut}>
-		<span class="editor-label">Inicio</span>
-		<div class="editor-inputs">
+	<div class="started-at-pill" onfocusout={handleFocusOut}>
+		<span class="pill-label">Inicio</span>
+		<span class="pill-divider"></span>
+		<div class="pill-time">
 			<input
 				type="number" min="0" max="23" step="1"
 				placeholder="HH" value={hours}
@@ -71,21 +72,24 @@
 <style>
 	@reference "../../../../styles/app.css";
 
-	.started-at-editor {
-		@apply flex items-center gap-3 p-2;
+	.started-at-pill {
+		@apply flex items-center bg-bg border border-text-muted/20 rounded-lg overflow-hidden m-1;
 
-		.editor-label {
-			@apply text-xs text-text-muted font-medium;
+		.pill-label {
+			@apply text-sm text-text-muted font-medium px-3 py-2;
 		}
 
-		.editor-inputs {
-			@apply flex items-center gap-1;
+		.pill-divider {
+			@apply w-px self-stretch bg-text-muted/20;
+		}
+
+		.pill-time {
+			@apply flex items-center gap-1 px-2.5 py-2;
 
 			input {
-				@apply text-center bg-bg border border-text-muted/20 rounded
-				       focus:outline-none focus:border-primary
-				       text-sm font-mono text-text p-1;
-				width: 4ch;
+				@apply text-center bg-transparent border-none focus:outline-none
+				       text-sm font-mono text-text p-0;
+				width: 2.5ch;
 				-moz-appearance: textfield;
 				appearance: textfield;
 
@@ -94,12 +98,15 @@
 					-webkit-appearance: none;
 					margin: 0;
 				}
+
+				&::placeholder {
+					@apply text-text-muted/30;
+				}
 			}
 
 			.colon {
 				@apply text-text-muted font-mono text-sm;
 			}
 		}
-
 	}
 </style>

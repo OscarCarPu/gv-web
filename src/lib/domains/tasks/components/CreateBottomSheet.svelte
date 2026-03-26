@@ -3,6 +3,7 @@
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { toISOString } from '$lib/shared/utils/datetime';
+	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import type { ProjectListItem } from '$lib/domains/tasks/types/Task.types';
 
 	interface Props {
@@ -87,8 +88,8 @@
 
 		<div class="detail-inline-row">
 			<div class="detail-field">
-				<label for="create-due">Fecha límite</label>
-				<input id="create-due" type="datetime-local" bind:value={dueAt} />
+				<label>Fecha límite</label>
+				<DatetimePicker bind:value={dueAt} id="create-due" />
 			</div>
 
 			{#if currentMode === 'task'}

@@ -3,6 +3,7 @@
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { toLocalDatetime, toISOString, formatTime, formatDateFull } from '$lib/shared/utils/datetime';
+	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import type { TaskFullResponse, TodoResponse } from '$lib/domains/tasks/types/Task.types';
 
 	interface Props {
@@ -124,8 +125,8 @@
 					<input id="task-name" type="text" bind:value={name} />
 				</div>
 				<div class="detail-field">
-					<label for="task-due">Fecha límite</label>
-					<input id="task-due" type="datetime-local" bind:value={dueAt} />
+					<label>Fecha límite</label>
+					<DatetimePicker bind:value={dueAt} id="task-due" />
 				</div>
 			</div>
 			<div class="detail-field">

@@ -2,6 +2,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { toLocalDatetime, toISOString, formatTime, formatDateShort, formatDateFull } from '$lib/shared/utils/datetime';
+	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
 	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
 
@@ -100,8 +101,8 @@
 						<input id="project-name" type="text" bind:value={name} />
 					</div>
 					<div class="detail-field">
-						<label for="project-due">Fecha límite</label>
-						<input id="project-due" type="datetime-local" bind:value={dueAt} />
+						<label>Fecha límite</label>
+						<DatetimePicker bind:value={dueAt} id="project-due" />
 					</div>
 				</div>
 				<div class="detail-field">
