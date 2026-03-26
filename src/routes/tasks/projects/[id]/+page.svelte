@@ -5,7 +5,6 @@
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
 	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
-	import ConfirmDialog from '$lib/shared/components/ConfirmDialog.svelte';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
 
 	let { data } = $props();
@@ -21,7 +20,6 @@
 	let showCreate = $state(false);
 	let createMode = $state<'task' | 'project'>('task');
 	let saving = $state(false);
-	let confirmDelete = $state(false);
 
 	$effect(() => {
 		if (project) {
@@ -79,7 +77,6 @@
 			addToast('Error al eliminar proyecto', 'error');
 		} finally {
 			saving = false;
-			confirmDelete = false;
 		}
 	}
 
@@ -162,7 +159,7 @@
 				</div>
 
 				<div class="detail-actions">
-					<button class="btn-danger mr-auto" onclick={() => confirmDelete = true} disabled={saving}>Eliminar</button>
+					<button class="btn-danger mr-auto" onclick={remove} disabled={saving}>Eliminar</button>
 					<button class="btn-primary" onclick={save} disabled={saving}>Guardar</button>
 				</div>
 			</div>
@@ -232,12 +229,4 @@
 	mode={createMode}
 	prefillProjectId={createMode === 'task' ? project?.id : null}
 	prefillParentId={createMode === 'project' ? project?.id : null}
-/>
-
-<ConfirmDialog
-	open={confirmDelete}
-	title="Eliminar proyecto"
-	message="Se eliminarán todas las tareas y sub-proyectos."
-	onconfirm={remove}
-	oncancel={() => confirmDelete = false}
 />

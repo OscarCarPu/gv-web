@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
-	import ConfirmDialog from '$lib/shared/components/ConfirmDialog.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { toLocalDatetime, toISOString, formatTime, formatDateFull } from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
@@ -24,8 +23,6 @@
 	let projectName = $state<string | null>(null);
 	let saving = $state(false);
 	let nameError = $state(false);
-	let confirmDelete = $state(false);
-	let confirmDeleteTodoId = $state<number | null>(null);
 
 	async function loadTask() {
 		if (taskId == null) return;
@@ -107,7 +104,6 @@
 			addToast('Error al eliminar tarea', 'error');
 		} finally {
 			saving = false;
-			confirmDelete = false;
 		}
 	}
 
@@ -130,8 +126,6 @@
 			todos = todos.filter((t) => t.id !== id);
 		} catch {
 			addToast('Error al eliminar todo', 'error');
-		} finally {
-			confirmDeleteTodoId = null;
 		}
 	}
 
@@ -214,7 +208,7 @@
 						<div class="todo-item">
 							<input type="checkbox" checked={todo.is_done} onchange={() => toggleTodo(todo)} />
 							<span class:line-through={todo.is_done}>{todo.name}</span>
-							<button class="btn-danger btn-sm ml-auto" onclick={() => confirmDeleteTodoId = todo.id} aria-label="Delete todo">
+							<button class="btn-danger btn-sm ml-auto" onclick={() => deleteTodo(todo.id)} aria-label="Delete todo">
 								<i class="fa-solid fa-trash"></i>
 							</button>
 						</div>
@@ -227,25 +221,9 @@
 			</div>
 
 			<div class="detail-actions">
-				<button class="btn-danger mr-auto" onclick={() => confirmDelete = true} disabled={saving}>Eliminar</button>
+				<button class="btn-danger mr-auto" onclick={remove} disabled={saving}>Eliminar</button>
 				<button class="btn-primary" onclick={save} disabled={saving}>Guardar</button>
 			</div>
 		</div>
 	{/if}
 </BottomSheet>
-
-<ConfirmDialog
-	open={confirmDelete}
-	title="Eliminar tarea"
-	message="Esta acción no se puede deshacer."
-	onconfirm={remove}
-	oncancel={() => confirmDelete = false}
-/>
-
-<ConfirmDialog
-	open={confirmDeleteTodoId != null}
-	title="Eliminar todo"
-	message="Se eliminará este todo."
-	onconfirm={() => { if (confirmDeleteTodoId != null) deleteTodo(confirmDeleteTodoId); }}
-	oncancel={() => confirmDeleteTodoId = null}
-/>

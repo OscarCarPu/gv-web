@@ -64,6 +64,7 @@ Charts use LayerCake + D3 scale. Components in `src/lib/shared/components/chart/
 - **Zod validation**: Every API response has a schema in `{domain}/api/*.schemas.ts` — always validate
 - **CSS convention**: Styles go in global CSS files (`src/styles/`), not in component `<style>` blocks. Use existing classes from components.css/tasks.css/habits.css before creating new ones
 - **Spanish UI**: All user-facing text is in Spanish
+- **No confirmation dialogs**: Destructive actions (delete task, delete project, delete todo) execute immediately without confirmation modals
 - **Env vars**: `VITE_API_URL` (browser), `API_URL` (server/Docker), `ORIGIN` (CSRF)
 
 ## Deployment
