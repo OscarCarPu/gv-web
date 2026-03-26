@@ -11,7 +11,7 @@
 
     .task-selector {
         @apply flex-1 text-center text-lg font-medium text-text-muted bg-bg rounded-lg px-4 py-3 border border-text-muted/20 cursor-default appearance-none;
-        font: inherit;
+        font-family: inherit;
 
         &.active {
             @apply text-text cursor-pointer;
@@ -80,7 +80,7 @@
     }
 
     .summary-pace {
-        @apply text-sm font-mono text-text-muted tabular-nums;
+        @apply text-sm text-text-muted tabular-nums;
     }
 
     .summary-item {
@@ -92,7 +92,7 @@
     }
 
     .summary-value {
-        @apply text-sm font-mono text-text tabular-nums whitespace-nowrap;
+        @apply text-sm text-text tabular-nums whitespace-nowrap;
     }
 }
 

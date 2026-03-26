@@ -45,7 +45,7 @@ Login (password) → optional 2FA (TOTP) → JWT stored as httpOnly cookie (`ses
 
 ### Styling System
 
-Tailwind CSS 4 via Vite plugin — config lives in `src/styles/app.css` using `@theme` directive (no tailwind.config.js). Single custom breakpoint: `desktop` at 1000px (default sm/md/lg/xl/2xl disabled). Feature CSS files use `@reference "./app.css"` to access theme tokens. Font: Manrope (body), JetBrains Mono (monospace). All component styles use `@apply` in global CSS files — only use scoped `<style>` blocks as a last resort.
+Tailwind CSS 4 via Vite plugin — config lives in `src/styles/app.css` using `@theme` directive (no tailwind.config.js). Single custom breakpoint: `desktop` at 1000px (default sm/md/lg/xl/2xl disabled). Feature CSS files use `@reference "./app.css"` to access theme tokens. Font: Inter (body), JetBrains Mono (monospace). All component styles use `@apply` in global CSS files — only use scoped `<style>` blocks as a last resort.
 
 ### Path Aliases
 

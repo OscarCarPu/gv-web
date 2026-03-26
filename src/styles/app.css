@@ -15,7 +15,7 @@
   --color-info: #3b82f6;
   --color-danger: #f87171;
   --color-warning: #fbbf24;
-  --font-sans: 'Manrope', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --breakpoint-desktop: 1000px;
   --breakpoint-sm: initial;
