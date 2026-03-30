@@ -19,6 +19,17 @@
 	let summaryOverride = $state<TimeEntrySummaryResponse | null>(null);
 	let commentExpanded = $state(false);
 	let showTimeHistory = $state(false);
+
+	const FOLD_LIMIT = 15;
+	const EXPAND_STEP = 10;
+	let dueDateVisibleCount = $state(FOLD_LIMIT);
+	let visibleDueDateTasks = $derived(data.tasksByDueDate.slice(0, dueDateVisibleCount));
+	let hasMoreDueDateTasks = $derived(dueDateVisibleCount < data.tasksByDueDate.length);
+	let remainingDueDateTasks = $derived(data.tasksByDueDate.length - dueDateVisibleCount);
+
+	function showMoreDueDateTasks() {
+		dueDateVisibleCount = Math.min(dueDateVisibleCount + EXPAND_STEP, data.tasksByDueDate.length);
+	}
 	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
 
 	let isWeekend = $derived.by(() => {
@@ -298,9 +309,19 @@
 				</button>
 			</div>
 			<div class="task-list">
-				{#each data.tasksByDueDate as task (task.id)}
+				{#each visibleDueDateTasks as task (task.id)}
 					<TaskItem {task} onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)} ontoggle={handleTaskToggle} ondetail={openTaskDetail} isTimerRunning={timer.isRunning} />
 				{/each}
+				{#if hasMoreDueDateTasks}
+					<button class="show-more-btn" onclick={showMoreDueDateTasks}>
+						<span class="show-more-line"></span>
+						<span class="show-more-pill">
+							<i class="fa-solid fa-chevron-down"></i>
+							<span>{remainingDueDateTasks} más</span>
+						</span>
+						<span class="show-more-line"></span>
+					</button>
+				{/if}
 			</div>
 		</div>
 

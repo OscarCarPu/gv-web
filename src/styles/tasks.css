@@ -121,6 +121,36 @@
     @apply flex flex-col gap-2;
 }
 
+.show-more-btn {
+    @apply flex items-center gap-3 w-full bg-transparent border-none cursor-pointer py-2 px-1;
+
+    .show-more-line {
+        @apply flex-1 h-px bg-text-muted/15 transition-colors duration-300;
+    }
+
+    .show-more-pill {
+        @apply flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium
+               text-text-muted bg-bg border border-text-muted/15
+               transition-all duration-300;
+    }
+
+    .show-more-pill i {
+        @apply text-[10px] transition-transform duration-300;
+    }
+
+    &:hover .show-more-line {
+        @apply bg-primary/30;
+    }
+
+    &:hover .show-more-pill {
+        @apply text-primary border-primary/30 bg-primary/5;
+    }
+
+    &:hover .show-more-pill i {
+        @apply translate-y-0.5;
+    }
+}
+
 .task-item {
     @apply flex items-center justify-between gap-4 bg-bg rounded-lg px-4 py-3 transition-colors;
     border: 1px solid transparent;
