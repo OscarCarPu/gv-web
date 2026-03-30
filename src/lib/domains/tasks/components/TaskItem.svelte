@@ -44,7 +44,7 @@
 			<span class="task-description">{task.description}</span>
 		{/if}
 		<div class="task-meta">
-			<span class="task-status" class:started={isStarted}>
+			<span class="status-badge" class:started={isStarted}>
 				{isStarted ? 'En progreso' : 'Pendiente'}
 			</span>
 			{#if hasOwnDue}

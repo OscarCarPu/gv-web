@@ -47,6 +47,8 @@ Login (password) → optional 2FA (TOTP) → JWT stored as httpOnly cookie (`ses
 
 Tailwind CSS 4 via Vite plugin — config lives in `src/styles/app.css` using `@theme` directive (no tailwind.config.js). Single custom breakpoint: `desktop` at 1000px (default sm/md/lg/xl/2xl disabled). Feature CSS files use `@reference "./app.css"` to access theme tokens. Font: Inter (body), JetBrains Mono (monospace). All component styles use `@apply` in global CSS files — only use scoped `<style>` blocks as a last resort.
 
+Shared base utilities are defined via `@utility` in `components.css` (e.g. `btn`, `status-badge`) so they can be composed with `@apply` across files. Border colors use theme tokens `--color-border` / `--color-border-light` — never hardcode `rgba()` for borders.
+
 ### Path Aliases
 
 - `$shared` → `src/lib/shared`
@@ -62,7 +64,7 @@ Charts use LayerCake + D3 scale. Components in `src/lib/shared/components/chart/
 
 - **Svelte 5 runes**: Use `$state`, `$derived`, `$effect` — not legacy `$:` or stores
 - **Zod validation**: Every API response has a schema in `{domain}/api/*.schemas.ts` — always validate
-- **CSS convention**: Styles go in global CSS files (`src/styles/`), not in component `<style>` blocks. Use existing classes from components.css/tasks.css/habits.css before creating new ones
+- **CSS convention**: Styles go in global CSS files (`src/styles/`), not in component `<style>` blocks. Use existing classes from components.css/tasks.css/habits.css before creating new ones. See `docs/styling.md` for the full class inventory
 - **Spanish UI**: All user-facing text is in Spanish
 - **No confirmation dialogs**: Destructive actions (delete task, delete project, delete todo) execute immediately without confirmation modals
 - **List folding**: Long lists fold at 15 items with a "show more" divider (line—pill—line pattern, `.show-more-btn`) that expands 10 at a time. See "Próximas a vencer" in `/tasks` for reference

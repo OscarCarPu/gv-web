@@ -5,7 +5,7 @@
 
   form {
     @apply bg-bg-light rounded-xl p-8 w-full max-w-sm;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--color-border-light);
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
 
     h1 {
@@ -45,7 +45,7 @@
     }
 
     .back-link {
-      @apply flex items-center justify-center gap-2 text-text-muted hover:text-text text-sm mt-4 transition-colors;
+      @apply justify-center mt-4;
     }
   }
 }

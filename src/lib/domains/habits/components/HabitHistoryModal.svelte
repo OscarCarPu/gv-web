@@ -109,7 +109,7 @@
 			<span class="text-sm">Prueba ajustar las fechas</span>
 		</div>
 	{:else}
-		<div class="chart-container" style="width: 100%; height: 250px;">
+		<div class="chart-container">
 			<LayerCake
 				data={chartData}
 				x="date"

@@ -102,8 +102,10 @@ Defined in `src/styles/app.css` inside the `@theme` block:
 - `--color-primary`, `--color-secondary` — brand colors
 - `--color-bg`, `--color-bg-light` — dark background tones
 - `--color-text`, `--color-text-muted` — text colors
-- `--color-success`, `--color-info`, `--color-danger` — semantic colors
+- `--color-success`, `--color-info`, `--color-danger`, `--color-warning` — semantic colors
+- `--color-border`, `--color-border-light` — border colors (use these instead of hardcoded `rgba()`)
 - `--font-sans` — Inter font stack
+- `--font-mono` — JetBrains Mono (timers, numeric displays)
 
 ### Responsive Design
 
@@ -113,6 +115,17 @@ The app uses a single custom breakpoint — `desktop` at 1000px — instead of T
 - **1000px and above:** Desktop/full-screen layout (multi-column). Habits show 3 columns; tasks show 2 columns.
 
 Usage in CSS: `desktop:grid-cols-3`, `desktop:flex-row`, etc.
+
+### Shared Utilities (`@utility`)
+
+`components.css` defines reusable base utilities via Tailwind's `@utility` directive, making them composable with `@apply` across all CSS files:
+
+| Utility | Purpose |
+|---|---|
+| `btn` | Base button styles (flex, padding, rounded, font, cursor, transition) |
+| `status-badge` | Small pill badge (text-xs, rounded-full, muted colors) |
+
+These are extended by regular classes (e.g. `.btn-primary { @apply btn bg-primary ... }`). See `docs/styling.md` for the full class inventory.
 
 ### Per-Feature CSS
 

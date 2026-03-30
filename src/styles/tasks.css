@@ -2,7 +2,7 @@
 
 .task-timer-panel {
     @apply flex flex-col items-center gap-4 w-full max-w-3xl mx-auto bg-bg-light rounded-xl px-6 py-5 mt-6;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--color-border);
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 
     .task-header {
@@ -102,7 +102,7 @@
 
 .tasks-section {
     @apply bg-bg-light rounded-xl px-3 py-5;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--color-border);
 
     & > h2 {
         @apply text-lg font-semibold mb-4 text-center;
@@ -184,14 +184,6 @@
 .task-meta {
     @apply flex items-center gap-3 text-xs mt-1;
 
-    .task-status {
-        @apply px-2 py-0.5 rounded-full bg-text-muted/20 text-text-muted;
-
-        &.started {
-            @apply bg-primary/20 text-primary;
-        }
-    }
-
     .task-due {
         @apply text-text-muted;
     }
@@ -230,7 +222,7 @@
 }
 
 .task-actions {
-    @apply flex items-center gap-2 shrink-0;
+    @apply flex items-center gap-3 shrink-0;
 }
 
 
@@ -351,22 +343,6 @@
            bg-transparent border-none p-0;
 }
 
-.start-now-switch {
-    @apply relative w-10 h-5 rounded-full bg-text-muted/30 transition-colors;
-
-    &.active {
-        @apply bg-success;
-
-        .start-now-knob {
-            @apply translate-x-5;
-        }
-    }
-}
-
-.start-now-knob {
-    @apply absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform;
-}
-
 /* Create BottomSheet */
 
 .create-mode-toggle {
@@ -388,18 +364,14 @@
     @apply flex items-center gap-4 mt-2 max-w-5xl mx-auto;
 }
 
-.back-link {
-    @apply flex items-center gap-2 text-text-muted hover:text-text transition-colors text-sm font-medium;
-}
-
 .project-detail-card {
     @apply bg-bg-light rounded-xl px-6 py-5 mt-4 max-w-5xl mx-auto;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--color-border);
 }
 
 .project-children-section {
     @apply bg-bg-light rounded-xl px-4 py-5 mt-4 max-w-5xl mx-auto;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--color-border);
 }
 
 .project-children-header {
@@ -437,18 +409,6 @@
 
 .child-time {
     @apply text-xs text-text-muted;
-}
-
-.child-status {
-    @apply text-xs px-2 py-0.5 rounded-full bg-text-muted/20 text-text-muted;
-
-    &.started {
-        @apply bg-primary/20 text-primary;
-    }
-
-    &.finished {
-        @apply bg-success/20 text-success;
-    }
 }
 
 .child-chevron {

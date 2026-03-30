@@ -193,7 +193,7 @@
 								{#if child.time_spent > 0}
 									<span class="child-time"><i class="fa-regular fa-clock"></i> {formatTime(child.time_spent)}</span>
 								{/if}
-								<span class="child-status" class:started={child.started_at != null} class:finished={child.finished_at != null}>
+								<span class="status-badge" class:started={child.started_at != null} class:finished={child.finished_at != null}>
 									{child.finished_at ? 'Completado' : child.started_at ? 'En progreso' : 'Pendiente'}
 								</span>
 								<i class="fa-solid fa-chevron-right child-chevron"></i>
@@ -208,7 +208,7 @@
 								{#if child.time_spent > 0}
 									<span class="child-time"><i class="fa-regular fa-clock"></i> {formatTime(child.time_spent)}</span>
 								{/if}
-								<span class="child-status" class:started={child.started_at != null} class:finished={child.finished_at != null}>
+								<span class="status-badge" class:started={child.started_at != null} class:finished={child.finished_at != null}>
 									{child.finished_at ? 'Completado' : child.started_at ? 'En progreso' : 'Pendiente'}
 								</span>
 							</button>

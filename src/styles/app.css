@@ -15,6 +15,8 @@
   --color-info: #3b82f6;
   --color-danger: #f87171;
   --color-warning: #fbbf24;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-light: rgba(255, 255, 255, 0.08);
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --breakpoint-desktop: 1000px;
@@ -53,7 +55,7 @@ main {
 
 .date-navigation {
     @apply flex items-center gap-4 mx-auto w-fit bg-bg-light rounded-xl px-5 py-3 mt-6;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--color-border);
 
     & > p {
         @apply text-center text-lg font-medium cursor-pointer min-w-[17rem];

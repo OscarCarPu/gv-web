@@ -130,8 +130,8 @@
 		</div>
 
 		<button class="start-now-toggle" type="button" onclick={() => startNow = !startNow}>
-			<div class="start-now-switch" class:active={startNow}>
-				<div class="start-now-knob"></div>
+			<div class="toggle toggle-sm" class:on={startNow} class:off={!startNow}>
+				<div class="knob"></div>
 			</div>
 			Empezar ya
 		</button>

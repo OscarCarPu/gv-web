@@ -98,9 +98,9 @@ This prevents the line from touching the top/bottom edges while keeping 0 as the
 
 ## Styling
 
-Chart styles live in `src/styles/habits.css`:
+Chart styles live in `src/styles/components.css`:
 
-- `.chart-container` — wrapper with top margin
+- `.chart-container` — wrapper with top margin, full width, 250px height
 - `.history-controls` — flex row containing frequency toggle and date inputs
 - `.frequency-toggle` — segmented control with 3 icon buttons
 - `.frequency-toggle button.active` — primary background for selected frequency
