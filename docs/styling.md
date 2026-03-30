@@ -71,7 +71,7 @@ Size/state modifiers (combine with variants):
 
 ### `status-badge`
 
-Small status pill: `text-xs px-2 py-0.5 rounded-full bg-text-muted/20 text-text-muted`
+Small status pill: `text-xs font-medium px-2 py-0.5 rounded-full border border-current/25 bg-text-muted/20 text-text-muted`
 
 State classes on the element:
 
@@ -183,7 +183,7 @@ State classes on the parent element:
 | `.habit-header` | Title row (name + flag + badge) |
 | `.title` | Habit name |
 | `.required-flag` | Warning-colored flag icon |
-| `.frequency-badge` | Purple pill for non-daily habits |
+| `.frequency-badge` | Purple pill for non-daily habits (same shape as `status-badge`) |
 | `.description` | Truncated description (2 lines) |
 | `.value-controls` | +/- buttons + number input |
 | `.adjust-btn` | Round increment/decrement button |

@@ -33,7 +33,7 @@
     }
 
     .frequency-badge {
-        @apply text-xs font-medium px-2 py-0.5 rounded-full bg-secondary/15 text-secondary shrink-0;
+        @apply text-xs font-medium px-2 py-0.5 rounded-full border border-current/25 bg-secondary/15 text-secondary shrink-0;
     }
 
     .description {

@@ -5,7 +5,7 @@
 }
 
 @utility status-badge {
-    @apply text-xs px-2 py-0.5 rounded-full bg-text-muted/20 text-text-muted;
+    @apply text-xs font-medium px-2 py-0.5 rounded-full border border-current/25;
 }
 
 .app-header {
@@ -272,6 +272,8 @@
 /* Status Badge — base styles via @utility status-badge */
 
 .status-badge {
+    @apply status-badge bg-text-muted/20 text-text-muted;
+
     &.started {
         @apply bg-primary/20 text-primary;
     }
