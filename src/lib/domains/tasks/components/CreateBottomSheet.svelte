@@ -5,7 +5,8 @@
 	import { toISOString } from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import type { ProjectListItem } from '$lib/domains/tasks/types/Task.types';
+	import type { ProjectListItem, TaskDepRef } from '$lib/domains/tasks/types/Task.types';
+	import DepSelector from './DepSelector.svelte';
 
 	interface Props {
 		open: boolean;
@@ -27,6 +28,7 @@
 	let currentMode = $state<'task' | 'project'>('task');
 	let saving = $state(false);
 	let nameError = $state(false);
+	let selectedDeps = $state<TaskDepRef[]>([]);
 
 	$effect(() => {
 		if (open) {
@@ -36,6 +38,7 @@
 			dueAt = '';
 			startNow = false;
 			nameError = false;
+			selectedDeps = [];
 			selectedProjectId = prefillProjectId ?? prefillParentId ?? null;
 			selectedParentId = prefillParentId ?? prefillProjectId ?? null;
 			tasksApi.listProjectsFast().then((p) => projects = p);
@@ -55,7 +58,8 @@
 					name: name.trim(),
 					description: description || null,
 					due_at: toISOString(dueAt),
-					project_id: selectedProjectId
+					project_id: selectedProjectId,
+					depends_on: selectedDeps.length > 0 ? selectedDeps.map((d) => d.id) : undefined
 				});
 				if (startNow) {
 					await tasksApi.updateTask(created.id, { started_at: new Date().toISOString() });
@@ -128,6 +132,15 @@
 				</div>
 			{/if}
 		</div>
+
+		{#if currentMode === 'task'}
+			<DepSelector
+				selected={selectedDeps}
+				onchange={(deps) => selectedDeps = deps}
+				excludeId={-1}
+				label="Depende de"
+			/>
+		{/if}
 
 		<button class="start-now-toggle" type="button" onclick={() => startNow = !startNow}>
 			<div class="toggle toggle-sm" class:on={startNow} class:off={!startNow}>

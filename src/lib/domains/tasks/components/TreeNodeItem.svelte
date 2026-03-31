@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ActiveTreeNode } from '$lib/domains/tasks/types/Task.types';
 	import TreeNodeItem from './TreeNodeItem.svelte';
+	import DepBadges from './DepBadges.svelte';
 	import { getContext } from 'svelte';
 
 	interface Props {
@@ -57,6 +58,9 @@
 	<div class="task-item">
 		<div class="task-info">
 			<button class="task-name-btn" onclick={() => ondetail?.(node.id, 'task')}>{node.name}</button>
+			{#if node.depends_on?.length}
+				<DepBadges deps={node.depends_on} ondetail={(id) => ondetail?.(id, 'task')} />
+			{/if}
 			{#if parentProjectName}
 				<span class="task-project">
 					{parentProjectName}

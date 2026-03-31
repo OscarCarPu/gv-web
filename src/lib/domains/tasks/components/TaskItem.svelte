@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
+	import DepBadges from './DepBadges.svelte';
 
 	interface Props {
 		task: TaskByDueDateResponse;
@@ -32,6 +33,9 @@
 <div class="task-item">
 	<div class="task-info">
 		<button class="task-name-btn" onclick={() => ondetail?.(task.id)}>{task.name}</button>
+		{#if task.depends_on?.length}
+			<DepBadges deps={task.depends_on} ondetail={(id) => ondetail?.(id)} />
+		{/if}
 		{#if task.project_name}
 			<span class="task-project">
 				{task.project_name}

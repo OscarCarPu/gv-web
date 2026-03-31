@@ -3,6 +3,17 @@ export interface ProjectListItem {
     name: string;
 }
 
+export interface TaskListItem {
+    id: number;
+    name: string;
+}
+
+export interface TaskDepRef {
+    id: number;
+    name: string;
+    due_at: string | null;
+}
+
 export interface CreateProjectRequest {
     name: string;
     description?: string | null;
@@ -25,6 +36,7 @@ export interface CreateTaskRequest {
     name: string;
     description?: string | null;
     due_at?: string | null;
+    depends_on?: number[];
 }
 
 export interface TaskResponse {
@@ -35,6 +47,8 @@ export interface TaskResponse {
     due_at: string | null;
     started_at: string | null;
     finished_at: string | null;
+    depends_on: TaskDepRef[];
+    task_depends: TaskDepRef[];
 }
 
 export interface CreateTodoRequest {
@@ -80,6 +94,7 @@ export interface UpdateTaskRequest {
     project_id?: number | null;
     started_at?: string | null;
     finished_at?: string | null;
+    depends_on?: number[];
 }
 
 export interface UpdateTodoRequest {
@@ -104,6 +119,8 @@ export interface TaskByDueDateResponse {
     project_id: number | null;
     project_name: string | null;
     project_due_at: string | null;
+    depends_on: TaskDepRef[];
+    task_depends: TaskDepRef[];
 }
 
 export interface TaskDetailResponse {
@@ -127,6 +144,8 @@ export interface TaskFullResponse {
     finished_at: string | null;
     time_spent: number;
     todos: TodoResponse[];
+    depends_on: TaskDepRef[];
+    task_depends: TaskDepRef[];
 }
 
 export interface TaskTimeEntriesResponse {
@@ -157,6 +176,8 @@ export interface ProjectChildNode {
     parent_id?: number | null; // project only
     project_id?: number | null; // task only
     todos?: TodoResponse[]; //task only
+    depends_on?: TaskDepRef[];
+    task_depends?: TaskDepRef[];
 }
 
 export interface ProjectChildrenResponse {
@@ -177,6 +198,8 @@ export interface ActiveTreeNode {
     due_at?: string | null;
     started_at?: string | null;
     children?: ActiveTreeNode[];
+    depends_on?: TaskDepRef[];
+    task_depends?: TaskDepRef[];
 }
 
 export interface TimeEntryHistoryEntry {

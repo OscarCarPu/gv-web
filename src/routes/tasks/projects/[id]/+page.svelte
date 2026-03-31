@@ -6,6 +6,7 @@
 	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
 	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
+	import DepBadges from '$lib/domains/tasks/components/DepBadges.svelte';
 
 	let { data } = $props();
 
@@ -199,19 +200,26 @@
 								<i class="fa-solid fa-chevron-right child-chevron"></i>
 							</a>
 						{:else}
-							<button class="project-child-row" onclick={() => selectedTaskId = child.id}>
-								<i class="fa-solid fa-check-circle child-task-icon"></i>
-								<span class="child-name">{child.name}</span>
-								{#if child.due_at}
-									<span class="child-due"><i class="fa-regular fa-calendar"></i> {formatDateShort(child.due_at)}</span>
+							<div class="project-child-task-wrapper">
+								<button class="project-child-row" onclick={() => selectedTaskId = child.id}>
+									<i class="fa-solid fa-check-circle child-task-icon"></i>
+									<span class="child-name">{child.name}</span>
+									{#if child.due_at}
+										<span class="child-due"><i class="fa-regular fa-calendar"></i> {formatDateShort(child.due_at)}</span>
+									{/if}
+									{#if child.time_spent > 0}
+										<span class="child-time"><i class="fa-regular fa-clock"></i> {formatTime(child.time_spent)}</span>
+									{/if}
+									<span class="status-badge" class:started={child.started_at != null} class:finished={child.finished_at != null}>
+										{child.finished_at ? 'Completado' : child.started_at ? 'En progreso' : 'Pendiente'}
+									</span>
+								</button>
+								{#if child.depends_on?.length}
+									<div class="ml-7">
+										<DepBadges deps={child.depends_on} ondetail={(id) => selectedTaskId = id} />
+									</div>
 								{/if}
-								{#if child.time_spent > 0}
-									<span class="child-time"><i class="fa-regular fa-clock"></i> {formatTime(child.time_spent)}</span>
-								{/if}
-								<span class="status-badge" class:started={child.started_at != null} class:finished={child.finished_at != null}>
-									{child.finished_at ? 'Completado' : child.started_at ? 'En progreso' : 'Pendiente'}
-								</span>
-							</button>
+							</div>
 						{/if}
 					{/each}
 				</div>

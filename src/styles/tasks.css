@@ -418,3 +418,35 @@
 .child-task-icon {
     @apply text-sm text-text-muted;
 }
+
+/* --- Dependency badges --- */
+
+.dep-badges {
+    @apply flex flex-wrap gap-1;
+}
+
+.dep-badge {
+    @apply text-xs font-medium px-2 py-0.5 rounded-full border border-current/25
+           bg-secondary/15 text-secondary cursor-pointer transition-colors;
+    &:hover {
+        @apply bg-secondary/25;
+    }
+}
+
+/* --- Dependency selector --- */
+
+.dep-selected-pills {
+    @apply flex flex-wrap gap-1.5;
+}
+
+.dep-pill {
+    @apply text-xs font-medium px-2 py-0.5 rounded-full border border-current/25
+           flex items-center gap-1.5 bg-secondary/15 text-secondary;
+}
+
+.dep-pill-remove {
+    @apply text-secondary/60 cursor-pointer transition-colors;
+    &:hover {
+        @apply text-secondary;
+    }
+}

@@ -275,6 +275,16 @@ State classes on the parent element:
 | `.child-name`, `.child-due`, `.child-time` | Child info parts |
 | `.child-chevron`, `.child-task-icon` | Child row icons |
 
+### Dependencies
+
+| Class | Description |
+|---|---|
+| `.dep-badges` | Flex-wrap row of dependency badge pills |
+| `.dep-badge` | Clickable dependency pill (secondary purple, rounded-full) |
+| `.dep-selected-pills` | Flex-wrap row of selected pills in DepSelector |
+| `.dep-pill` | Selected dependency pill with remove button |
+| `.dep-pill-remove` | Remove (✕) button inside dep-pill |
+
 ### Create Sheet
 
 | Class | Description |

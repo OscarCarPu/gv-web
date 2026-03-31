@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+// --- Dependency ref schema ---
+
+export const TaskDepRefSchema = z.object({
+	id: z.number(),
+	name: z.string(),
+	due_at: z.string().nullable()
+});
+
 // --- Base response schemas ---
 
 export const ProjectResponseSchema = z.object({
@@ -19,7 +27,9 @@ export const TaskResponseSchema = z.object({
 	description: z.string().nullable(),
 	due_at: z.string().nullable(),
 	started_at: z.string().nullable(),
-	finished_at: z.string().nullable()
+	finished_at: z.string().nullable(),
+	depends_on: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? []),
+	task_depends: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? [])
 });
 
 export const TodoResponseSchema = z.object({
@@ -70,7 +80,9 @@ export const TaskFullResponseSchema = z.object({
 	started_at: z.string().nullable(),
 	finished_at: z.string().nullable(),
 	time_spent: z.number(),
-	todos: z.array(TodoResponseSchema)
+	todos: z.array(TodoResponseSchema),
+	depends_on: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? []),
+	task_depends: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? [])
 });
 
 // --- Composite schemas ---
@@ -86,7 +98,9 @@ export const ProjectChildNodeSchema = z.object({
 	time_spent: z.number(),
 	parent_id: z.number().nullable().optional(),
 	project_id: z.number().nullable().optional(),
-	todos: z.array(TodoResponseSchema).optional()
+	todos: z.array(TodoResponseSchema).optional(),
+	depends_on: z.array(TaskDepRefSchema).nullable().optional().transform((v) => v ?? []),
+	task_depends: z.array(TaskDepRefSchema).nullable().optional().transform((v) => v ?? [])
 });
 
 export const ProjectChildrenResponseSchema = z.object({
@@ -109,7 +123,9 @@ export const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
 		description: z.string().nullable().optional(),
 		due_at: z.string().nullable().optional(),
 		started_at: z.string().nullable().optional(),
-		children: z.array(ActiveTreeNodeSchema).optional()
+		children: z.array(ActiveTreeNodeSchema).optional(),
+		depends_on: z.array(TaskDepRefSchema).nullable().optional().transform((v) => v ?? []),
+		task_depends: z.array(TaskDepRefSchema).nullable().optional().transform((v) => v ?? [])
 	})
 );
 
@@ -131,7 +147,9 @@ export const TaskByDueDateResponseSchema = z.object({
 	time_spent: z.number(),
 	project_id: z.number().nullable(),
 	project_name: z.string().nullable(),
-	project_due_at: z.string().nullable()
+	project_due_at: z.string().nullable(),
+	depends_on: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? []),
+	task_depends: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? [])
 });
 
 export const TaskByDueDateResponseListSchema = z.array(TaskByDueDateResponseSchema);
@@ -152,5 +170,12 @@ export const ProjectListItemSchema = z.object({
 });
 
 export const ProjectListItemListSchema = z.array(ProjectListItemSchema);
+
+export const TaskListItemSchema = z.object({
+	id: z.number(),
+	name: z.string()
+});
+
+export const TaskListItemListSchema = z.array(TaskListItemSchema);
 export const ProjectResponseListSchema = z.array(ProjectResponseSchema);
 export const ActiveTreeNodeListSchema = z.array(ActiveTreeNodeSchema);

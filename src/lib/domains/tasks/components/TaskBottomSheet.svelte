@@ -5,7 +5,8 @@
 	import { toLocalDatetime, toISOString, formatTime, formatDateFull } from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import type { TaskFullResponse, TodoResponse } from '$lib/domains/tasks/types/Task.types';
+	import type { TaskFullResponse, TodoResponse, TaskDepRef } from '$lib/domains/tasks/types/Task.types';
+	import DepSelector from './DepSelector.svelte';
 
 	interface Props {
 		taskId: number | null;
@@ -23,6 +24,9 @@
 	let projectName = $state<string | null>(null);
 	let saving = $state(false);
 	let nameError = $state(false);
+	let dependsOn = $state<TaskDepRef[]>([]);
+	let taskDepends = $state<TaskDepRef[]>([]);
+	let initialTaskDepends = $state<TaskDepRef[]>([]);
 
 	async function loadTask() {
 		if (taskId == null) return;
@@ -32,6 +36,9 @@
 		name = t.name;
 		description = t.description ?? '';
 		dueAt = toLocalDatetime(t.due_at);
+		dependsOn = [...t.depends_on];
+		taskDepends = [...t.task_depends];
+		initialTaskDepends = [...t.task_depends];
 		if (t.project_id) {
 			tasksApi.getProject(t.project_id).then((p) => { projectName = p.name; });
 		} else {
@@ -82,14 +89,37 @@
 			await tasksApi.updateTask(taskId, {
 				name,
 				description: description || null,
-				due_at: toISOString(dueAt)
+				due_at: toISOString(dueAt),
+				depends_on: dependsOn.map((d) => d.id)
 			});
+			await syncReverseDepends();
 			await invalidateAll();
 			onclose();
 		} catch {
 			addToast('Error al guardar tarea', 'error');
 		} finally {
 			saving = false;
+		}
+	}
+
+	async function syncReverseDepends() {
+		if (taskId == null) return;
+		const initialIds = new Set(initialTaskDepends.map((d) => d.id));
+		const currentIds = new Set(taskDepends.map((d) => d.id));
+		const added = taskDepends.filter((d) => !initialIds.has(d.id));
+		const removed = initialTaskDepends.filter((d) => !currentIds.has(d.id));
+
+		for (const dep of added) {
+			const otherTask = await tasksApi.getTask(dep.id);
+			const otherDeps = otherTask.depends_on.map((d) => d.id);
+			if (!otherDeps.includes(taskId)) {
+				await tasksApi.updateTask(dep.id, { depends_on: [...otherDeps, taskId] });
+			}
+		}
+		for (const dep of removed) {
+			const otherTask = await tasksApi.getTask(dep.id);
+			const otherDeps = otherTask.depends_on.map((d) => d.id).filter((id) => id !== taskId);
+			await tasksApi.updateTask(dep.id, { depends_on: otherDeps });
 		}
 	}
 
@@ -200,6 +230,20 @@
 					</div>
 				{/if}
 			</div>
+
+			<DepSelector
+				selected={dependsOn}
+				onchange={(deps) => dependsOn = deps}
+				excludeId={taskId!}
+				label="Depende de"
+			/>
+
+			<DepSelector
+				selected={taskDepends}
+				onchange={(deps) => taskDepends = deps}
+				excludeId={taskId!}
+				label="Dependientes"
+			/>
 
 			<div class="detail-field">
 				<span class="label text-sm text-text-muted font-medium">Todos</span>

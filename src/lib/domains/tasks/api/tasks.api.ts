@@ -14,7 +14,8 @@ import {
 	ActiveTreeNodeListSchema,
 	TaskByDueDateResponseListSchema,
 	TimeEntrySummaryResponseSchema,
-	TimeEntryHistoryResponseSchema
+	TimeEntryHistoryResponseSchema,
+	TaskListItemListSchema
 } from './tasks.schemas';
 import type {
 	ProjectListItem,
@@ -36,6 +37,7 @@ import type {
 	UpdateTimeEntryRequest,
 	ActiveTreeNode,
 	TaskByDueDateResponse,
+	TaskListItem,
 	TimeEntrySummaryResponse,
 	TimeEntryHistoryResponse
 } from '../types/Task.types';
@@ -45,6 +47,10 @@ export const tasksApi = {
 
 	async listProjectsFast(token?: string): Promise<ProjectListItem[]> {
 		return fetchAPI('/tasks/projects/list-fast', ProjectListItemListSchema, { token });
+	},
+
+	async listTasksFast(token?: string): Promise<TaskListItem[]> {
+		return fetchAPI('/tasks/tasks/list-fast', TaskListItemListSchema, { token });
 	},
 
 	async getRootProjects(token?: string): Promise<ProjectResponse[]> {
