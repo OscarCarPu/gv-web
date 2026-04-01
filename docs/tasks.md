@@ -38,12 +38,12 @@ API accepts `depends_on: number[]` (array of task IDs) on create and update — 
 | `ProjectChildrenResponse` | project + children[] (mixed tasks and sub-projects) |
 | `TaskDepRef` | id, name, due_at (dependency reference) |
 | `TaskListItem` | id, name (for list-fast endpoint) |
-| `TaskResponse` | id, name, description, due_at, project_id, started_at, finished_at, depends_on[], task_depends[] |
+| `TaskResponse` | id, name, description, due_at, project_id, started_at, finished_at, depends_on[], blocks[], blocked |
 | `TaskFullResponse` | Same + time_spent, todos[] |
 | `TodoResponse` | id, task_id, name, is_done |
 | `TimeEntryResponse` | id, task_id, started_at, finished_at, comment |
-| `ActiveTreeNode` | Recursive tree: id, type, name, children[], depends_on[], task_depends[] |
-| `TaskByDueDateResponse` | Task with project_name, project_due_at, depends_on[], task_depends[] |
+| `ActiveTreeNode` | Recursive tree: id, type, name, children[], depends_on[], blocks[], blocked |
+| `TaskByDueDateResponse` | Task with project_name, project_due_at, depends_on[], blocks[], blocked |
 
 ## Routes
 
@@ -96,7 +96,7 @@ Half-modal (BottomSheet) for viewing/editing a task.
 │  [Task A ✕] [Task B ✕]             │  ← Removable pills
 │  [▼ Agregar tarea...]               │  ← Select dropdown
 │                                     │
-│ Dependientes:                       │
+│ Bloquea a:                          │
 │  [Task C ✕]                         │
 │  [▼ Agregar tarea...]               │
 │                                     │
@@ -109,7 +109,7 @@ Half-modal (BottomSheet) for viewing/editing a task.
 
 - **Project link**: Inline chip at title level, navigates to project page
 - **started_at / finished_at**: Read-only display when set. "Empezar"/"Finalizar" button when null — PATCHes to `now()`
-- **Dependencies**: Two DepSelector sections — "Depende de" and "Dependientes". Each shows selected tasks as removable pills + a `<select>` dropdown to add more. Saving syncs reverse deps by fetching+updating each affected task
+- **Dependencies**: Two DepSelector sections — "Depende de" and "Bloquea a". Each shows selected tasks as removable pills + a `<select>` dropdown to add more. Saving syncs reverse deps by fetching+updating each affected task
 - **Todos**: Checkbox toggle, delete, add new
 
 ### CreateBottomSheet (`src/lib/domains/tasks/components/CreateBottomSheet.svelte`)

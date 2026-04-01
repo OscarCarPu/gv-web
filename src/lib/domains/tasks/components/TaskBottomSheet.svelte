@@ -25,8 +25,8 @@
 	let saving = $state(false);
 	let nameError = $state(false);
 	let dependsOn = $state<TaskDepRef[]>([]);
-	let taskDepends = $state<TaskDepRef[]>([]);
-	let initialTaskDepends = $state<TaskDepRef[]>([]);
+	let blocks = $state<TaskDepRef[]>([]);
+	let initialBlocks = $state<TaskDepRef[]>([]);
 
 	async function loadTask() {
 		if (taskId == null) return;
@@ -37,8 +37,8 @@
 		description = t.description ?? '';
 		dueAt = toLocalDatetime(t.due_at);
 		dependsOn = [...t.depends_on];
-		taskDepends = [...t.task_depends];
-		initialTaskDepends = [...t.task_depends];
+		blocks = [...t.blocks];
+		initialBlocks = [...t.blocks];
 		if (t.project_id) {
 			tasksApi.getProject(t.project_id).then((p) => { projectName = p.name; });
 		} else {
@@ -104,10 +104,10 @@
 
 	async function syncReverseDepends() {
 		if (taskId == null) return;
-		const initialIds = new Set(initialTaskDepends.map((d) => d.id));
-		const currentIds = new Set(taskDepends.map((d) => d.id));
-		const added = taskDepends.filter((d) => !initialIds.has(d.id));
-		const removed = initialTaskDepends.filter((d) => !currentIds.has(d.id));
+		const initialIds = new Set(initialBlocks.map((d) => d.id));
+		const currentIds = new Set(blocks.map((d) => d.id));
+		const added = blocks.filter((d) => !initialIds.has(d.id));
+		const removed = initialBlocks.filter((d) => !currentIds.has(d.id));
 
 		for (const dep of added) {
 			const otherTask = await tasksApi.getTask(dep.id);
@@ -239,10 +239,10 @@
 			/>
 
 			<DepSelector
-				selected={taskDepends}
-				onchange={(deps) => taskDepends = deps}
+				selected={blocks}
+				onchange={(deps) => blocks = deps}
 				excludeId={taskId!}
-				label="Dependientes"
+				label="Bloquea a"
 			/>
 
 			<div class="detail-field">

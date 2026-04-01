@@ -204,6 +204,12 @@
 								<button class="project-child-row" onclick={() => selectedTaskId = child.id}>
 									<i class="fa-solid fa-check-circle child-task-icon"></i>
 									<span class="child-name">{child.name}</span>
+									{#if child.blocked}
+										<i class="fa-solid fa-ban blocked-icon" title="Bloqueada"></i>
+									{/if}
+									{#if child.depends_on?.length}
+										<DepBadges deps={child.depends_on} ondetail={(id) => { selectedTaskId = id; }} />
+									{/if}
 									{#if child.due_at}
 										<span class="child-due"><i class="fa-regular fa-calendar"></i> {formatDateShort(child.due_at)}</span>
 									{/if}
@@ -214,11 +220,6 @@
 										{child.finished_at ? 'Completado' : child.started_at ? 'En progreso' : 'Pendiente'}
 									</span>
 								</button>
-								{#if child.depends_on?.length}
-									<div class="ml-7">
-										<DepBadges deps={child.depends_on} ondetail={(id) => selectedTaskId = id} />
-									</div>
-								{/if}
 							</div>
 						{/if}
 					{/each}

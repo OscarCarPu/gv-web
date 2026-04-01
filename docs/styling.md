@@ -279,6 +279,8 @@ State classes on the parent element:
 
 | Class | Description |
 |---|---|
+| `.task-name-row` | Flex baseline row wrapping task name + blocked icon |
+| `.blocked-icon` | Muted ban icon shown inline for blocked tasks |
 | `.dep-badges` | Flex-wrap row of dependency badge pills |
 | `.dep-badge` | Clickable dependency pill (secondary purple, rounded-full) |
 | `.dep-selected-pills` | Flex-wrap row of selected pills in DepSelector |

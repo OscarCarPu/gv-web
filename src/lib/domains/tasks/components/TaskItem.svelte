@@ -32,7 +32,12 @@
 
 <div class="task-item">
 	<div class="task-info">
-		<button class="task-name-btn" onclick={() => ondetail?.(task.id)}>{task.name}</button>
+		<div class="task-name-row">
+			<button class="task-name-btn" onclick={() => ondetail?.(task.id)}>{task.name}</button>
+			{#if task.blocked}
+				<i class="fa-solid fa-ban blocked-icon" title="Bloqueada"></i>
+			{/if}
+		</div>
 		{#if task.depends_on?.length}
 			<DepBadges deps={task.depends_on} ondetail={(id) => ondetail?.(id)} />
 		{/if}

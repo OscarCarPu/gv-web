@@ -48,7 +48,8 @@ export interface TaskResponse {
     started_at: string | null;
     finished_at: string | null;
     depends_on: TaskDepRef[];
-    task_depends: TaskDepRef[];
+    blocks: TaskDepRef[];
+    blocked: boolean;
 }
 
 export interface CreateTodoRequest {
@@ -120,7 +121,8 @@ export interface TaskByDueDateResponse {
     project_name: string | null;
     project_due_at: string | null;
     depends_on: TaskDepRef[];
-    task_depends: TaskDepRef[];
+    blocks: TaskDepRef[];
+    blocked: boolean;
 }
 
 export interface TaskDetailResponse {
@@ -145,7 +147,8 @@ export interface TaskFullResponse {
     time_spent: number;
     todos: TodoResponse[];
     depends_on: TaskDepRef[];
-    task_depends: TaskDepRef[];
+    blocks: TaskDepRef[];
+    blocked: boolean;
 }
 
 export interface TaskTimeEntriesResponse {
@@ -177,7 +180,8 @@ export interface ProjectChildNode {
     project_id?: number | null; // task only
     todos?: TodoResponse[]; //task only
     depends_on?: TaskDepRef[];
-    task_depends?: TaskDepRef[];
+    blocks?: TaskDepRef[];
+    blocked?: boolean;
 }
 
 export interface ProjectChildrenResponse {
@@ -199,7 +203,8 @@ export interface ActiveTreeNode {
     started_at?: string | null;
     children?: ActiveTreeNode[];
     depends_on?: TaskDepRef[];
-    task_depends?: TaskDepRef[];
+    blocks?: TaskDepRef[];
+    blocked?: boolean;
 }
 
 export interface TimeEntryHistoryEntry {

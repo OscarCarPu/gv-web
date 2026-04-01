@@ -419,6 +419,16 @@
     @apply text-sm text-text-muted;
 }
 
+/* --- Blocked indicator --- */
+
+.task-name-row {
+    @apply flex items-baseline gap-1.5;
+}
+
+.blocked-icon {
+    @apply text-xs text-text-muted;
+}
+
 /* --- Dependency badges --- */
 
 .dep-badges {

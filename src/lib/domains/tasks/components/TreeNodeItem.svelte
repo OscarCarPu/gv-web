@@ -57,7 +57,12 @@
 {:else}
 	<div class="task-item">
 		<div class="task-info">
+			<div class="task-name-row">
 			<button class="task-name-btn" onclick={() => ondetail?.(node.id, 'task')}>{node.name}</button>
+			{#if node.blocked}
+				<i class="fa-solid fa-ban blocked-icon" title="Bloqueada"></i>
+			{/if}
+		</div>
 			{#if node.depends_on?.length}
 				<DepBadges deps={node.depends_on} ondetail={(id) => ondetail?.(id, 'task')} />
 			{/if}

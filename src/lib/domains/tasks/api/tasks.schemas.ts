@@ -29,7 +29,8 @@ export const TaskResponseSchema = z.object({
 	started_at: z.string().nullable(),
 	finished_at: z.string().nullable(),
 	depends_on: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? []),
-	task_depends: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? [])
+	blocks: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? []),
+	blocked: z.boolean()
 });
 
 export const TodoResponseSchema = z.object({
@@ -82,7 +83,8 @@ export const TaskFullResponseSchema = z.object({
 	time_spent: z.number(),
 	todos: z.array(TodoResponseSchema),
 	depends_on: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? []),
-	task_depends: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? [])
+	blocks: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? []),
+	blocked: z.boolean()
 });
 
 // --- Composite schemas ---
@@ -100,7 +102,8 @@ export const ProjectChildNodeSchema = z.object({
 	project_id: z.number().nullable().optional(),
 	todos: z.array(TodoResponseSchema).optional(),
 	depends_on: z.array(TaskDepRefSchema).nullable().optional().transform((v) => v ?? []),
-	task_depends: z.array(TaskDepRefSchema).nullable().optional().transform((v) => v ?? [])
+	blocks: z.array(TaskDepRefSchema).nullable().optional().transform((v) => v ?? []),
+	blocked: z.boolean().nullable().optional().transform((v) => v ?? undefined)
 });
 
 export const ProjectChildrenResponseSchema = z.object({
@@ -125,7 +128,8 @@ export const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
 		started_at: z.string().nullable().optional(),
 		children: z.array(ActiveTreeNodeSchema).optional(),
 		depends_on: z.array(TaskDepRefSchema).nullable().optional().transform((v) => v ?? []),
-		task_depends: z.array(TaskDepRefSchema).nullable().optional().transform((v) => v ?? [])
+		blocks: z.array(TaskDepRefSchema).nullable().optional().transform((v) => v ?? []),
+		blocked: z.boolean().optional()
 	})
 );
 
@@ -149,7 +153,8 @@ export const TaskByDueDateResponseSchema = z.object({
 	project_name: z.string().nullable(),
 	project_due_at: z.string().nullable(),
 	depends_on: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? []),
-	task_depends: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? [])
+	blocks: z.array(TaskDepRefSchema).nullable().transform((v) => v ?? []),
+	blocked: z.boolean()
 });
 
 export const TaskByDueDateResponseListSchema = z.array(TaskByDueDateResponseSchema);
