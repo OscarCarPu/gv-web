@@ -27,7 +27,9 @@ Where `TaskDepRef` is `{ id: number; name: string; due_at: string | null }`.
 
 API accepts `depends_on: number[]` (array of task IDs) on create and update — replaces all existing deps. Omitting the field leaves deps unchanged; passing `[]` clears them.
 
-**Reverse dependency editing**: Editing `task_depends` (dependientes) in the UI requires fetching and updating each affected task's `depends_on` individually, since the API only accepts `depends_on` on the task being updated.
+**Blocked indicator**: Tasks with `blocked: true` display a `fa-ban` icon (`.blocked-icon`) inline next to the task name in TaskItem, TreeNodeItem, and the project detail page. All action buttons (Empezar/Acabar, Asignar/Iniciar) are disabled on blocked tasks.
+
+**Reverse dependency editing**: Editing `blocks` ("Bloquea a") in the UI requires fetching and updating each affected task's `depends_on` individually, since the API only accepts `depends_on` on the task being updated.
 
 ### Key Types (`src/lib/domains/tasks/types/Task.types.ts`)
 

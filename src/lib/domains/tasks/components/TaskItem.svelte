@@ -64,11 +64,11 @@
 	</div>
 	<div class="task-actions">
 		{#if isStarted}
-			<button class="btn-primary" onclick={() => ontoggle?.(task.id, 'finish')}>Acabar</button>
+			<button class="btn-primary" onclick={() => ontoggle?.(task.id, 'finish')} disabled={task.blocked}>Acabar</button>
 		{:else}
-			<button class="btn-primary btn-start" onclick={() => ontoggle?.(task.id, 'start')}>Empezar</button>
+			<button class="btn-primary btn-start" onclick={() => ontoggle?.(task.id, 'start')} disabled={task.blocked}>Empezar</button>
 		{/if}
-		<button class="btn-primary" onclick={onstart}>
+		<button class="btn-primary" onclick={onstart} disabled={task.blocked}>
 			<i class="fa-solid {isTimerRunning ? 'fa-arrow-right' : 'fa-play'}"></i>
 			{isTimerRunning ? 'Asignar' : 'Iniciar'}
 		</button>

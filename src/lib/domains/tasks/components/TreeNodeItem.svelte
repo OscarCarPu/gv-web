@@ -88,11 +88,11 @@
 		</div>
 		<div class="task-actions">
 			{#if isStarted}
-				<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'finish')}>Acabar</button>
+				<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'finish')} disabled={node.blocked}>Acabar</button>
 			{:else}
-				<button class="btn-primary btn-start btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'start')}>Empezar</button>
+				<button class="btn-primary btn-start btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'start')} disabled={node.blocked}>Empezar</button>
 			{/if}
-			<button class="btn-primary" onclick={() => onstart?.(node.id, node.name, parentProjectName)}>
+			<button class="btn-primary" onclick={() => onstart?.(node.id, node.name, parentProjectName)} disabled={node.blocked}>
 				<i class="fa-solid {isTimerRunning ? 'fa-arrow-right' : 'fa-play'}"></i>
 				{isTimerRunning ? 'Asignar' : 'Iniciar'}
 			</button>
