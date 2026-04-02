@@ -7,7 +7,7 @@ export function toLocalDatetime(iso: string | null): string {
 
 export function toISOString(local: string): string | null {
 	if (!local) return null;
-	return local.split('T')[0];
+	return local.split('T')[0] + 'T00:00:00Z';
 }
 
 export function formatTime(seconds: number): string {
