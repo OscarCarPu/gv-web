@@ -194,7 +194,7 @@
 			<div class="detail-inline-row">
 				<div class="detail-field flex-1">
 					<label for="task-name">Nombre</label>
-					<input id="task-name" type="text" bind:value={name} class:field-error={nameError} oninput={() => nameError = false} />
+					<input id="task-name" type="text" bind:value={name} maxlength={40} class:field-error={nameError} oninput={() => nameError = false} />
 				</div>
 				<div class="detail-field">
 					<label for="dtp-task-due">Fecha límite</label>

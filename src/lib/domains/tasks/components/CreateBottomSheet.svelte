@@ -71,9 +71,7 @@
 					due_at: toISOString(dueAt),
 					parent_id: selectedParentId
 				});
-				if (startNow) {
-					await tasksApi.updateProject(created.id, { started_at: new Date().toISOString() });
-				}
+				await tasksApi.updateProject(created.id, { started_at: new Date().toISOString() });
 			}
 
 			onclose();
@@ -97,7 +95,7 @@
 	<div class="detail-form">
 		<div class="detail-field">
 			<label for="create-name">Nombre</label>
-			<input id="create-name" type="text" bind:value={name} class:field-error={nameError} oninput={() => nameError = false} onkeydown={(e) => e.key === 'Enter' && create()} />
+			<input id="create-name" type="text" bind:value={name} maxlength={40} class:field-error={nameError} oninput={() => nameError = false} onkeydown={(e) => e.key === 'Enter' && create()} />
 		</div>
 		<div class="detail-field">
 			<label for="create-desc">Descripción</label>
@@ -142,12 +140,14 @@
 			/>
 		{/if}
 
-		<button class="start-now-toggle" type="button" onclick={() => startNow = !startNow}>
-			<div class="toggle toggle-sm" class:on={startNow} class:off={!startNow}>
-				<div class="knob"></div>
-			</div>
-			Empezar ya
-		</button>
+		{#if currentMode === 'task'}
+			<button class="start-now-toggle" type="button" onclick={() => startNow = !startNow}>
+				<div class="toggle toggle-sm" class:on={startNow} class:off={!startNow}>
+					<div class="knob"></div>
+				</div>
+				Empezar ya
+			</button>
+		{/if}
 
 		<div class="detail-actions">
 			<button class="btn-primary" onclick={create} disabled={saving}>Crear</button>

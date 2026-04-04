@@ -101,6 +101,7 @@
 			onselect={handleDateSelect}
 			inline
 			locale="es-ES"
+			firstDayOfWeek={1}
 		/>
 	</Popover>
 </div>

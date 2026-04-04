@@ -123,7 +123,7 @@
 				<div class="detail-inline-row">
 					<div class="detail-field flex-1">
 						<label for="project-name">Nombre</label>
-						<input id="project-name" type="text" bind:value={name} />
+						<input id="project-name" type="text" bind:value={name} maxlength={40} />
 					</div>
 					<div class="detail-field">
 						<label for="dtp-project-due">Fecha límite</label>
