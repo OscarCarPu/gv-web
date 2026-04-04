@@ -6,6 +6,8 @@ export interface ProjectListItem {
 export interface TaskListItem {
     id: number;
     name: string;
+    project_id: number | null;
+    project_name: string | null;
 }
 
 export interface TaskDepRef {

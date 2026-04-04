@@ -178,7 +178,9 @@ export const ProjectListItemListSchema = z.array(ProjectListItemSchema);
 
 export const TaskListItemSchema = z.object({
 	id: z.number(),
-	name: z.string()
+	name: z.string(),
+	project_id: z.number().nullable(),
+	project_name: z.string().nullable()
 });
 
 export const TaskListItemListSchema = z.array(TaskListItemSchema);

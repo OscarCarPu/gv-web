@@ -236,6 +236,7 @@
 				onchange={(deps) => dependsOn = deps}
 				excludeId={taskId!}
 				label="Depende de"
+				projectId={task?.project_id}
 			/>
 
 			<DepSelector
@@ -243,6 +244,7 @@
 				onchange={(deps) => blocks = deps}
 				excludeId={taskId!}
 				label="Bloquea a"
+				projectId={task?.project_id}
 			/>
 
 			<div class="detail-field">

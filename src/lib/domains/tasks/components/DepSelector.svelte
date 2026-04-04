@@ -7,9 +7,10 @@
 		onchange: (selected: TaskDepRef[]) => void;
 		excludeId: number;
 		label: string;
+		projectId?: number | null;
 	}
 
-	let { selected, onchange, excludeId, label }: Props = $props();
+	let { selected, onchange, excludeId, label, projectId = null }: Props = $props();
 
 	let allTasks = $state<TaskListItem[]>([]);
 
@@ -18,6 +19,41 @@
 	const available = $derived(
 		allTasks.filter((t) => t.id !== excludeId && !selectedIds.has(t.id))
 	);
+
+	interface TaskGroup {
+		label: string;
+		projectId: number | null;
+		tasks: TaskListItem[];
+	}
+
+	const grouped = $derived.by(() => {
+		const groupMap = new Map<number | null, { label: string; tasks: TaskListItem[] }>();
+
+		for (const t of available) {
+			const key = t.project_id;
+			if (!groupMap.has(key)) {
+				groupMap.set(key, {
+					label: t.project_name ?? 'Sin proyecto',
+					tasks: []
+				});
+			}
+			groupMap.get(key)!.tasks.push(t);
+		}
+
+		// Mover el grupo del proyecto actual al principio
+		const groups: TaskGroup[] = [];
+		const currentKey = projectId ?? null;
+		const currentGroup = groupMap.get(currentKey);
+		if (currentGroup) {
+			groups.push({ label: currentGroup.label, projectId: currentKey, tasks: currentGroup.tasks });
+			groupMap.delete(currentKey);
+		}
+		for (const [pid, g] of groupMap) {
+			groups.push({ label: g.label, projectId: pid, tasks: g.tasks });
+		}
+
+		return groups;
+	});
 
 	$effect(() => {
 		tasksApi.listTasksFast().then((tasks) => (allTasks = tasks));
@@ -55,8 +91,12 @@
 	{/if}
 	<select onchange={add}>
 		<option value="">Agregar tarea...</option>
-		{#each available as task (task.id)}
-			<option value={task.id}>{task.name}</option>
+		{#each grouped as group}
+			<optgroup label={group.label}>
+				{#each group.tasks as task (task.id)}
+					<option value={task.id}>{task.name}</option>
+				{/each}
+			</optgroup>
 		{/each}
 	</select>
 </div>

@@ -137,6 +137,7 @@
 				onchange={(deps) => selectedDeps = deps}
 				excludeId={-1}
 				label="Depende de"
+				projectId={selectedProjectId}
 			/>
 		{/if}
 
