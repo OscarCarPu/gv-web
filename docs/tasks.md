@@ -201,7 +201,7 @@ Opens from chart icon on summary bars. Uses shared chart components (LayerCake).
 | Function | Description |
 |---|---|
 | `toLocalDatetime(iso)` | ISO string → `datetime-local` input value |
-| `toISOString(local)` | `datetime-local` value → ISO string (or null) |
+| `toISOString(local)` | `datetime-local` value → UTC ISO string via `new Date(local).toISOString()` (or null) |
 | `formatTime(seconds)` | Seconds → "Xh Xm" display |
 | `formatDateShort(dateStr)` | Date → "22 mar" (short, for lists) |
 | `formatDateFull(iso)` | Date → "22 mar 2026, 14:30" (full, for detail views) |
