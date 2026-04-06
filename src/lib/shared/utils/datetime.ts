@@ -1,13 +1,12 @@
 export function toLocalDatetime(iso: string | null): string {
 	if (!iso) return '';
-	const d = new Date(iso);
-	const pad = (n: number) => n.toString().padStart(2, '0');
-	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+	return iso.slice(0, 16);
 }
 
 export function toISOString(local: string): string | null {
 	if (!local) return null;
-	return new Date(local).toISOString();
+	const d = new Date(local);
+	return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString();
 }
 
 export function formatTime(seconds: number): string {

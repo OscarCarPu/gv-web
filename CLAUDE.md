@@ -69,6 +69,7 @@ Charts use LayerCake + D3 scale. Components in `src/lib/shared/components/chart/
 - **Task dependencies**: Tasks can depend on other tasks. `depends_on` (tasks this depends on) and `blocks` (tasks this blocks) are `TaskDepRef[]` (`{id, name, due_at}`) on all task responses. `blocked: boolean` indicates whether the task has unfinished dependencies. API accepts `depends_on: number[]` on create/update. Zod schemas use `.nullable().transform(v => v ?? [])` since API may return null. Editing reverse deps (`blocks`) requires fetching+updating each affected task individually. Blocked tasks show a `fa-ban` icon inline with the task name (`.blocked-icon` class) and have all action buttons (Empezar/Acabar, Asignar/Iniciar) disabled.
 - **No confirmation dialogs**: Destructive actions (delete task, delete project, delete todo) execute immediately without confirmation modals
 - **List folding**: Long lists fold at 15 items with a "show more" divider (line—pill—line pattern, `.show-more-btn`) that expands 10 at a time. See "Próximas a vencer" in `/tasks` for reference
+- **Datetime convention**: `due_at` is a conceptual date, not a UTC moment. `toISOString()` compensates for timezone offset so the ISO string preserves the local date/time (avoids day-shift). `toLocalDatetime()` slices the ISO string directly (no tz conversion). Time entries (`started_at`, `finished_at`) use native `new Date().toISOString()` for real UTC moments.
 - **Env vars**: `VITE_API_URL` (browser), `API_URL` (server/Docker), `ORIGIN` (CSRF)
 
 ## Deployment
