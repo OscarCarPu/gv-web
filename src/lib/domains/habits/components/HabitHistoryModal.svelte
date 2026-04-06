@@ -11,6 +11,7 @@
 	import AxisX from '$shared/components/chart/AxisX.svelte';
 	import AxisY from '$shared/components/chart/AxisY.svelte';
 	import Points from '$shared/components/chart/Points.svelte';
+	import { toLocalDateString } from '$shared/utils/datetime';
 
 	let {
 		habit,
@@ -21,10 +22,6 @@
 		open: boolean;
 		onclose: () => void;
 	} = $props();
-
-	function toDateStr(d: Date): string {
-		return d.toISOString().split('T')[0];
-	}
 
 	let startAt = $state('');
 	let endAt = $state('');

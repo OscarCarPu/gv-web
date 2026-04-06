@@ -4,14 +4,15 @@
 	import HabitCard from '$habits/components/HabitCard.svelte';
 	import DateNavigation from '$shared/components/DateNavigation.svelte';
 	import FloatingReminder from '$shared/components/FloatingReminder.svelte';
+	import { toLocalDateString } from '$shared/utils/datetime';
 
 	let { data }: { data: { habits: HabitWithLog[] } } = $props();
 	let fetchedHabits: HabitWithLog[] | null = $state(null);
 	let habits = $derived(fetchedHabits ?? data.habits);
-	let currentDate = $state(new Date().toISOString().split('T')[0]);
+	let currentDate = $state(toLocalDateString());
 
 	function handleDateChange(date: Date) {
-		const dateStr = date.toISOString().split('T')[0];
+		const dateStr = toLocalDateString(date);
 		currentDate = dateStr;
 		habitsApi.getHabits(dateStr).then((newHabits) => {
 			fetchedHabits = newHabits;

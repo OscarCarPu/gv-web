@@ -2,11 +2,12 @@
 	import type { HabitWithLog } from '$habits/types/Habit.types';
 	import { habitsApi } from '$habits/api/habits.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
+	import { toLocalDateString } from '$shared/utils/datetime';
 	import HabitHistoryModal from './HabitHistoryModal.svelte';
 
 	let {
 		habit,
-		currentDate = new Date().toISOString().split('T')[0],
+		currentDate = toLocalDateString(),
 		onRefresh,
 	}: {
 		habit: HabitWithLog;

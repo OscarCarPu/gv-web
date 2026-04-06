@@ -1,5 +1,35 @@
 import { describe, it, expect } from 'vitest';
-import { toLocalDatetime, toISOString, formatTime } from '$shared/utils/datetime';
+import { toLocalDateString, toLocalDatetime, toISOString, formatTime } from '$shared/utils/datetime';
+
+describe('toLocalDateString', () => {
+	it('should return YYYY-MM-DD for today when called without args', () => {
+		const result = toLocalDateString();
+		expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+		const now = new Date();
+		expect(result).toBe(
+			`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+		);
+	});
+
+	it('should return the local date, not UTC date', () => {
+		// 2026-03-15T23:30 UTC = 2026-03-16 in UTC, but still 2026-03-15 in UTC-5
+		const date = new Date('2026-03-16T04:30:00Z'); // UTC
+		const result = toLocalDateString(date);
+		// Should match the local date of the test environment, not necessarily UTC
+		const expected = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+		expect(result).toBe(expected);
+	});
+
+	it('should pad single-digit month and day', () => {
+		const date = new Date(2026, 0, 5); // Jan 5
+		expect(toLocalDateString(date)).toBe('2026-01-05');
+	});
+
+	it('should handle year boundaries', () => {
+		const date = new Date(2025, 11, 31); // Dec 31
+		expect(toLocalDateString(date)).toBe('2025-12-31');
+	});
+});
 
 describe('toLocalDatetime', () => {
 	it('should return empty string for null', () => {
