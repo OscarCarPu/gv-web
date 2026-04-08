@@ -307,12 +307,18 @@ State classes on the parent element:
 | Class                    | Description                                            |
 | ------------------------ | ------------------------------------------------------ |
 | `.agenda-title`          | Sheet heading (lg bold, right padding for close btn)   |
-| `.agenda-subtitle`       | Muted subtitle below title                             |
+| `.agenda-subtitle-row`   | Flex row: subtitle text + mode toggle                  |
+| `.agenda-subtitle`       | Muted subtitle text                                    |
+| `.agenda-mode-toggle`    | Day/week toggle button (inline with subtitle)          |
 | `.agenda-timeline`       | Vertical timeline container                            |
-| `.agenda-hour-group`     | Row: hour label + entries column                       |
-| `.agenda-hour-label`     | Monospace hour label (right-aligned, 40px)             |
-| `.agenda-hour-entries`   | Entries column with left border                        |
-| `.agenda-hour-empty`     | Spacer for hours with no entries                       |
+| `.agenda-row`            | Flex row: hour label + entry/gap                       |
+| `.agenda-hour-label`     | Monospace hour label (bottom-aligned, 40px)            |
+| `.agenda-day-divider`    | Day boundary divider (line—label—line)                 |
+| `.agenda-day-line`       | Horizontal line in day divider                         |
+| `.agenda-day-label`      | Uppercase date label (e.g. "Miércoles 8/4")            |
+| `.agenda-gap`            | Idle gap indicator (line—duration—line)                 |
+| `.agenda-gap-line`       | Horizontal line in gap                                 |
+| `.agenda-gap-label`      | Muted mono duration text in gap                        |
 | `.agenda-entry`          | Clickable entry row (bar + content)                    |
 | `.agenda-entry-bar`      | Colored left bar (`.finished` green, `.running` pulse) |
 | `.agenda-entry-content`  | Name + project + meta                                  |

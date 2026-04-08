@@ -16,10 +16,12 @@
 
 	let entries = $state<TimeEntryWithTask[]>([]);
 	let loading = $state(false);
+	let mode = $state<'day' | 'week'>('day');
 
 	function getTimeWindow() {
 		const now = new Date();
-		const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+		const hours = mode === 'day' ? 24 : 24 * 7;
+		const start = new Date(now.getTime() - hours * 60 * 60 * 1000);
 		return { start, end: now };
 	}
 
@@ -44,62 +46,113 @@
 
 	$effect(() => {
 		if (open) {
+			void mode;
 			fetchEntries();
 		}
 	});
 
-	interface HourGroup {
-		hour: number;
-		label: string;
-		entries: TimeEntryWithTask[];
-	}
+	type AgendaItem =
+		| { type: 'entry'; entry: TimeEntryWithTask; hourLabel: string | null }
+		| { type: 'gap'; duration: number; from: string; to: string }
+		| { type: 'day'; label: string };
 
-	const hourGroups = $derived.by((): HourGroup[] => {
-		const window = getTimeWindow();
-		const groups: HourGroup[] = [];
+	const agendaItems = $derived.by((): AgendaItem[] => {
+		// Sort ascending by started_at (full timestamp, not just hour)
+		const sorted = [...entries].sort(
+			(a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime()
+		);
 
-		// Build hours from most recent to oldest
-		const endHour = window.end.getHours();
-		for (let i = 0; i < 24; i++) {
-			const h = (endHour - i + 24) % 24;
-			groups.push({
-				hour: h,
-				label: `${String(h).padStart(2, '0')}:00`,
-				entries: [],
-			});
+		const items: AgendaItem[] = [];
+		let lastHourKey = '';
+
+		for (let i = 0; i < sorted.length; i++) {
+			const d = new Date(sorted[i].started_at);
+			const dateKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+			const thisStart = new Date(sorted[i].started_at).getTime();
+
+			if (i > 0) {
+				const prevEntry = sorted[i - 1];
+				const prevD = new Date(prevEntry.started_at);
+				const prevDateKey = `${prevD.getFullYear()}-${prevD.getMonth()}-${prevD.getDate()}`;
+				const finishedAt = prevEntry.finished_at;
+				const prevEnd = finishedAt ? new Date(finishedAt).getTime() : Date.now();
+
+				if (dateKey !== prevDateKey) {
+					// Day boundary — split gap at midnight
+					const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+					const gapBefore = (midnight - prevEnd) / 1000;
+					if (gapBefore > 120) {
+						items.push({
+							type: 'gap',
+							duration: gapBefore,
+							from: new Date(prevEnd).toISOString(),
+							to: new Date(midnight).toISOString(),
+						});
+					}
+
+					items.push({ type: 'day', label: formatDay(d) });
+
+					const gapAfter = (thisStart - midnight) / 1000;
+					if (gapAfter > 120) {
+						items.push({
+							type: 'gap',
+							duration: gapAfter,
+							from: new Date(midnight).toISOString(),
+							to: new Date(thisStart).toISOString(),
+						});
+					}
+				} else {
+					// Same day — normal gap
+					const gap = (thisStart - prevEnd) / 1000;
+					if (gap > 120) {
+						items.push({
+							type: 'gap',
+							duration: gap,
+							from: new Date(prevEnd).toISOString(),
+							to: new Date(thisStart).toISOString(),
+						});
+					}
+				}
+			}
+
+			// Compute hour label — show when the hour changes
+			const hourKey = `${dateKey}-${d.getHours()}`;
+			const hourLabel =
+				hourKey !== lastHourKey ? `${String(d.getHours()).padStart(2, '0')}:00` : null;
+			lastHourKey = hourKey;
+
+			items.push({ type: 'entry', entry: sorted[i], hourLabel });
 		}
 
-		// Assign entries to the hour they started in
-		for (const entry of entries) {
-			const startHour = new Date(entry.started_at).getHours();
-			const group = groups.find((g) => g.hour === startHour);
-			if (group) group.entries.push(entry);
-		}
-
-		// Sort entries within each group: most recent first
-		for (const group of groups) {
-			group.entries.sort(
-				(a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
-			);
-		}
-
-		// Remove trailing empty hours (oldest with no entries)
-		while (groups.length > 0 && groups[groups.length - 1].entries.length === 0) {
-			groups.pop();
-		}
-
-		return groups;
+		// Reverse for most-recent-first display
+		return items.reverse();
 	});
 
 	function formatHour(iso: string): string {
 		const d = new Date(iso);
 		return d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
 	}
+
+	function formatDay(d: Date): string {
+		const weekday = d.toLocaleDateString('es', { weekday: 'long' });
+		const capitalized = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+		return `${capitalized} ${d.getDate()}/${d.getMonth() + 1}`;
+	}
 </script>
 
 <RightSheet {open} {onclose}>
 	<div class="agenda-title">Agenda</div>
-	<div class="agenda-subtitle">Últimas 24 horas</div>
+	<div class="agenda-subtitle-row">
+		<span class="agenda-subtitle">{mode === 'day' ? 'Últimas 24 horas' : 'Últimos 7 días'}</span>
+		<button
+			class="agenda-mode-toggle"
+			onclick={() => (mode = mode === 'day' ? 'week' : 'day')}
+			aria-label={mode === 'day' ? 'Ver semana' : 'Ver día'}
+		>
+			<i class="fa-solid {mode === 'day' ? 'fa-calendar-week' : 'fa-calendar-day'}"></i>
+		</button>
+	</div>
 
 	{#if loading}
 		<div class="history-loading">
@@ -113,49 +166,64 @@
 		</div>
 	{:else}
 		<div class="agenda-timeline">
-			{#each hourGroups as group (group.hour)}
-				<div class="agenda-hour-group">
-					<span class="agenda-hour-label">{group.label}</span>
-					<div class="agenda-hour-entries">
-						{#if group.entries.length === 0}
-							<div class="agenda-hour-empty"></div>
-						{:else}
-							{#each group.entries as entry (entry.id)}
-								<button
-									class="agenda-entry"
-									onclick={() => onopentask(entry.task_id, entry.project_id)}
-								>
-									<div
-										class="agenda-entry-bar"
-										class:finished={entry.task_finished_at !== null}
-										class:running={entry.finished_at === null}
-									></div>
-									<div class="agenda-entry-content">
-										<div class="agenda-entry-name">{entry.task_name}</div>
-										{#if entry.project_name}
-											<div class="agenda-entry-project">{entry.project_name}</div>
-										{/if}
-										<div class="agenda-entry-row">
-											<span class="agenda-entry-time">
-												{formatHour(entry.started_at)} – {entry.finished_at
-													? formatHour(entry.finished_at)
-													: 'ahora'}
-											</span>
-											<span
-												class="status-badge"
-												class:started={entry.task_finished_at === null}
-												class:finished={entry.task_finished_at !== null}
-											>
-												{entry.task_finished_at !== null ? 'Finalizada' : 'En progreso'}
-											</span>
-											<span class="agenda-entry-duration">{formatTime(entry.time_spent)}</span>
-										</div>
-									</div>
-								</button>
-							{/each}
-						{/if}
+			{#each agendaItems as item, i (item.type === 'entry' ? item.entry.id : item.type === 'day' ? `day-${i}` : `gap-${i}`)}
+				{#if item.type === 'day'}
+					<div class="agenda-day-divider">
+						<span class="agenda-day-line"></span>
+						<span class="agenda-day-label">{item.label}</span>
+						<span class="agenda-day-line"></span>
 					</div>
-				</div>
+				{:else if item.type === 'gap'}
+					<div class="agenda-row">
+						<span class="agenda-hour-label"></span>
+						<div class="agenda-gap">
+							<span class="agenda-gap-line"></span>
+							<span class="agenda-gap-label">
+								{#if item.duration >= 3600}
+									{formatHour(item.from)} – {formatHour(item.to)} · {formatTime(item.duration)}
+								{:else}
+									{formatTime(item.duration)}
+								{/if}
+							</span>
+							<span class="agenda-gap-line"></span>
+						</div>
+					</div>
+				{:else}
+					<div class="agenda-row">
+						<span class="agenda-hour-label">{item.hourLabel ?? ''}</span>
+						<button
+							class="agenda-entry"
+							onclick={() => onopentask(item.entry.task_id, item.entry.project_id)}
+						>
+							<div
+								class="agenda-entry-bar"
+								class:finished={item.entry.task_finished_at !== null}
+								class:running={item.entry.finished_at === null}
+							></div>
+							<div class="agenda-entry-content">
+								<div class="agenda-entry-name">{item.entry.task_name}</div>
+								{#if item.entry.project_name}
+									<div class="agenda-entry-project">{item.entry.project_name}</div>
+								{/if}
+								<div class="agenda-entry-row">
+									<span class="agenda-entry-time">
+										{formatHour(item.entry.started_at)} – {item.entry.finished_at
+											? formatHour(item.entry.finished_at)
+											: 'ahora'}
+									</span>
+									<span
+										class="status-badge"
+										class:started={item.entry.task_finished_at === null}
+										class:finished={item.entry.task_finished_at !== null}
+									>
+										{item.entry.task_finished_at !== null ? 'Finalizada' : 'En progreso'}
+									</span>
+									<span class="agenda-entry-duration">{formatTime(item.entry.time_spent)}</span>
+								</div>
+							</div>
+						</button>
+					</div>
+				{/if}
 			{/each}
 		</div>
 	{/if}

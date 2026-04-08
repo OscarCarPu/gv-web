@@ -186,14 +186,18 @@ Shared side panel sliding in from the right (420px / 90vw, full height). Same AP
 
 ### AgendaRightSheet (`src/lib/domains/tasks/components/AgendaRightSheet.svelte`)
 
-Right-sliding panel showing last 24 hours of time entries as a vertical timeline grouped by hour.
+Right-sliding panel showing a chronological timeline of time entries (most recent first).
 
 - Opens from calendar-day icon button next to the chart button in summary-actions
-- Groups entries by start hour, most recent hour first
+- **Mode toggle**: Day (24h) / Week (7 days) — icon button inline with subtitle, re-fetches on toggle
+- Entries sorted by full `started_at` timestamp (date-aware, not just hour)
 - Each entry shows: task name, project name, time range, status badge (En progreso / Finalizada), duration
 - Colored left bar per entry: blue (in progress), green (task finished), pulsing (entry still running)
+- **Hour labels**: Left column shows `HH:00` when the hour changes between entries
+- **Gap indicators**: Between entries with >2 min gap, shows idle time. Gaps ≥1h also show the time range (e.g. `14:30 – 17:00 · 2h 30m`)
+- **Day dividers**: When entries cross midnight, gap is split at 00:00 with a day label (e.g. `Miércoles 8/4`) between the two halves
 - Click: if task has a project, navigates to `/tasks/projects/{id}?task={taskId}` (auto-opens TaskBottomSheet); otherwise opens TaskBottomSheet in place
-- Calls `tasksApi.getTimeEntries({ start_time })` with `toLocalDateString(now - 24h)`
+- Calls `tasksApi.getTimeEntries({ start_time })` with `toLocalDateString(now - 24h|7d)`
 
 ## Timer (`src/lib/domains/tasks/taskTimer.svelte.ts`)
 
