@@ -10,7 +10,11 @@
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import StartedAtEditor from '$lib/domains/tasks/components/StartedAtEditor.svelte';
 	import TimeHistoryModal from '$lib/domains/tasks/components/TimeHistoryModal.svelte';
-	import type { ActiveTreeNode, TimeEntrySummaryResponse } from '$lib/domains/tasks/types/Task.types';
+	import AgendaRightSheet from '$lib/domains/tasks/components/AgendaRightSheet.svelte';
+	import type {
+		ActiveTreeNode,
+		TimeEntrySummaryResponse,
+	} from '$lib/domains/tasks/types/Task.types';
 
 	let { data } = $props();
 
@@ -19,6 +23,7 @@
 	let summaryOverride = $state<TimeEntrySummaryResponse | null>(null);
 	let commentExpanded = $state(false);
 	let showTimeHistory = $state(false);
+	let showAgenda = $state(false);
 
 	const FOLD_LIMIT = 15;
 	const EXPAND_STEP = 10;
@@ -50,7 +55,7 @@
 		const wakingHoursLeft = Math.max(0, 24 - currentHour);
 
 		const isWeekendDay = (d: number) => d >= 6; // 6=Sat, 7=Sun
-		const wakingHours = (d: number) => isWeekendDay(d) ? 12 : 17;
+		const wakingHours = (d: number) => (isWeekendDay(d) ? 12 : 17);
 
 		// Uniform calculation (all days equal, 17h)
 		const uniformWaking = 17;
@@ -114,12 +119,25 @@
 		selectedTaskId = id;
 	}
 
+	function handleAgendaTaskClick(taskId: number, projectId: number | null) {
+		showAgenda = false;
+		if (projectId) {
+			goto(`/tasks/projects/${projectId}?task=${taskId}`);
+		} else {
+			selectedTaskId = taskId;
+		}
+	}
+
 	function openDetail(id: number, type: 'project' | 'task') {
 		if (type === 'project') goto(`/tasks/projects/${id}`);
 		else selectedTaskId = id;
 	}
 
-	function findTaskInTree(nodes: ActiveTreeNode[], taskId: number, parentProjectName?: string): { name: string; projectName?: string } | null {
+	function findTaskInTree(
+		nodes: ActiveTreeNode[],
+		taskId: number,
+		parentProjectName?: string
+	): { name: string; projectName?: string } | null {
 		for (const node of nodes) {
 			if (node.type === 'task' && node.id === taskId) {
 				return { name: node.name, projectName: parentProjectName };
@@ -142,11 +160,25 @@
 			const entry = data.activeTimeEntry;
 			const dueDateTask = data.tasksByDueDate.find((t) => t.id === entry.task_id);
 			if (dueDateTask) {
-				timer.restore(entry.id, entry.task_id, entry.started_at, dueDateTask.name, dueDateTask.project_name, entry.comment);
+				timer.restore(
+					entry.id,
+					entry.task_id,
+					entry.started_at,
+					dueDateTask.name,
+					dueDateTask.project_name,
+					entry.comment
+				);
 			} else {
 				const treeTask = findTaskInTree(data.activeTree, entry.task_id);
 				if (treeTask) {
-					timer.restore(entry.id, entry.task_id, entry.started_at, treeTask.name, treeTask.projectName, entry.comment);
+					timer.restore(
+						entry.id,
+						entry.task_id,
+						entry.started_at,
+						treeTask.name,
+						treeTask.projectName,
+						entry.comment
+					);
 				}
 			}
 		}
@@ -162,7 +194,11 @@
 		await invalidateAll();
 	}
 
-	async function handleTreeToggle(id: number, type: 'project' | 'task', action: 'start' | 'finish') {
+	async function handleTreeToggle(
+		id: number,
+		type: 'project' | 'task',
+		action: 'start' | 'finish'
+	) {
 		const now = new Date().toISOString();
 		const payload = action === 'start' ? { started_at: now } : { finished_at: now };
 		if (type === 'project') {
@@ -181,13 +217,11 @@
 		4: 'Limpiar habitación',
 		5: 'Limpiar entrada e invitados',
 		6: 'Limpiar gatos y {ventanas, sofá, nevera, ...}',
-		0: 'Limpiar coche'
+		0: 'Limpiar coche',
 	};
 	const todayReminder = dailyReminders[new Date().getDay()];
 
-	let timeEntries = $state([
-		{ id: 1, start: '10:00', end: '11:00' }
-	]);
+	let timeEntries = $state([{ id: 1, start: '10:00', end: '11:00' }]);
 
 	async function submitTimeEntry() {
 		if (!timer.activeTimeEntryId) return;
@@ -196,12 +230,26 @@
 		const today = new Date();
 		const [startH, startM] = entry.start.split(':').map(Number);
 		const [endH, endM] = entry.end.split(':').map(Number);
-		const startedAt = new Date(today.getFullYear(), today.getMonth(), today.getDate(), startH, startM, 0);
-		const finishedAt = new Date(today.getFullYear(), today.getMonth(), today.getDate(), endH, endM, 0);
+		const startedAt = new Date(
+			today.getFullYear(),
+			today.getMonth(),
+			today.getDate(),
+			startH,
+			startM,
+			0
+		);
+		const finishedAt = new Date(
+			today.getFullYear(),
+			today.getMonth(),
+			today.getDate(),
+			endH,
+			endM,
+			0
+		);
 		await tasksApi.updateTimeEntry(timer.activeTimeEntryId, {
 			started_at: startedAt.toISOString(),
 			finished_at: finishedAt.toISOString(),
-			comment: timer.comment || null
+			comment: timer.comment || null,
 		});
 		timer.reset();
 		commentExpanded = false;
@@ -220,13 +268,32 @@
 
 	<div class="task-timer-panel">
 		<div class="task-header">
-			<button class="comment-toggle" class:has-comment={timer.comment.length > 0} onclick={() => { commentExpanded = !commentExpanded }} title="Comentario">
+			<button
+				class="comment-toggle"
+				class:has-comment={timer.comment.length > 0}
+				onclick={() => {
+					commentExpanded = !commentExpanded;
+				}}
+				title="Comentario"
+			>
 				<i class="fa-solid fa-comment"></i>
 			</button>
-			<button class="task-selector" class:active={timer.selectedTaskDisplay !== null} onclick={() => { if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId); }} disabled={!timer.selectedTaskId}>
+			<button
+				class="task-selector"
+				class:active={timer.selectedTaskDisplay !== null}
+				onclick={() => {
+					if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId);
+				}}
+				disabled={!timer.selectedTaskId}
+			>
 				{timer.selectedTaskDisplay ?? 'Seleccionar Tarea'}
 			</button>
-			<button class="btn-cancel" onclick={handleCancel} disabled={!timer.activeTimeEntryId} title="Cancelar entrada"><i class="fa-solid fa-xmark"></i></button>
+			<button
+				class="btn-cancel"
+				onclick={handleCancel}
+				disabled={!timer.activeTimeEntryId}
+				title="Cancelar entrada"><i class="fa-solid fa-xmark"></i></button
+			>
 		</div>
 		{#if commentExpanded || timer.comment.length > 0}
 			<input
@@ -241,26 +308,21 @@
 		<div class="timer-row">
 			<div class="time-entries">
 				{#each timeEntries as entry (entry.id)}
-					<TimePicker value={entry.start} onchange={(v) => entry.start = v} />
+					<TimePicker value={entry.start} onchange={(v) => (entry.start = v)} />
 					<span class="time-separator">-</span>
-					<TimePicker value={entry.end} onchange={(v) => entry.end = v} />
+					<TimePicker value={entry.end} onchange={(v) => (entry.end = v)} />
 				{/each}
-				<button class="btn-primary" onclick={submitTimeEntry} disabled={!timer.activeTimeEntryId}><i class="fa-solid fa-plus"></i> Agregar</button>
+				<button class="btn-primary" onclick={submitTimeEntry} disabled={!timer.activeTimeEntryId}
+					><i class="fa-solid fa-plus"></i> Agregar</button
+				>
 			</div>
 
 			<div class="timer-controls">
-				<span
-					id="timer-display-trigger"
-					class="timer-display"
-					class:clickable={timer.isRunning}
-				>
+				<span id="timer-display-trigger" class="timer-display" class:clickable={timer.isRunning}>
 					{timer.formattedTime}
 				</span>
 				{#if timer.isRunning && timer.startedAtDate}
-					<StartedAtEditor
-						startedAt={timer.startedAtDate}
-						onchange={handleStartedAtChange}
-					/>
+					<StartedAtEditor startedAt={timer.startedAtDate} onchange={handleStartedAtChange} />
 				{/if}
 				{#if timer.isRunning}
 					<button class="btn-primary running" onclick={handleStop}>
@@ -277,24 +339,43 @@
 		</div>
 
 		<div class="time-summary">
-			<div class="summary-item" class:danger={summary.today < dailyTarget * 5/6} class:warning={summary.today >= dailyTarget * 5/6 && summary.today <= dailyTarget * 11/12} class:completed={summary.today > dailyTarget * 11/12}>
+			<div
+				class="summary-item"
+				class:danger={summary.today < (dailyTarget * 5) / 6}
+				class:warning={summary.today >= (dailyTarget * 5) / 6 &&
+					summary.today <= (dailyTarget * 11) / 12}
+				class:completed={summary.today > (dailyTarget * 11) / 12}
+			>
 				<span class="summary-label">Hoy</span>
 				<div class="progress-track bg-bg">
-					<div class="progress-fill" style="width: {Math.min(summary.today / dailyTarget * 100, 100)}%"></div>
+					<div
+						class="progress-fill"
+						style="width: {Math.min((summary.today / dailyTarget) * 100, 100)}%"
+					></div>
 				</div>
 				<span class="summary-value">{formatTime(summary.today)} / {dailyTargetLabel}</span>
 			</div>
 			<div class="summary-item" class:completed={summary.week >= 288000}>
 				<span class="summary-label">Semana</span>
 				<div class="progress-track bg-bg">
-					<div class="progress-fill" style="width: {Math.min(summary.week / 288000 * 100, 100)}%"></div>
+					<div
+						class="progress-fill"
+						style="width: {Math.min((summary.week / 288000) * 100, 100)}%"
+					></div>
 				</div>
 				<span class="summary-value">{formatTime(summary.week)} / 80h</span>
 			</div>
 			<div class="summary-actions">
 				<span class="summary-pace">{weekTargetTooltip}</span>
-				<button class="btn-icon" onclick={() => showTimeHistory = true} aria-label="Ver historial">
+				<button
+					class="btn-icon"
+					onclick={() => (showTimeHistory = true)}
+					aria-label="Ver historial"
+				>
 					<i class="fa-solid fa-chart-line"></i>
+				</button>
+				<button class="btn-icon" onclick={() => (showAgenda = true)} aria-label="Ver agenda">
+					<i class="fa-solid fa-calendar-day"></i>
 				</button>
 			</div>
 		</div>
@@ -304,13 +385,26 @@
 		<div class="tasks-section">
 			<div class="section-header">
 				<h2>Próximas a vencer</h2>
-				<button class="btn-primary btn-sm" onclick={() => { createMode = 'task'; createPrefillProjectId = null; showCreate = true; }}>
+				<button
+					class="btn-primary btn-sm"
+					onclick={() => {
+						createMode = 'task';
+						createPrefillProjectId = null;
+						showCreate = true;
+					}}
+				>
 					<i class="fa-solid fa-plus"></i> Tarea
 				</button>
 			</div>
 			<div class="task-list">
 				{#each visibleDueDateTasks as task (task.id)}
-					<TaskItem {task} onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)} ontoggle={handleTaskToggle} ondetail={openTaskDetail} isTimerRunning={timer.isRunning} />
+					<TaskItem
+						{task}
+						onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)}
+						ontoggle={handleTaskToggle}
+						ondetail={openTaskDetail}
+						isTimerRunning={timer.isRunning}
+					/>
 				{/each}
 				{#if hasMoreDueDateTasks}
 					<button class="show-more-btn" onclick={showMoreDueDateTasks}>
@@ -328,17 +422,48 @@
 		<div class="tasks-section">
 			<div class="section-header">
 				<h2>Proyectos activos</h2>
-				<button class="btn-primary btn-sm" onclick={() => { createMode = 'project'; createPrefillProjectId = null; showCreate = true; }}>
+				<button
+					class="btn-primary btn-sm"
+					onclick={() => {
+						createMode = 'project';
+						createPrefillProjectId = null;
+						showCreate = true;
+					}}
+				>
 					<i class="fa-solid fa-plus"></i> Proyecto
 				</button>
 			</div>
 			<div class="task-list">
-				<TreeNode nodes={data.activeTree} onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)} ontoggle={handleTreeToggle} ondetail={openDetail} oncreatetask={(projectId) => { createMode = 'task'; createPrefillProjectId = projectId; showCreate = true; }} isTimerRunning={timer.isRunning} />
+				<TreeNode
+					nodes={data.activeTree}
+					onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)}
+					ontoggle={handleTreeToggle}
+					ondetail={openDetail}
+					oncreatetask={(projectId) => {
+						createMode = 'task';
+						createPrefillProjectId = projectId;
+						showCreate = true;
+					}}
+					isTimerRunning={timer.isRunning}
+				/>
 			</div>
 		</div>
 	</div>
 </div>
 
-<TaskBottomSheet taskId={selectedTaskId} onclose={() => selectedTaskId = null} />
-<CreateBottomSheet open={showCreate} onclose={() => { showCreate = false; createPrefillProjectId = null; }} mode={createMode} prefillProjectId={createPrefillProjectId} />
-<TimeHistoryModal open={showTimeHistory} onclose={() => showTimeHistory = false} />
+<TaskBottomSheet taskId={selectedTaskId} onclose={() => (selectedTaskId = null)} />
+<CreateBottomSheet
+	open={showCreate}
+	onclose={() => {
+		showCreate = false;
+		createPrefillProjectId = null;
+	}}
+	mode={createMode}
+	prefillProjectId={createPrefillProjectId}
+/>
+<TimeHistoryModal open={showTimeHistory} onclose={() => (showTimeHistory = false)} />
+<AgendaRightSheet
+	open={showAgenda}
+	onclose={() => (showAgenda = false)}
+	onopentask={handleAgendaTaskClick}
+/>

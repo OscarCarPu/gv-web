@@ -15,7 +15,8 @@ import {
 	TaskByDueDateResponseListSchema,
 	TimeEntrySummaryResponseSchema,
 	TimeEntryHistoryResponseSchema,
-	TaskListItemListSchema
+	TimeEntryWithTaskListSchema,
+	TaskListItemListSchema,
 } from './tasks.schemas';
 import type {
 	ProjectListItem,
@@ -39,7 +40,8 @@ import type {
 	TaskByDueDateResponse,
 	TaskListItem,
 	TimeEntrySummaryResponse,
-	TimeEntryHistoryResponse
+	TimeEntryHistoryResponse,
+	TimeEntryWithTask,
 } from '../types/Task.types';
 
 export const tasksApi = {
@@ -69,22 +71,26 @@ export const tasksApi = {
 		return fetchAPI('/tasks/projects', ProjectResponseSchema, {
 			method: 'POST',
 			body: JSON.stringify(input),
-			token
+			token,
 		});
 	},
 
-	async updateProject(id: number, input: UpdateProjectRequest, token?: string): Promise<ProjectResponse> {
+	async updateProject(
+		id: number,
+		input: UpdateProjectRequest,
+		token?: string
+	): Promise<ProjectResponse> {
 		return fetchAPI(`/tasks/projects/${id}`, ProjectResponseSchema, {
 			method: 'PATCH',
 			body: JSON.stringify(input),
-			token
+			token,
 		});
 	},
 
 	async deleteProject(id: number, token?: string): Promise<void> {
 		return fetchAPI(`/tasks/projects/${id}`, z.void(), {
 			method: 'DELETE',
-			token
+			token,
 		});
 	},
 
@@ -98,7 +104,7 @@ export const tasksApi = {
 		return fetchAPI('/tasks/tasks', TaskResponseSchema, {
 			method: 'POST',
 			body: JSON.stringify(input),
-			token
+			token,
 		});
 	},
 
@@ -106,14 +112,14 @@ export const tasksApi = {
 		return fetchAPI(`/tasks/tasks/${id}`, TaskResponseSchema, {
 			method: 'PATCH',
 			body: JSON.stringify(input),
-			token
+			token,
 		});
 	},
 
 	async deleteTask(id: number, token?: string): Promise<void> {
 		return fetchAPI(`/tasks/tasks/${id}`, z.void(), {
 			method: 'DELETE',
-			token
+			token,
 		});
 	},
 
@@ -131,7 +137,7 @@ export const tasksApi = {
 		return fetchAPI('/tasks/todos', TodoResponseSchema, {
 			method: 'POST',
 			body: JSON.stringify(input),
-			token
+			token,
 		});
 	},
 
@@ -139,14 +145,14 @@ export const tasksApi = {
 		return fetchAPI(`/tasks/todos/${id}`, TodoResponseSchema, {
 			method: 'PATCH',
 			body: JSON.stringify(input),
-			token
+			token,
 		});
 	},
 
 	async deleteTodo(id: number, token?: string): Promise<void> {
 		return fetchAPI(`/tasks/todos/${id}`, z.void(), {
 			method: 'DELETE',
-			token
+			token,
 		});
 	},
 
@@ -156,15 +162,19 @@ export const tasksApi = {
 		return fetchAPI('/tasks/time-entries', TimeEntryResponseSchema, {
 			method: 'POST',
 			body: JSON.stringify(input),
-			token
+			token,
 		});
 	},
 
-	async updateTimeEntry(id: number, input: UpdateTimeEntryRequest, token?: string): Promise<TimeEntryResponse> {
+	async updateTimeEntry(
+		id: number,
+		input: UpdateTimeEntryRequest,
+		token?: string
+	): Promise<TimeEntryResponse> {
 		return fetchAPI(`/tasks/time-entries/${id}`, TimeEntryResponseSchema, {
 			method: 'PATCH',
 			body: JSON.stringify(input),
-			token
+			token,
 		});
 	},
 
@@ -175,7 +185,7 @@ export const tasksApi = {
 	async deleteTimeEntry(id: number, token?: string): Promise<void> {
 		return fetchAPI(`/tasks/time-entries/${id}`, z.void(), {
 			method: 'DELETE',
-			token
+			token,
 		});
 	},
 
@@ -193,12 +203,24 @@ export const tasksApi = {
 		query.set('frequency', params.frequency);
 		if (params.start_at) query.set('start_at', params.start_at);
 		if (params.end_at) query.set('end_at', params.end_at);
-		return fetchAPI(`/tasks/time-entries/history?${query}`, TimeEntryHistoryResponseSchema, { token });
+		return fetchAPI(`/tasks/time-entries/history?${query}`, TimeEntryHistoryResponseSchema, {
+			token,
+		});
+	},
+
+	async getTimeEntries(
+		params: { start_time: string; end_time?: string },
+		token?: string
+	): Promise<TimeEntryWithTask[]> {
+		const query = new URLSearchParams();
+		query.set('start_time', params.start_time);
+		if (params.end_time) query.set('end_time', params.end_time);
+		return fetchAPI(`/tasks/time-entries?${query}`, TimeEntryWithTaskListSchema, { token });
 	},
 
 	// --- Tree ---
 
 	async getActiveTree(token?: string): Promise<ActiveTreeNode[]> {
 		return fetchAPI('/tasks/tree', ActiveTreeNodeListSchema, { token });
-	}
+	},
 };

@@ -33,26 +33,27 @@ API accepts `depends_on: number[]` (array of task IDs) on create and update — 
 
 ### Key Types (`src/lib/domains/tasks/types/Task.types.ts`)
 
-| Type | Key Fields |
-|---|---|
-| `ProjectResponse` | id, name, description, due_at, parent_id, started_at, finished_at |
-| `ProjectDetailResponse` | Same + time_spent (aggregated) |
-| `ProjectChildrenResponse` | project + children[] (mixed tasks and sub-projects) |
-| `TaskDepRef` | id, name, due_at (dependency reference) |
-| `TaskListItem` | id, name (for list-fast endpoint) |
-| `TaskResponse` | id, name, description, due_at, project_id, started_at, finished_at, depends_on[], blocks[], blocked |
-| `TaskFullResponse` | Same + time_spent, todos[] |
-| `TodoResponse` | id, task_id, name, is_done |
-| `TimeEntryResponse` | id, task_id, started_at, finished_at, comment |
-| `ActiveTreeNode` | Recursive tree: id, type, name, children[], depends_on[], blocks[], blocked |
-| `TaskByDueDateResponse` | Task with project_name, project_due_at, depends_on[], blocks[], blocked |
+| Type                      | Key Fields                                                                                          |
+| ------------------------- | --------------------------------------------------------------------------------------------------- |
+| `ProjectResponse`         | id, name, description, due_at, parent_id, started_at, finished_at                                   |
+| `ProjectDetailResponse`   | Same + time_spent (aggregated)                                                                      |
+| `ProjectChildrenResponse` | project + children[] (mixed tasks and sub-projects)                                                 |
+| `TaskDepRef`              | id, name, due_at (dependency reference)                                                             |
+| `TaskListItem`            | id, name (for list-fast endpoint)                                                                   |
+| `TaskResponse`            | id, name, description, due_at, project_id, started_at, finished_at, depends_on[], blocks[], blocked |
+| `TaskFullResponse`        | Same + time_spent, todos[]                                                                          |
+| `TodoResponse`            | id, task_id, name, is_done                                                                          |
+| `TimeEntryResponse`       | id, task_id, started_at, finished_at, comment                                                       |
+| `ActiveTreeNode`          | Recursive tree: id, type, name, children[], depends_on[], blocks[], blocked                         |
+| `TaskByDueDateResponse`   | Task with project_name, project_due_at, depends_on[], blocks[], blocked                             |
+| `TimeEntryWithTask`       | Time entry with task_name, project_name, task_finished_at, time_spent                               |
 
 ## Routes
 
-| Route | Purpose |
-|---|---|
-| `/tasks` | Main page — timer, due-date list, active project tree |
-| `/tasks/projects/[id]` | Project detail — edit project, view/create children |
+| Route                  | Purpose                                               |
+| ---------------------- | ----------------------------------------------------- |
+| `/tasks`               | Main page — timer, due-date list, active project tree |
+| `/tasks/projects/[id]` | Project detail — edit project, view/create children   |
 
 ## UI Components
 
@@ -64,7 +65,7 @@ API accepts `depends_on: number[]` (array of task IDs) on create and update — 
 │  [Comment input]                    │
 │  HH:MM ─ HH:MM  [+ Agregar]        │  ← Time entry row
 │  00:12:34  [Started at]  [▶ Play]   │  ← Timer controls
-│  Hoy: ██░░  Semana: ████░░  [📊]   │  ← Summary bars
+│  Hoy: ██░░  Semana: ████░░  [📊][📅]│  ← Summary bars + agenda
 ├────────────────┬────────────────────┤
 │ Próximas a     │ Proyectos activos  │
 │ vencer    [+]  │              [+]   │
@@ -148,6 +149,7 @@ Full page for project management.
 └─────────────────────────────────────┘
 ```
 
+- **`?task={id}` query param**: Auto-opens TaskBottomSheet for the given task (used by agenda navigation)
 - **ESC key**: Navigates back to `/tasks` (unless a BottomSheet is open)
 - **Children list**: Sub-projects link to their own page, tasks open TaskBottomSheet
 - **Create buttons**: Open CreateBottomSheet with prefilled project context
@@ -175,6 +177,24 @@ Shared half-modal component sliding up from bottom (max 60vh).
 
 - `constrained` prop: When true, caps content at `max-w-5xl` (used by TaskBottomSheet and CreateBottomSheet, not by TimeHistoryModal)
 
+### RightSheet (`src/lib/shared/components/RightSheet.svelte`)
+
+Shared side panel sliding in from the right (420px / 90vw, full height). Same API pattern as BottomSheet.
+
+- Props: `open: boolean`, `onclose: () => void`, `children: Snippet`
+- Both BottomSheet and RightSheet share `@utility` base styles: `sheet-backdrop`, `sheet-close`, `sheet-base`
+
+### AgendaRightSheet (`src/lib/domains/tasks/components/AgendaRightSheet.svelte`)
+
+Right-sliding panel showing last 24 hours of time entries as a vertical timeline grouped by hour.
+
+- Opens from calendar-day icon button next to the chart button in summary-actions
+- Groups entries by start hour, most recent hour first
+- Each entry shows: task name, project name, time range, status badge (En progreso / Finalizada), duration
+- Colored left bar per entry: blue (in progress), green (task finished), pulsing (entry still running)
+- Click: if task has a project, navigates to `/tasks/projects/{id}?task={taskId}` (auto-opens TaskBottomSheet); otherwise opens TaskBottomSheet in place
+- Calls `tasksApi.getTimeEntries({ start_time })` with `toLocalDateString(now - 24h)`
+
 ## Timer (`src/lib/domains/tasks/taskTimer.svelte.ts`)
 
 Client-side timer state using Svelte runes:
@@ -198,36 +218,37 @@ Opens from chart icon on summary bars. Uses shared chart components (LayerCake).
 
 ### `src/lib/shared/utils/datetime.ts`
 
-| Function | Description |
-|---|---|
-| `toLocalDatetime(iso)` | ISO string → `datetime-local` input value (slices to `YYYY-MM-DDTHH:MM`, no tz conversion) |
-| `toISOString(local)` | `datetime-local` value → ISO string preserving local date/time via offset compensation (or null) |
-| `formatTime(seconds)` | Seconds → "Xh Xm" display |
-| `formatDateShort(dateStr)` | Date → "22 mar" (short, for lists) |
-| `formatDateFull(iso)` | Date → "22 mar 2026, 14:30" (full, for detail views) |
+| Function                   | Description                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| `toLocalDatetime(iso)`     | ISO string → `datetime-local` input value (slices to `YYYY-MM-DDTHH:MM`, no tz conversion)       |
+| `toISOString(local)`       | `datetime-local` value → ISO string preserving local date/time via offset compensation (or null) |
+| `formatTime(seconds)`      | Seconds → "Xh Xm" display                                                                        |
+| `formatDateShort(dateStr)` | Date → "22 mar" (short, for lists)                                                               |
+| `formatDateFull(iso)`      | Date → "22 mar 2026, 14:30" (full, for detail views)                                             |
 
 ## API Endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/tasks/tree` | Active project/task tree |
-| `GET` | `/tasks/tasks/by-due-date` | Tasks sorted by due date |
-| `GET` | `/tasks/projects` | Root projects list |
-| `GET` | `/tasks/projects/{id}` | Project detail with time_spent |
-| `GET` | `/tasks/projects/{id}/children` | Project + child tasks/sub-projects |
-| `POST` | `/tasks/projects` | Create project |
-| `PATCH` | `/tasks/projects/{id}` | Update project |
-| `DELETE` | `/tasks/projects/{id}` | Delete project |
-| `GET` | `/tasks/tasks/list-fast` | All unfinished tasks (id, name only) |
-| `GET` | `/tasks/tasks/{id}` | Task detail with todos + dependencies |
-| `POST` | `/tasks/tasks` | Create task (accepts `depends_on: int[]`) |
-| `PATCH` | `/tasks/tasks/{id}` | Update task (accepts `depends_on: int[]`) |
-| `DELETE` | `/tasks/tasks/{id}` | Delete task |
-| CRUD | `/tasks/todos` | Todo management |
-| CRUD | `/tasks/time-entries` | Time entry management |
-| `GET` | `/tasks/time-entries/active` | Currently running time entry |
-| `GET` | `/tasks/time-entries/summary` | Today + week totals |
-| `GET` | `/tasks/time-entries/history` | Aggregated history (daily/weekly/monthly) |
+| Method   | Endpoint                                    | Purpose                                      |
+| -------- | ------------------------------------------- | -------------------------------------------- |
+| `GET`    | `/tasks/tree`                               | Active project/task tree                     |
+| `GET`    | `/tasks/tasks/by-due-date`                  | Tasks sorted by due date                     |
+| `GET`    | `/tasks/projects`                           | Root projects list                           |
+| `GET`    | `/tasks/projects/{id}`                      | Project detail with time_spent               |
+| `GET`    | `/tasks/projects/{id}/children`             | Project + child tasks/sub-projects           |
+| `POST`   | `/tasks/projects`                           | Create project                               |
+| `PATCH`  | `/tasks/projects/{id}`                      | Update project                               |
+| `DELETE` | `/tasks/projects/{id}`                      | Delete project                               |
+| `GET`    | `/tasks/tasks/list-fast`                    | All unfinished tasks (id, name only)         |
+| `GET`    | `/tasks/tasks/{id}`                         | Task detail with todos + dependencies        |
+| `POST`   | `/tasks/tasks`                              | Create task (accepts `depends_on: int[]`)    |
+| `PATCH`  | `/tasks/tasks/{id}`                         | Update task (accepts `depends_on: int[]`)    |
+| `DELETE` | `/tasks/tasks/{id}`                         | Delete task                                  |
+| CRUD     | `/tasks/todos`                              | Todo management                              |
+| CRUD     | `/tasks/time-entries`                       | Time entry management                        |
+| `GET`    | `/tasks/time-entries/active`                | Currently running time entry                 |
+| `GET`    | `/tasks/time-entries/summary`               | Today + week totals                          |
+| `GET`    | `/tasks/time-entries/history`               | Aggregated history (daily/weekly/monthly)    |
+| `GET`    | `/tasks/time-entries?start_time=&end_time=` | Time entries with task/project info (agenda) |
 
 ## Floating Reminder
 

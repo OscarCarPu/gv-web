@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { toLocalDatetime, toISOString, formatTime, formatDateShort, formatDateFull } from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
@@ -17,7 +18,8 @@
 	let description = $state('');
 	let dueAt = $state('');
 
-	let selectedTaskId = $state<number | null>(null);
+	const taskParam = page.url.searchParams.get('task');
+	let selectedTaskId = $state<number | null>(taskParam ? Number(taskParam) : null);
 	let showCreate = $state(false);
 	let createMode = $state<'task' | 'project'>('task');
 	let saving = $state(false);

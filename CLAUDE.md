@@ -30,7 +30,7 @@ src/lib/domains/{auth,habits,tasks}/
   components/ — Domain-specific Svelte components
 src/lib/shared/
   api/client.ts   — fetchAPI<T>(endpoint, schema, options?) core HTTP client
-  components/     — Reusable UI (BottomSheet, Modal, DatetimePicker, chart/*)
+  components/     — Reusable UI (BottomSheet, RightSheet, Modal, DatetimePicker, chart/*)
   stores/         — toast.svelte.ts (Svelte 5 runes store)
   utils/          — datetime helpers, date navigation runes
 ```
@@ -47,7 +47,7 @@ Login (password) → optional 2FA (TOTP) → JWT stored as httpOnly cookie (`ses
 
 Tailwind CSS 4 via Vite plugin — config lives in `src/styles/app.css` using `@theme` directive (no tailwind.config.js). Single custom breakpoint: `desktop` at 1000px (default sm/md/lg/xl/2xl disabled). Feature CSS files use `@reference "./app.css"` to access theme tokens. Font: Inter (body), JetBrains Mono (monospace). All component styles use `@apply` in global CSS files — only use scoped `<style>` blocks as a last resort.
 
-Shared base utilities are defined via `@utility` in `components.css` (e.g. `btn`, `status-badge`) so they can be composed with `@apply` across files. Border colors use theme tokens `--color-border` / `--color-border-light` — never hardcode `rgba()` for borders.
+Shared base utilities are defined via `@utility` in `components.css` (e.g. `btn`, `status-badge`, `sheet-backdrop`, `sheet-close`, `sheet-base`) so they can be composed with `@apply` across files. Border colors use theme tokens `--color-border` / `--color-border-light` — never hardcode `rgba()` for borders.
 
 ### Path Aliases
 

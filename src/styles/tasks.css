@@ -1,462 +1,542 @@
 @reference "./app.css";
 
 .task-timer-panel {
-    @apply flex flex-col items-center gap-4 w-full max-w-3xl mx-auto bg-bg-light rounded-xl px-6 py-5 mt-6;
-    border: 1px solid var(--color-border);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+	@apply bg-bg-light mx-auto mt-6 flex w-full max-w-3xl flex-col items-center gap-4 rounded-xl px-6 py-5;
+	border: 1px solid var(--color-border);
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 
-    .task-header {
-        @apply flex items-center gap-2 w-full;
-    }
+	.task-header {
+		@apply flex w-full items-center gap-2;
+	}
 
-    .task-selector {
-        @apply flex-1 text-center text-lg font-medium text-text-muted bg-bg rounded-lg px-4 py-3 border border-text-muted/20 cursor-default appearance-none;
-        font-family: inherit;
+	.task-selector {
+		@apply text-text-muted bg-bg border-text-muted/20 flex-1 cursor-default appearance-none rounded-lg border px-4 py-3 text-center text-lg font-medium;
+		font-family: inherit;
 
-        &.active {
-            @apply text-text cursor-pointer;
-        }
+		&.active {
+			@apply text-text cursor-pointer;
+		}
 
-        &:disabled {
-            @apply cursor-default;
-        }
-    }
+		&:disabled {
+			@apply cursor-default;
+		}
+	}
 
-    .comment-toggle {
-        @apply bg-transparent border-none text-text-muted cursor-pointer p-2 rounded-lg hover:text-text transition-colors duration-200;
+	.comment-toggle {
+		@apply text-text-muted hover:text-text cursor-pointer rounded-lg border-none bg-transparent p-2 transition-colors duration-200;
 
-        &.has-comment {
-            @apply text-primary;
-        }
-    }
+		&.has-comment {
+			@apply text-primary;
+		}
+	}
 
-    .comment-input {
-        @apply w-full bg-bg border-none rounded-lg px-4 py-2 text-sm text-text placeholder-text-muted/50;
-        outline: none;
+	.comment-input {
+		@apply bg-bg text-text placeholder-text-muted/50 w-full rounded-lg border-none px-4 py-2 text-sm;
+		outline: none;
 
-        &:focus {
-            @apply ring-1 ring-primary/40;
-        }
-    }
+		&:focus {
+			@apply ring-primary/40 ring-1;
+		}
+	}
 
-    .running {
-        @apply bg-danger hover:bg-danger/80;
-    }
+	.running {
+		@apply bg-danger hover:bg-danger/80;
+	}
 
-    .timer-row {
-        @apply flex items-center justify-between w-full gap-4;
-    }
+	.timer-row {
+		@apply flex w-full items-center justify-between gap-4;
+	}
 
-    .time-entries {
-        @apply flex items-center gap-2 flex-wrap;
-    }
+	.time-entries {
+		@apply flex flex-wrap items-center gap-2;
+	}
 
-    .time-separator {
-        @apply text-text-muted text-sm;
-    }
+	.time-separator {
+		@apply text-text-muted text-sm;
+	}
 
-    .timer-controls {
-        @apply flex items-center gap-4;
-    }
+	.timer-controls {
+		@apply flex items-center gap-4;
+	}
 
-    .timer-display {
-        @apply text-2xl font-mono font-bold text-text tabular-nums min-w-28;
+	.timer-display {
+		@apply text-text min-w-28 font-mono text-2xl font-bold tabular-nums;
 
-        &.clickable {
-            @apply cursor-pointer hover:text-primary transition-colors duration-200;
-        }
-    }
+		&.clickable {
+			@apply hover:text-primary cursor-pointer transition-colors duration-200;
+		}
+	}
 
-    .time-summary {
-        @apply flex flex-wrap items-center gap-6 w-full;
-    }
+	.time-summary {
+		@apply flex w-full flex-wrap items-center gap-6;
+	}
 
-    .summary-actions {
-        @apply w-full flex items-center justify-center gap-3;
-    }
+	.summary-actions {
+		@apply flex w-full items-center justify-center gap-3;
+	}
 
-    .summary-actions .btn-icon {
-        @apply bg-transparent border-none text-text-muted cursor-pointer p-1 rounded hover:text-primary;
-    }
+	.summary-actions .btn-icon {
+		@apply text-text-muted hover:text-primary cursor-pointer rounded border-none bg-transparent p-1;
+	}
 
-    .summary-pace {
-        @apply text-sm text-text-muted tabular-nums;
-    }
+	.summary-pace {
+		@apply text-text-muted text-sm tabular-nums;
+	}
 
-    .summary-item {
-        @apply flex items-center gap-2 flex-1;
-    }
+	.summary-item {
+		@apply flex flex-1 items-center gap-2;
+	}
 
-    .summary-label {
-        @apply text-sm font-medium text-text-muted whitespace-nowrap;
-    }
+	.summary-label {
+		@apply text-text-muted text-sm font-medium whitespace-nowrap;
+	}
 
-    .summary-value {
-        @apply text-sm text-text tabular-nums whitespace-nowrap;
-    }
+	.summary-value {
+		@apply text-text text-sm whitespace-nowrap tabular-nums;
+	}
 }
 
 .tasks-content {
-    @apply grid grid-cols-1 desktop:grid-cols-2 gap-6 mt-3;
+	@apply desktop:grid-cols-2 mt-3 grid grid-cols-1 gap-6;
 }
 
 .tasks-section {
-    @apply bg-bg-light rounded-xl px-3 py-5;
-    border: 1px solid var(--color-border);
+	@apply bg-bg-light rounded-xl px-3 py-5;
+	border: 1px solid var(--color-border);
 
-    & > h2 {
-        @apply text-lg font-semibold mb-4 text-center;
-    }
+	& > h2 {
+		@apply mb-4 text-center text-lg font-semibold;
+	}
 }
 
 .section-header {
-    @apply flex items-center justify-between mb-4 px-1;
+	@apply mb-4 flex items-center justify-between px-1;
 
-    & > h2 {
-        @apply text-lg font-semibold;
-    }
+	& > h2 {
+		@apply text-lg font-semibold;
+	}
 }
 
 .task-list {
-    @apply flex flex-col gap-2;
+	@apply flex flex-col gap-2;
 }
 
 .show-more-btn {
-    @apply flex items-center gap-3 w-full bg-transparent border-none cursor-pointer py-2 px-1;
+	@apply flex w-full cursor-pointer items-center gap-3 border-none bg-transparent px-1 py-2;
 
-    .show-more-line {
-        @apply flex-1 h-px bg-text-muted/15 transition-colors duration-300;
-    }
+	.show-more-line {
+		@apply bg-text-muted/15 h-px flex-1 transition-colors duration-300;
+	}
 
-    .show-more-pill {
-        @apply flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium
-               text-text-muted bg-bg border border-text-muted/15
-               transition-all duration-300;
-    }
+	.show-more-pill {
+		@apply text-text-muted bg-bg border-text-muted/15 flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-medium transition-all duration-300;
+	}
 
-    .show-more-pill i {
-        @apply text-[10px] transition-transform duration-300;
-    }
+	.show-more-pill i {
+		@apply text-[10px] transition-transform duration-300;
+	}
 
-    &:hover .show-more-line {
-        @apply bg-primary/30;
-    }
+	&:hover .show-more-line {
+		@apply bg-primary/30;
+	}
 
-    &:hover .show-more-pill {
-        @apply text-primary border-primary/30 bg-primary/5;
-    }
+	&:hover .show-more-pill {
+		@apply text-primary border-primary/30 bg-primary/5;
+	}
 
-    &:hover .show-more-pill i {
-        @apply translate-y-0.5;
-    }
+	&:hover .show-more-pill i {
+		@apply translate-y-0.5;
+	}
 }
 
 .task-item {
-    @apply flex items-center justify-between gap-4 bg-bg rounded-lg px-4 py-3 transition-colors;
-    border: 1px solid transparent;
+	@apply bg-bg flex items-center justify-between gap-4 rounded-lg px-4 py-3 transition-colors;
+	border: 1px solid transparent;
 
-    &:hover {
-        border-color: rgba(255, 255, 255, 0.04);
-        @apply bg-bg/80;
-    }
+	&:hover {
+		border-color: rgba(255, 255, 255, 0.04);
+		@apply bg-bg/80;
+	}
 }
 
 .task-info {
-    @apply flex flex-col gap-1 min-w-0;
+	@apply flex min-w-0 flex-col gap-1;
 
-    .task-name {
-        @apply font-bold text-text;
-    }
+	.task-name {
+		@apply text-text font-bold;
+	}
 
-    .task-project {
-        @apply text-sm text-text-muted;
+	.task-project {
+		@apply text-text-muted text-sm;
 
-        .task-project-due {
-            @apply text-xs ml-1;
-        }
-    }
+		.task-project-due {
+			@apply ml-1 text-xs;
+		}
+	}
 
-    .task-description {
-        @apply text-sm text-text-muted truncate;
-    }
+	.task-description {
+		@apply text-text-muted truncate text-sm;
+	}
 }
 
 .task-meta {
-    @apply flex items-center gap-3 text-xs mt-1;
+	@apply mt-1 flex items-center gap-3 text-xs;
 
-    .task-due {
-        @apply text-text-muted;
-    }
+	.task-due {
+		@apply text-text-muted;
+	}
 
-    .task-time {
-        @apply text-text-muted;
-    }
+	.task-time {
+		@apply text-text-muted;
+	}
 }
 
 .tree-project-row {
-    @apply flex items-center gap-2 w-full bg-bg rounded-lg px-4 py-3 border-none text-left;
+	@apply bg-bg flex w-full items-center gap-2 rounded-lg border-none px-4 py-3 text-left;
 }
 
 .tree-chevron-btn {
-    @apply bg-transparent border-none cursor-pointer p-1 text-text-muted hover:text-text transition-colors;
+	@apply text-text-muted hover:text-text cursor-pointer border-none bg-transparent p-1 transition-colors;
 }
 
 .tree-project-name {
-    @apply font-bold text-text;
+	@apply text-text font-bold;
 }
 
 .tree-project-due {
-    @apply text-xs text-text-muted ml-auto;
+	@apply text-text-muted ml-auto text-xs;
 }
 
 .tree-chevron {
-    @apply text-xs text-text-muted transition-transform duration-200;
+	@apply text-text-muted text-xs transition-transform duration-200;
 
-    &.expanded {
-        transform: rotate(90deg);
-    }
+	&.expanded {
+		transform: rotate(90deg);
+	}
 }
 
 .tree-folder-icon {
-    @apply text-sm text-primary;
+	@apply text-primary text-sm;
 }
 
 .task-actions {
-    @apply flex items-center gap-3 shrink-0;
+	@apply flex shrink-0 items-center gap-3;
 }
 
-
 .tree-project-wrapper {
-    @apply flex items-center gap-2;
+	@apply flex items-center gap-2;
 }
 
 .tree-children {
-    @apply flex flex-col gap-2 mt-1 ml-3 pl-3 border-l-2 border-l-primary;
+	@apply border-l-primary mt-1 ml-3 flex flex-col gap-2 border-l-2 pl-3;
 }
 
 .task-name-btn {
-    @apply font-bold text-text cursor-pointer bg-transparent border-none hover:underline text-left p-0;
+	@apply text-text cursor-pointer border-none bg-transparent p-0 text-left font-bold hover:underline;
 }
 
 .detail-form {
-    @apply flex flex-col gap-4 mt-4;
+	@apply mt-4 flex flex-col gap-4;
 }
 
 .detail-field {
-    @apply flex flex-col gap-1;
+	@apply flex flex-col gap-1;
 
-    & label {
-        @apply text-sm text-text-muted font-medium;
-    }
+	& label {
+		@apply text-text-muted text-sm font-medium;
+	}
 
-    & input, & textarea {
-        @apply bg-bg border border-text-muted/20 rounded-lg px-3 py-2 text-sm text-text leading-normal
-               focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-colors;
-    }
+	& input,
+	& textarea {
+		@apply bg-bg border-text-muted/20 text-text focus:border-primary/50 focus:ring-primary/30 rounded-lg border px-3 py-2 text-sm leading-normal transition-colors focus:ring-1 focus:outline-none;
+	}
 }
 
 .todo-list {
-    @apply flex flex-col gap-2 mt-2;
+	@apply mt-2 flex flex-col gap-2;
 }
 
 .todo-item {
-    @apply flex items-center gap-2 bg-bg rounded-lg px-3 py-2;
+	@apply bg-bg flex items-center gap-2 rounded-lg px-3 py-2;
 
-    & input[type=checkbox] {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 18px;
-        height: 18px;
-        aspect-ratio: 1;
-        flex-shrink: 0;
-        border: 2px solid var(--color-text-muted);
-        border-radius: 3px;
-        background: var(--color-bg);
-        cursor: pointer;
-        padding: 0;
-        margin: 0;
+	& input[type='checkbox'] {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 18px;
+		height: 18px;
+		aspect-ratio: 1;
+		flex-shrink: 0;
+		border: 2px solid var(--color-text-muted);
+		border-radius: 3px;
+		background: var(--color-bg);
+		cursor: pointer;
+		padding: 0;
+		margin: 0;
 
-        &:checked {
-            @apply bg-primary border-primary;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E");
-        }
-    }
+		&:checked {
+			@apply bg-primary border-primary;
+			background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E");
+		}
+	}
 }
 
 .todo-add {
-    @apply flex items-center gap-2 mt-2;
+	@apply mt-2 flex items-center gap-2;
 
-    & input {
-        @apply flex-1;
-    }
+	& input {
+		@apply flex-1;
+	}
 }
 
 .detail-actions {
-    @apply flex items-center gap-3 mt-4 justify-end;
+	@apply mt-4 flex items-center justify-end gap-3;
 }
 
 /* Task BottomSheet */
 
 .detail-title-row {
-    @apply flex items-center gap-3;
+	@apply flex items-center gap-3;
 }
 
 .detail-title-row .modal-title {
-    @apply flex-1;
+	@apply flex-1;
 }
 
 .project-link-inline {
-    @apply flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-bg text-primary text-xs font-medium
-           cursor-pointer border border-primary/20 hover:bg-primary/10 transition-colors whitespace-nowrap;
+	@apply bg-bg text-primary border-primary/20 hover:bg-primary/10 flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors;
 }
 
-
 .detail-inline-row {
-    @apply flex items-end gap-3;
+	@apply flex items-end gap-3;
 }
 
 .detail-info-row {
-    @apply flex items-center justify-around;
+	@apply flex items-center justify-around;
 }
 
 .detail-info-item {
-    @apply flex flex-col items-center gap-1;
+	@apply flex flex-col items-center gap-1;
 }
 
 .detail-info-label {
-    @apply text-xs text-text-muted font-medium;
+	@apply text-text-muted text-xs font-medium;
 }
 
 .detail-info-value {
-    @apply text-base text-text font-semibold;
+	@apply text-text text-base font-semibold;
 }
 
 .detail-field select {
-    @apply bg-bg border border-text-muted/20 rounded-lg px-3 py-2 text-text
-           focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-colors;
-    color-scheme: dark;
+	@apply bg-bg border-text-muted/20 text-text focus:border-primary/50 focus:ring-primary/30 rounded-lg border px-3 py-2 transition-colors focus:ring-1 focus:outline-none;
+	color-scheme: dark;
 }
 
-
 .start-now-toggle {
-    @apply flex items-center gap-3 text-sm text-text font-medium cursor-pointer
-           bg-transparent border-none p-0;
+	@apply text-text flex cursor-pointer items-center gap-3 border-none bg-transparent p-0 text-sm font-medium;
 }
 
 /* Create BottomSheet */
 
 .create-mode-toggle {
-    @apply flex gap-1 mt-3 p-1 bg-bg rounded-lg;
+	@apply bg-bg mt-3 flex gap-1 rounded-lg p-1;
 
-    & button {
-        @apply flex-1 py-2 rounded-lg text-sm font-medium cursor-pointer
-               bg-transparent border-none text-text-muted transition-colors;
+	& button {
+		@apply text-text-muted flex-1 cursor-pointer rounded-lg border-none bg-transparent py-2 text-sm font-medium transition-colors;
 
-        &.active {
-            @apply bg-primary text-white;
-        }
-    }
+		&.active {
+			@apply bg-primary text-white;
+		}
+	}
 }
 
 /* Project Page */
 
 .project-nav {
-    @apply flex items-center gap-4 mt-2 max-w-5xl mx-auto;
+	@apply mx-auto mt-2 flex max-w-5xl items-center gap-4;
 }
 
 .project-detail-card {
-    @apply bg-bg-light rounded-xl px-6 py-5 mt-4 max-w-5xl mx-auto;
-    border: 1px solid var(--color-border);
+	@apply bg-bg-light mx-auto mt-4 max-w-5xl rounded-xl px-6 py-5;
+	border: 1px solid var(--color-border);
 }
 
 .project-children-section {
-    @apply bg-bg-light rounded-xl px-4 py-5 mt-4 max-w-5xl mx-auto;
-    border: 1px solid var(--color-border);
+	@apply bg-bg-light mx-auto mt-4 max-w-5xl rounded-xl px-4 py-5;
+	border: 1px solid var(--color-border);
 }
 
 .project-children-header {
-    @apply flex items-center justify-between mb-4;
+	@apply mb-4 flex items-center justify-between;
 
-    & h2 {
-        @apply text-lg font-semibold;
-    }
+	& h2 {
+		@apply text-lg font-semibold;
+	}
 }
 
 .project-children-actions {
-    @apply flex items-center gap-2;
+	@apply flex items-center gap-2;
 }
 
 .project-children-empty {
-    @apply text-center text-text-muted py-6;
+	@apply text-text-muted py-6 text-center;
 }
 
 .project-children-list {
-    @apply flex flex-col gap-2;
+	@apply flex flex-col gap-2;
 }
 
 .project-child-row {
-    @apply flex items-center gap-3 w-full bg-bg rounded-lg px-4 py-3 text-left
-           border-none cursor-pointer hover:bg-bg/80 transition-colors text-text no-underline;
+	@apply bg-bg hover:bg-bg/80 text-text flex w-full cursor-pointer items-center gap-3 rounded-lg border-none px-4 py-3 text-left no-underline transition-colors;
 }
 
 .child-name {
-    @apply font-medium text-text flex-1;
+	@apply text-text flex-1 font-medium;
 }
 
 .child-due {
-    @apply text-xs text-text-muted;
+	@apply text-text-muted text-xs;
 }
 
 .child-time {
-    @apply text-xs text-text-muted;
+	@apply text-text-muted text-xs;
 }
 
 .child-chevron {
-    @apply text-xs text-text-muted;
+	@apply text-text-muted text-xs;
 }
 
 .child-task-icon {
-    @apply text-sm text-text-muted;
+	@apply text-text-muted text-sm;
 }
 
 /* --- Blocked indicator --- */
 
 .task-name-row {
-    @apply flex items-baseline gap-1.5;
+	@apply flex items-baseline gap-1.5;
 }
 
 .blocked-icon {
-    @apply text-xs text-text-muted;
+	@apply text-text-muted text-xs;
 }
 
 /* --- Dependency badges --- */
 
 .dep-badges {
-    @apply flex flex-wrap gap-1;
+	@apply flex flex-wrap gap-1;
 }
 
 .dep-badge {
-    @apply text-xs font-medium px-2 py-0.5 rounded-full border border-current/25
-           bg-secondary/15 text-secondary cursor-pointer transition-colors;
-    &:hover {
-        @apply bg-secondary/25;
-    }
+	@apply bg-secondary/15 text-secondary cursor-pointer rounded-full border border-current/25 px-2 py-0.5 text-xs font-medium transition-colors;
+	&:hover {
+		@apply bg-secondary/25;
+	}
 }
 
 /* --- Dependency selector --- */
 
 .dep-selected-pills {
-    @apply flex flex-wrap gap-1.5;
+	@apply flex flex-wrap gap-1.5;
 }
 
 .dep-pill {
-    @apply text-xs font-medium px-2 py-0.5 rounded-full border border-current/25
-           flex items-center gap-1.5 bg-secondary/15 text-secondary;
+	@apply bg-secondary/15 text-secondary flex items-center gap-1.5 rounded-full border border-current/25 px-2 py-0.5 text-xs font-medium;
 }
 
 .dep-pill-remove {
-    @apply text-secondary/60 cursor-pointer transition-colors;
-    &:hover {
-        @apply text-secondary;
-    }
+	@apply text-secondary/60 cursor-pointer transition-colors;
+	&:hover {
+		@apply text-secondary;
+	}
+}
+
+/* --- Agenda Timeline --- */
+
+/* --- Agenda Right Sheet --- */
+
+.agenda-title {
+	@apply text-text pr-8 text-lg font-bold;
+}
+
+.agenda-subtitle {
+	@apply text-text-muted mt-1 text-xs;
+}
+
+.agenda-timeline {
+	@apply mt-5 flex flex-col;
+}
+
+.agenda-hour-group {
+	@apply flex gap-3;
+}
+
+.agenda-hour-label {
+	@apply text-text-muted shrink-0 pt-1 font-mono text-xs tabular-nums;
+	width: 40px;
+	text-align: right;
+}
+
+.agenda-hour-entries {
+	@apply border-l-text-muted/15 flex flex-1 flex-col gap-1 border-l pb-3 pl-3;
+}
+
+.agenda-hour-empty {
+	@apply h-1;
+}
+
+.agenda-entry {
+	@apply bg-bg flex w-full cursor-pointer items-start gap-3 rounded-lg border-none px-3 py-2.5 text-left transition-all duration-150;
+	border: 1px solid transparent;
+
+	&:hover {
+		border-color: var(--color-primary);
+		@apply bg-primary/5;
+	}
+}
+
+.agenda-entry-bar {
+	@apply w-1 shrink-0 self-stretch rounded-full;
+	background: var(--color-primary);
+
+	&.finished {
+		background: var(--color-success);
+	}
+
+	&.running {
+		animation: agenda-pulse 2s ease-in-out infinite;
+		background: var(--color-primary);
+	}
+}
+
+.agenda-entry-content {
+	@apply min-w-0 flex-1;
+}
+
+.agenda-entry-name {
+	@apply text-text truncate text-sm font-semibold;
+}
+
+.agenda-entry-project {
+	@apply text-text-muted truncate text-xs;
+}
+
+.agenda-entry-row {
+	@apply mt-1 flex items-center gap-2;
+}
+
+.agenda-entry-time {
+	@apply text-text-muted font-mono text-xs tabular-nums;
+}
+
+.agenda-entry-duration {
+	@apply text-text-muted ml-auto text-xs tabular-nums;
+}
+
+@keyframes agenda-pulse {
+	0%,
+	100% {
+		opacity: 0.7;
+	}
+	50% {
+		opacity: 1;
+	}
 }
