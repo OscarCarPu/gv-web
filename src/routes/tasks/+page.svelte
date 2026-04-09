@@ -34,6 +34,14 @@
 	function showMoreDueDateTasks() {
 		dueDateVisibleCount = Math.min(dueDateVisibleCount + EXPAND_STEP, data.tasksByDueDate.length);
 	}
+
+	function formatDueDay(iso: string | null): string {
+		if (!iso) return 'Sin fecha';
+		const d = new Date(iso);
+		const weekday = d.toLocaleDateString('es', { weekday: 'long' });
+		return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${d.getDate()}/${d.getMonth() + 1}`;
+	}
+
 	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
 
 	let isWeekend = $derived.by(() => {
@@ -363,7 +371,19 @@
 				</button>
 			</div>
 			<div class="task-list">
-				{#each visibleDueDateTasks as task (task.id)}
+				{#each visibleDueDateTasks as task, i (task.id)}
+					{@const taskDate = task.due_at ?? task.project_due_at}
+					{@const taskDateKey = taskDate ? taskDate.slice(0, 10) : 'no-date'}
+					{@const prevTask = visibleDueDateTasks[i - 1]}
+					{@const prevDate = prevTask ? (prevTask.due_at ?? prevTask.project_due_at) : null}
+					{@const prevDateKey = prevDate ? prevDate.slice(0, 10) : 'no-date'}
+					{#if i > 0 && taskDateKey !== prevDateKey}
+						<div class="agenda-day-divider">
+							<span class="agenda-day-line"></span>
+							<span class="agenda-day-label">{formatDueDay(taskDate)}</span>
+							<span class="agenda-day-line"></span>
+						</div>
+					{/if}
 					<TaskItem
 						{task}
 						onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)}

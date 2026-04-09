@@ -313,9 +313,9 @@ State classes on the parent element:
 | `.agenda-timeline`       | Vertical timeline container                            |
 | `.agenda-row`            | Flex row: hour label + entry/gap                       |
 | `.agenda-hour-label`     | Monospace hour label (bottom-aligned, 40px)            |
-| `.agenda-day-divider`    | Day boundary divider (line—label—line)                 |
-| `.agenda-day-line`       | Horizontal line in day divider                         |
-| `.agenda-day-label`      | Uppercase date label (e.g. "Miércoles 8/4")            |
+| `.agenda-day-divider`    | Day boundary divider (line—label—line), also used in "Próximas a vencer" |
+| `.agenda-day-line`       | Horizontal line in day divider                                           |
+| `.agenda-day-label`      | Uppercase date label (e.g. "Miércoles 8/4")                              |
 | `.agenda-gap`            | Idle gap indicator (line—duration—line)                 |
 | `.agenda-gap-line`       | Horizontal line in gap                                 |
 | `.agenda-gap-label`      | Muted mono duration text in gap                        |
