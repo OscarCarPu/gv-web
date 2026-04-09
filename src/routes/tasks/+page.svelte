@@ -12,7 +12,6 @@
 	import TimeHistoryModal from '$lib/domains/tasks/components/TimeHistoryModal.svelte';
 	import AgendaRightSheet from '$lib/domains/tasks/components/AgendaRightSheet.svelte';
 	import type {
-		ActiveTreeNode,
 		TimeEntrySummaryResponse,
 	} from '$lib/domains/tasks/types/Task.types';
 
@@ -133,24 +132,6 @@
 		else selectedTaskId = id;
 	}
 
-	function findTaskInTree(
-		nodes: ActiveTreeNode[],
-		taskId: number,
-		parentProjectName?: string
-	): { name: string; projectName?: string } | null {
-		for (const node of nodes) {
-			if (node.type === 'task' && node.id === taskId) {
-				return { name: node.name, projectName: parentProjectName };
-			}
-			if (node.children) {
-				const projectName = node.type === 'project' ? node.name : parentProjectName;
-				const found = findTaskInTree(node.children, taskId, projectName);
-				if (found) return found;
-			}
-		}
-		return null;
-	}
-
 	let lastHandledEntryId: number | null = null;
 
 	$effect(() => {
@@ -158,29 +139,14 @@
 			if (data.activeTimeEntry.id === lastHandledEntryId) return;
 			lastHandledEntryId = data.activeTimeEntry.id;
 			const entry = data.activeTimeEntry;
-			const dueDateTask = data.tasksByDueDate.find((t) => t.id === entry.task_id);
-			if (dueDateTask) {
-				timer.restore(
-					entry.id,
-					entry.task_id,
-					entry.started_at,
-					dueDateTask.name,
-					dueDateTask.project_name,
-					entry.comment
-				);
-			} else {
-				const treeTask = findTaskInTree(data.activeTree, entry.task_id);
-				if (treeTask) {
-					timer.restore(
-						entry.id,
-						entry.task_id,
-						entry.started_at,
-						treeTask.name,
-						treeTask.projectName,
-						entry.comment
-					);
-				}
-			}
+			timer.restore(
+				entry.id,
+				entry.task_id,
+				entry.started_at,
+				entry.task_name,
+				entry.project_name,
+				entry.comment
+			);
 		}
 	});
 

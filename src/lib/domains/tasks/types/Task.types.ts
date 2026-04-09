@@ -81,6 +81,16 @@ export interface TimeEntryResponse {
 	comment: string | null;
 }
 
+export interface ActiveTimeEntryResponse {
+	id: number;
+	task_id: number;
+	started_at: string;
+	finished_at: string | null;
+	comment: string | null;
+	task_name: string;
+	project_name: string | null;
+}
+
 export interface UpdateProjectRequest {
 	name?: string | null;
 	description?: string | null;

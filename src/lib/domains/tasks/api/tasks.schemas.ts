@@ -54,6 +54,16 @@ export const TimeEntryResponseSchema = z.object({
 	comment: z.string().nullable(),
 });
 
+export const ActiveTimeEntryResponseSchema = z.object({
+	id: z.number(),
+	task_id: z.number(),
+	started_at: z.string(),
+	finished_at: z.string().nullable(),
+	comment: z.string().nullable(),
+	task_name: z.string(),
+	project_name: z.string().nullable(),
+});
+
 // --- Detail schemas ---
 
 export const ProjectDetailResponseSchema = z.object({

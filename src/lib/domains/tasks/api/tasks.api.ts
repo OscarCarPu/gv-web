@@ -11,6 +11,7 @@ import {
 	TaskTimeEntriesResponseSchema,
 	TodoResponseSchema,
 	TimeEntryResponseSchema,
+	ActiveTimeEntryResponseSchema,
 	ActiveTreeNodeListSchema,
 	TaskByDueDateResponseListSchema,
 	TimeEntrySummaryResponseSchema,
@@ -34,6 +35,7 @@ import type {
 	CreateTodoRequest,
 	UpdateTodoRequest,
 	TimeEntryResponse,
+	ActiveTimeEntryResponse,
 	CreateTimeEntryRequest,
 	UpdateTimeEntryRequest,
 	ActiveTreeNode,
@@ -178,8 +180,8 @@ export const tasksApi = {
 		});
 	},
 
-	async getActiveTimeEntry(token?: string): Promise<TimeEntryResponse> {
-		return fetchAPI('/tasks/time-entries/active', TimeEntryResponseSchema, { token });
+	async getActiveTimeEntry(token?: string): Promise<ActiveTimeEntryResponse> {
+		return fetchAPI('/tasks/time-entries/active', ActiveTimeEntryResponseSchema, { token });
 	},
 
 	async deleteTimeEntry(id: number, token?: string): Promise<void> {
