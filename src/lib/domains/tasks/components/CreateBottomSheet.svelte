@@ -22,6 +22,8 @@
 	let description = $state('');
 	let dueAt = $state('');
 	let startNow = $state(false);
+	let taskType = $state<'standard' | 'continuous' | 'recurring'>('standard');
+	let recurrence = $state<number | null>(null);
 	let selectedProjectId = $state<number | null>(null);
 	let selectedParentId = $state<number | null>(null);
 	let projects = $state<ProjectListItem[]>([]);
@@ -37,6 +39,8 @@
 			description = '';
 			dueAt = '';
 			startNow = false;
+			taskType = 'standard';
+			recurrence = null;
 			nameError = false;
 			selectedDeps = [];
 			selectedProjectId = prefillProjectId ?? prefillParentId ?? null;
@@ -59,7 +63,9 @@
 					description: description || null,
 					due_at: toISOString(dueAt),
 					project_id: selectedProjectId,
-					depends_on: selectedDeps.length > 0 ? selectedDeps.map((d) => d.id) : undefined
+					depends_on: selectedDeps.length > 0 ? selectedDeps.map((d) => d.id) : undefined,
+					task_type: taskType !== 'standard' ? taskType : undefined,
+					recurrence: taskType === 'recurring' ? recurrence : undefined
 				});
 				if (startNow) {
 					await tasksApi.updateTask(created.id, { started_at: new Date().toISOString() });
@@ -118,6 +124,20 @@
 						{/each}
 					</select>
 				</div>
+				<div class="detail-field">
+					<label for="create-task-type">Tipo</label>
+					<select id="create-task-type" bind:value={taskType}>
+						<option value="standard">Estándar</option>
+						<option value="continuous">Continua</option>
+						<option value="recurring">Recurrente</option>
+					</select>
+				</div>
+				{#if taskType === 'recurring'}
+					<div class="detail-field">
+						<label for="create-recurrence">Cada (días)</label>
+						<input id="create-recurrence" type="number" min="1" bind:value={recurrence} />
+					</div>
+				{/if}
 			{:else}
 				<div class="detail-field flex-1">
 					<label for="create-parent">Proyecto padre</label>
@@ -141,16 +161,15 @@
 			/>
 		{/if}
 
-		{#if currentMode === 'task'}
-			<button class="start-now-toggle" type="button" onclick={() => startNow = !startNow}>
-				<div class="toggle toggle-sm" class:on={startNow} class:off={!startNow}>
-					<div class="knob"></div>
-				</div>
-				Empezar ya
-			</button>
-		{/if}
-
 		<div class="detail-actions">
+			{#if currentMode === 'task'}
+				<button class="start-now-toggle mr-auto" type="button" onclick={() => startNow = !startNow}>
+					<div class="toggle toggle-sm" class:on={startNow} class:off={!startNow}>
+						<div class="knob"></div>
+					</div>
+					Empezar ya
+				</button>
+			{/if}
 			<button class="btn-primary" onclick={create} disabled={saving}>Crear</button>
 		</div>
 	</div>

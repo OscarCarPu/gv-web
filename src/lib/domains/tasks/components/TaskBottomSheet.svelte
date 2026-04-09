@@ -6,6 +6,7 @@
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import type { TaskFullResponse, TodoResponse, TaskDepRef } from '$lib/domains/tasks/types/Task.types';
+	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import DepSelector from './DepSelector.svelte';
 
 	interface Props {
@@ -24,6 +25,8 @@
 	let projectName = $state<string | null>(null);
 	let saving = $state(false);
 	let nameError = $state(false);
+	let taskType = $state<'standard' | 'continuous' | 'recurring'>('standard');
+	let recurrence = $state<number | null>(null);
 	let dependsOn = $state<TaskDepRef[]>([]);
 	let blocks = $state<TaskDepRef[]>([]);
 	let initialBlocks = $state<TaskDepRef[]>([]);
@@ -36,6 +39,8 @@
 		name = t.name;
 		description = t.description ?? '';
 		dueAt = toLocalDatetime(t.due_at);
+		taskType = (t.task_type as 'standard' | 'continuous' | 'recurring') ?? 'standard';
+		recurrence = t.recurrence ?? null;
 		dependsOn = [...t.depends_on];
 		blocks = [...t.blocks];
 		initialBlocks = [...t.blocks];
@@ -90,7 +95,9 @@
 				name,
 				description: description || null,
 				due_at: toISOString(dueAt),
-				depends_on: dependsOn.map((d) => d.id)
+				depends_on: dependsOn.map((d) => d.id),
+				task_type: taskType,
+				recurrence: taskType === 'recurring' ? recurrence : undefined
 			});
 			await syncReverseDepends();
 			await invalidateAll();
@@ -200,6 +207,20 @@
 					<label for="dtp-task-due">Fecha límite</label>
 					<DatetimePicker bind:value={dueAt} id="task-due" />
 				</div>
+				<div class="detail-field">
+					<label for="task-type">Tipo</label>
+					<select id="task-type" bind:value={taskType}>
+						<option value="standard">Estándar</option>
+						<option value="continuous">Continua</option>
+						<option value="recurring">Recurrente</option>
+					</select>
+				</div>
+				{#if taskType === 'recurring'}
+					<div class="detail-field">
+						<label for="task-recurrence">Cada (días)</label>
+						<input id="task-recurrence" type="number" min="1" bind:value={recurrence} />
+					</div>
+				{/if}
 			</div>
 			<div class="detail-field">
 				<label for="task-desc">Descripción</label>
@@ -231,21 +252,26 @@
 				{/if}
 			</div>
 
-			<DepSelector
-				selected={dependsOn}
-				onchange={(deps) => dependsOn = deps}
-				excludeId={taskId!}
-				label="Depende de"
-				projectId={task?.project_id}
-			/>
-
-			<DepSelector
-				selected={blocks}
-				onchange={(deps) => blocks = deps}
-				excludeId={taskId!}
-				label="Bloquea a"
-				projectId={task?.project_id}
-			/>
+			<div class="detail-inline-row">
+				<div class="flex-1">
+					<DepSelector
+						selected={dependsOn}
+						onchange={(deps) => dependsOn = deps}
+						excludeId={taskId!}
+						label="Depende de"
+						projectId={task?.project_id}
+					/>
+				</div>
+				<div class="flex-1">
+					<DepSelector
+						selected={blocks}
+						onchange={(deps) => blocks = deps}
+						excludeId={taskId!}
+						label="Bloquea a"
+						projectId={task?.project_id}
+					/>
+				</div>
+			</div>
 
 			<div class="detail-field">
 				<span class="label text-sm text-text-muted font-medium">Todos</span>

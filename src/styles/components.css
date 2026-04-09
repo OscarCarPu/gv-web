@@ -335,6 +335,14 @@
 		@apply bg-primary/20 text-primary;
 	}
 
+	&.continuous {
+		@apply bg-continuous/20 text-continuous;
+	}
+
+	&.recurring {
+		@apply bg-recurring/20 text-recurring;
+	}
+
 	&.finished {
 		@apply bg-success/20 text-success;
 	}

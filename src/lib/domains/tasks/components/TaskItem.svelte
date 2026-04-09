@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
+	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import DepBadges from './DepBadges.svelte';
 
 	interface Props {
@@ -13,6 +14,7 @@
 	let { task, onstart, ontoggle, ondetail, isTimerRunning = false }: Props = $props();
 
 	const isStarted = $derived(task.started_at !== null);
+	const statusLabel = $derived(getStatusLabel(task.started_at, task.task_type, task.recurrence));
 
 	const formattedTime = $derived(() => {
 		const totalMinutes = Math.floor(task.time_spent / 60);
@@ -53,8 +55,8 @@
 			<span class="task-description">{task.description}</span>
 		{/if}
 		<div class="task-meta">
-			<span class="status-badge" class:started={isStarted}>
-				{isStarted ? 'En progreso' : 'Pendiente'}
+			<span class="status-badge" class:started={isStarted && task.task_type === 'standard'} class:continuous={task.task_type === 'continuous' && isStarted} class:recurring={task.task_type === 'recurring' && isStarted}>
+				{statusLabel}
 			</span>
 			{#if hasOwnDue}
 				<span class="task-due"><i class="fa-regular fa-calendar"></i> {formatDate(task.due_at!)}</span>
@@ -64,7 +66,7 @@
 	</div>
 	<div class="task-actions">
 		{#if isStarted}
-			<button class="btn-primary" onclick={() => ontoggle?.(task.id, 'finish')} disabled={task.blocked}>Acabar</button>
+			<button class="btn-primary" onclick={() => ontoggle?.(task.id, 'finish')} disabled={task.blocked}>{task.task_type === 'recurring' ? 'Renovar' : 'Acabar'}</button>
 		{:else}
 			<button class="btn-primary btn-start" onclick={() => ontoggle?.(task.id, 'start')} disabled={task.blocked}>Empezar</button>
 		{/if}

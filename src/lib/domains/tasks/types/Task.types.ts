@@ -8,6 +8,8 @@ export interface TaskListItem {
 	name: string;
 	project_id: number | null;
 	project_name: string | null;
+	task_type?: string;
+	recurrence?: number | null;
 }
 
 export interface TaskDepRef {
@@ -39,6 +41,8 @@ export interface CreateTaskRequest {
 	description?: string | null;
 	due_at?: string | null;
 	depends_on?: number[];
+	task_type?: string;
+	recurrence?: number | null;
 }
 
 export interface TaskResponse {
@@ -49,6 +53,8 @@ export interface TaskResponse {
 	due_at: string | null;
 	started_at: string | null;
 	finished_at: string | null;
+	task_type: string;
+	recurrence?: number | null;
 	depends_on: TaskDepRef[];
 	blocks: TaskDepRef[];
 	blocked: boolean;
@@ -88,6 +94,8 @@ export interface ActiveTimeEntryResponse {
 	finished_at: string | null;
 	comment: string | null;
 	task_name: string;
+	task_type: string;
+	recurrence?: number | null;
 	project_name: string | null;
 }
 
@@ -108,6 +116,8 @@ export interface UpdateTaskRequest {
 	started_at?: string | null;
 	finished_at?: string | null;
 	depends_on?: number[];
+	task_type?: string;
+	recurrence?: number | null;
 }
 
 export interface UpdateTodoRequest {
@@ -128,6 +138,8 @@ export interface TaskByDueDateResponse {
 	description: string | null;
 	due_at: string | null;
 	started_at: string | null;
+	task_type: string;
+	recurrence?: number | null;
 	time_spent: number;
 	project_id: number | null;
 	project_name: string | null;
@@ -145,6 +157,8 @@ export interface TaskDetailResponse {
 	due_at: string | null;
 	started_at: string | null;
 	finished_at: string | null;
+	task_type: string;
+	recurrence?: number | null;
 	time_spent: number;
 }
 
@@ -156,6 +170,8 @@ export interface TaskFullResponse {
 	due_at: string | null;
 	started_at: string | null;
 	finished_at: string | null;
+	task_type: string;
+	recurrence?: number | null;
 	time_spent: number;
 	todos: TodoResponse[];
 	depends_on: TaskDepRef[];
@@ -190,6 +206,8 @@ export interface ProjectChildNode {
 	time_spent: number;
 	parent_id?: number | null; // project only
 	project_id?: number | null; // task only
+	task_type?: string; // task only
+	recurrence?: number | null; // task only
 	todos?: TodoResponse[]; //task only
 	depends_on?: TaskDepRef[];
 	blocks?: TaskDepRef[];
@@ -213,6 +231,8 @@ export interface ActiveTreeNode {
 	description?: string | null;
 	due_at?: string | null;
 	started_at?: string | null;
+	task_type?: string;
+	recurrence?: number | null;
 	children?: ActiveTreeNode[];
 	depends_on?: TaskDepRef[];
 	blocks?: TaskDepRef[];
@@ -234,6 +254,8 @@ export interface TimeEntryWithTask {
 	id: number;
 	task_id: number;
 	task_name: string;
+	task_type: string;
+	recurrence?: number | null;
 	project_id: number | null;
 	project_name: string | null;
 	started_at: string;

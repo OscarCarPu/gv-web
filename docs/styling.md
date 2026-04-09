@@ -19,16 +19,24 @@ Feature CSS files use `@reference "./app.css"` to access theme tokens without du
 ## Theme Tokens (`app.css`)
 
 ```css
---color-primary: #3b82f6 /* Blue — buttons, links, active states */ --color-secondary: #a78bfa
-	/* Purple — badges, secondary highlights */ --color-bg: #0b0f1a /* Ultra-dark background */
-	--color-bg-light: #141926 /* Card/panel background */ --color-surface: #1a2033
-	/* Elevated surface */ --color-text: #e8ecf4 /* Primary text */ --color-text-muted: #7b8ba5
-	/* Secondary text */ --color-success: #34d399 /* Completed/met states */ --color-info: #3b82f6
-	/* Informational */ --color-danger: #f87171 /* Destructive/exceeded */ --color-warning: #fbbf24
-	/* Caution/flags */ --color-border: rgba(255, 255, 255, 0.06) /* Default borders */
-	--color-border-light: rgba(255, 255, 255, 0.08) /* Slightly visible borders */
-	--font-sans: 'Inter' /* Body text */ --font-mono: 'JetBrains Mono' /* Timers, numbers */
-	--breakpoint-desktop: 1000px /* Single breakpoint */;
+--color-primary: #3b82f6;      /* Blue — buttons, links, active states */
+--color-secondary: #a78bfa;    /* Purple — badges, secondary highlights */
+--color-bg: #0b0f1a;           /* Ultra-dark background */
+--color-bg-light: #141926;     /* Card/panel background */
+--color-surface: #1a2033;      /* Elevated surface */
+--color-text: #e8ecf4;         /* Primary text */
+--color-text-muted: #7b8ba5;   /* Secondary text */
+--color-success: #34d399;      /* Completed/met states */
+--color-info: #3b82f6;         /* Informational */
+--color-danger: #f87171;       /* Destructive/exceeded */
+--color-warning: #fbbf24;      /* Caution/flags */
+--color-continuous: #2dd4bf;   /* Teal — continuous task type badge */
+--color-recurring: #f59e0b;    /* Amber — recurring task type badge */
+--color-border: rgba(255, 255, 255, 0.06);       /* Default borders */
+--color-border-light: rgba(255, 255, 255, 0.08); /* Slightly visible borders */
+--font-sans: 'Inter';          /* Body text */
+--font-mono: 'JetBrains Mono'; /* Timers, numbers */
+--breakpoint-desktop: 1000px;  /* Single breakpoint */
 ```
 
 ## Z-Index Scale
@@ -87,10 +95,12 @@ Small status pill: `text-xs font-medium px-2 py-0.5 rounded-full border border-c
 
 State classes on the element:
 
-| Class       | Colors                       |
-| ----------- | ---------------------------- |
-| `.started`  | `bg-primary/20 text-primary` |
-| `.finished` | `bg-success/20 text-success` |
+| Class         | Colors                             |
+| ------------- | ---------------------------------- |
+| `.started`    | `bg-primary/20 text-primary`       |
+| `.continuous` | `bg-continuous/20 text-continuous` |
+| `.recurring`  | `bg-recurring/20 text-recurring`   |
+| `.finished`   | `bg-success/20 text-success`       |
 
 ## Shared Components (`components.css`)
 
@@ -185,7 +195,7 @@ State classes on the parent element:
 
 | Class           | Description                                                     |
 | --------------- | --------------------------------------------------------------- |
-| `.status-badge` | Status pill (via `@utility`) with `.started`/`.finished` states |
+| `.status-badge` | Status pill (via `@utility`) with `.started`/`.continuous`/`.recurring`/`.finished` states |
 | `.back-link`    | Navigation link with icon + text                                |
 | `.field-error`  | Validation ring (danger border + ring)                          |
 

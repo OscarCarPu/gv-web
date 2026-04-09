@@ -28,6 +28,8 @@ export const TaskResponseSchema = z.object({
 	due_at: z.string().nullable(),
 	started_at: z.string().nullable(),
 	finished_at: z.string().nullable(),
+	task_type: z.string(),
+	recurrence: z.number().nullable().optional(),
 	depends_on: z
 		.array(TaskDepRefSchema)
 		.nullable()
@@ -61,6 +63,8 @@ export const ActiveTimeEntryResponseSchema = z.object({
 	finished_at: z.string().nullable(),
 	comment: z.string().nullable(),
 	task_name: z.string(),
+	task_type: z.string(),
+	recurrence: z.number().nullable().optional(),
 	project_name: z.string().nullable(),
 });
 
@@ -85,6 +89,8 @@ export const TaskDetailResponseSchema = z.object({
 	due_at: z.string().nullable(),
 	started_at: z.string().nullable(),
 	finished_at: z.string().nullable(),
+	task_type: z.string(),
+	recurrence: z.number().nullable().optional(),
 	time_spent: z.number(),
 });
 
@@ -96,6 +102,8 @@ export const TaskFullResponseSchema = z.object({
 	due_at: z.string().nullable(),
 	started_at: z.string().nullable(),
 	finished_at: z.string().nullable(),
+	task_type: z.string(),
+	recurrence: z.number().nullable().optional(),
 	time_spent: z.number(),
 	todos: z.array(TodoResponseSchema),
 	depends_on: z
@@ -122,6 +130,8 @@ export const ProjectChildNodeSchema = z.object({
 	time_spent: z.number(),
 	parent_id: z.number().nullable().optional(),
 	project_id: z.number().nullable().optional(),
+	task_type: z.string().optional(),
+	recurrence: z.number().nullable().optional(),
 	todos: z.array(TodoResponseSchema).optional(),
 	depends_on: z
 		.array(TaskDepRefSchema)
@@ -160,6 +170,8 @@ export const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
 		description: z.string().nullable().optional(),
 		due_at: z.string().nullable().optional(),
 		started_at: z.string().nullable().optional(),
+		task_type: z.string().optional(),
+		recurrence: z.number().nullable().optional(),
 		children: z.array(ActiveTreeNodeSchema).optional(),
 		depends_on: z
 			.array(TaskDepRefSchema)
@@ -190,6 +202,8 @@ export const TaskByDueDateResponseSchema = z.object({
 	description: z.string().nullable(),
 	due_at: z.string().nullable(),
 	started_at: z.string().nullable(),
+	task_type: z.string(),
+	recurrence: z.number().nullable().optional(),
 	time_spent: z.number(),
 	project_id: z.number().nullable(),
 	project_name: z.string().nullable(),
@@ -221,6 +235,8 @@ export const TimeEntryWithTaskSchema = z.object({
 	id: z.number(),
 	task_id: z.number(),
 	task_name: z.string(),
+	task_type: z.string(),
+	recurrence: z.number().nullable().optional(),
 	project_id: z.number().nullable(),
 	project_name: z.string().nullable(),
 	started_at: z.string(),
@@ -246,6 +262,8 @@ export const TaskListItemSchema = z.object({
 	name: z.string(),
 	project_id: z.number().nullable(),
 	project_name: z.string().nullable(),
+	task_type: z.string().optional(),
+	recurrence: z.number().nullable().optional(),
 });
 
 export const TaskListItemListSchema = z.array(TaskListItemSchema);

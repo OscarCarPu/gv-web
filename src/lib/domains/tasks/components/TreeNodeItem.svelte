@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActiveTreeNode } from '$lib/domains/tasks/types/Task.types';
+	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import TreeNodeItem from './TreeNodeItem.svelte';
 	import DepBadges from './DepBadges.svelte';
 	import { getContext } from 'svelte';
@@ -27,6 +28,7 @@
 	const hasChildren = $derived(node.children != null && node.children.length > 0);
 	const expanded = $derived(isExpanded(node.id));
 	const isStarted = $derived(node.started_at != null);
+	const statusLabel = $derived(getStatusLabel(node.started_at, node.task_type, node.recurrence));
 </script>
 
 {#if isProject}
@@ -78,8 +80,8 @@
 				<span class="task-description">{node.description}</span>
 			{/if}
 			<div class="task-meta">
-				<span class="status-badge" class:started={isStarted}>
-					{isStarted ? 'En progreso' : 'Pendiente'}
+				<span class="status-badge" class:started={isStarted && node.task_type === 'standard'} class:continuous={node.task_type === 'continuous' && isStarted} class:recurring={node.task_type === 'recurring' && isStarted}>
+					{statusLabel}
 				</span>
 				{#if node.due_at}
 					<span class="task-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
@@ -88,7 +90,7 @@
 		</div>
 		<div class="task-actions">
 			{#if isStarted}
-				<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'finish')} disabled={node.blocked}>Acabar</button>
+				<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'finish')} disabled={node.blocked}>{node.task_type === 'recurring' ? 'Renovar' : 'Acabar'}</button>
 			{:else}
 				<button class="btn-primary btn-start btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'start')} disabled={node.blocked}>Empezar</button>
 			{/if}

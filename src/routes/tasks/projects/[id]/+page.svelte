@@ -2,6 +2,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
+	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import { toLocalDatetime, toISOString, formatTime, formatDateShort, formatDateFull } from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
@@ -218,8 +219,8 @@
 									{#if child.time_spent > 0}
 										<span class="child-time"><i class="fa-regular fa-clock"></i> {formatTime(child.time_spent)}</span>
 									{/if}
-									<span class="status-badge" class:started={child.started_at != null} class:finished={child.finished_at != null}>
-										{child.finished_at ? 'Completado' : child.started_at ? 'En progreso' : 'Pendiente'}
+									<span class="status-badge" class:started={child.started_at != null && child.task_type === 'standard'} class:continuous={child.started_at != null && child.task_type === 'continuous'} class:recurring={child.started_at != null && child.task_type === 'recurring'} class:finished={child.finished_at != null}>
+										{child.finished_at ? 'Completado' : getStatusLabel(child.started_at, child.task_type, child.recurrence)}
 									</span>
 								</button>
 							</div>

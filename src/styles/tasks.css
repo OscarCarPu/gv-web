@@ -236,7 +236,7 @@
 }
 
 .detail-form {
-	@apply mt-4 flex flex-col gap-4;
+	@apply mt-3 flex flex-col gap-3;
 }
 
 .detail-field {
@@ -253,7 +253,7 @@
 }
 
 .todo-list {
-	@apply mt-2 flex flex-col gap-2;
+	@apply flex flex-col gap-2;
 }
 
 .todo-item {
@@ -281,7 +281,7 @@
 }
 
 .todo-add {
-	@apply mt-2 flex items-center gap-2;
+	@apply flex items-center gap-2;
 
 	& input {
 		@apply flex-1;
@@ -289,7 +289,7 @@
 }
 
 .detail-actions {
-	@apply mt-4 flex items-center justify-end gap-3;
+	@apply mt-2 flex items-center justify-end gap-3;
 }
 
 /* Task BottomSheet */
@@ -327,7 +327,7 @@
 }
 
 .detail-field select {
-	@apply bg-bg border-text-muted/20 text-text focus:border-primary/50 focus:ring-primary/30 rounded-lg border px-3 py-2 transition-colors focus:ring-1 focus:outline-none;
+	@apply bg-bg border-text-muted/20 text-text focus:border-primary/50 focus:ring-primary/30 rounded-lg border px-3 py-2 text-sm leading-normal transition-colors focus:ring-1 focus:outline-none;
 	color-scheme: dark;
 }
 

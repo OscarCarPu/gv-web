@@ -1,6 +1,7 @@
 <script lang="ts">
 	import RightSheet from '$shared/components/RightSheet.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
+	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
 	import { formatTime, toLocalDateString } from '$lib/shared/utils/datetime';
 
@@ -213,10 +214,12 @@
 									</span>
 									<span
 										class="status-badge"
-										class:started={item.entry.task_finished_at === null}
+										class:started={item.entry.task_finished_at === null && item.entry.task_type === 'standard'}
+										class:continuous={item.entry.task_finished_at === null && item.entry.task_type === 'continuous'}
+										class:recurring={item.entry.task_finished_at === null && item.entry.task_type === 'recurring'}
 										class:finished={item.entry.task_finished_at !== null}
 									>
-										{item.entry.task_finished_at !== null ? 'Finalizada' : 'En progreso'}
+										{item.entry.task_finished_at !== null ? 'Finalizada' : item.entry.task_type === 'continuous' ? 'Continua' : item.entry.task_type === 'recurring' ? `Recurrente · ${item.entry.recurrence}` : 'En progreso'}
 									</span>
 									<span class="agenda-entry-duration">{formatTime(item.entry.time_spent)}</span>
 								</div>

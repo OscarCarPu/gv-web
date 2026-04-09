@@ -12,8 +12,10 @@
 	import TimeHistoryModal from '$lib/domains/tasks/components/TimeHistoryModal.svelte';
 	import AgendaRightSheet from '$lib/domains/tasks/components/AgendaRightSheet.svelte';
 	import type {
+		ActiveTreeNode,
 		TimeEntrySummaryResponse,
 	} from '$lib/domains/tasks/types/Task.types';
+	import { toLocalDateString, toISOString } from '$lib/shared/utils/datetime';
 
 	let { data } = $props();
 
@@ -158,12 +160,33 @@
 		}
 	});
 
+	function buildRecurringDueAt(recurrence: number): string {
+		const d = new Date();
+		d.setDate(d.getDate() + recurrence);
+		return toISOString(toLocalDateString(d) + 'T12:00')!;
+	}
+
+	function findTreeTask(nodes: ActiveTreeNode[], id: number): ActiveTreeNode | undefined {
+		for (const node of nodes) {
+			if (node.type === 'task' && node.id === id) return node;
+			if (node.children) {
+				const found = findTreeTask(node.children, id);
+				if (found) return found;
+			}
+		}
+	}
+
 	async function handleTaskToggle(taskId: number, action: 'start' | 'finish') {
 		const now = new Date().toISOString();
 		if (action === 'start') {
 			await tasksApi.updateTask(taskId, { started_at: now });
 		} else {
-			await tasksApi.updateTask(taskId, { finished_at: now });
+			const task = data.tasksByDueDate.find((t) => t.id === taskId);
+			if (task?.task_type === 'recurring' && task.recurrence) {
+				await tasksApi.updateTask(taskId, { due_at: buildRecurringDueAt(task.recurrence) });
+			} else {
+				await tasksApi.updateTask(taskId, { finished_at: now });
+			}
 		}
 		await invalidateAll();
 	}
@@ -174,11 +197,18 @@
 		action: 'start' | 'finish'
 	) {
 		const now = new Date().toISOString();
-		const payload = action === 'start' ? { started_at: now } : { finished_at: now };
 		if (type === 'project') {
+			const payload = action === 'start' ? { started_at: now } : { finished_at: now };
 			await tasksApi.updateProject(id, payload);
+		} else if (action === 'start') {
+			await tasksApi.updateTask(id, { started_at: now });
 		} else {
-			await tasksApi.updateTask(id, payload);
+			const task = findTreeTask(data.activeTree, id);
+			if (task?.task_type === 'recurring' && task.recurrence) {
+				await tasksApi.updateTask(id, { due_at: buildRecurringDueAt(task.recurrence) });
+			} else {
+				await tasksApi.updateTask(id, { finished_at: now });
+			}
 		}
 		await invalidateAll();
 	}
