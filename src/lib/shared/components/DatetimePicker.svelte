@@ -4,6 +4,7 @@
 	let { value = $bindable(''), id = '' }: { value: string; id?: string } = $props();
 
 	let triggerId = $derived(id ? `dtp-${id}` : `dtp-${Math.random().toString(36).slice(2, 8)}`);
+	let popoverOpen = $state(false);
 
 	let dateObj = $derived.by(() => {
 		if (!value) return null;
@@ -36,6 +37,7 @@
 		const m = parseInt(minutes) || 0;
 		selected.setHours(h, m, 0, 0);
 		emitValue(selected);
+		popoverOpen = false;
 	}
 
 	function onHoursInput(e: Event) {
@@ -95,7 +97,7 @@
 			<i class="fa-solid fa-xmark"></i>
 		</button>
 	{/if}
-	<Popover triggeredBy="#{triggerId}" trigger="click">
+	<Popover triggeredBy="#{triggerId}" trigger="click" bind:isOpen={popoverOpen}>
 		<Datepicker
 			value={dateObj ?? undefined}
 			onselect={handleDateSelect}
