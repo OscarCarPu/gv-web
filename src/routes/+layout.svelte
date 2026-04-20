@@ -6,6 +6,7 @@
 	import { page } from '$app/state';
 	import { setClientToken } from '$lib/shared/api/client';
 	import ToastContainer from '$lib/shared/components/ToastContainer.svelte';
+	import NotificationContainer from '$lib/shared/components/NotificationContainer.svelte';
 
 	let { data, children } = $props();
 
@@ -33,3 +34,4 @@
 </main>
 
 <ToastContainer />
+<NotificationContainer />

@@ -2,6 +2,7 @@
 	import type { HabitWithLog } from '$habits/types/Habit.types';
 	import { habitsApi } from '$habits/api/habits.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
+	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import { toLocalDateString } from '$shared/utils/datetime';
 	import HabitHistoryModal from './HabitHistoryModal.svelte';
 
@@ -86,6 +87,7 @@
 				date: currentDate,
 				value: newValue,
 			});
+			addNotification('Hábito registrado', 'success');
 			onRefresh?.();
 		} catch {
 			optimisticValue = null;

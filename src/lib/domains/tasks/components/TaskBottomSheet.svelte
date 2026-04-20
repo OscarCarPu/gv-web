@@ -10,6 +10,7 @@
 	} from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
+	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import type {
 		TaskFullResponse,
 		TodoResponse,
@@ -78,6 +79,7 @@
 		if (taskId == null) return;
 		try {
 			await tasksApi.updateTask(taskId, { started_at: new Date().toISOString() });
+			addNotification('Tarea iniciada', 'success');
 			await loadTask();
 			await invalidateAll();
 		} catch {
@@ -89,6 +91,7 @@
 		if (taskId == null) return;
 		try {
 			await tasksApi.updateTask(taskId, { finished_at: new Date().toISOString() });
+			addNotification('Tarea finalizada', 'success');
 			await loadTask();
 			await invalidateAll();
 		} catch {
@@ -114,6 +117,7 @@
 				priority,
 			});
 			await syncReverseDepends();
+			addNotification('Tarea actualizada', 'success');
 			await invalidateAll();
 			onclose();
 		} catch {
@@ -149,6 +153,7 @@
 		saving = true;
 		try {
 			await tasksApi.deleteTask(taskId);
+			addNotification('Tarea eliminada', 'success');
 			onclose();
 			await invalidateAll();
 		} catch {
@@ -166,6 +171,7 @@
 		try {
 			const updated = await tasksApi.updateTodo(todo.id, { is_done: !todo.is_done });
 			todos = sortTodos(todos.map((t) => (t.id === updated.id ? updated : t)));
+			addNotification(updated.is_done ? 'Todo completado' : 'Todo pendiente', 'success');
 		} catch {
 			addToast('Error al actualizar todo', 'error');
 		}
@@ -175,6 +181,7 @@
 		try {
 			await tasksApi.deleteTodo(id);
 			todos = todos.filter((t) => t.id !== id);
+			addNotification('Todo eliminado', 'success');
 		} catch {
 			addToast('Error al eliminar todo', 'error');
 		}
@@ -186,6 +193,7 @@
 			const created = await tasksApi.createTodo({ task_id: taskId, name: newTodoName.trim() });
 			todos = [...todos, created];
 			newTodoName = '';
+			addNotification('Todo agregado', 'success');
 		} catch {
 			addToast('Error al agregar todo', 'error');
 		}

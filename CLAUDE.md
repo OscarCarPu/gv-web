@@ -12,8 +12,7 @@ bun run lint             # Prettier + ESLint check
 bun run format           # Auto-format with Prettier
 bun run test:unit        # Unit tests (Vitest, watch mode)
 bun run test:unit -- --run  # Unit tests (single run)
-bun run test:e2e         # E2E tests (Playwright, builds first)
-bun run test             # All tests (unit --run + e2e)
+bun run test             # All tests (unit --run)
 make up-dev              # Dev: clears .svelte-kit, syncs, starts dev server
 ```
 

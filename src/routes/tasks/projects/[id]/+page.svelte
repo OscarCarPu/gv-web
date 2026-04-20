@@ -8,6 +8,7 @@
 	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
 	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
+	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import DepBadges from '$lib/domains/tasks/components/DepBadges.svelte';
 
 	let { data } = $props();
@@ -42,6 +43,7 @@
 				description: description || null,
 				due_at: toISOString(dueAt)
 			});
+			addNotification('Proyecto actualizado', 'success');
 			await invalidateAll();
 		} catch {
 			addToast('Error al guardar proyecto', 'error');
@@ -54,6 +56,7 @@
 		if (!project) return;
 		try {
 			await tasksApi.updateProject(project.id, { started_at: new Date().toISOString() });
+			addNotification('Proyecto iniciado', 'success');
 			await invalidateAll();
 		} catch {
 			addToast('Error al iniciar proyecto', 'error');
@@ -64,6 +67,7 @@
 		if (!project) return;
 		try {
 			await tasksApi.updateProject(project.id, { finished_at: new Date().toISOString() });
+			addNotification('Proyecto finalizado', 'success');
 			await invalidateAll();
 		} catch {
 			addToast('Error al finalizar proyecto', 'error');
@@ -75,6 +79,7 @@
 		saving = true;
 		try {
 			await tasksApi.deleteProject(project.id);
+			addNotification('Proyecto eliminado', 'success');
 			await invalidateAll();
 			goto('/tasks');
 		} catch {
@@ -222,6 +227,11 @@
 									<span class="status-badge" class:started={child.started_at != null && child.task_type === 'standard'} class:continuous={child.started_at != null && child.task_type === 'continuous'} class:recurring={child.started_at != null && child.task_type === 'recurring'} class:finished={child.finished_at != null}>
 										{child.finished_at ? 'Completado' : getStatusLabel(child.started_at, child.task_type, child.recurrence)}
 									</span>
+									{#if child.priority && child.priority <= 2}
+										<span class="priority-badge" class:p-1={child.priority === 1} class:p-2={child.priority === 2}>
+											P{child.priority}
+										</span>
+									{/if}
 								</button>
 							</div>
 						{/if}

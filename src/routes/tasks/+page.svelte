@@ -15,6 +15,7 @@
 		TimeEntrySummaryResponse,
 	} from '$lib/domains/tasks/types/Task.types';
 	import { toLocalDateString, toISOString } from '$lib/shared/utils/datetime';
+	import { addNotification } from '$lib/shared/stores/notification.svelte';
 
 	let { data } = $props();
 
@@ -136,12 +137,14 @@
 
 	async function handleStop() {
 		await timer.stopTimer();
+		addNotification('Tiempo registrado', 'success');
 		commentExpanded = false;
 		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
 
 	async function handleCancel() {
 		await timer.cancelTimer();
+		addNotification('Tiempo cancelado', 'success');
 		commentExpanded = false;
 		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
 		summaryOverride = await tasksApi.getTimeEntrySummary();
@@ -149,6 +152,11 @@
 
 	async function handleStartedAtChange(newDate: Date) {
 		await timer.updateStartedAt(newDate);
+	}
+
+	async function handleTaskStartWithNotification(taskId: number, taskName: string, projectName?: string | null) {
+		await timer.handleTaskStart(taskId, taskName, projectName);
+		addNotification('Temporizador iniciado', 'success');
 	}
 
 	let selectedTaskId = $state<number | null>(null);
@@ -212,12 +220,15 @@
 		const now = new Date().toISOString();
 		if (action === 'start') {
 			await tasksApi.updateTask(taskId, { started_at: now });
+			addNotification('Tarea iniciada', 'success');
 		} else {
 			const task = data.tasksByDueDate.find((t) => t.id === taskId);
 			if (task?.task_type === 'recurring' && task.recurrence) {
 				await tasksApi.updateTask(taskId, { due_at: buildRecurringDueAt(task.recurrence) });
+				addNotification('Tarea renovada', 'success');
 			} else {
 				await tasksApi.updateTask(taskId, { finished_at: now });
+				addNotification('Tarea finalizada', 'success');
 			}
 		}
 		await invalidateAll();
@@ -232,14 +243,18 @@
 		if (type === 'project') {
 			const payload = action === 'start' ? { started_at: now } : { finished_at: now };
 			await tasksApi.updateProject(id, payload);
+			addNotification(action === 'start' ? 'Proyecto iniciado' : 'Proyecto finalizado', 'success');
 		} else if (action === 'start') {
 			await tasksApi.updateTask(id, { started_at: now });
+			addNotification('Tarea iniciada', 'success');
 		} else {
 			const task = findTreeTask(data.activeTree, id);
 			if (task?.task_type === 'recurring' && task.recurrence) {
 				await tasksApi.updateTask(id, { due_at: buildRecurringDueAt(task.recurrence) });
+				addNotification('Tarea renovada', 'success');
 			} else {
 				await tasksApi.updateTask(id, { finished_at: now });
+				addNotification('Tarea finalizada', 'success');
 			}
 		}
 		await invalidateAll();
@@ -277,6 +292,7 @@
 			finished_at: finishedAt.toISOString(),
 			comment: timer.comment || null,
 		});
+		addNotification('Tiempo registrado', 'success');
 		timer.reset();
 		commentExpanded = false;
 		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
@@ -450,7 +466,7 @@
 					{/if}
 					<TaskItem
 						{task}
-						onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)}
+						onstart={() => handleTaskStartWithNotification(task.id, task.name, task.project_name)}
 						ontoggle={handleTaskToggle}
 						ondetail={openTaskDetail}
 						isTimerRunning={timer.isRunning}
@@ -499,7 +515,7 @@
 			<div class="task-list">
 				<TreeNode
 					nodes={filteredActiveTree}
-					onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)}
+					onstart={(id, name, proj) => handleTaskStartWithNotification(id, name, proj)}
 					ontoggle={handleTreeToggle}
 					ondetail={openDetail}
 					oncreatetask={(projectId) => {

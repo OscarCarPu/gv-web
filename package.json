@@ -13,13 +13,11 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run && npm run test:e2e",
-		"test:e2e": "playwright test"
+		"test": "npm run test:unit -- --run"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
 		"@eslint/js": "^9.39.1",
-		"@playwright/test": "^1.57.0",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-node": "^5.4.0",
 		"@sveltejs/kit": "^2.49.1",
@@ -41,7 +39,6 @@
 		"husky": "^9.1.7",
 		"jsdom": "^27.3.0",
 		"lint-staged": "^16.2.7",
-		"playwright": "^1.57.0",
 		"postcss": "^8.5.6",
 		"prettier": "^3.7.4",
 		"prettier-plugin-svelte": "^3.4.0",

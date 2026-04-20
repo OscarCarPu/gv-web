@@ -5,6 +5,7 @@
 	import { toISOString } from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
+	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import type { ProjectListItem, TaskDepRef } from '$lib/domains/tasks/types/Task.types';
 	import DepSelector from './DepSelector.svelte';
 
@@ -78,6 +79,9 @@
 				});
 				if (startNow) {
 					await tasksApi.updateTask(created.id, { started_at: new Date().toISOString() });
+					addNotification('Tarea creada e iniciada', 'success');
+				} else {
+					addNotification('Tarea creada', 'success');
 				}
 			} else {
 				const created = await tasksApi.createProject({
@@ -87,6 +91,7 @@
 					parent_id: selectedParentId,
 				});
 				await tasksApi.updateProject(created.id, { started_at: new Date().toISOString() });
+				addNotification('Proyecto creado e iniciado', 'success');
 			}
 
 			onclose();
