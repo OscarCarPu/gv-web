@@ -5,7 +5,7 @@
 	import TreeNode from '$lib/domains/tasks/components/TreeNode.svelte';
 	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
 	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
-import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
+	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import StartedAtEditor from '$lib/domains/tasks/components/StartedAtEditor.svelte';
 	import TimeHistoryModal from '$lib/domains/tasks/components/TimeHistoryModal.svelte';
@@ -28,12 +28,45 @@ import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 	const FOLD_LIMIT = 15;
 	const EXPAND_STEP = 10;
 	let dueDateVisibleCount = $state(FOLD_LIMIT);
-	let visibleDueDateTasks = $derived(data.tasksByDueDate.slice(0, dueDateVisibleCount));
-	let hasMoreDueDateTasks = $derived(dueDateVisibleCount < data.tasksByDueDate.length);
-	let remainingDueDateTasks = $derived(data.tasksByDueDate.length - dueDateVisibleCount);
+	let dueDatePriorityFilter = $state<number | null>(null);
+	let activeTreePriorityFilter = $state<number | null>(null);
+
+	let filteredByDueDate = $derived(
+		dueDatePriorityFilter === null
+			? data.tasksByDueDate
+			: data.tasksByDueDate.filter((t) => t.priority <= dueDatePriorityFilter!)
+	);
+	let visibleDueDateTasks = $derived(filteredByDueDate.slice(0, dueDateVisibleCount));
+	let hasMoreDueDateTasks = $derived(dueDateVisibleCount < filteredByDueDate.length);
+	let remainingDueDateTasks = $derived(filteredByDueDate.length - dueDateVisibleCount);
+
+	$effect(() => {
+		dueDatePriorityFilter;
+		dueDateVisibleCount = FOLD_LIMIT;
+	});
+
+	function filterTreeByPriority(nodes: ActiveTreeNode[], min: number | null): ActiveTreeNode[] {
+		if (min === null) return nodes;
+		const result: ActiveTreeNode[] = [];
+		for (const node of nodes) {
+			if (node.type === 'project') {
+				result.push({
+					...node,
+					children: node.children ? filterTreeByPriority(node.children, min) : undefined,
+				});
+			} else if ((node.priority ?? 3) <= min) {
+				result.push(node);
+			}
+		}
+		return result;
+	}
+
+	let filteredActiveTree = $derived(
+		filterTreeByPriority(data.activeTree, activeTreePriorityFilter)
+	);
 
 	function showMoreDueDateTasks() {
-		dueDateVisibleCount = Math.min(dueDateVisibleCount + EXPAND_STEP, data.tasksByDueDate.length);
+		dueDateVisibleCount = Math.min(dueDateVisibleCount + EXPAND_STEP, filteredByDueDate.length);
 	}
 
 	function formatDueDay(iso: string | null): string {
@@ -377,6 +410,19 @@ import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 		<div class="tasks-section">
 			<div class="section-header">
 				<h2>Próximas a vencer</h2>
+				<div class="priority-filter">
+					<button
+						class:active={dueDatePriorityFilter === null}
+						onclick={() => (dueDatePriorityFilter = null)}>Todas</button
+					>
+					{#each [1, 2, 3, 4] as p (p)}
+						<button
+							class:active={dueDatePriorityFilter === p}
+							onclick={() => (dueDatePriorityFilter = p)}
+							aria-label="Prioridad hasta {p}">≤{p}</button
+						>
+					{/each}
+				</div>
 				<button
 					class="btn-primary btn-sm"
 					onclick={() => {
@@ -426,6 +472,19 @@ import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 		<div class="tasks-section">
 			<div class="section-header">
 				<h2>Proyectos activos</h2>
+				<div class="priority-filter">
+					<button
+						class:active={activeTreePriorityFilter === null}
+						onclick={() => (activeTreePriorityFilter = null)}>Todas</button
+					>
+					{#each [1, 2, 3, 4] as p (p)}
+						<button
+							class:active={activeTreePriorityFilter === p}
+							onclick={() => (activeTreePriorityFilter = p)}
+							aria-label="Prioridad hasta {p}">≤{p}</button
+						>
+					{/each}
+				</div>
 				<button
 					class="btn-primary btn-sm"
 					onclick={() => {
@@ -439,7 +498,7 @@ import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
 			</div>
 			<div class="task-list">
 				<TreeNode
-					nodes={data.activeTree}
+					nodes={filteredActiveTree}
 					onstart={(id, name, proj) => timer.handleTaskStart(id, name, proj)}
 					ontoggle={handleTreeToggle}
 					ondetail={openDetail}

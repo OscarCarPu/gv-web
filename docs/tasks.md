@@ -31,6 +31,28 @@ API accepts `depends_on: number[]` (array of task IDs) on create and update — 
 
 **Reverse dependency editing**: Editing `blocks` ("Bloquea a") in the UI requires fetching and updating each affected task's `depends_on` individually, since the API only accepts `depends_on` on the task being updated.
 
+### Task Types
+
+The `task_type` field controls behavior on completion:
+
+| Type         | Badge color        | Completion action                                    |
+| ------------ | ------------------ | ---------------------------------------------------- |
+| `standard`   | `--color-primary`  | Sets `finished_at`                                   |
+| `continuous` | `--color-continuous` | Sets `finished_at` (same as standard)              |
+| `recurring`  | `--color-recurring`  | Reschedules (`due_at = today + recurrence`) in "Próximas a vencer" / "Proyectos activos" — the button is labeled "Renovar" there. Sets `finished_at` everywhere else. Requires `recurrence: number` (days) |
+
+Status labels are produced by `getStatusLabel()` in `src/lib/domains/tasks/utils/statusLabel.ts`. The agenda uses a shortened "Recurrente · N".
+
+### Task Priority
+
+Tasks have a `priority: number` field, 1 (highest/most urgent) to 5 (lowest), default `3`. Always present on every task response. `ActiveTreeNode` and `ProjectChildNode` type it as optional since the API emits `omitempty` for those.
+
+**Editing**: Prioridad `<select>` in both `CreateBottomSheet` and `TaskBottomSheet`, placed in the inline row with Tipo. Create only sends the field when non-default (kept consistent with how `task_type` is omitted when standard); update always sends it.
+
+**Display**: `.priority-badge` with `P{n}` label next to `.status-badge` on `TaskItem` and `TreeNodeItem`. `.p-1` uses danger red; `.p-2` uses warning amber; 3–5 stay muted.
+
+**Filtering on `/tasks`**: "Próximas a vencer" and "Proyectos activos" each have a `.priority-filter` pill group (`Todas · ≤1 · ≤2 · ≤3 · ≤4`). Filtering is **client-side** via `$derived` on the already-loaded SSR data — instant, no round-trip. The tree filter keeps all projects regardless of their children's priorities (matches the API's `min_priority` semantics on `/tasks/tree`). Server-side support exists (`?min_priority=N` on `/tasks/tree` and `/tasks/tasks/by-due-date`) but is currently unused from the frontend.
+
 ### Key Types (`src/lib/domains/tasks/types/Task.types.ts`)
 
 | Type                      | Key Fields                                                                                          |
@@ -39,13 +61,13 @@ API accepts `depends_on: number[]` (array of task IDs) on create and update — 
 | `ProjectDetailResponse`   | Same + time_spent (aggregated)                                                                      |
 | `ProjectChildrenResponse` | project + children[] (mixed tasks and sub-projects)                                                 |
 | `TaskDepRef`              | id, name, due_at (dependency reference)                                                             |
-| `TaskListItem`            | id, name (for list-fast endpoint)                                                                   |
-| `TaskResponse`            | id, name, description, due_at, project_id, started_at, finished_at, depends_on[], blocks[], blocked |
+| `TaskListItem`            | id, name, project_id, project_name, task_type?, recurrence?, priority? (for list-fast endpoint)     |
+| `TaskResponse`            | id, name, description, due_at, project_id, started_at, finished_at, task_type, recurrence?, priority, depends_on[], blocks[], blocked |
 | `TaskFullResponse`        | Same + time_spent, todos[]                                                                          |
 | `TodoResponse`            | id, task_id, name, is_done                                                                          |
 | `TimeEntryResponse`       | id, task_id, started_at, finished_at, comment                                                       |
-| `ActiveTreeNode`          | Recursive tree: id, type, name, children[], depends_on[], blocks[], blocked                         |
-| `TaskByDueDateResponse`   | Task with project_name, project_due_at, depends_on[], blocks[], blocked                             |
+| `ActiveTreeNode`          | Recursive tree: id, type, name, task_type?, recurrence?, priority?, children[], depends_on[], blocks[], blocked |
+| `TaskByDueDateResponse`   | Task with project_name, project_due_at, task_type, recurrence?, priority, depends_on[], blocks[], blocked |
 | `TimeEntryWithTask`       | Time entry with task_name, project_name, task_finished_at, time_spent                               |
 
 ## Routes
@@ -66,14 +88,14 @@ API accepts `depends_on: number[]` (array of task IDs) on create and update — 
 │  HH:MM ─ HH:MM  [+ Agregar]        │  ← Time entry row
 │  00:12:34  [Started at]  [▶ Play]   │  ← Timer controls
 │  Hoy: ██░░  Semana: ████░░  [📊][📅]│  ← Summary bars + agenda
-├────────────────┬────────────────────┤
-│ Próximas a     │ Proyectos activos  │
-│ vencer    [+]  │              [+]   │
-│                │                    │
-│ Task items     │ Tree view          │
-│ (click→sheet)  │ (proj→navigate,    │
-│                │  task→sheet)       │
-└────────────────┴────────────────────┘
+├────────────────────────┬────────────────────────┤
+│ Próximas a vencer      │ Proyectos activos      │
+│ [Todas ≤1 ≤2 ≤3 ≤4][+] │ [Todas ≤1 ≤2 ≤3 ≤4][+] │
+│                        │                        │
+│ Task items (with P{n}) │ Tree view (with P{n})  │
+│ (click→sheet)          │ (proj→navigate,        │
+│                        │  task→sheet)           │
+└────────────────────────┴────────────────────────┘
 ```
 
 - **"+" buttons**: Open CreateBottomSheet in task or project mode
@@ -120,7 +142,7 @@ Half-modal (BottomSheet) for viewing/editing a task.
 Half-modal for creating tasks and projects.
 
 - **Mode toggle**: Tarea / Proyecto (segmented control)
-- **Fields**: Nombre, Descripción, Fecha límite + Proyecto/Proyecto padre selector (same row)
+- **Fields**: Nombre, Descripción, inline row (Fecha límite + Proyecto/Proyecto padre + Tipo + Cada días [when recurring] + Prioridad)
 - **Dependencies** (task mode only): DepSelector for "Depende de" — select tasks from dropdown, shown as removable pills. Sent as `depends_on: number[]` on create
 - **"Empezar ya" toggle**: When active, PATCHes `started_at: now()` after creation
 - **Prefill**: When opened from a project page, project_id/parent_id are pre-selected for both modes
@@ -234,8 +256,8 @@ Opens from chart icon on summary bars. Uses shared chart components (LayerCake).
 
 | Method   | Endpoint                                    | Purpose                                      |
 | -------- | ------------------------------------------- | -------------------------------------------- |
-| `GET`    | `/tasks/tree`                               | Active project/task tree                     |
-| `GET`    | `/tasks/tasks/by-due-date`                  | Tasks sorted by due date                     |
+| `GET`    | `/tasks/tree`                               | Active project/task tree (accepts `?min_priority=N`) |
+| `GET`    | `/tasks/tasks/by-due-date`                  | Tasks sorted by due date (accepts `?min_priority=N`) |
 | `GET`    | `/tasks/projects`                           | Root projects list                           |
 | `GET`    | `/tasks/projects/{id}`                      | Project detail with time_spent               |
 | `GET`    | `/tasks/projects/{id}/children`             | Project + child tasks/sub-projects           |

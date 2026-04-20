@@ -2,10 +2,19 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
-	import { toLocalDatetime, toISOString, formatTime, formatDateFull } from '$lib/shared/utils/datetime';
+	import {
+		toLocalDatetime,
+		toISOString,
+		formatTime,
+		formatDateFull,
+	} from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import type { TaskFullResponse, TodoResponse, TaskDepRef } from '$lib/domains/tasks/types/Task.types';
+	import type {
+		TaskFullResponse,
+		TodoResponse,
+		TaskDepRef,
+	} from '$lib/domains/tasks/types/Task.types';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import DepSelector from './DepSelector.svelte';
 
@@ -27,6 +36,7 @@
 	let nameError = $state(false);
 	let taskType = $state<'standard' | 'continuous' | 'recurring'>('standard');
 	let recurrence = $state<number | null>(null);
+	let priority = $state<number>(3);
 	let dependsOn = $state<TaskDepRef[]>([]);
 	let blocks = $state<TaskDepRef[]>([]);
 	let initialBlocks = $state<TaskDepRef[]>([]);
@@ -41,11 +51,14 @@
 		dueAt = toLocalDatetime(t.due_at);
 		taskType = (t.task_type as 'standard' | 'continuous' | 'recurring') ?? 'standard';
 		recurrence = t.recurrence ?? null;
+		priority = t.priority ?? 3;
 		dependsOn = [...t.depends_on];
 		blocks = [...t.blocks];
 		initialBlocks = [...t.blocks];
 		if (t.project_id) {
-			tasksApi.getProject(t.project_id).then((p) => { projectName = p.name; });
+			tasksApi.getProject(t.project_id).then((p) => {
+				projectName = p.name;
+			});
 		} else {
 			projectName = null;
 		}
@@ -97,7 +110,8 @@
 				due_at: toISOString(dueAt),
 				depends_on: dependsOn.map((d) => d.id),
 				task_type: taskType,
-				recurrence: taskType === 'recurring' ? recurrence : undefined
+				recurrence: taskType === 'recurring' ? recurrence : undefined,
+				priority,
 			});
 			await syncReverseDepends();
 			await invalidateAll();
@@ -201,7 +215,14 @@
 			<div class="detail-inline-row">
 				<div class="detail-field flex-1">
 					<label for="task-name">Nombre</label>
-					<input id="task-name" type="text" bind:value={name} maxlength={40} class:field-error={nameError} oninput={() => nameError = false} />
+					<input
+						id="task-name"
+						type="text"
+						bind:value={name}
+						maxlength={40}
+						class:field-error={nameError}
+						oninput={() => (nameError = false)}
+					/>
 				</div>
 				<div class="detail-field">
 					<label for="dtp-task-due">Fecha límite</label>
@@ -221,6 +242,16 @@
 						<input id="task-recurrence" type="number" min="1" bind:value={recurrence} />
 					</div>
 				{/if}
+				<div class="detail-field">
+					<label for="task-priority">Prioridad</label>
+					<select id="task-priority" bind:value={priority}>
+						<option value={1}>1 · Urgente</option>
+						<option value={2}>2 · Alta</option>
+						<option value={3}>3 · Media</option>
+						<option value={4}>4 · Baja</option>
+						<option value={5}>5 · Muy baja</option>
+					</select>
+				</div>
 			</div>
 			<div class="detail-field">
 				<label for="task-desc">Descripción</label>
@@ -256,7 +287,7 @@
 				<div class="flex-1">
 					<DepSelector
 						selected={dependsOn}
-						onchange={(deps) => dependsOn = deps}
+						onchange={(deps) => (dependsOn = deps)}
 						excludeId={taskId!}
 						label="Depende de"
 						projectId={task?.project_id}
@@ -265,7 +296,7 @@
 				<div class="flex-1">
 					<DepSelector
 						selected={blocks}
-						onchange={(deps) => blocks = deps}
+						onchange={(deps) => (blocks = deps)}
 						excludeId={taskId!}
 						label="Bloquea a"
 						projectId={task?.project_id}
@@ -274,20 +305,29 @@
 			</div>
 
 			<div class="detail-field">
-				<span class="label text-sm text-text-muted font-medium">Todos</span>
+				<span class="label text-text-muted text-sm font-medium">Todos</span>
 				<div class="todo-list">
 					{#each todos as todo (todo.id)}
 						<div class="todo-item">
 							<input type="checkbox" checked={todo.is_done} onchange={() => toggleTodo(todo)} />
 							<span class:line-through={todo.is_done}>{todo.name}</span>
-							<button class="btn-danger btn-sm ml-auto" onclick={() => deleteTodo(todo.id)} aria-label="Delete todo">
+							<button
+								class="btn-danger btn-sm ml-auto"
+								onclick={() => deleteTodo(todo.id)}
+								aria-label="Delete todo"
+							>
 								<i class="fa-solid fa-trash"></i>
 							</button>
 						</div>
 					{/each}
 				</div>
 				<div class="todo-add">
-					<input type="text" placeholder="Nuevo todo..." bind:value={newTodoName} onkeydown={(e) => e.key === 'Enter' && addTodo()} />
+					<input
+						type="text"
+						placeholder="Nuevo todo..."
+						bind:value={newTodoName}
+						onkeydown={(e) => e.key === 'Enter' && addTodo()}
+					/>
 					<button class="btn-primary btn-sm" onclick={addTodo}>Agregar</button>
 				</div>
 			</div>

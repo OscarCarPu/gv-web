@@ -16,7 +16,16 @@
 		isTimerRunning?: boolean;
 	}
 
-	let { node, parentProjectName, parentProjectDueAt, onstart, ontoggle, ondetail, oncreatetask, isTimerRunning = false }: Props = $props();
+	let {
+		node,
+		parentProjectName,
+		parentProjectDueAt,
+		onstart,
+		ontoggle,
+		ondetail,
+		oncreatetask,
+		isTimerRunning = false,
+	}: Props = $props();
 
 	const { isExpanded, toggle, formatDate } = getContext<{
 		isExpanded: (id: number) => boolean;
@@ -40,19 +49,36 @@
 				</button>
 			{/if}
 			<i class="fa-solid fa-folder tree-folder-icon"></i>
-			<button class="task-name-btn" onclick={() => ondetail?.(node.id, 'project')}>{node.name}</button>
+			<button class="task-name-btn" onclick={() => ondetail?.(node.id, 'project')}
+				>{node.name}</button
+			>
 			{#if node.due_at}
-				<span class="tree-project-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
+				<span class="tree-project-due"
+					><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span
+				>
 			{/if}
 		</div>
-		<button class="btn-primary btn-sm" onclick={() => oncreatetask?.(node.id)} title="Agregar tarea"><i class="fa-solid fa-plus"></i></button>
-		<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'project', 'finish')}>Acabar</button>
+		<button class="btn-primary btn-sm" onclick={() => oncreatetask?.(node.id)} title="Agregar tarea"
+			><i class="fa-solid fa-plus"></i></button
+		>
+		<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'project', 'finish')}
+			>Acabar</button
+		>
 	</div>
 
 	{#if expanded && hasChildren}
 		<div class="tree-children">
 			{#each node.children! as child (`${child.type}-${child.id}`)}
-				<TreeNodeItem node={child} parentProjectName={node.name} parentProjectDueAt={node.due_at} {onstart} {ontoggle} {ondetail} {oncreatetask} {isTimerRunning} />
+				<TreeNodeItem
+					node={child}
+					parentProjectName={node.name}
+					parentProjectDueAt={node.due_at}
+					{onstart}
+					{ontoggle}
+					{ondetail}
+					{oncreatetask}
+					{isTimerRunning}
+				/>
 			{/each}
 		</div>
 	{/if}
@@ -60,11 +86,13 @@
 	<div class="task-item">
 		<div class="task-info">
 			<div class="task-name-row">
-			<button class="task-name-btn" onclick={() => ondetail?.(node.id, 'task')}>{node.name}</button>
-			{#if node.blocked}
-				<i class="fa-solid fa-ban blocked-icon" title="Bloqueada"></i>
-			{/if}
-		</div>
+				<button class="task-name-btn" onclick={() => ondetail?.(node.id, 'task')}
+					>{node.name}</button
+				>
+				{#if node.blocked}
+					<i class="fa-solid fa-ban blocked-icon" title="Bloqueada"></i>
+				{/if}
+			</div>
 			{#if node.depends_on?.length}
 				<DepBadges deps={node.depends_on} ondetail={(id) => ondetail?.(id, 'task')} />
 			{/if}
@@ -72,7 +100,9 @@
 				<span class="task-project">
 					{parentProjectName}
 					{#if parentProjectDueAt}
-						<span class="task-project-due"><i class="fa-regular fa-calendar"></i> {formatDate(parentProjectDueAt)}</span>
+						<span class="task-project-due"
+							><i class="fa-regular fa-calendar"></i> {formatDate(parentProjectDueAt)}</span
+						>
 					{/if}
 				</span>
 			{/if}
@@ -80,21 +110,43 @@
 				<span class="task-description">{node.description}</span>
 			{/if}
 			<div class="task-meta">
-				<span class="status-badge" class:started={isStarted && node.task_type === 'standard'} class:continuous={node.task_type === 'continuous' && isStarted} class:recurring={node.task_type === 'recurring' && isStarted}>
+				<span
+					class="status-badge"
+					class:started={isStarted && node.task_type === 'standard'}
+					class:continuous={node.task_type === 'continuous' && isStarted}
+					class:recurring={node.task_type === 'recurring' && isStarted}
+				>
 					{statusLabel}
 				</span>
+				{#if node.priority != null}
+					<span class="priority-badge p-{node.priority}">P{node.priority}</span>
+				{/if}
 				{#if node.due_at}
-					<span class="task-due"><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span>
+					<span class="task-due"
+						><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span
+					>
 				{/if}
 			</div>
 		</div>
 		<div class="task-actions">
 			{#if isStarted}
-				<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'finish')} disabled={node.blocked}>{node.task_type === 'recurring' ? 'Renovar' : 'Acabar'}</button>
+				<button
+					class="btn-primary btn-sm"
+					onclick={() => ontoggle?.(node.id, 'task', 'finish')}
+					disabled={node.blocked}>{node.task_type === 'recurring' ? 'Renovar' : 'Acabar'}</button
+				>
 			{:else}
-				<button class="btn-primary btn-start btn-sm" onclick={() => ontoggle?.(node.id, 'task', 'start')} disabled={node.blocked}>Empezar</button>
+				<button
+					class="btn-primary btn-start btn-sm"
+					onclick={() => ontoggle?.(node.id, 'task', 'start')}
+					disabled={node.blocked}>Empezar</button
+				>
 			{/if}
-			<button class="btn-primary" onclick={() => onstart?.(node.id, node.name, parentProjectName)} disabled={node.blocked}>
+			<button
+				class="btn-primary"
+				onclick={() => onstart?.(node.id, node.name, parentProjectName)}
+				disabled={node.blocked}
+			>
 				<i class="fa-solid {isTimerRunning ? 'fa-arrow-right' : 'fa-play'}"></i>
 				{isTimerRunning ? 'Asignar' : 'Iniciar'}
 			</button>

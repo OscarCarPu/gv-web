@@ -16,7 +16,13 @@
 		prefillParentId?: number | null;
 	}
 
-	let { open, onclose, mode = 'task', prefillProjectId = null, prefillParentId = null }: Props = $props();
+	let {
+		open,
+		onclose,
+		mode = 'task',
+		prefillProjectId = null,
+		prefillParentId = null,
+	}: Props = $props();
 
 	let name = $state('');
 	let description = $state('');
@@ -24,6 +30,7 @@
 	let startNow = $state(false);
 	let taskType = $state<'standard' | 'continuous' | 'recurring'>('standard');
 	let recurrence = $state<number | null>(null);
+	let priority = $state<number>(3);
 	let selectedProjectId = $state<number | null>(null);
 	let selectedParentId = $state<number | null>(null);
 	let projects = $state<ProjectListItem[]>([]);
@@ -41,11 +48,12 @@
 			startNow = false;
 			taskType = 'standard';
 			recurrence = null;
+			priority = 3;
 			nameError = false;
 			selectedDeps = [];
 			selectedProjectId = prefillProjectId ?? prefillParentId ?? null;
 			selectedParentId = prefillParentId ?? prefillProjectId ?? null;
-			tasksApi.listProjectsFast().then((p) => projects = p);
+			tasksApi.listProjectsFast().then((p) => (projects = p));
 		}
 	});
 
@@ -65,7 +73,8 @@
 					project_id: selectedProjectId,
 					depends_on: selectedDeps.length > 0 ? selectedDeps.map((d) => d.id) : undefined,
 					task_type: taskType !== 'standard' ? taskType : undefined,
-					recurrence: taskType === 'recurring' ? recurrence : undefined
+					recurrence: taskType === 'recurring' ? recurrence : undefined,
+					priority: priority !== 3 ? priority : undefined,
 				});
 				if (startNow) {
 					await tasksApi.updateTask(created.id, { started_at: new Date().toISOString() });
@@ -75,7 +84,7 @@
 					name: name.trim(),
 					description: description || null,
 					due_at: toISOString(dueAt),
-					parent_id: selectedParentId
+					parent_id: selectedParentId,
 				});
 				await tasksApi.updateProject(created.id, { started_at: new Date().toISOString() });
 			}
@@ -94,14 +103,26 @@
 	<h3 class="modal-title">{currentMode === 'task' ? 'Nueva tarea' : 'Nuevo proyecto'}</h3>
 
 	<div class="create-mode-toggle">
-		<button class:active={currentMode === 'task'} onclick={() => currentMode = 'task'}>Tarea</button>
-		<button class:active={currentMode === 'project'} onclick={() => currentMode = 'project'}>Proyecto</button>
+		<button class:active={currentMode === 'task'} onclick={() => (currentMode = 'task')}
+			>Tarea</button
+		>
+		<button class:active={currentMode === 'project'} onclick={() => (currentMode = 'project')}
+			>Proyecto</button
+		>
 	</div>
 
 	<div class="detail-form">
 		<div class="detail-field">
 			<label for="create-name">Nombre</label>
-			<input id="create-name" type="text" bind:value={name} maxlength={40} class:field-error={nameError} oninput={() => nameError = false} onkeydown={(e) => e.key === 'Enter' && create()} />
+			<input
+				id="create-name"
+				type="text"
+				bind:value={name}
+				maxlength={40}
+				class:field-error={nameError}
+				oninput={() => (nameError = false)}
+				onkeydown={(e) => e.key === 'Enter' && create()}
+			/>
 		</div>
 		<div class="detail-field">
 			<label for="create-desc">Descripción</label>
@@ -138,6 +159,16 @@
 						<input id="create-recurrence" type="number" min="1" bind:value={recurrence} />
 					</div>
 				{/if}
+				<div class="detail-field">
+					<label for="create-priority">Prioridad</label>
+					<select id="create-priority" bind:value={priority}>
+						<option value={1}>1 · Urgente</option>
+						<option value={2}>2 · Alta</option>
+						<option value={3}>3 · Media</option>
+						<option value={4}>4 · Baja</option>
+						<option value={5}>5 · Muy baja</option>
+					</select>
+				</div>
 			{:else}
 				<div class="detail-field flex-1">
 					<label for="create-parent">Proyecto padre</label>
@@ -154,7 +185,7 @@
 		{#if currentMode === 'task'}
 			<DepSelector
 				selected={selectedDeps}
-				onchange={(deps) => selectedDeps = deps}
+				onchange={(deps) => (selectedDeps = deps)}
 				excludeId={-1}
 				label="Depende de"
 				projectId={selectedProjectId}
@@ -163,7 +194,11 @@
 
 		<div class="detail-actions">
 			{#if currentMode === 'task'}
-				<button class="start-now-toggle mr-auto" type="button" onclick={() => startNow = !startNow}>
+				<button
+					class="start-now-toggle mr-auto"
+					type="button"
+					onclick={() => (startNow = !startNow)}
+				>
 					<div class="toggle toggle-sm" class:on={startNow} class:off={!startNow}>
 						<div class="knob"></div>
 					</div>

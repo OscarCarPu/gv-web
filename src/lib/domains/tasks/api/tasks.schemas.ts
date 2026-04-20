@@ -30,6 +30,7 @@ export const TaskResponseSchema = z.object({
 	finished_at: z.string().nullable(),
 	task_type: z.string(),
 	recurrence: z.number().nullable().optional(),
+	priority: z.number(),
 	depends_on: z
 		.array(TaskDepRefSchema)
 		.nullable()
@@ -65,6 +66,7 @@ export const ActiveTimeEntryResponseSchema = z.object({
 	task_name: z.string(),
 	task_type: z.string(),
 	recurrence: z.number().nullable().optional(),
+	priority: z.number(),
 	project_name: z.string().nullable(),
 });
 
@@ -91,6 +93,7 @@ export const TaskDetailResponseSchema = z.object({
 	finished_at: z.string().nullable(),
 	task_type: z.string(),
 	recurrence: z.number().nullable().optional(),
+	priority: z.number(),
 	time_spent: z.number(),
 });
 
@@ -104,6 +107,7 @@ export const TaskFullResponseSchema = z.object({
 	finished_at: z.string().nullable(),
 	task_type: z.string(),
 	recurrence: z.number().nullable().optional(),
+	priority: z.number(),
 	time_spent: z.number(),
 	todos: z.array(TodoResponseSchema),
 	depends_on: z
@@ -132,6 +136,7 @@ export const ProjectChildNodeSchema = z.object({
 	project_id: z.number().nullable().optional(),
 	task_type: z.string().optional(),
 	recurrence: z.number().nullable().optional(),
+	priority: z.number().nullable().optional(),
 	todos: z.array(TodoResponseSchema).optional(),
 	depends_on: z
 		.array(TaskDepRefSchema)
@@ -172,6 +177,7 @@ export const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
 		started_at: z.string().nullable().optional(),
 		task_type: z.string().optional(),
 		recurrence: z.number().nullable().optional(),
+		priority: z.number().nullable().optional(),
 		children: z.array(ActiveTreeNodeSchema).optional(),
 		depends_on: z
 			.array(TaskDepRefSchema)
@@ -204,6 +210,7 @@ export const TaskByDueDateResponseSchema = z.object({
 	started_at: z.string().nullable(),
 	task_type: z.string(),
 	recurrence: z.number().nullable().optional(),
+	priority: z.number(),
 	time_spent: z.number(),
 	project_id: z.number().nullable(),
 	project_name: z.string().nullable(),
@@ -237,6 +244,7 @@ export const TimeEntryWithTaskSchema = z.object({
 	task_name: z.string(),
 	task_type: z.string(),
 	recurrence: z.number().nullable().optional(),
+	priority: z.number(),
 	project_id: z.number().nullable(),
 	project_name: z.string().nullable(),
 	started_at: z.string(),
@@ -264,6 +272,7 @@ export const TaskListItemSchema = z.object({
 	project_name: z.string().nullable(),
 	task_type: z.string().optional(),
 	recurrence: z.number().nullable().optional(),
+	priority: z.number().optional(),
 });
 
 export const TaskListItemListSchema = z.array(TaskListItemSchema);
