@@ -252,6 +252,8 @@ State classes on the parent element:
 | `.task-meta`      | Status + due date + time badges          |
 | `.task-actions`   | Action buttons group                     |
 | `.show-more-btn`  | Expandable list divider (line-pill-line) |
+| `.priority-filter` | Pill group for filtering by priority (in `.section-header`) — buttons take `.active` state |
+| `.priority-badge`  | `P{n}` pill next to `.status-badge` — `.p-1` danger, `.p-2` warning, muted otherwise |
 
 ### Tree View
 
