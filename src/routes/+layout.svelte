@@ -7,11 +7,16 @@
 	import { setClientToken } from '$lib/shared/api/client';
 	import ToastContainer from '$lib/shared/components/ToastContainer.svelte';
 	import NotificationContainer from '$lib/shared/components/NotificationContainer.svelte';
+	import { installLinkifyHandler } from '$lib/shared/utils/linkify';
 
 	let { data, children } = $props();
 
 	$effect(() => {
 		setClientToken(data.token);
+	});
+
+	$effect(() => {
+		installLinkifyHandler();
 	});
 </script>
 

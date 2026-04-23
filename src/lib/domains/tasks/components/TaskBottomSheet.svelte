@@ -42,6 +42,7 @@
 	let dependsOn = $state<TaskDepRef[]>([]);
 	let blocks = $state<TaskDepRef[]>([]);
 	let initialBlocks = $state<TaskDepRef[]>([]);
+	let editingDescription = $state(false);
 
 	async function loadTask() {
 		if (taskId == null) return;
@@ -50,6 +51,7 @@
 		todos = sortTodos([...t.todos]);
 		name = t.name;
 		description = t.description ?? '';
+		editingDescription = !description;
 		dueAt = toLocalDatetime(t.due_at);
 		taskType = (t.task_type as 'standard' | 'continuous' | 'recurring') ?? 'standard';
 		recurrence = t.recurrence ?? null;
@@ -263,10 +265,30 @@
 				</div>
 			</div>
 			<div class="detail-field">
-				<label for="task-desc">Descripción</label>
-				<textarea id="task-desc" bind:value={description} rows="2"></textarea>
-				{#if description}
-					<span class="task-description">{@html linkify(description)}</span>
+				<div class="detail-field-header">
+					<label for="task-desc">Descripción</label>
+					{#if description && !editingDescription}
+						<button
+							type="button"
+							class="desc-edit-btn"
+							onclick={() => (editingDescription = true)}
+							aria-label="Editar descripción"
+						>
+							<i class="fa-solid fa-pen"></i>
+						</button>
+					{/if}
+				</div>
+				{#if editingDescription}
+					<textarea
+						id="task-desc"
+						bind:value={description}
+						rows="2"
+						onblur={() => {
+							if (description) editingDescription = false;
+						}}
+					></textarea>
+				{:else}
+					<div class="desc-view">{@html linkify(description)}</div>
 				{/if}
 			</div>
 

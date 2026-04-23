@@ -199,9 +199,33 @@
 	}
 }
 
+.linkify-link,
 .task-description a {
 	@apply text-primary underline;
-	pointer-events: all;
+	pointer-events: auto;
+	cursor: pointer;
+	word-break: break-all;
+}
+
+.linkify-link:hover,
+.task-description a:hover {
+	@apply text-primary/80;
+}
+
+.detail-field-header {
+	@apply flex items-center justify-between gap-2;
+}
+
+.desc-edit-btn {
+	@apply text-text-muted hover:text-text cursor-pointer border-none bg-transparent p-1 text-xs transition-colors;
+}
+
+.desc-view {
+	@apply text-text text-sm;
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow: visible;
+	min-height: 1.5rem;
 }
 
 .task-meta {
