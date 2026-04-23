@@ -3,6 +3,7 @@
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import TreeNodeItem from './TreeNodeItem.svelte';
 	import DepBadges from './DepBadges.svelte';
+	import { linkify } from '$shared/utils/linkify';
 	import { getContext } from 'svelte';
 
 	interface Props {
@@ -107,7 +108,7 @@
 				</span>
 			{/if}
 			{#if node.description}
-				<span class="task-description">{node.description}</span>
+				<span class="task-description">{@html linkify(node.description)}</span>
 			{/if}
 			<div class="task-meta">
 				<span

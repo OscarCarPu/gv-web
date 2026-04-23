@@ -2,6 +2,7 @@
 	import type { TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import DepBadges from './DepBadges.svelte';
+	import { linkify } from '$shared/utils/linkify';
 
 	interface Props {
 		task: TaskByDueDateResponse;
@@ -64,7 +65,7 @@
 			</span>
 		{/if}
 		{#if task.description}
-			<span class="task-description">{task.description}</span>
+			<span class="task-description">{@html linkify(task.description)}</span>
 		{/if}
 		<div class="task-meta">
 			<span
