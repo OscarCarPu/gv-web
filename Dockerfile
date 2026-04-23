@@ -1,4 +1,4 @@
-FROM oven/bun:latest AS builder
+FROM oven/bun:1.3.13 AS builder
 WORKDIR /app
 
 COPY package.json bun.lock ./
@@ -9,7 +9,7 @@ ENV VITE_API_URL=$VITE_API_URL
 
 RUN bun run build 
 
-FROM oven/bun:latest
+FROM oven/bun:1.3.13
 WORKDIR /app
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package.json ./package.json
