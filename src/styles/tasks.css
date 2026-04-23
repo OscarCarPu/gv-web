@@ -167,6 +167,16 @@
 			background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg));
 		}
 	}
+
+	&.overdue {
+		border-color: color-mix(in srgb, var(--color-danger) 40%, transparent);
+		background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg));
+
+		&:hover {
+			border-color: color-mix(in srgb, var(--color-danger) 60%, transparent);
+			background: color-mix(in srgb, var(--color-danger) 12%, var(--color-bg));
+		}
+	}
 }
 
 .task-info {

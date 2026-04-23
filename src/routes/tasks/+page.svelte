@@ -459,6 +459,7 @@
 					{@const prevDate = prevTask ? (prevTask.due_at ?? prevTask.project_due_at) : null}
 					{@const prevDateKey = prevDate ? prevDate.slice(0, 10) : 'no-date'}
 					{@const isToday = taskDateKey === todayKey}
+					{@const isOverdue = taskDateKey !== 'no-date' && taskDateKey < todayKey}
 					{#if (i > 0 && taskDateKey !== prevDateKey) || (i === 0 && isToday)}
 						<div class="agenda-day-divider" class:today={isToday}>
 							<span class="agenda-day-line"></span>
@@ -469,6 +470,7 @@
 					<TaskItem
 						{task}
 						{isToday}
+						{isOverdue}
 						onstart={() => handleTaskStartWithNotification(task.id, task.name, task.project_name)}
 						ontoggle={handleTaskToggle}
 						ondetail={openTaskDetail}

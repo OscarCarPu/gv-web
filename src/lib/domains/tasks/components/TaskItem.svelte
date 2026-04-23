@@ -10,6 +10,7 @@
 		ondetail?: (taskId: number) => void;
 		isTimerRunning?: boolean;
 		isToday?: boolean;
+		isOverdue?: boolean;
 	}
 
 	let {
@@ -19,6 +20,7 @@
 		ondetail,
 		isTimerRunning = false,
 		isToday = false,
+		isOverdue = false,
 	}: Props = $props();
 
 	const isStarted = $derived(task.started_at !== null);
@@ -40,7 +42,7 @@
 	const hasProjectDue = $derived(!hasOwnDue && task.project_due_at !== null);
 </script>
 
-<div class="task-item" class:today={isToday}>
+<div class="task-item" class:today={isToday} class:overdue={isOverdue}>
 	<div class="task-info">
 		<div class="task-name-row">
 			<button class="task-name-btn" onclick={() => ondetail?.(task.id)}>{task.name}</button>
