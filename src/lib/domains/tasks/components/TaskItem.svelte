@@ -9,9 +9,17 @@
 		ontoggle?: (taskId: number, action: 'start' | 'finish') => void;
 		ondetail?: (taskId: number) => void;
 		isTimerRunning?: boolean;
+		isToday?: boolean;
 	}
 
-	let { task, onstart, ontoggle, ondetail, isTimerRunning = false }: Props = $props();
+	let {
+		task,
+		onstart,
+		ontoggle,
+		ondetail,
+		isTimerRunning = false,
+		isToday = false,
+	}: Props = $props();
 
 	const isStarted = $derived(task.started_at !== null);
 	const statusLabel = $derived(getStatusLabel(task.started_at, task.task_type, task.recurrence));
@@ -32,7 +40,7 @@
 	const hasProjectDue = $derived(!hasOwnDue && task.project_due_at !== null);
 </script>
 
-<div class="task-item">
+<div class="task-item" class:today={isToday}>
 	<div class="task-info">
 		<div class="task-name-row">
 			<button class="task-name-btn" onclick={() => ondetail?.(task.id)}>{task.name}</button>

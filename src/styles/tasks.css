@@ -157,6 +157,16 @@
 		border-color: rgba(255, 255, 255, 0.04);
 		@apply bg-bg/80;
 	}
+
+	&.today {
+		border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+		background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg));
+
+		&:hover {
+			border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+			background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg));
+		}
+	}
 }
 
 .task-info {
@@ -483,6 +493,16 @@
 
 .agenda-day-label {
 	@apply text-text-muted text-xs font-semibold tracking-wide uppercase;
+}
+
+.agenda-day-divider.today {
+	.agenda-day-line {
+		background: color-mix(in srgb, var(--color-primary) 45%, transparent);
+	}
+
+	.agenda-day-label {
+		color: var(--color-primary);
+	}
 }
 
 .agenda-row {

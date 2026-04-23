@@ -39,6 +39,7 @@
 	let visibleDueDateTasks = $derived(filteredByDueDate.slice(0, dueDateVisibleCount));
 	let hasMoreDueDateTasks = $derived(dueDateVisibleCount < filteredByDueDate.length);
 	let remainingDueDateTasks = $derived(filteredByDueDate.length - dueDateVisibleCount);
+	let todayKey = $derived(toLocalDateString());
 
 	$effect(() => {
 		dueDatePriorityFilter;
@@ -441,8 +442,9 @@
 					{@const prevTask = visibleDueDateTasks[i - 1]}
 					{@const prevDate = prevTask ? (prevTask.due_at ?? prevTask.project_due_at) : null}
 					{@const prevDateKey = prevDate ? prevDate.slice(0, 10) : 'no-date'}
-					{#if i > 0 && taskDateKey !== prevDateKey}
-						<div class="agenda-day-divider">
+					{@const isToday = taskDateKey === todayKey}
+					{#if (i > 0 && taskDateKey !== prevDateKey) || (i === 0 && isToday)}
+						<div class="agenda-day-divider" class:today={isToday}>
 							<span class="agenda-day-line"></span>
 							<span class="agenda-day-label">{formatDueDay(taskDate)}</span>
 							<span class="agenda-day-line"></span>
@@ -450,6 +452,7 @@
 					{/if}
 					<TaskItem
 						{task}
+						{isToday}
 						onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)}
 						ontoggle={handleTaskToggle}
 						ondetail={openTaskDetail}
