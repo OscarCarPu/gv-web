@@ -18,6 +18,7 @@
 	} from '$lib/domains/tasks/types/Task.types';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import DepSelector from './DepSelector.svelte';
+	import { linkify } from '$shared/utils/linkify';
 
 	interface Props {
 		taskId: number | null;
@@ -264,6 +265,9 @@
 			<div class="detail-field">
 				<label for="task-desc">Descripción</label>
 				<textarea id="task-desc" bind:value={description} rows="2"></textarea>
+				{#if description}
+					<span class="task-description">{@html linkify(description)}</span>
+				{/if}
 			</div>
 
 			<div class="detail-info-row">

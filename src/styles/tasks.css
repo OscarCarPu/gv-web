@@ -199,6 +199,11 @@
 	}
 }
 
+.task-description a {
+	@apply text-primary underline;
+	pointer-events: all;
+}
+
 .task-meta {
 	@apply mt-1 flex items-center gap-3 text-xs;
 
