@@ -468,12 +468,8 @@
 					{/if}
 					<TaskItem
 						{task}
-<<<<<<< HEAD
-						onstart={() => handleTaskStartWithNotification(task.id, task.name, task.project_name)}
-=======
 						{isToday}
-						onstart={() => timer.handleTaskStart(task.id, task.name, task.project_name)}
->>>>>>> develop
+						onstart={() => handleTaskStartWithNotification(task.id, task.name, task.project_name)}
 						ontoggle={handleTaskToggle}
 						ondetail={openTaskDetail}
 						isTimerRunning={timer.isRunning}
