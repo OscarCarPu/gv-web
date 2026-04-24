@@ -135,6 +135,7 @@ Half-modal (BottomSheet) for viewing/editing a task.
 - **Project link**: Inline chip at title level, navigates to project page
 - **started_at / finished_at**: Read-only display when set. "Empezar"/"Finalizar" button when null — PATCHes to `now()`
 - **Dependencies**: Two DepSelector sections — "Depende de" and "Bloquea a". Each shows selected tasks as removable pills + a `<select>` dropdown to add more. Saving syncs reverse deps by fetching+updating each affected task
+- **Description view/edit toggle**: When a description exists, the sheet renders it as linkified read-only text (`.desc-view`) with an edit button. Clicking edit swaps in a textarea; blurring with content returns to view mode. Empty descriptions open directly in edit mode.
 - **Todos**: Checkbox toggle, delete, add new
 
 ### CreateBottomSheet (`src/lib/domains/tasks/components/CreateBottomSheet.svelte`)
@@ -240,6 +241,23 @@ Opens from chart icon on summary bars. Uses shared chart components (LayerCake).
 - Date range picker
 - Calls `tasksApi.getTimeEntryHistory()`
 
+## Description Linkification
+
+Task and project descriptions run through `linkify()` (`src/lib/shared/utils/linkify.ts`) before rendering, turning URLs into anchor tags with short, readable labels.
+
+- **Regex**: matches `https?://` and `file://` URLs, stripping trailing punctuation (`.,;:!?)`)
+- **Short labels**: `hostname/…/last-segment` for web URLs, `…/last-segment` for `file://`. URL-decoded so spaces and unicode render cleanly. Full URL is preserved in the `title` attribute
+- **Space handling**: raw URLs with spaces are encoded to `%20` so the `href` is valid
+- **Escaping**: both the `href` and visible label are HTML-escaped to prevent injection
+- **`file://` clipboard fallback**: browsers block navigation to `file://` URLs, so `installLinkifyHandler()` (called once from the root layout) installs a document-level click listener on `a.linkify-file` that `preventDefault`s and copies the URL to the clipboard via `navigator.clipboard.writeText`, with a success/error toast
+- **Styles**: `.linkify-link` / `.linkify-file` in `tasks.css`; `.desc-view` wraps the rendered HTML in `TaskBottomSheet`
+
+Used by TaskItem, TreeNodeItem, TaskBottomSheet, and project detail pages.
+
+## Overdue Indicator
+
+Tasks with `due_at < today` appear in red on "Próximas a vencer". `TaskItem` adds a `.overdue` class alongside the existing `.today` class when `isOverdue` is true, styled in `tasks.css`. The indicator does not apply to tasks without a due date or to tasks in the active-project tree.
+
 ## Shared Utilities
 
 ### `src/lib/shared/utils/datetime.ts`
@@ -248,9 +266,17 @@ Opens from chart icon on summary bars. Uses shared chart components (LayerCake).
 | -------------------------- | ------------------------------------------------------------------------------------------------ |
 | `toLocalDatetime(iso)`     | ISO string → `datetime-local` input value (slices to `YYYY-MM-DDTHH:MM`, no tz conversion)       |
 | `toISOString(local)`       | `datetime-local` value → ISO string preserving local date/time via offset compensation (or null) |
+| `toLocalDateString(date)`  | Date object → local `YYYY-MM-DD` (avoids UTC day-shift from `toISOString().split('T')[0]`)       |
 | `formatTime(seconds)`      | Seconds → "Xh Xm" display                                                                        |
 | `formatDateShort(dateStr)` | Date → "22 mar" (short, for lists)                                                               |
 | `formatDateFull(iso)`      | Date → "22 mar 2026, 14:30" (full, for detail views)                                             |
+
+### `src/lib/shared/utils/linkify.ts`
+
+| Function                  | Description                                                                 |
+| ------------------------- | --------------------------------------------------------------------------- |
+| `linkify(text)`           | Wraps URLs in `<a>` tags with short labels; returns HTML-safe string        |
+| `installLinkifyHandler()` | Idempotent document-level click handler for `file://` links (clipboard copy) |
 
 ## API Endpoints
 

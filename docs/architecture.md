@@ -93,43 +93,11 @@ Set in `hooks.server.ts` on every response:
 
 ## Styling
 
-Tailwind CSS 4 with the Vite plugin (`@tailwindcss/vite`). No `tailwind.config` file — configuration uses the CSS-native `@theme` directive.
+Tailwind CSS 4 with the Vite plugin (`@tailwindcss/vite`). No `tailwind.config` file — configuration uses the CSS-native `@theme` directive in `src/styles/app.css`. All styles live in global CSS files under `src/styles/`; no scoped `<style>` blocks.
 
-### Theme Tokens
+Single custom breakpoint: `desktop` at 1000px (default `sm`/`md`/`lg`/`xl`/`2xl` disabled).
 
-Defined in `src/styles/app.css` inside the `@theme` block:
-
-- `--color-primary`, `--color-secondary` — brand colors
-- `--color-bg`, `--color-bg-light` — dark background tones
-- `--color-text`, `--color-text-muted` — text colors
-- `--color-success`, `--color-info`, `--color-danger`, `--color-warning` — semantic colors
-- `--color-border`, `--color-border-light` — border colors (use these instead of hardcoded `rgba()`)
-- `--font-sans` — Inter font stack
-- `--font-mono` — JetBrains Mono (timers, numeric displays)
-
-### Responsive Design
-
-The app uses a single custom breakpoint — `desktop` at 1000px — instead of Tailwind's default set. All default breakpoints (`sm`, `md`, `lg`, `xl`, `2xl`) are disabled.
-
-- **Below 1000px:** Mobile/split-screen layout (single column). This is the default when two apps are placed side by side on a standard 1920px display (~960px each).
-- **1000px and above:** Desktop/full-screen layout (multi-column). Habits show 3 columns; tasks show 2 columns.
-
-Usage in CSS: `desktop:grid-cols-3`, `desktop:flex-row`, etc.
-
-### Shared Utilities (`@utility`)
-
-`components.css` defines reusable base utilities via Tailwind's `@utility` directive, making them composable with `@apply` across all CSS files:
-
-| Utility | Purpose |
-|---|---|
-| `btn` | Base button styles (flex, padding, rounded, font, cursor, transition) |
-| `status-badge` | Small pill badge (text-xs, rounded-full, muted colors) |
-
-These are extended by regular classes (e.g. `.btn-primary { @apply btn bg-primary ... }`). See `docs/styling.md` for the full class inventory.
-
-### Per-Feature CSS
-
-Feature CSS files (e.g. `habits.css`, `tasks.css`) use `@reference "./app.css"` to access theme tokens without duplicating Tailwind's output. Component `<style>` blocks follow the same pattern.
+See [styling.md](styling.md) for theme tokens, `@utility` directives, and the full class inventory.
 
 ## Environment
 

@@ -78,9 +78,12 @@ To deploy, merge `develop` into `main` and push — the workflow handles the res
 
 See the [`docs/`](docs/) folder for detailed documentation:
 
-- [Architecture](docs/architecture.md) — tech stack, project structure, API layer, auth, styling
+- [Architecture](docs/architecture.md) — tech stack, project structure, API layer, auth
+- [Styling](docs/styling.md) — theme tokens, `@utility` directives, class inventory
 - [Habits](docs/habits.md) — habit tracking feature
 - [Tasks](docs/tasks.md) — task/time management feature
+- [Chart](docs/chart.md) — time-series chart system (LayerCake)
+- [Notifications](docs/notifications.md) — 2-second action feedback cards
 
 ## Development Approach
 
