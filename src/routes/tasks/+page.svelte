@@ -38,6 +38,12 @@
 			: data.tasksByDueDate.filter((t) => t.priority <= dueDatePriorityFilter!)
 	);
 	let visibleDueDateTasks = $derived(filteredByDueDate.slice(0, dueDateVisibleCount));
+	let dueTodayCount = $derived(
+		filteredByDueDate.filter((t) => {
+			const d = t.due_at ?? t.project_due_at;
+			return d ? d.slice(0, 10) <= toLocalDateString() : false;
+		}).length
+	);
 	let hasMoreDueDateTasks = $derived(dueDateVisibleCount < filteredByDueDate.length);
 	let remainingDueDateTasks = $derived(filteredByDueDate.length - dueDateVisibleCount);
 	let todayKey = $derived(toLocalDateString());
@@ -426,7 +432,7 @@
 	<div class="tasks-content">
 		<div class="tasks-section">
 			<div class="section-header">
-				<h2>Próximas a vencer</h2>
+				<h2>Próximas a vencer <span class="summary-pace">{dueTodayCount}</span></h2>
 				<div class="priority-filter">
 					<button
 						class:active={dueDatePriorityFilter === null}
