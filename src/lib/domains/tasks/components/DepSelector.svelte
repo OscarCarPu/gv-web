@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import type { TaskDepRef, TaskListItem } from '$lib/domains/tasks/types/Task.types';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
 		selected: TaskDepRef[];
@@ -83,7 +84,7 @@
 				<span class="dep-pill">
 					{dep.name}
 					<button class="dep-pill-remove" onclick={() => remove(dep.id)} aria-label="Quitar {dep.name}">
-						<i class="fa-solid fa-xmark"></i>
+						<Icon name="xmark" />
 					</button>
 				</span>
 			{/each}

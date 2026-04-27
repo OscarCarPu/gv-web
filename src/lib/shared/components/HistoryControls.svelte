@@ -1,7 +1,9 @@
 <script lang="ts">
+	import Icon, { type IconName } from '$lib/shared/components/Icon.svelte';
+
 	interface Frequency {
 		value: string;
-		icon: string;
+		icon: IconName;
 	}
 
 	interface Props {
@@ -25,7 +27,7 @@
 				type="button"
 				aria-label={f.value}
 			>
-				<i class={f.icon}></i>
+				<Icon name={f.icon} />
 			</button>
 		{/each}
 	</div>

@@ -5,7 +5,6 @@
     "": {
       "name": "gv-web",
       "dependencies": {
-        "@fortawesome/fontawesome-free": "^7.1.0",
         "flowbite": "^4.0.1",
         "flowbite-svelte": "^1.31.0",
         "http-status-codes": "^2.3.0",
@@ -167,8 +166,6 @@
     "@floating-ui/dom": ["@floating-ui/dom@1.7.4", "", { "dependencies": { "@floating-ui/core": "^1.7.3", "@floating-ui/utils": "^0.2.10" } }, ""],
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.10", "", {}, ""],
-
-    "@fortawesome/fontawesome-free": ["@fortawesome/fontawesome-free@7.1.0", "", {}, ""],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, ""],
 
@@ -947,8 +944,6 @@
     "@eslint/eslintrc/globals": ["globals@14.0.0", "", {}, ""],
 
     "@rollup/plugin-commonjs/is-reference": ["is-reference@1.2.1", "", { "dependencies": { "@types/estree": "*" } }, ""],
-
-    "@rollup/pluginutils/estree-walker": ["estree-walker@2.0.2", "", {}, ""],
 
     "@testing-library/dom/aria-query": ["aria-query@5.3.0", "", { "dependencies": { "dequal": "^2.0.3" } }, ""],
 

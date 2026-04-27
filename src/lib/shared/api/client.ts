@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { browser } from '$app/environment';
 import { env } from '$lib/config/env';
 

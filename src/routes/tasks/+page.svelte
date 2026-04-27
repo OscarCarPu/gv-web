@@ -14,8 +14,9 @@
 		ActiveTreeNode,
 		TimeEntrySummaryResponse,
 	} from '$lib/domains/tasks/types/Task.types';
-	import { toLocalDateString, toISOString } from '$lib/shared/utils/datetime';
+	import { toLocalDateString, toISOString, formatDueDay } from '$lib/shared/utils/datetime';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let { data } = $props();
 
@@ -38,15 +39,18 @@
 			: data.tasksByDueDate.filter((t) => t.priority <= dueDatePriorityFilter!)
 	);
 	let visibleDueDateTasks = $derived(filteredByDueDate.slice(0, dueDateVisibleCount));
-	let dueTodayCount = $derived(
-		filteredByDueDate.filter((t) => {
+	let todayKey = $derived(toLocalDateString());
+	let dueTodayCount = $derived.by(() => {
+		const today = todayKey;
+		let n = 0;
+		for (const t of filteredByDueDate) {
 			const d = t.due_at ?? t.project_due_at;
-			return d ? d.slice(0, 10) <= toLocalDateString() : false;
-		}).length
-	);
+			if (d && d.slice(0, 10) <= today) n++;
+		}
+		return n;
+	});
 	let hasMoreDueDateTasks = $derived(dueDateVisibleCount < filteredByDueDate.length);
 	let remainingDueDateTasks = $derived(filteredByDueDate.length - dueDateVisibleCount);
-	let todayKey = $derived(toLocalDateString());
 
 	$effect(() => {
 		dueDatePriorityFilter;
@@ -75,13 +79,6 @@
 
 	function showMoreDueDateTasks() {
 		dueDateVisibleCount = Math.min(dueDateVisibleCount + EXPAND_STEP, filteredByDueDate.length);
-	}
-
-	function formatDueDay(iso: string | null): string {
-		if (!iso) return 'Sin fecha';
-		const d = new Date(iso);
-		const weekday = d.toLocaleDateString('es', { weekday: 'long' });
-		return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${d.getDate()}/${d.getMonth() + 1}`;
 	}
 
 	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
@@ -324,7 +321,7 @@
 				}}
 				title="Comentario"
 			>
-				<i class="fa-solid fa-comment"></i>
+				<Icon name="comment" />
 			</button>
 			<button
 				class="task-selector"
@@ -340,7 +337,7 @@
 				class="btn-cancel"
 				onclick={handleCancel}
 				disabled={!timer.activeTimeEntryId}
-				title="Cancelar entrada"><i class="fa-solid fa-xmark"></i></button
+				title="Cancelar entrada"><Icon name="xmark" /></button
 			>
 		</div>
 		{#if commentExpanded || timer.comment.length > 0}
@@ -361,7 +358,7 @@
 					<TimePicker value={entry.end} onchange={(v) => (entry.end = v)} />
 				{/each}
 				<button class="btn-primary" onclick={submitTimeEntry} disabled={!timer.activeTimeEntryId}
-					><i class="fa-solid fa-plus"></i> Agregar</button
+					><Icon name="plus" /> Agregar</button
 				>
 			</div>
 
@@ -374,12 +371,12 @@
 				{/if}
 				{#if timer.isRunning}
 					<button class="btn-primary running" onclick={handleStop}>
-						<i class="fa-solid fa-stop"></i>
+						<Icon name="stop" />
 						Stop
 					</button>
 				{:else}
 					<button class="btn-primary" onclick={timer.startTimer}>
-						<i class="fa-solid fa-play"></i>
+						<Icon name="play" />
 						Iniciar
 					</button>
 				{/if}
@@ -420,10 +417,10 @@
 					onclick={() => (showTimeHistory = true)}
 					aria-label="Ver historial"
 				>
-					<i class="fa-solid fa-chart-line"></i>
+					<Icon name="chart-line" />
 				</button>
 				<button class="btn-icon" onclick={() => (showAgenda = true)} aria-label="Ver agenda">
-					<i class="fa-solid fa-calendar-day"></i>
+					<Icon name="calendar-day" />
 				</button>
 			</div>
 		</div>
@@ -454,7 +451,7 @@
 						showCreate = true;
 					}}
 				>
-					<i class="fa-solid fa-plus"></i> Tarea
+					<Icon name="plus" /> Tarea
 				</button>
 			</div>
 			<div class="task-list">
@@ -487,7 +484,7 @@
 					<button class="show-more-btn" onclick={showMoreDueDateTasks}>
 						<span class="show-more-line"></span>
 						<span class="show-more-pill">
-							<i class="fa-solid fa-chevron-down"></i>
+							<Icon name="chevron-down" />
 							<span>{remainingDueDateTasks} más</span>
 						</span>
 						<span class="show-more-line"></span>
@@ -520,7 +517,7 @@
 						showCreate = true;
 					}}
 				>
-					<i class="fa-solid fa-plus"></i> Proyecto
+					<Icon name="plus" /> Proyecto
 				</button>
 			</div>
 			<div class="task-list">

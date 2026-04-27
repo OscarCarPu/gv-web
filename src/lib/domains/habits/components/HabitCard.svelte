@@ -5,6 +5,7 @@
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import { toLocalDateString } from '$shared/utils/datetime';
 	import HabitHistoryModal from './HabitHistoryModal.svelte';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let {
 		habit,
@@ -105,12 +106,12 @@
 
 <div class="habit-card">
 	<button class="history-btn" onclick={() => showHistory = !showHistory} aria-label="Ver historial">
-		<i class="fa-solid fa-chart-line"></i>
+		<Icon name="chart-line" />
 	</button>
 	<div class="habit-header">
 		<h2 class="title">{habit.name}</h2>
 		{#if habit.recording_required}
-			<i class="fa-solid fa-flag required-flag"></i>
+			<Icon name="flag" class="required-flag" />
 		{/if}
 		{#if habit.frequency !== 'daily'}
 			<span class="frequency-badge">{habit.frequency}</span>
@@ -123,13 +124,13 @@
 
 	<div class="value-controls">
 		<button class="adjust-btn" onclick={() => logValue(displayValue - 1)} aria-label="Decrease value">
-			<i class="fa-solid fa-minus"></i>
+			<Icon name="minus" />
 		</button>
 		<div class="value-input">
 			<input type="number" value={displayValue} onchange={handleValueChange} />
 		</div>
 		<button class="adjust-btn" onclick={() => logValue(displayValue + 1)} aria-label="Increase value">
-			<i class="fa-solid fa-plus"></i>
+			<Icon name="plus" />
 		</button>
 	</div>
 
@@ -147,10 +148,10 @@
 	{#if hasTarget}
 		<div class="streaks">
 			<span class="streak current" class:active={habit.current_streak > 0}>
-				<i class="fa-solid fa-fire"></i> {habit.current_streak}
+				<Icon name="fire" /> {habit.current_streak}
 			</span>
 			<span class="streak longest">
-				<i class="fa-solid fa-trophy"></i> {habit.longest_streak}
+				<Icon name="trophy" /> {habit.longest_streak}
 			</span>
 		</div>
 	{/if}

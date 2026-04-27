@@ -2,6 +2,7 @@
 	import type { ActiveTreeNode } from '$lib/domains/tasks/types/Task.types';
 	import TreeNodeItem from './TreeNodeItem.svelte';
 	import { setContext } from 'svelte';
+	import { formatDateShort } from '$shared/utils/datetime';
 
 	interface Props {
 		nodes: ActiveTreeNode[];
@@ -29,11 +30,7 @@
 		return expandedIds.has(id);
 	}
 
-	function formatDate(dateStr: string): string {
-		return new Date(dateStr).toLocaleDateString('es', { day: 'numeric', month: 'short' });
-	}
-
-	setContext('tree-state', { isExpanded, toggle, formatDate });
+	setContext('tree-state', { isExpanded, toggle, formatDate: formatDateShort });
 </script>
 
 {#each nodes as node (`${node.type}-${node.id}`)}

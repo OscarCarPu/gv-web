@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Datepicker, Popover, type DateOrRange } from 'flowbite-svelte';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let { value = $bindable(''), id = '' }: { value: string; id?: string } = $props();
 
@@ -94,7 +95,7 @@
 	</div>
 	{#if value}
 		<button type="button" class="pill-clear" onclick={clear} title="Quitar fecha">
-			<i class="fa-solid fa-xmark"></i>
+			<Icon name="xmark" />
 		</button>
 	{/if}
 	<Popover triggeredBy="#{triggerId}" trigger="click" bind:isOpen={popoverOpen}>

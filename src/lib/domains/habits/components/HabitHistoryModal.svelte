@@ -12,6 +12,7 @@
 	import AxisY from '$shared/components/chart/AxisY.svelte';
 	import Points from '$shared/components/chart/Points.svelte';
 	import { toLocalDateString } from '$shared/utils/datetime';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let {
 		habit,
@@ -49,9 +50,9 @@
 	});
 
 	const frequencies = [
-		{ value: 'daily', icon: 'fa-solid fa-calendar-day' },
-		{ value: 'weekly', icon: 'fa-solid fa-calendar-week' },
-		{ value: 'monthly', icon: 'fa-solid fa-calendar' },
+		{ value: 'daily', icon: 'calendar-day' },
+		{ value: 'weekly', icon: 'calendar-week' },
+		{ value: 'monthly', icon: 'calendar-solid' },
 	] as const;
 
 	async function fetchHistory() {
@@ -101,7 +102,7 @@
 		</div>
 	{:else if chartData.length === 0}
 		<div class="history-empty">
-			<i class="fa-solid fa-chart-line text-2xl"></i>
+			<Icon name="chart-line" class="text-2xl" />
 			<span>Sin datos para este período</span>
 			<span class="text-sm">Prueba ajustar las fechas</span>
 		</div>

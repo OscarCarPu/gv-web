@@ -3,6 +3,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import '$styles/login.css';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let { form } = $props();
 	let isLoading = $state(false);
@@ -57,16 +58,16 @@
 
 		<button type="submit" disabled={isLoading}>
 			{#if isLoading}
-				<i class="fas fa-spinner fa-spin"></i>
+				<Icon name="spinner" spin />
 				Verifying...
 			{:else}
-				<i class="fas fa-lock"></i>
+				<Icon name="lock" />
 				Verify
 			{/if}
 		</button>
 
 		<a href="/login" class="back-link">
-			<i class="fas fa-arrow-left"></i>
+			<Icon name="arrow-left" />
 			Back to login
 		</a>
 	</form>

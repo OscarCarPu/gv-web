@@ -19,6 +19,7 @@
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import DepSelector from './DepSelector.svelte';
 	import { linkify } from '$shared/utils/linkify';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
 		taskId: number | null;
@@ -83,8 +84,7 @@
 		try {
 			await tasksApi.updateTask(taskId, { started_at: new Date().toISOString() });
 			addNotification('Tarea iniciada', 'success');
-			await loadTask();
-			await invalidateAll();
+			await Promise.all([loadTask(), invalidateAll()]);
 		} catch {
 			addToast('Error al iniciar tarea', 'error');
 		}
@@ -95,8 +95,7 @@
 		try {
 			await tasksApi.updateTask(taskId, { finished_at: new Date().toISOString() });
 			addNotification('Tarea finalizada', 'success');
-			await loadTask();
-			await invalidateAll();
+			await Promise.all([loadTask(), invalidateAll()]);
 		} catch {
 			addToast('Error al finalizar tarea', 'error');
 		}
@@ -110,16 +109,18 @@
 		}
 		saving = true;
 		try {
-			await tasksApi.updateTask(taskId, {
-				name,
-				description: description || null,
-				due_at: toISOString(dueAt),
-				depends_on: dependsOn.map((d) => d.id),
-				task_type: taskType,
-				recurrence: taskType === 'recurring' ? recurrence : undefined,
-				priority,
-			});
-			await syncReverseDepends();
+			await Promise.all([
+				tasksApi.updateTask(taskId, {
+					name,
+					description: description || null,
+					due_at: toISOString(dueAt),
+					depends_on: dependsOn.map((d) => d.id),
+					task_type: taskType,
+					recurrence: taskType === 'recurring' ? recurrence : undefined,
+					priority,
+				}),
+				syncReverseDepends(),
+			]);
 			addNotification('Tarea actualizada', 'success');
 			await invalidateAll();
 			onclose();
@@ -136,19 +137,23 @@
 		const currentIds = new Set(blocks.map((d) => d.id));
 		const added = blocks.filter((d) => !initialIds.has(d.id));
 		const removed = initialBlocks.filter((d) => !currentIds.has(d.id));
+		if (added.length === 0 && removed.length === 0) return;
 
-		for (const dep of added) {
-			const otherTask = await tasksApi.getTask(dep.id);
-			const otherDeps = otherTask.depends_on.map((d) => d.id);
+		const targets = [...added, ...removed];
+		const fetched = await Promise.all(targets.map((d) => tasksApi.getTask(d.id)));
+		const updates: Promise<unknown>[] = [];
+		for (let i = 0; i < added.length; i++) {
+			const otherDeps = fetched[i].depends_on.map((d) => d.id);
 			if (!otherDeps.includes(taskId)) {
-				await tasksApi.updateTask(dep.id, { depends_on: [...otherDeps, taskId] });
+				updates.push(tasksApi.updateTask(added[i].id, { depends_on: [...otherDeps, taskId] }));
 			}
 		}
-		for (const dep of removed) {
-			const otherTask = await tasksApi.getTask(dep.id);
-			const otherDeps = otherTask.depends_on.map((d) => d.id).filter((id) => id !== taskId);
-			await tasksApi.updateTask(dep.id, { depends_on: otherDeps });
+		for (let i = 0; i < removed.length; i++) {
+			const other = fetched[added.length + i];
+			const otherDeps = other.depends_on.map((d) => d.id).filter((id) => id !== taskId);
+			updates.push(tasksApi.updateTask(removed[i].id, { depends_on: otherDeps }));
 		}
+		await Promise.all(updates);
 	}
 
 	async function remove() {
@@ -215,7 +220,7 @@
 		<div class="detail-title-row">
 			{#if task.project_id && projectName}
 				<button class="project-link-inline" onclick={goToProject}>
-					<i class="fa-solid fa-folder"></i>
+					<Icon name="folder" />
 					{projectName}
 				</button>
 			{/if}
@@ -274,7 +279,7 @@
 							onclick={() => (editingDescription = true)}
 							aria-label="Editar descripción"
 						>
-							<i class="fa-solid fa-pen"></i>
+							<Icon name="pen" />
 						</button>
 					{/if}
 				</div>
@@ -350,7 +355,7 @@
 								onclick={() => deleteTodo(todo.id)}
 								aria-label="Delete todo"
 							>
-								<i class="fa-solid fa-trash"></i>
+								<Icon name="trash" />
 							</button>
 						</div>
 					{/each}

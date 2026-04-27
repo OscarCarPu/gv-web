@@ -4,6 +4,7 @@
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
 	import { formatTime, toLocalDateString } from '$lib/shared/utils/datetime';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let {
 		open,
@@ -151,7 +152,7 @@
 			onclick={() => (mode = mode === 'day' ? 'week' : 'day')}
 			aria-label={mode === 'day' ? 'Ver semana' : 'Ver día'}
 		>
-			<i class="fa-solid {mode === 'day' ? 'fa-calendar-week' : 'fa-calendar-day'}"></i>
+			<Icon name={mode === 'day' ? 'calendar-week' : 'calendar-day'} />
 		</button>
 	</div>
 
@@ -162,7 +163,7 @@
 		</div>
 	{:else if entries.length === 0}
 		<div class="history-empty">
-			<i class="fa-solid fa-calendar-day text-2xl"></i>
+			<Icon name="calendar-day" class="text-2xl" />
 			<span>Sin entradas en las últimas 24 horas</span>
 		</div>
 	{:else}

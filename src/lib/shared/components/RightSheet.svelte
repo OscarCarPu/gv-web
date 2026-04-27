@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
 		open: boolean;
@@ -60,7 +61,7 @@
 			tabindex="-1"
 		>
 			<button class="right-sheet-close" onclick={close} aria-label="Cerrar">
-				<i class="fa-solid fa-xmark"></i>
+				<Icon name="xmark" />
 			</button>
 			{@render children()}
 		</div>

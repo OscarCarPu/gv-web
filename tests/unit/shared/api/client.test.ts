@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { z } from 'zod';
+import * as z from 'zod';
 
 vi.mock('$app/environment', () => ({ browser: true }));
 vi.mock('$lib/config/env', () => ({

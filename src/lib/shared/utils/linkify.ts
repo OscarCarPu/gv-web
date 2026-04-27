@@ -35,8 +35,13 @@ function encodeUrl(raw: string): string {
 	}
 }
 
+const linkifyCache = new Map<string, string>();
+const LINKIFY_CACHE_LIMIT = 500;
+
 export function linkify(text: string): string {
-	return text.replace(URL_RE, (url) => {
+	const cached = linkifyCache.get(text);
+	if (cached !== undefined) return cached;
+	const out = text.replace(URL_RE, (url) => {
 		const isFile = url.startsWith('file://');
 		const href = encodeUrl(url);
 		const label = shortLabel(url);
@@ -44,6 +49,9 @@ export function linkify(text: string): string {
 		const dataAttr = isFile ? ` data-file-url="${escapeAttr(url)}"` : '';
 		return `<a href="${escapeAttr(href)}" target="_blank" rel="noopener noreferrer" class="${cls}" title="${escapeAttr(url)}"${dataAttr}>${escapeText(label)}</a>`;
 	});
+	if (linkifyCache.size >= LINKIFY_CACHE_LIMIT) linkifyCache.clear();
+	linkifyCache.set(text, out);
+	return out;
 }
 
 let listenerInstalled = false;

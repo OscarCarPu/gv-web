@@ -10,6 +10,7 @@
 	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import DepBadges from '$lib/domains/tasks/components/DepBadges.svelte';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let { data } = $props();
 
@@ -114,12 +115,12 @@
 <div class="container">
 	<div class="project-nav">
 		<a href="/tasks" class="back-link">
-			<i class="fa-solid fa-arrow-left"></i>
+			<Icon name="arrow-left" />
 			Tareas
 		</a>
 		{#if project?.parent_id}
 			<a href="/tasks/projects/{project.parent_id}" class="back-link">
-				<i class="fa-solid fa-arrow-left"></i>
+				<Icon name="arrow-left" />
 				Proyecto padre
 			</a>
 		{/if}
@@ -179,10 +180,10 @@
 				<h2>Hijos</h2>
 				<div class="project-children-actions">
 					<button class="btn-primary btn-sm" onclick={openCreateTask}>
-						<i class="fa-solid fa-plus"></i> Tarea
+						<Icon name="plus" /> Tarea
 					</button>
 					<button class="btn-primary btn-sm" onclick={openCreateSubproject}>
-						<i class="fa-solid fa-plus"></i> Sub-proyecto
+						<Icon name="plus" /> Sub-proyecto
 					</button>
 				</div>
 			</div>
@@ -194,35 +195,35 @@
 					{#each children as child (child.id + '-' + child.type)}
 						{#if child.type === 'project'}
 							<a href="/tasks/projects/{child.id}" class="project-child-row">
-								<i class="fa-solid fa-folder tree-folder-icon"></i>
+								<Icon name="folder" class="tree-folder-icon" />
 								<span class="child-name">{child.name}</span>
 								{#if child.due_at}
-									<span class="child-due"><i class="fa-regular fa-calendar"></i> {formatDateShort(child.due_at)}</span>
+									<span class="child-due"><Icon name="calendar" /> {formatDateShort(child.due_at)}</span>
 								{/if}
 								{#if child.time_spent > 0}
-									<span class="child-time"><i class="fa-regular fa-clock"></i> {formatTime(child.time_spent)}</span>
+									<span class="child-time"><Icon name="clock" /> {formatTime(child.time_spent)}</span>
 								{/if}
 								<span class="status-badge" class:started={child.started_at != null} class:finished={child.finished_at != null}>
 									{child.finished_at ? 'Completado' : child.started_at ? 'En progreso' : 'Pendiente'}
 								</span>
-								<i class="fa-solid fa-chevron-right child-chevron"></i>
+								<Icon name="chevron-right" class="child-chevron" />
 							</a>
 						{:else}
 							<div class="project-child-task-wrapper">
 								<button class="project-child-row" onclick={() => selectedTaskId = child.id}>
-									<i class="fa-solid fa-check-circle child-task-icon"></i>
+									<Icon name="check-circle" class="child-task-icon" />
 									<span class="child-name">{child.name}</span>
 									{#if child.blocked}
-										<i class="fa-solid fa-ban blocked-icon" title="Bloqueada"></i>
+										<Icon name="ban" class="blocked-icon" title="Bloqueada" />
 									{/if}
 									{#if child.depends_on?.length}
 										<DepBadges deps={child.depends_on} ondetail={(id) => { selectedTaskId = id; }} />
 									{/if}
 									{#if child.due_at}
-										<span class="child-due"><i class="fa-regular fa-calendar"></i> {formatDateShort(child.due_at)}</span>
+										<span class="child-due"><Icon name="calendar" /> {formatDateShort(child.due_at)}</span>
 									{/if}
 									{#if child.time_spent > 0}
-										<span class="child-time"><i class="fa-regular fa-clock"></i> {formatTime(child.time_spent)}</span>
+										<span class="child-time"><Icon name="clock" /> {formatTime(child.time_spent)}</span>
 									{/if}
 									<span class="status-badge" class:started={child.started_at != null && child.task_type === 'standard'} class:continuous={child.started_at != null && child.task_type === 'continuous'} class:recurring={child.started_at != null && child.task_type === 'recurring'} class:finished={child.finished_at != null}>
 										{child.finished_at ? 'Completado' : getStatusLabel(child.started_at, child.task_type, child.recurrence)}

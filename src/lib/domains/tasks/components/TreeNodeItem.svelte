@@ -5,6 +5,7 @@
 	import DepBadges from './DepBadges.svelte';
 	import { linkify } from '$shared/utils/linkify';
 	import { getContext } from 'svelte';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
 		node: ActiveTreeNode;
@@ -46,21 +47,21 @@
 		<div class="tree-project-row">
 			{#if hasChildren}
 				<button class="tree-chevron-btn" onclick={() => toggle(node.id)} aria-label="Expandir">
-					<i class="fa-solid fa-chevron-right tree-chevron" class:expanded></i>
+					<Icon name="chevron-right" class={`tree-chevron${expanded ? ' expanded' : ''}`} />
 				</button>
 			{/if}
-			<i class="fa-solid fa-folder tree-folder-icon"></i>
+			<Icon name="folder" class="tree-folder-icon" />
 			<button class="task-name-btn" onclick={() => ondetail?.(node.id, 'project')}
 				>{node.name}</button
 			>
 			{#if node.due_at}
 				<span class="tree-project-due"
-					><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span
+					><Icon name="calendar" /> {formatDate(node.due_at)}</span
 				>
 			{/if}
 		</div>
 		<button class="btn-primary btn-sm" onclick={() => oncreatetask?.(node.id)} title="Agregar tarea"
-			><i class="fa-solid fa-plus"></i></button
+			><Icon name="plus" /></button
 		>
 		<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'project', 'finish')}
 			>Acabar</button
@@ -91,7 +92,7 @@
 					>{node.name}</button
 				>
 				{#if node.blocked}
-					<i class="fa-solid fa-ban blocked-icon" title="Bloqueada"></i>
+					<Icon name="ban" class="blocked-icon" title="Bloqueada" />
 				{/if}
 			</div>
 			{#if node.depends_on?.length}
@@ -102,7 +103,7 @@
 					{parentProjectName}
 					{#if parentProjectDueAt}
 						<span class="task-project-due"
-							><i class="fa-regular fa-calendar"></i> {formatDate(parentProjectDueAt)}</span
+							><Icon name="calendar" /> {formatDate(parentProjectDueAt)}</span
 						>
 					{/if}
 				</span>
@@ -124,7 +125,7 @@
 				{/if}
 				{#if node.due_at}
 					<span class="task-due"
-						><i class="fa-regular fa-calendar"></i> {formatDate(node.due_at)}</span
+						><Icon name="calendar" /> {formatDate(node.due_at)}</span
 					>
 				{/if}
 			</div>
@@ -148,7 +149,7 @@
 				onclick={() => onstart?.(node.id, node.name, parentProjectName)}
 				disabled={node.blocked}
 			>
-				<i class="fa-solid {isTimerRunning ? 'fa-arrow-right' : 'fa-play'}"></i>
+				<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />
 				{isTimerRunning ? 'Asignar' : 'Iniciar'}
 			</button>
 		</div>

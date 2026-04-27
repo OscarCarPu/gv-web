@@ -3,6 +3,8 @@
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import DepBadges from './DepBadges.svelte';
 	import { linkify } from '$shared/utils/linkify';
+	import { formatDateShort } from '$shared/utils/datetime';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
 		task: TaskByDueDateResponse;
@@ -35,10 +37,6 @@
 		return `${m}m`;
 	});
 
-	function formatDate(dateStr: string): string {
-		return new Date(dateStr).toLocaleDateString('es', { day: 'numeric', month: 'short' });
-	}
-
 	const hasOwnDue = $derived(task.due_at !== null);
 	const hasProjectDue = $derived(!hasOwnDue && task.project_due_at !== null);
 </script>
@@ -48,7 +46,7 @@
 		<div class="task-name-row">
 			<button class="task-name-btn" onclick={() => ondetail?.(task.id)}>{task.name}</button>
 			{#if task.blocked}
-				<i class="fa-solid fa-ban blocked-icon" title="Bloqueada"></i>
+				<Icon name="ban" class="blocked-icon" title="Bloqueada" />
 			{/if}
 		</div>
 		{#if task.depends_on?.length}
@@ -59,7 +57,7 @@
 				{task.project_name}
 				{#if hasProjectDue}
 					<span class="task-project-due"
-						><i class="fa-regular fa-calendar"></i> {formatDate(task.project_due_at!)}</span
+						><Icon name="calendar" /> {formatDateShort(task.project_due_at!)}</span
 					>
 				{/if}
 			</span>
@@ -79,10 +77,10 @@
 			<span class="priority-badge p-{task.priority}">P{task.priority}</span>
 			{#if hasOwnDue}
 				<span class="task-due"
-					><i class="fa-regular fa-calendar"></i> {formatDate(task.due_at!)}</span
+					><Icon name="calendar" /> {formatDateShort(task.due_at!)}</span
 				>
 			{/if}
-			<span class="task-time"><i class="fa-regular fa-clock"></i> {formattedTime()}</span>
+			<span class="task-time"><Icon name="clock" /> {formattedTime()}</span>
 		</div>
 	</div>
 	<div class="task-actions">
@@ -100,7 +98,7 @@
 			>
 		{/if}
 		<button class="btn-primary" onclick={onstart} disabled={task.blocked}>
-			<i class="fa-solid {isTimerRunning ? 'fa-arrow-right' : 'fa-play'}"></i>
+			<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />
 			{isTimerRunning ? 'Asignar' : 'Iniciar'}
 		</button>
 	</div>

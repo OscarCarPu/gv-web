@@ -1,5 +1,4 @@
 <script lang="ts">
-	import '@fortawesome/fontawesome-free/css/all.min.css';
 	import '$styles/app.css';
 	import '$styles/components.css';
 	import { enhance } from '$app/forms';
@@ -8,6 +7,7 @@
 	import ToastContainer from '$lib/shared/components/ToastContainer.svelte';
 	import NotificationContainer from '$lib/shared/components/NotificationContainer.svelte';
 	import { installLinkifyHandler } from '$lib/shared/utils/linkify';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let { data, children } = $props();
 
@@ -28,7 +28,7 @@
 		</nav>
 		<form method="POST" action="/logout" use:enhance>
 			<button type="submit" class="logout-btn" title="Logout">
-				<i class="fas fa-sign-out-alt"></i>
+				<Icon name="sign-out" />
 			</button>
 		</form>
 	</header>

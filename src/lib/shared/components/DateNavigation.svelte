@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createDateNavigation } from '$shared/utils/dateNavigation.svelte';
 	import { Datepicker, Popover, type DateOrRange } from 'flowbite-svelte';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let { onDateChange }: { onDateChange?: (date: Date) => void } = $props();
 	const navDate = createDateNavigation();
@@ -30,16 +31,16 @@
 
 <div class="date-navigation">
 	<button title="Volver a hoy" onclick={handleReturnToday}>
-		<i class="fa-solid fa-rotate-left"></i>
+		<Icon name="rotate-left" />
 	</button>
 	<button title="Un dia atrás" onclick={handleSubOneDay}>
-		<i class="fa-solid fa-arrow-left"></i>
+		<Icon name="arrow-left" />
 	</button>
 	<p id="date-trigger">{navDate.formatted}</p>
 	<Popover triggeredBy="#date-trigger" trigger="click">
 		<Datepicker value={navDate.current} onselect={handleDatepickerSelect} inline locale="es-ES" />
 	</Popover>
 	<button title="Un dia adelante" onclick={handleAddOneDay}>
-		<i class="fa-solid fa-arrow-right"></i>
+		<Icon name="arrow-right" />
 	</button>
 </div>

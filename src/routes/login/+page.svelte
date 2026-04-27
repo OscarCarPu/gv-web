@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import '$styles/login.css';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let { form } = $props();
 	let isLoading = $state(false);
@@ -41,11 +42,11 @@
 
 		<button type="submit" disabled={isLoading}>
 			{#if isLoading}
-				<i class="fas fa-spinner fa-spin"></i>
+				<Icon name="spinner" spin />
 				Verificando...
 			{:else}
 				Siguiente
-				<i class="fas fa-arrow-right"></i>
+				<Icon name="arrow-right" />
 			{/if}
 		</button>
 	</form>
