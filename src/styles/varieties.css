@@ -55,6 +55,26 @@
 	@apply text-warning;
 }
 
+.ranking-row.silver {
+	background: color-mix(in srgb, #c0c0c0 8%, var(--color-bg));
+	border-color: color-mix(in srgb, #c0c0c0 45%, transparent);
+}
+
+.ranking-row.silver .ranking-rank,
+.ranking-row.silver .ranking-score {
+	color: #b8b8b8;
+}
+
+.ranking-row.bronze {
+	background: color-mix(in srgb, #cd7f32 8%, var(--color-bg));
+	border-color: color-mix(in srgb, #cd7f32 40%, transparent);
+}
+
+.ranking-row.bronze .ranking-rank,
+.ranking-row.bronze .ranking-score {
+	color: #cd7f32;
+}
+
 /* Card */
 
 .variety-card {

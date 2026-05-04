@@ -41,6 +41,8 @@
 								type="button"
 								class="ranking-row"
 								class:podium={i === 0}
+								class:silver={i === 1}
+								class:bronze={i === 2}
 								onclick={() => focusVariety(v.id)}
 							>
 								<span class="ranking-rank">#{i + 1}</span>
