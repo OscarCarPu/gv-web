@@ -8,105 +8,107 @@ const SEMIPRIVATE_ROUTES = ['/varieties'];
 const AUTH_ONLY_ROUTES = ['/logout'];
 
 function isValidJWT(token: string): boolean {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return false;
+	try {
+		const parts = token.split('.');
+		if (parts.length !== 3) return false;
 
-    const payload = JSON.parse(atob(parts[1]));
+		const payload = JSON.parse(atob(parts[1]));
 
-    // Check expiration
-    if (payload.exp) {
-      const now = Math.floor(Date.now() / 1000);
-      if (payload.exp < now) return false;
-    }
+		// Check expiration
+		if (payload.exp) {
+			const now = Math.floor(Date.now() / 1000);
+			if (payload.exp < now) return false;
+		}
 
-    return true;
-  } catch {
-    return false;
-  }
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 function matchesRoute(pathname: string, routes: string[]): boolean {
-  return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+	return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const { pathname } = event.url;
-  let token = event.cookies.get('session');
-  if (!token) {
-    const authHeader = event.request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.split(' ')[1];
-    }
-  }
-  const semiprivateToken = event.cookies.get('semiprivate');
+	const { pathname } = event.url;
+	let token = event.cookies.get('session');
+	if (!token) {
+		const authHeader = event.request.headers.get('Authorization');
+		if (authHeader && authHeader.startsWith('Bearer ')) {
+			token = authHeader.split(' ')[1];
+		}
+	}
+	const semiprivateToken = event.cookies.get('semiprivate');
 
-  const validSession = !!token && isValidJWT(token);
-  const validSemiprivate = !!semiprivateToken && isValidJWT(semiprivateToken);
+	const validSession = !!token && isValidJWT(token);
+	const validSemiprivate = !!semiprivateToken && isValidJWT(semiprivateToken);
 
-  if (validSession) {
-    event.locals.token = token;
-  }
-  if (validSemiprivate) {
-    event.locals.semiprivateToken = semiprivateToken;
-  }
+	if (validSession) {
+		event.locals.token = token;
+	}
+	if (validSemiprivate) {
+		event.locals.semiprivateToken = semiprivateToken;
+	}
 
-  const isPublicRoute = matchesRoute(pathname, PUBLIC_ROUTES);
-  const isSemiprivateRoute = matchesRoute(pathname, SEMIPRIVATE_ROUTES);
-  const isAuthOnlyRoute = matchesRoute(pathname, AUTH_ONLY_ROUTES);
+	const isPublicRoute = matchesRoute(pathname, PUBLIC_ROUTES);
+	const isSemiprivateRoute = matchesRoute(pathname, SEMIPRIVATE_ROUTES);
+	const isAuthOnlyRoute = matchesRoute(pathname, AUTH_ONLY_ROUTES);
 
-  const isApiRequest = pathname.startsWith('/api') ||
-    event.request.headers.get('accept')?.includes('application/json');
+	const isApiRequest =
+		pathname.startsWith('/api') ||
+		event.request.headers.get('accept')?.includes('application/json');
 
-  if (isAuthOnlyRoute) {
-    // pass through — endpoints handle their own logic regardless of auth state
-  } else if (isPublicRoute) {
-    if (validSession) {
-      redirect(StatusCodes.SEE_OTHER, '/habits');
-    }
-    if (validSemiprivate) {
-      redirect(StatusCodes.SEE_OTHER, '/varieties');
-    }
-  } else if (isSemiprivateRoute) {
-    if (!validSession && !validSemiprivate) {
-      if (isApiRequest) {
-        return json({ error: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
-      }
-      redirect(StatusCodes.SEE_OTHER, '/login');
-    }
-  } else {
-    if (!validSession) {
-      if (isApiRequest) {
-        return json({ error: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
-      }
-      redirect(StatusCodes.SEE_OTHER, '/login');
-    }
-  }
+	if (isAuthOnlyRoute) {
+		// pass through — endpoints handle their own logic regardless of auth state
+	} else if (isPublicRoute) {
+		if (validSession) {
+			redirect(StatusCodes.SEE_OTHER, '/habits');
+		}
+		if (validSemiprivate) {
+			redirect(StatusCodes.SEE_OTHER, '/varieties');
+		}
+	} else if (isSemiprivateRoute) {
+		if (!validSession && !validSemiprivate) {
+			if (isApiRequest) {
+				return json({ error: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
+			}
+			redirect(StatusCodes.SEE_OTHER, '/login');
+		}
+	} else {
+		if (!validSession) {
+			if (isApiRequest) {
+				return json({ error: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
+			}
+			redirect(StatusCodes.SEE_OTHER, '/login');
+		}
+	}
 
-  const response = await resolve(event);
+	let apiOrigin = env.API_URL;
+	try {
+		apiOrigin = new URL(env.API_URL).origin;
+	} catch (e) {
+		console.warn('Invalid API URL for CSP');
+	}
 
-  let apiOrigin = env.API_URL;
-  try {
-    apiOrigin = new URL(env.API_URL).origin;
-  } catch (e) {
-    console.warn('Invalid API URL for CSP');
-  }
+	const preconnectTag = apiOrigin ? `<link rel="preconnect" href="${apiOrigin}" crossorigin>` : '';
 
-  // Security headers
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  const scriptSrc = dev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
-  response.headers.set(
-    'Content-Security-Policy',
-    `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' ${apiOrigin}`
-  );
+	const response = await resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('%api.preconnect%', preconnectTag),
+	});
 
-  response.headers.set(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=()'
-  );
+	// Security headers
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('X-XSS-Protection', '1; mode=block');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+	const scriptSrc = dev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
+	response.headers.set(
+		'Content-Security-Policy',
+		`default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' ${apiOrigin}`
+	);
 
-  return response;
+	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+	return response;
 };

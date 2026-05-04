@@ -1,9 +1,15 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
-	import { toLocalDatetime, toISOString, formatTime, formatDateShort, formatDateFull } from '$lib/shared/utils/datetime';
+	import {
+		toLocalDatetime,
+		toISOString,
+		formatTime,
+		formatDateShort,
+		formatDateFull,
+	} from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
 	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
@@ -42,10 +48,10 @@
 			await tasksApi.updateProject(project.id, {
 				name,
 				description: description || null,
-				due_at: toISOString(dueAt)
+				due_at: toISOString(dueAt),
 			});
 			addNotification('Proyecto actualizado', 'success');
-			await invalidateAll();
+			invalidate('app:tasks');
 		} catch {
 			addToast('Error al guardar proyecto', 'error');
 		} finally {
@@ -60,7 +66,7 @@
 		addNotification('Proyecto iniciado', 'success');
 		try {
 			await tasksApi.updateProject(id, { started_at: now });
-			await invalidateAll();
+			invalidate('app:tasks');
 		} catch {
 			addToast('Error al iniciar proyecto', 'error');
 		}
@@ -73,7 +79,7 @@
 		addNotification('Proyecto finalizado', 'success');
 		try {
 			await tasksApi.updateProject(id, { finished_at: now });
-			await invalidateAll();
+			invalidate('app:tasks');
 		} catch {
 			addToast('Error al finalizar proyecto', 'error');
 		}
@@ -86,10 +92,10 @@
 		goto('/tasks');
 		try {
 			await tasksApi.deleteProject(id);
-			await invalidateAll();
+			invalidate('app:tasks');
 		} catch {
 			addToast('Error al eliminar proyecto', 'error');
-			await invalidateAll();
+			invalidate('app:tasks');
 		}
 	}
 
@@ -104,12 +110,14 @@
 	}
 </script>
 
-<svelte:window onkeydown={(e) => {
-	if (e.key === 'Escape' && !selectedTaskId && !showCreate) {
-		e.preventDefault();
-		goto('/tasks');
-	}
-}} />
+<svelte:window
+	onkeydown={(e) => {
+		if (e.key === 'Escape' && !selectedTaskId && !showCreate) {
+			e.preventDefault();
+			goto('/tasks');
+		}
+	}}
+/>
 
 <svelte:head>
 	<title>{project?.name ?? 'Proyecto'}</title>
@@ -201,38 +209,71 @@
 								<Icon name="folder" class="tree-folder-icon" />
 								<span class="child-name">{child.name}</span>
 								{#if child.due_at}
-									<span class="child-due"><Icon name="calendar" /> {formatDateShort(child.due_at)}</span>
+									<span class="child-due"
+										><Icon name="calendar" /> {formatDateShort(child.due_at)}</span
+									>
 								{/if}
 								{#if child.time_spent > 0}
-									<span class="child-time"><Icon name="clock" /> {formatTime(child.time_spent)}</span>
+									<span class="child-time"
+										><Icon name="clock" /> {formatTime(child.time_spent)}</span
+									>
 								{/if}
-								<span class="status-badge" class:started={child.started_at != null} class:finished={child.finished_at != null}>
-									{child.finished_at ? 'Completado' : child.started_at ? 'En progreso' : 'Pendiente'}
+								<span
+									class="status-badge"
+									class:started={child.started_at != null}
+									class:finished={child.finished_at != null}
+								>
+									{child.finished_at
+										? 'Completado'
+										: child.started_at
+											? 'En progreso'
+											: 'Pendiente'}
 								</span>
 								<Icon name="chevron-right" class="child-chevron" />
 							</a>
 						{:else}
 							<div class="project-child-task-wrapper">
-								<button class="project-child-row" onclick={() => selectedTaskId = child.id}>
+								<button class="project-child-row" onclick={() => (selectedTaskId = child.id)}>
 									<Icon name="check-circle" class="child-task-icon" />
 									<span class="child-name">{child.name}</span>
 									{#if child.blocked}
 										<Icon name="ban" class="blocked-icon" title="Bloqueada" />
 									{/if}
 									{#if child.depends_on?.length}
-										<DepBadges deps={child.depends_on} ondetail={(id) => { selectedTaskId = id; }} />
+										<DepBadges
+											deps={child.depends_on}
+											ondetail={(id) => {
+												selectedTaskId = id;
+											}}
+										/>
 									{/if}
 									{#if child.due_at}
-										<span class="child-due"><Icon name="calendar" /> {formatDateShort(child.due_at)}</span>
+										<span class="child-due"
+											><Icon name="calendar" /> {formatDateShort(child.due_at)}</span
+										>
 									{/if}
 									{#if child.time_spent > 0}
-										<span class="child-time"><Icon name="clock" /> {formatTime(child.time_spent)}</span>
+										<span class="child-time"
+											><Icon name="clock" /> {formatTime(child.time_spent)}</span
+										>
 									{/if}
-									<span class="status-badge" class:started={child.started_at != null && child.task_type === 'standard'} class:continuous={child.started_at != null && child.task_type === 'continuous'} class:recurring={child.started_at != null && child.task_type === 'recurring'} class:finished={child.finished_at != null}>
-										{child.finished_at ? 'Completado' : getStatusLabel(child.started_at, child.task_type, child.recurrence)}
+									<span
+										class="status-badge"
+										class:started={child.started_at != null && child.task_type === 'standard'}
+										class:continuous={child.started_at != null && child.task_type === 'continuous'}
+										class:recurring={child.started_at != null && child.task_type === 'recurring'}
+										class:finished={child.finished_at != null}
+									>
+										{child.finished_at
+											? 'Completado'
+											: getStatusLabel(child.started_at, child.task_type, child.recurrence)}
 									</span>
 									{#if child.priority && child.priority <= 2}
-										<span class="priority-badge" class:p-1={child.priority === 1} class:p-2={child.priority === 2}>
+										<span
+											class="priority-badge"
+											class:p-1={child.priority === 1}
+											class:p-2={child.priority === 2}
+										>
 											P{child.priority}
 										</span>
 									{/if}
@@ -248,10 +289,10 @@
 	{/if}
 </div>
 
-<TaskBottomSheet taskId={selectedTaskId} onclose={() => selectedTaskId = null} />
+<TaskBottomSheet taskId={selectedTaskId} onclose={() => (selectedTaskId = null)} />
 <CreateBottomSheet
 	open={showCreate}
-	onclose={() => showCreate = false}
+	onclose={() => (showCreate = false)}
 	mode={createMode}
 	prefillProjectId={createMode === 'task' ? project?.id : null}
 	prefillParentId={createMode === 'project' ? project?.id : null}

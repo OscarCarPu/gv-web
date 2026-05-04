@@ -100,6 +100,7 @@ export const TaskDetailResponseSchema = z.object({
 export const TaskFullResponseSchema = z.object({
 	id: z.number(),
 	project_id: z.number().nullable(),
+	project_name: z.string().nullable(),
 	name: z.string(),
 	description: z.string().nullable(),
 	due_at: z.string().nullable(),

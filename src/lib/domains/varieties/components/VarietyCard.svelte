@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidate } from '$app/navigation';
 	import { varietiesApi } from '$lib/domains/varieties/api/varieties.api';
 	import type { Variety } from '$lib/domains/varieties/types/Variety.types';
 	import { linkify } from '$lib/shared/utils/linkify';
@@ -57,7 +57,7 @@
 				comments: comments.trim() ? comments.trim() : null,
 			});
 			addNotification('Variedad actualizada', 'success');
-			await invalidateAll();
+			invalidate('app:varieties');
 		} catch {
 			addToast('Error al guardar', 'error');
 		} finally {
@@ -69,7 +69,7 @@
 		try {
 			await varietiesApi.deleteVariety(variety.id);
 			addNotification('Variedad eliminada', 'success');
-			await invalidateAll();
+			invalidate('app:varieties');
 		} catch {
 			addToast('Error al eliminar', 'error');
 		}
@@ -85,9 +85,14 @@
 	}
 </script>
 
-<article id={`variety-card-${variety.id}`} class="variety-card" class:saving class:highlight={highlighted}>
+<article
+	id={`variety-card-${variety.id}`}
+	class="variety-card"
+	class:saving
+	class:highlight={highlighted}
+>
 	<input
-		class="text-text rounded-md border-none bg-transparent px-1 py-1 text-base font-bold focus:bg-bg outline-none transition-colors"
+		class="text-text focus:bg-bg rounded-md border-none bg-transparent px-1 py-1 text-base font-bold transition-colors outline-none"
 		type="text"
 		bind:value={name}
 		oninput={scheduleSave}
@@ -174,20 +179,12 @@
 			{/if}
 		</div>
 		{#if editingComments}
-			<textarea
-				bind:this={textareaEl}
-				bind:value={comments}
-				rows="3"
-				onblur={commitCommentsEdit}
+			<textarea bind:this={textareaEl} bind:value={comments} rows="3" onblur={commitCommentsEdit}
 			></textarea>
 		{:else if variety.comments}
 			<div class="desc-view">{@html linkify(variety.comments)}</div>
 		{:else}
-			<button
-				class="comments-empty"
-				onclick={() => (editingComments = true)}
-				type="button"
-			>
+			<button class="comments-empty" onclick={() => (editingComments = true)} type="button">
 				Añadir comentarios…
 			</button>
 		{/if}

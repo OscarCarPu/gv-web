@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { invalidate } from '$app/navigation';
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { toISOString } from '$lib/shared/utils/datetime';
@@ -95,7 +95,7 @@
 			}
 
 			onclose();
-			await invalidateAll();
+			invalidate('app:tasks');
 		} catch {
 			addToast('Error al crear', 'error');
 		} finally {

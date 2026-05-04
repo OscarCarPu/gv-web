@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { invalidate } from '$app/navigation';
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import { varietiesApi } from '$lib/domains/varieties/api/varieties.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
@@ -58,7 +58,7 @@
 			});
 			addNotification('Variedad creada', 'success');
 			onclose();
-			await invalidateAll();
+			invalidate('app:varieties');
 		} catch {
 			addToast('Error al crear', 'error');
 		} finally {
@@ -84,7 +84,7 @@
 			/>
 		</div>
 
-		<div class="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(120px,1fr))]">
+		<div class="grid [grid-template-columns:repeat(auto-fit,minmax(120px,1fr))] gap-3">
 			<div class="detail-field">
 				<label for="variety-scent">Aroma</label>
 				<input id="variety-scent" type="number" min="0" max="10" step="0.1" bind:value={scent} />
@@ -99,7 +99,14 @@
 			</div>
 			<div class="detail-field">
 				<label for="variety-quality">Efecto</label>
-				<input id="variety-quality" type="number" min="0" max="10" step="0.1" bind:value={quality} />
+				<input
+					id="variety-quality"
+					type="number"
+					min="0"
+					max="10"
+					step="0.1"
+					bind:value={quality}
+				/>
 			</div>
 			<div class="detail-field">
 				<label for="variety-price">Precio</label>
