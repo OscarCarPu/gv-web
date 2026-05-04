@@ -1,11 +1,7 @@
 import * as z from 'zod';
 import { fetchAPI } from '$lib/shared/api/client';
 import { VarietyResponseSchema, VarietyResponseListSchema } from './varieties.schemas';
-import type {
-	Variety,
-	CreateVarietyRequest,
-	UpdateVarietyRequest,
-} from '../types/Variety.types';
+import type { Variety, CreateVarietyRequest, UpdateVarietyRequest } from '../types/Variety.types';
 
 export const varietiesApi = {
 	async listVarieties(token?: string): Promise<Variety[]> {
@@ -24,11 +20,7 @@ export const varietiesApi = {
 		});
 	},
 
-	async updateVariety(
-		id: number,
-		input: UpdateVarietyRequest,
-		token?: string
-	): Promise<Variety> {
+	async updateVariety(id: number, input: UpdateVarietyRequest, token?: string): Promise<Variety> {
 		return fetchAPI(`/varieties/${id}`, VarietyResponseSchema, {
 			method: 'PUT',
 			body: JSON.stringify(input),

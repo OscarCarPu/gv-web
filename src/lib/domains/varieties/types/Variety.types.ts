@@ -8,6 +8,7 @@ export interface Variety {
 	score: number;
 	price: number;
 	comments: string | null;
+	judge: string;
 }
 
 export interface CreateVarietyRequest {
@@ -18,6 +19,7 @@ export interface CreateVarietyRequest {
 	quality: number;
 	price: number;
 	comments?: string | null;
+	judge: string;
 }
 
 export type UpdateVarietyRequest = CreateVarietyRequest;

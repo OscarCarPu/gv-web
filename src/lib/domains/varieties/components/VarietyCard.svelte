@@ -23,6 +23,7 @@
 	let quality = $state<number | null>(init.quality);
 	let price = $state<number | null>(init.price);
 	let comments = $state(init.comments ?? '');
+	let judge = $state(init.judge);
 	let editingComments = $state(false);
 
 	let saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -55,6 +56,7 @@
 				quality: clamp(quality),
 				price: price ?? 0,
 				comments: comments.trim() ? comments.trim() : null,
+				judge: judge.trim() || variety.judge,
 			});
 			addNotification('Variedad actualizada', 'success');
 			invalidate('app:varieties');
@@ -192,6 +194,17 @@
 
 	<footer class="flex items-center justify-between gap-2 pt-1">
 		<span class="score-badge" title="Puntuación">{variety.score.toFixed(2)}</span>
+		<label class="judge-label flex min-w-0 flex-1 items-baseline gap-1 text-xs">
+			<span class="text-text-muted shrink-0">Puntuado por</span>
+			<input
+				class="text-text focus:bg-bg min-w-0 flex-1 rounded-md border-none bg-transparent px-1 py-0.5 font-medium transition-colors outline-none"
+				type="text"
+				bind:value={judge}
+				oninput={scheduleSave}
+				maxlength={40}
+				aria-label="Juez"
+			/>
+		</label>
 		<button
 			class="btn-icon hover:text-danger"
 			onclick={handleDelete}

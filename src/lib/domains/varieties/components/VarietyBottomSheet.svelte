@@ -19,6 +19,7 @@
 	let quality = $state<number | null>(null);
 	let price = $state<number | null>(null);
 	let comments = $state('');
+	let judge = $state('Oscar');
 	let saving = $state(false);
 	let nameError = $state(false);
 
@@ -31,6 +32,7 @@
 			quality = null;
 			price = null;
 			comments = '';
+			judge = 'Oscar';
 			nameError = false;
 		}
 	});
@@ -55,6 +57,7 @@
 				quality: clamp(quality),
 				price: price ?? 0,
 				comments: comments.trim() ? comments.trim() : null,
+				judge: judge.trim() || 'Oscar',
 			});
 			addNotification('Variedad creada', 'success');
 			onclose();
@@ -112,6 +115,11 @@
 				<label for="variety-price">Precio</label>
 				<input id="variety-price" type="number" min="0" step="0.01" bind:value={price} />
 			</div>
+		</div>
+
+		<div class="detail-field">
+			<label for="variety-judge">Puntuado por</label>
+			<input id="variety-judge" type="text" bind:value={judge} maxlength={40} />
 		</div>
 
 		<div class="detail-field">

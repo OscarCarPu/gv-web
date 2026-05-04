@@ -10,6 +10,7 @@ export const VarietyResponseSchema = z.object({
 	score: z.number(),
 	price: z.number(),
 	comments: z.string().nullable(),
+	judge: z.string(),
 });
 
 export const VarietyResponseListSchema = z
