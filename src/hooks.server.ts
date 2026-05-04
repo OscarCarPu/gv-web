@@ -1,9 +1,10 @@
 import { redirect, type Handle, json } from '@sveltejs/kit';
 import { StatusCodes } from 'http-status-codes';
+import { dev } from '$app/environment';
 import { env } from '$lib/config/env';
 
 const PUBLIC_ROUTES = ['/login', '/login/2fa'];
-const SEMIPRIVATE_ROUTES = ['/weed'];
+const SEMIPRIVATE_ROUTES = ['/varieties'];
 const AUTH_ONLY_ROUTES = ['/logout'];
 
 function isValidJWT(token: string): boolean {
@@ -64,7 +65,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       redirect(StatusCodes.SEE_OTHER, '/habits');
     }
     if (validSemiprivate) {
-      redirect(StatusCodes.SEE_OTHER, '/weed');
+      redirect(StatusCodes.SEE_OTHER, '/varieties');
     }
   } else if (isSemiprivateRoute) {
     if (!validSession && !validSemiprivate) {
@@ -96,9 +97,10 @@ export const handle: Handle = async ({ event, resolve }) => {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  const scriptSrc = dev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
   response.headers.set(
     'Content-Security-Policy',
-    `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' ${apiOrigin}`
+    `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' ${apiOrigin}`
   );
 
   response.headers.set(

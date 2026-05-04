@@ -67,6 +67,10 @@
 	@apply cursor-default opacity-30;
 }
 
+.btn-icon {
+	@apply text-text-muted hover:text-text hover:bg-text-muted/10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-none bg-transparent transition-colors;
+}
+
 .input-transparent {
 	@apply border-none bg-transparent text-center focus:outline-none;
 }
@@ -360,6 +364,69 @@
 	&.finished {
 		@apply bg-success/20 text-success;
 	}
+}
+
+/* Form Layout */
+
+.detail-form {
+	@apply mt-3 flex flex-col gap-3;
+}
+
+.detail-field {
+	@apply flex flex-col gap-1;
+
+	& label {
+		@apply text-text-muted text-sm font-medium;
+	}
+
+	& input,
+	& textarea {
+		@apply bg-bg border-text-muted/20 text-text focus:border-primary/50 focus:ring-primary/30 rounded-lg border px-3 py-2 text-sm leading-normal transition-colors focus:ring-1 focus:outline-none;
+	}
+
+	& select {
+		@apply bg-bg border-text-muted/20 text-text focus:border-primary/50 focus:ring-primary/30 rounded-lg border px-3 py-2 text-sm leading-normal transition-colors focus:ring-1 focus:outline-none;
+		color-scheme: dark;
+	}
+}
+
+.detail-actions {
+	@apply mt-2 flex items-center justify-end gap-3;
+}
+
+.section-header {
+	@apply mb-4 flex items-center justify-between px-1;
+
+	& > h2 {
+		@apply text-lg font-semibold;
+	}
+}
+
+.detail-field-header {
+	@apply flex items-center justify-between gap-2;
+}
+
+.desc-edit-btn {
+	@apply text-text-muted hover:text-text cursor-pointer border-none bg-transparent p-1 text-xs transition-colors;
+}
+
+.desc-view {
+	@apply text-text text-sm;
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow: visible;
+	min-height: 1.5rem;
+}
+
+.linkify-link {
+	@apply text-primary underline;
+	pointer-events: auto;
+	cursor: pointer;
+	word-break: break-all;
+}
+
+.linkify-link:hover {
+	@apply text-primary/80;
 }
 
 /* Back Link */

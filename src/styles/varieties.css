@@ -1,0 +1,114 @@
+@reference "./app.css";
+
+.varieties-layout {
+	@apply mt-6 grid grid-cols-1 gap-6;
+}
+
+@media (min-width: 1000px) {
+	.varieties-layout {
+		grid-template-columns: 320px 1fr;
+		align-items: start;
+	}
+}
+
+/* Ranking */
+
+.ranking-list {
+	@apply bg-bg-light rounded-xl px-3 py-5;
+	border: 1px solid var(--color-border);
+}
+
+.ranking-row {
+	@apply bg-bg flex w-full cursor-pointer items-baseline gap-3 rounded-lg px-3 py-2 text-left text-sm;
+	border: 1px solid transparent;
+	transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.ranking-row:hover {
+	border-color: var(--color-border-light);
+	background: color-mix(in srgb, var(--color-bg-light) 80%, transparent);
+}
+
+.ranking-row .ranking-rank {
+	@apply text-text-muted w-7 shrink-0 font-mono text-xs tabular-nums;
+}
+
+.ranking-row .ranking-name {
+	@apply flex-1 truncate font-medium;
+}
+
+.ranking-row .ranking-score {
+	@apply text-text font-mono font-semibold tabular-nums;
+}
+
+.ranking-row .ranking-price {
+	@apply text-text-muted w-14 text-right font-mono text-xs tabular-nums;
+}
+
+.ranking-row.podium {
+	background: color-mix(in srgb, var(--color-warning) 8%, var(--color-bg));
+	border-color: color-mix(in srgb, var(--color-warning) 35%, transparent);
+}
+
+.ranking-row.podium .ranking-rank,
+.ranking-row.podium .ranking-score {
+	@apply text-warning;
+}
+
+/* Card */
+
+.variety-card {
+	@apply bg-bg-light flex flex-col gap-3 rounded-xl px-4 py-4;
+	border: 1px solid var(--color-border);
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	scroll-margin-top: 1rem;
+}
+
+.variety-card:hover {
+	border-color: var(--color-border-light);
+}
+
+.variety-card.saving {
+	border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.variety-card.highlight {
+	border-color: var(--color-primary);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+.score-badge {
+	@apply rounded-full px-3 py-1 font-mono text-sm font-bold tabular-nums;
+	background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+	color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.score-grid {
+	@apply grid grid-cols-2 gap-2;
+
+	.detail-field input {
+		@apply px-2 py-1 text-center font-mono tabular-nums;
+		-moz-appearance: textfield;
+		appearance: textfield;
+	}
+
+	.detail-field input::-webkit-outer-spin-button,
+	.detail-field input::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+
+	.detail-field label {
+		@apply text-center text-xs uppercase tracking-wide;
+	}
+}
+
+.comments-empty {
+	@apply text-text-muted/60 hover:text-text-muted w-full cursor-pointer rounded-md border border-dashed bg-transparent px-3 py-2 text-left text-sm transition-colors;
+	border-color: var(--color-border);
+}
+
+.comments-empty:hover {
+	border-color: var(--color-border-light);
+}

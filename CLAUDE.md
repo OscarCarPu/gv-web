@@ -40,11 +40,11 @@ All API calls go through `fetchAPI<T>()` which validates responses against Zod s
 
 ### Auth Flow
 
-Login (password) returns `{ token, kind: 'tmp' | 'semi' }` (`LoginResponseSchema`). `kind: 'tmp'` → continue to 2FA (TOTP) → full JWT stored as httpOnly cookie (`session`), exposed as `event.locals.token`. `kind: 'semi'` → token stored as httpOnly cookie (`semiprivate`), exposed as `event.locals.semiprivateToken`, redirect to `/weed`.
+Login (password) returns `{ token, kind: 'tmp' | 'semi' }` (`LoginResponseSchema`). `kind: 'tmp'` → continue to 2FA (TOTP) → full JWT stored as httpOnly cookie (`session`), exposed as `event.locals.token`. `kind: 'semi'` → token stored as httpOnly cookie (`semiprivate`), exposed as `event.locals.semiprivateToken`, redirect to `/varieties`.
 
 `hooks.server.ts` validates both JWTs on every request and guards routes by tier:
-- **Public** (`PUBLIC_ROUTES`): `/login`, `/login/2fa` — accessible without auth; redirect to `/habits` if `session` valid, to `/weed` if `semiprivate` valid.
-- **Semiprivate** (`SEMIPRIVATE_ROUTES`): `/weed` — accessible with either `session` or `semiprivate`.
+- **Public** (`PUBLIC_ROUTES`): `/login`, `/login/2fa` — accessible without auth; redirect to `/habits` if `session` valid, to `/varieties` if `semiprivate` valid.
+- **Semiprivate** (`SEMIPRIVATE_ROUTES`): `/varieties` — accessible with either `session` or `semiprivate`.
 - **Auth-only** (`AUTH_ONLY_ROUTES`): `/logout` — passes through regardless of auth state; the action clears both cookies.
 - **Private** (everything else): requires valid `session`.
 

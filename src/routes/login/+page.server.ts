@@ -39,7 +39,7 @@ export const actions = {
           sameSite: 'strict',
           maxAge: 60 * 60 * 24 * 30
         });
-        redirect(StatusCodes.SEE_OTHER, '/weed');
+        redirect(StatusCodes.SEE_OTHER, '/varieties');
       }
 
       redirect(StatusCodes.SEE_OTHER, `/login/2fa?token=${token}`);

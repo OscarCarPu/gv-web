@@ -109,14 +109,6 @@
 	}
 }
 
-.section-header {
-	@apply mb-4 flex items-center justify-between px-1;
-
-	& > h2 {
-		@apply text-lg font-semibold;
-	}
-}
-
 .task-list {
 	@apply flex flex-col gap-2;
 }
@@ -199,35 +191,6 @@
 	}
 }
 
-.linkify-link,
-.task-description a {
-	@apply text-primary underline;
-	pointer-events: auto;
-	cursor: pointer;
-	word-break: break-all;
-}
-
-.linkify-link:hover,
-.task-description a:hover {
-	@apply text-primary/80;
-}
-
-.detail-field-header {
-	@apply flex items-center justify-between gap-2;
-}
-
-.desc-edit-btn {
-	@apply text-text-muted hover:text-text cursor-pointer border-none bg-transparent p-1 text-xs transition-colors;
-}
-
-.desc-view {
-	@apply text-text text-sm;
-	white-space: pre-wrap;
-	word-break: break-word;
-	overflow: visible;
-	min-height: 1.5rem;
-}
-
 .task-meta {
 	@apply mt-1 flex items-center gap-3 text-xs;
 
@@ -284,23 +247,6 @@
 	@apply text-text cursor-pointer border-none bg-transparent p-0 text-left font-bold hover:underline;
 }
 
-.detail-form {
-	@apply mt-3 flex flex-col gap-3;
-}
-
-.detail-field {
-	@apply flex flex-col gap-1;
-
-	& label {
-		@apply text-text-muted text-sm font-medium;
-	}
-
-	& input,
-	& textarea {
-		@apply bg-bg border-text-muted/20 text-text focus:border-primary/50 focus:ring-primary/30 rounded-lg border px-3 py-2 text-sm leading-normal transition-colors focus:ring-1 focus:outline-none;
-	}
-}
-
 .todo-list {
 	@apply flex flex-col gap-2;
 }
@@ -337,10 +283,6 @@
 	}
 }
 
-.detail-actions {
-	@apply mt-2 flex items-center justify-end gap-3;
-}
-
 /* Task BottomSheet */
 
 .detail-title-row {
@@ -373,11 +315,6 @@
 
 .detail-info-value {
 	@apply text-text text-base font-semibold;
-}
-
-.detail-field select {
-	@apply bg-bg border-text-muted/20 text-text focus:border-primary/50 focus:ring-primary/30 rounded-lg border px-3 py-2 text-sm leading-normal transition-colors focus:ring-1 focus:outline-none;
-	color-scheme: dark;
 }
 
 .start-now-toggle {
