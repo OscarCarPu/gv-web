@@ -4,7 +4,7 @@ import { LoginResponseSchema } from '$lib/domains/auth/schemas/auth.schemas';
 import { StatusCodes } from 'http-status-codes';
 
 export const actions = {
-  login: async ({ request, fetch }: RequestEvent) => {
+  login: async ({ request, fetch, cookies }: RequestEvent) => {
     const formData = await request.formData();
     const password = formData.get('password');
 
@@ -29,7 +29,18 @@ export const actions = {
       }
 
       const data = await response.json();
-      const { token } = LoginResponseSchema.parse(data);
+      const { token, kind } = LoginResponseSchema.parse(data);
+
+      if (kind === 'semi') {
+        cookies.set('semiprivate', token, {
+          path: '/',
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+          maxAge: 60 * 60 * 24 * 30
+        });
+        redirect(StatusCodes.SEE_OTHER, '/weed');
+      }
 
       redirect(StatusCodes.SEE_OTHER, `/login/2fa?token=${token}`);
     } catch (error) {

@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { env } from '$lib/config/env';
 
 const PUBLIC_ROUTES = ['/login', '/login/2fa'];
+const SEMIPRIVATE_ROUTES = ['/weed'];
 const AUTH_ONLY_ROUTES = ['/logout'];
 
 function isValidJWT(token: string): boolean {
@@ -24,6 +25,10 @@ function isValidJWT(token: string): boolean {
   }
 }
 
+function matchesRoute(pathname: string, routes: string[]): boolean {
+  return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
   const { pathname } = event.url;
   let token = event.cookies.get('session');
@@ -33,27 +38,48 @@ export const handle: Handle = async ({ event, resolve }) => {
       token = authHeader.split(' ')[1];
     }
   }
-  const isPublicRoute = PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-  const isAuthOnlyRoute = AUTH_ONLY_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-  const validSession = token && isValidJWT(token);
+  const semiprivateToken = event.cookies.get('semiprivate');
+
+  const validSession = !!token && isValidJWT(token);
+  const validSemiprivate = !!semiprivateToken && isValidJWT(semiprivateToken);
+
   if (validSession) {
     event.locals.token = token;
   }
-  if (!validSession && !isPublicRoute) {
-    const isApiRequest = pathname.startsWith('/api') ||
-      event.request.headers.get('accept')?.includes('application/json');
-    if (isApiRequest) {
-      return json({ error: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
-    } else {
+  if (validSemiprivate) {
+    event.locals.semiprivateToken = semiprivateToken;
+  }
+
+  const isPublicRoute = matchesRoute(pathname, PUBLIC_ROUTES);
+  const isSemiprivateRoute = matchesRoute(pathname, SEMIPRIVATE_ROUTES);
+  const isAuthOnlyRoute = matchesRoute(pathname, AUTH_ONLY_ROUTES);
+
+  const isApiRequest = pathname.startsWith('/api') ||
+    event.request.headers.get('accept')?.includes('application/json');
+
+  if (isAuthOnlyRoute) {
+    // pass through — endpoints handle their own logic regardless of auth state
+  } else if (isPublicRoute) {
+    if (validSession) {
+      redirect(StatusCodes.SEE_OTHER, '/habits');
+    }
+    if (validSemiprivate) {
+      redirect(StatusCodes.SEE_OTHER, '/weed');
+    }
+  } else if (isSemiprivateRoute) {
+    if (!validSession && !validSemiprivate) {
+      if (isApiRequest) {
+        return json({ error: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
+      }
       redirect(StatusCodes.SEE_OTHER, '/login');
     }
-  }
-  if (validSession && isPublicRoute && !isAuthOnlyRoute) {
-    redirect(StatusCodes.SEE_OTHER, '/habits');
+  } else {
+    if (!validSession) {
+      if (isApiRequest) {
+        return json({ error: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
+      }
+      redirect(StatusCodes.SEE_OTHER, '/login');
+    }
   }
 
   const response = await resolve(event);

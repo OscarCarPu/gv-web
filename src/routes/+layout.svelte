@@ -20,11 +20,14 @@
 	});
 </script>
 
-{#if data.token}
+{#if data.token || data.semiprivateToken}
 	<header class="app-header">
 		<nav class="app-nav">
-			<a href="/habits" class="nav-link" class:active={page.url.pathname.startsWith('/habits')}>Hábitos</a>
-			<a href="/tasks" class="nav-link" class:active={page.url.pathname.startsWith('/tasks')}>Tareas</a>
+			{#if data.token}
+				<a href="/habits" class="nav-link" class:active={page.url.pathname.startsWith('/habits')}>Hábitos</a>
+				<a href="/tasks" class="nav-link" class:active={page.url.pathname.startsWith('/tasks')}>Tareas</a>
+			{/if}
+			<a href="/weed" class="nav-link" class:active={page.url.pathname.startsWith('/weed')}>Maria</a>
 		</nav>
 		<form method="POST" action="/logout" use:enhance>
 			<button type="submit" class="logout-btn" title="Logout">

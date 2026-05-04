@@ -41,12 +41,9 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		timerInterval = null;
 		if (commentTimeout) { clearTimeout(commentTimeout); commentTimeout = null; }
 
-		if (activeTimeEntryId) {
-			await api.updateTimeEntry(activeTimeEntryId, {
-				finished_at: new Date().toISOString(),
-				comment: comment || null
-			});
-		}
+		const entryId = activeTimeEntryId;
+		const finalComment = comment;
+		const finishedAt = new Date().toISOString();
 
 		isRunning = false;
 		elapsedSeconds = 0;
@@ -55,6 +52,13 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		selectedTaskDisplay = null;
 		activeTimeEntryId = null;
 		comment = '';
+
+		if (entryId) {
+			await api.updateTimeEntry(entryId, {
+				finished_at: finishedAt,
+				comment: finalComment || null
+			});
+		}
 	}
 
 	async function handleTaskStart(taskId: number, taskName: string, projectName?: string | null) {
@@ -81,9 +85,9 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 			});
 			activeTimeEntryId = entry.id;
 		} else {
-			await api.updateTimeEntry(activeTimeEntryId, { task_id: taskId });
 			selectedTaskId = taskId;
 			selectedTaskDisplay = display;
+			await api.updateTimeEntry(activeTimeEntryId, { task_id: taskId });
 		}
 	}
 
@@ -118,9 +122,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		timerInterval = null;
 		if (commentTimeout) { clearTimeout(commentTimeout); commentTimeout = null; }
 
-		if (activeTimeEntryId) {
-			await api.deleteTimeEntry(activeTimeEntryId);
-		}
+		const entryId = activeTimeEntryId;
 
 		isRunning = false;
 		elapsedSeconds = 0;
@@ -129,6 +131,10 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		selectedTaskDisplay = null;
 		activeTimeEntryId = null;
 		comment = '';
+
+		if (entryId) {
+			await api.deleteTimeEntry(entryId);
+		}
 	}
 
 	function reset() {

@@ -80,23 +80,33 @@
 	});
 
 	async function setStarted() {
-		if (taskId == null) return;
+		if (taskId == null || !task) return;
+		const id = taskId;
+		const now = new Date().toISOString();
+		const prev = task.started_at;
+		task.started_at = now;
+		addNotification('Tarea iniciada', 'success');
 		try {
-			await tasksApi.updateTask(taskId, { started_at: new Date().toISOString() });
-			addNotification('Tarea iniciada', 'success');
+			await tasksApi.updateTask(id, { started_at: now });
 			await Promise.all([loadTask(), invalidateAll()]);
 		} catch {
+			if (task) task.started_at = prev;
 			addToast('Error al iniciar tarea', 'error');
 		}
 	}
 
 	async function setFinished() {
-		if (taskId == null) return;
+		if (taskId == null || !task) return;
+		const id = taskId;
+		const now = new Date().toISOString();
+		const prev = task.finished_at;
+		task.finished_at = now;
+		addNotification('Tarea finalizada', 'success');
 		try {
-			await tasksApi.updateTask(taskId, { finished_at: new Date().toISOString() });
-			addNotification('Tarea finalizada', 'success');
+			await tasksApi.updateTask(id, { finished_at: now });
 			await Promise.all([loadTask(), invalidateAll()]);
 		} catch {
+			if (task) task.finished_at = prev;
 			addToast('Error al finalizar tarea', 'error');
 		}
 	}
@@ -158,16 +168,15 @@
 
 	async function remove() {
 		if (taskId == null) return;
-		saving = true;
+		const id = taskId;
+		onclose();
+		addNotification('Tarea eliminada', 'success');
 		try {
-			await tasksApi.deleteTask(taskId);
-			addNotification('Tarea eliminada', 'success');
-			onclose();
+			await tasksApi.deleteTask(id);
 			await invalidateAll();
 		} catch {
 			addToast('Error al eliminar tarea', 'error');
-		} finally {
-			saving = false;
+			await invalidateAll();
 		}
 	}
 
@@ -176,33 +185,44 @@
 	}
 
 	async function toggleTodo(todo: TodoResponse) {
+		const newDone = !todo.is_done;
+		todos = sortTodos(todos.map((t) => (t.id === todo.id ? { ...t, is_done: newDone } : t)));
+		addNotification(newDone ? 'Todo completado' : 'Todo pendiente', 'success');
 		try {
-			const updated = await tasksApi.updateTodo(todo.id, { is_done: !todo.is_done });
+			const updated = await tasksApi.updateTodo(todo.id, { is_done: newDone });
 			todos = sortTodos(todos.map((t) => (t.id === updated.id ? updated : t)));
-			addNotification(updated.is_done ? 'Todo completado' : 'Todo pendiente', 'success');
 		} catch {
+			todos = sortTodos(todos.map((t) => (t.id === todo.id ? todo : t)));
 			addToast('Error al actualizar todo', 'error');
 		}
 	}
 
 	async function deleteTodo(id: number) {
+		const removed = todos.find((t) => t.id === id);
+		todos = todos.filter((t) => t.id !== id);
+		addNotification('Todo eliminado', 'success');
 		try {
 			await tasksApi.deleteTodo(id);
-			todos = todos.filter((t) => t.id !== id);
-			addNotification('Todo eliminado', 'success');
 		} catch {
+			if (removed) todos = sortTodos([...todos, removed]);
 			addToast('Error al eliminar todo', 'error');
 		}
 	}
 
 	async function addTodo() {
 		if (!newTodoName.trim() || taskId == null) return;
+		const id = taskId;
+		const name = newTodoName.trim();
+		const tempId = -Date.now();
+		const optimistic: TodoResponse = { id: tempId, task_id: id, name, is_done: false };
+		todos = [...todos, optimistic];
+		newTodoName = '';
+		addNotification('Todo agregado', 'success');
 		try {
-			const created = await tasksApi.createTodo({ task_id: taskId, name: newTodoName.trim() });
-			todos = [...todos, created];
-			newTodoName = '';
-			addNotification('Todo agregado', 'success');
+			const created = await tasksApi.createTodo({ task_id: id, name });
+			todos = todos.map((t) => (t.id === tempId ? created : t));
 		} catch {
+			todos = todos.filter((t) => t.id !== tempId);
 			addToast('Error al agregar todo', 'error');
 		}
 	}

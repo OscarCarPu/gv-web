@@ -1,5 +1,5 @@
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
-  return { token: locals.token };
+  return { token: locals.token, semiprivateToken: locals.semiprivateToken };
 };

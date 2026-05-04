@@ -55,9 +55,11 @@
 
 	async function setStarted() {
 		if (!project) return;
+		const id = project.id;
+		const now = new Date().toISOString();
+		addNotification('Proyecto iniciado', 'success');
 		try {
-			await tasksApi.updateProject(project.id, { started_at: new Date().toISOString() });
-			addNotification('Proyecto iniciado', 'success');
+			await tasksApi.updateProject(id, { started_at: now });
 			await invalidateAll();
 		} catch {
 			addToast('Error al iniciar proyecto', 'error');
@@ -66,9 +68,11 @@
 
 	async function setFinished() {
 		if (!project) return;
+		const id = project.id;
+		const now = new Date().toISOString();
+		addNotification('Proyecto finalizado', 'success');
 		try {
-			await tasksApi.updateProject(project.id, { finished_at: new Date().toISOString() });
-			addNotification('Proyecto finalizado', 'success');
+			await tasksApi.updateProject(id, { finished_at: now });
 			await invalidateAll();
 		} catch {
 			addToast('Error al finalizar proyecto', 'error');
@@ -77,16 +81,15 @@
 
 	async function remove() {
 		if (!project) return;
-		saving = true;
+		const id = project.id;
+		addNotification('Proyecto eliminado', 'success');
+		goto('/tasks');
 		try {
-			await tasksApi.deleteProject(project.id);
-			addNotification('Proyecto eliminado', 'success');
+			await tasksApi.deleteProject(id);
 			await invalidateAll();
-			goto('/tasks');
 		} catch {
 			addToast('Error al eliminar proyecto', 'error');
-		} finally {
-			saving = false;
+			await invalidateAll();
 		}
 	}
 

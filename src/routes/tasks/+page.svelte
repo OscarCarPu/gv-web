@@ -17,6 +17,7 @@
 	import { toLocalDateString, toISOString, formatDueDay } from '$lib/shared/utils/datetime';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	let { data } = $props();
 
@@ -32,11 +33,14 @@
 	let dueDateVisibleCount = $state(FOLD_LIMIT);
 	let dueDatePriorityFilter = $state<number | null>(null);
 	let activeTreePriorityFilter = $state<number | null>(null);
+	let pendingTaskIds = $state(new SvelteSet<number>());
+	let pendingProjectIds = $state(new SvelteSet<number>());
 
 	let filteredByDueDate = $derived(
-		dueDatePriorityFilter === null
+		(dueDatePriorityFilter === null
 			? data.tasksByDueDate
 			: data.tasksByDueDate.filter((t) => t.priority <= dueDatePriorityFilter!)
+		).filter((t) => !pendingTaskIds.has(t.id))
 	);
 	let visibleDueDateTasks = $derived(filteredByDueDate.slice(0, dueDateVisibleCount));
 	let todayKey = $derived(toLocalDateString());
@@ -57,16 +61,25 @@
 		dueDateVisibleCount = FOLD_LIMIT;
 	});
 
-	function filterTreeByPriority(nodes: ActiveTreeNode[], min: number | null): ActiveTreeNode[] {
-		if (min === null) return nodes;
+	function filterTree(
+		nodes: ActiveTreeNode[],
+		min: number | null,
+		pendingTasks: SvelteSet<number>,
+		pendingProjects: SvelteSet<number>
+	): ActiveTreeNode[] {
 		const result: ActiveTreeNode[] = [];
 		for (const node of nodes) {
 			if (node.type === 'project') {
+				if (pendingProjects.has(node.id)) continue;
 				result.push({
 					...node,
-					children: node.children ? filterTreeByPriority(node.children, min) : undefined,
+					children: node.children
+						? filterTree(node.children, min, pendingTasks, pendingProjects)
+						: undefined,
 				});
-			} else if ((node.priority ?? 3) <= min) {
+			} else {
+				if (pendingTasks.has(node.id)) continue;
+				if (min !== null && (node.priority ?? 3) > min) continue;
 				result.push(node);
 			}
 		}
@@ -74,7 +87,7 @@
 	}
 
 	let filteredActiveTree = $derived(
-		filterTreeByPriority(data.activeTree, activeTreePriorityFilter)
+		filterTree(data.activeTree, activeTreePriorityFilter, pendingTaskIds, pendingProjectIds)
 	);
 
 	function showMoreDueDateTasks() {
@@ -140,17 +153,17 @@
 	}
 
 	async function handleStop() {
-		await timer.stopTimer();
-		addNotification('Tiempo registrado', 'success');
 		commentExpanded = false;
+		addNotification('Tiempo registrado', 'success');
+		await timer.stopTimer();
 		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
 
 	async function handleCancel() {
-		await timer.cancelTimer();
-		addNotification('Tiempo cancelado', 'success');
 		commentExpanded = false;
 		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
+		addNotification('Tiempo cancelado', 'success');
+		await timer.cancelTimer();
 		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
 
@@ -159,8 +172,8 @@
 	}
 
 	async function handleTaskStartWithNotification(taskId: number, taskName: string, projectName?: string | null) {
-		await timer.handleTaskStart(taskId, taskName, projectName);
 		addNotification('Temporizador iniciado', 'success');
+		await timer.handleTaskStart(taskId, taskName, projectName);
 	}
 
 	let selectedTaskId = $state<number | null>(null);
@@ -222,20 +235,23 @@
 
 	async function handleTaskToggle(taskId: number, action: 'start' | 'finish') {
 		const now = new Date().toISOString();
-		if (action === 'start') {
-			await tasksApi.updateTask(taskId, { started_at: now });
-			addNotification('Tarea iniciada', 'success');
-		} else {
-			const task = data.tasksByDueDate.find((t) => t.id === taskId);
-			if (task?.task_type === 'recurring' && task.recurrence) {
-				await tasksApi.updateTask(taskId, { due_at: buildRecurringDueAt(task.recurrence) });
+		const task = data.tasksByDueDate.find((t) => t.id === taskId);
+		pendingTaskIds.add(taskId);
+		try {
+			if (action === 'start') {
+				addNotification('Tarea iniciada', 'success');
+				await tasksApi.updateTask(taskId, { started_at: now });
+			} else if (task?.task_type === 'recurring' && task.recurrence) {
 				addNotification('Tarea renovada', 'success');
+				await tasksApi.updateTask(taskId, { due_at: buildRecurringDueAt(task.recurrence) });
 			} else {
-				await tasksApi.updateTask(taskId, { finished_at: now });
 				addNotification('Tarea finalizada', 'success');
+				await tasksApi.updateTask(taskId, { finished_at: now });
 			}
+			await invalidateAll();
+		} finally {
+			pendingTaskIds.delete(taskId);
 		}
-		await invalidateAll();
 	}
 
 	async function handleTreeToggle(
@@ -244,24 +260,30 @@
 		action: 'start' | 'finish'
 	) {
 		const now = new Date().toISOString();
-		if (type === 'project') {
-			const payload = action === 'start' ? { started_at: now } : { finished_at: now };
-			await tasksApi.updateProject(id, payload);
-			addNotification(action === 'start' ? 'Proyecto iniciado' : 'Proyecto finalizado', 'success');
-		} else if (action === 'start') {
-			await tasksApi.updateTask(id, { started_at: now });
-			addNotification('Tarea iniciada', 'success');
-		} else {
-			const task = findTreeTask(data.activeTree, id);
-			if (task?.task_type === 'recurring' && task.recurrence) {
-				await tasksApi.updateTask(id, { due_at: buildRecurringDueAt(task.recurrence) });
-				addNotification('Tarea renovada', 'success');
+		const pendingSet = type === 'project' ? pendingProjectIds : pendingTaskIds;
+		pendingSet.add(id);
+		try {
+			if (type === 'project') {
+				const payload = action === 'start' ? { started_at: now } : { finished_at: now };
+				addNotification(action === 'start' ? 'Proyecto iniciado' : 'Proyecto finalizado', 'success');
+				await tasksApi.updateProject(id, payload);
+			} else if (action === 'start') {
+				addNotification('Tarea iniciada', 'success');
+				await tasksApi.updateTask(id, { started_at: now });
 			} else {
-				await tasksApi.updateTask(id, { finished_at: now });
-				addNotification('Tarea finalizada', 'success');
+				const task = findTreeTask(data.activeTree, id);
+				if (task?.task_type === 'recurring' && task.recurrence) {
+					addNotification('Tarea renovada', 'success');
+					await tasksApi.updateTask(id, { due_at: buildRecurringDueAt(task.recurrence) });
+				} else {
+					addNotification('Tarea finalizada', 'success');
+					await tasksApi.updateTask(id, { finished_at: now });
+				}
 			}
+			await invalidateAll();
+		} finally {
+			pendingSet.delete(id);
 		}
-		await invalidateAll();
 	}
 
 	// Placeholder time entries
@@ -291,15 +313,17 @@
 			endM,
 			0
 		);
-		await tasksApi.updateTimeEntry(timer.activeTimeEntryId, {
-			started_at: startedAt.toISOString(),
-			finished_at: finishedAt.toISOString(),
-			comment: timer.comment || null,
-		});
-		addNotification('Tiempo registrado', 'success');
+		const entryId = timer.activeTimeEntryId;
+		const entryComment = timer.comment;
 		timer.reset();
 		commentExpanded = false;
 		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
+		addNotification('Tiempo registrado', 'success');
+		await tasksApi.updateTimeEntry(entryId, {
+			started_at: startedAt.toISOString(),
+			finished_at: finishedAt.toISOString(),
+			comment: entryComment || null,
+		});
 		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
 </script>
