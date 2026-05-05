@@ -40,14 +40,25 @@
 		const startFar = inner.length === 0 || Math.abs($xScale(inner[0]) - $xScale(start)) > minGap;
 		if (startFar) result.push(start);
 		result.push(...inner);
-		const endFar = inner.length === 0 || Math.abs($xScale(inner[inner.length - 1]) - $xScale(end)) > minGap;
+		const endFar =
+			inner.length === 0 || Math.abs($xScale(inner[inner.length - 1]) - $xScale(end)) > minGap;
 		if (endFar) result.push(end);
 		return result;
 	}
 
 	const monthNames = [
-		'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-		'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+		'Enero',
+		'Febrero',
+		'Marzo',
+		'Abril',
+		'Mayo',
+		'Junio',
+		'Julio',
+		'Agosto',
+		'Septiembre',
+		'Octubre',
+		'Noviembre',
+		'Diciembre',
 	];
 
 	function getISOWeek(d: Date): number {
@@ -83,5 +94,12 @@
 			</text>
 		</g>
 	{/each}
-	<line x1="0" x2={$width} y1={$height} y2={$height} stroke="var(--color-text-muted)" opacity="0.2" />
+	<line
+		x1="0"
+		x2={$width}
+		y1={$height}
+		y2={$height}
+		stroke="var(--color-text-muted)"
+		opacity="0.2"
+	/>
 </g>

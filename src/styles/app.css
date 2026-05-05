@@ -1,34 +1,33 @@
-@import "tailwindcss";
-@plugin "flowbite/plugin";
+@import 'tailwindcss';
+@plugin 'flowbite/plugin';
 @custom-variant dark (&);
-@source "../../node_modules/flowbite-svelte/dist";
+@source '../../node_modules/flowbite-svelte/dist';
 
 @theme {
-  --color-primary: #3b82f6;
-  --color-secondary: #a78bfa;
-  --color-bg: #0b0f1a;
-  --color-bg-light: #141926;
-  --color-surface: #1a2033;
-  --color-text: #e8ecf4;
-  --color-text-muted: #7b8ba5;
-  --color-success: #34d399;
-  --color-info: #3b82f6;
-  --color-danger: #f87171;
-  --color-warning: #fbbf24;
-  --color-continuous: #2dd4bf;
-  --color-recurring: #f59e0b;
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-border-light: rgba(255, 255, 255, 0.08);
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --breakpoint-desktop: 1000px;
-  --breakpoint-sm: initial;
-  --breakpoint-md: initial;
-  --breakpoint-lg: initial;
-  --breakpoint-xl: initial;
-  --breakpoint-2xl: initial;
+	--color-primary: #3b82f6;
+	--color-secondary: #a78bfa;
+	--color-bg: #0b0f1a;
+	--color-bg-light: #141926;
+	--color-surface: #1a2033;
+	--color-text: #e8ecf4;
+	--color-text-muted: #7b8ba5;
+	--color-success: #34d399;
+	--color-info: #3b82f6;
+	--color-danger: #f87171;
+	--color-warning: #fbbf24;
+	--color-continuous: #2dd4bf;
+	--color-recurring: #f59e0b;
+	--color-border: rgba(255, 255, 255, 0.06);
+	--color-border-light: rgba(255, 255, 255, 0.08);
+	--font-sans: 'Inter', system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
+	--breakpoint-desktop: 1000px;
+	--breakpoint-sm: initial;
+	--breakpoint-md: initial;
+	--breakpoint-lg: initial;
+	--breakpoint-xl: initial;
+	--breakpoint-2xl: initial;
 }
-
 
 /* Z-INDEX SCALE
    z-10  App header (sticky nav)
@@ -38,31 +37,31 @@
 /* BASE STYLES */
 
 .container {
-    @apply w-full max-w-none px-4 desktop:px-[10%];
+	@apply desktop:px-[10%] w-full max-w-none px-4;
 
-    & > h1 {
-        @apply text-center text-3xl font-bold;
-    }
+	& > h1 {
+		@apply text-center text-3xl font-bold;
+	}
 }
 
 main {
-    @apply bg-bg text-text w-full py-8 min-h-screen;
-    background-image:
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.04), transparent),
-        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(167, 139, 250, 0.03), transparent);
+	@apply bg-bg text-text min-h-screen w-full py-8;
+	background-image:
+		radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.04), transparent),
+		radial-gradient(ellipse 60% 40% at 80% 100%, rgba(167, 139, 250, 0.03), transparent);
 }
 
 /* DATE NAVIGATION */
 
 .date-navigation {
-    @apply flex items-center gap-4 mx-auto w-fit bg-bg-light rounded-xl px-5 py-3 mt-6;
-    border: 1px solid var(--color-border);
+	@apply bg-bg-light mx-auto mt-6 flex w-fit items-center gap-4 rounded-xl px-5 py-3;
+	border: 1px solid var(--color-border);
 
-    & > p {
-        @apply text-center text-lg font-medium cursor-pointer min-w-[17rem];
-    }
+	& > p {
+		@apply min-w-[17rem] cursor-pointer text-center text-lg font-medium;
+	}
 
-    & > button {
-        @apply flex-shrink-0 text-text-muted hover:text-text transition-colors text-lg;
-    }
+	& > button {
+		@apply text-text-muted hover:text-text flex-shrink-0 text-lg transition-colors;
+	}
 }

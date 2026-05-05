@@ -6,8 +6,18 @@
 	let hoveredIndex: number | null = $state(null);
 
 	const monthNames = [
-		'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-		'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+		'Enero',
+		'Febrero',
+		'Marzo',
+		'Abril',
+		'Mayo',
+		'Junio',
+		'Julio',
+		'Agosto',
+		'Septiembre',
+		'Octubre',
+		'Noviembre',
+		'Diciembre',
 	];
 
 	function getISOWeek(d: Date): number {
@@ -36,8 +46,8 @@
 			r="20"
 			fill="transparent"
 			style="cursor: pointer;"
-			onpointerenter={() => hoveredIndex = i}
-			onpointerleave={() => hoveredIndex = null}
+			onpointerenter={() => (hoveredIndex = i)}
+			onpointerleave={() => (hoveredIndex = null)}
 		/>
 		<!-- Visible point -->
 		<circle
@@ -62,13 +72,9 @@
 					stroke="var(--color-text-muted)"
 					stroke-opacity="0.3"
 				/>
-				<text
-					text-anchor="middle"
-					y="-9"
-					fill="var(--color-text)"
-					font-size="11"
-					font-weight="500"
-				>{label}</text>
+				<text text-anchor="middle" y="-9" fill="var(--color-text)" font-size="11" font-weight="500"
+					>{label}</text
+				>
 			</g>
 		{/if}
 	{/each}

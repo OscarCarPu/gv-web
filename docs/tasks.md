@@ -35,10 +35,10 @@ API accepts `depends_on: number[]` (array of task IDs) on create and update — 
 
 The `task_type` field controls behavior on completion:
 
-| Type         | Badge color        | Completion action                                    |
-| ------------ | ------------------ | ---------------------------------------------------- |
-| `standard`   | `--color-primary`  | Sets `finished_at`                                   |
-| `continuous` | `--color-continuous` | Sets `finished_at` (same as standard)              |
+| Type         | Badge color          | Completion action                                                                                                                                                                                          |
+| ------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `standard`   | `--color-primary`    | Sets `finished_at`                                                                                                                                                                                         |
+| `continuous` | `--color-continuous` | Sets `finished_at` (same as standard)                                                                                                                                                                      |
 | `recurring`  | `--color-recurring`  | Reschedules (`due_at = today + recurrence`) in "Próximas a vencer" / "Proyectos activos" — the button is labeled "Renovar" there. Sets `finished_at` everywhere else. Requires `recurrence: number` (days) |
 
 Status labels are produced by `getStatusLabel()` in `src/lib/domains/tasks/utils/statusLabel.ts`. The agenda uses a shortened "Recurrente · N".
@@ -55,20 +55,20 @@ Tasks have a `priority: number` field, 1 (highest/most urgent) to 5 (lowest), de
 
 ### Key Types (`src/lib/domains/tasks/types/Task.types.ts`)
 
-| Type                      | Key Fields                                                                                          |
-| ------------------------- | --------------------------------------------------------------------------------------------------- |
-| `ProjectResponse`         | id, name, description, due_at, parent_id, started_at, finished_at                                   |
-| `ProjectDetailResponse`   | Same + time_spent (aggregated)                                                                      |
-| `ProjectChildrenResponse` | project + children[] (mixed tasks and sub-projects)                                                 |
-| `TaskDepRef`              | id, name, due_at (dependency reference)                                                             |
-| `TaskListItem`            | id, name, project_id, project_name, task_type?, recurrence?, priority? (for list-fast endpoint)     |
+| Type                      | Key Fields                                                                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `ProjectResponse`         | id, name, description, due_at, parent_id, started_at, finished_at                                                                     |
+| `ProjectDetailResponse`   | Same + time_spent (aggregated)                                                                                                        |
+| `ProjectChildrenResponse` | project + children[] (mixed tasks and sub-projects)                                                                                   |
+| `TaskDepRef`              | id, name, due_at (dependency reference)                                                                                               |
+| `TaskListItem`            | id, name, project_id, project_name, task_type?, recurrence?, priority? (for list-fast endpoint)                                       |
 | `TaskResponse`            | id, name, description, due_at, project_id, started_at, finished_at, task_type, recurrence?, priority, depends_on[], blocks[], blocked |
-| `TaskFullResponse`        | Same + time_spent, todos[]                                                                          |
-| `TodoResponse`            | id, task_id, name, is_done                                                                          |
-| `TimeEntryResponse`       | id, task_id, started_at, finished_at, comment                                                       |
-| `ActiveTreeNode`          | Recursive tree: id, type, name, task_type?, recurrence?, priority?, children[], depends_on[], blocks[], blocked |
-| `TaskByDueDateResponse`   | Task with project_name, project_due_at, task_type, recurrence?, priority, depends_on[], blocks[], blocked |
-| `TimeEntryWithTask`       | Time entry with task_name, project_name, task_finished_at, time_spent                               |
+| `TaskFullResponse`        | Same + time_spent, todos[]                                                                                                            |
+| `TodoResponse`            | id, task_id, name, is_done                                                                                                            |
+| `TimeEntryResponse`       | id, task_id, started_at, finished_at, comment                                                                                         |
+| `ActiveTreeNode`          | Recursive tree: id, type, name, task_type?, recurrence?, priority?, children[], depends_on[], blocks[], blocked                       |
+| `TaskByDueDateResponse`   | Task with project_name, project_due_at, task_type, recurrence?, priority, depends_on[], blocks[], blocked                             |
+| `TimeEntryWithTask`       | Time entry with task_name, project_name, task_finished_at, time_spent                                                                 |
 
 ## Routes
 
@@ -273,34 +273,34 @@ Tasks with `due_at < today` appear in red on "Próximas a vencer". `TaskItem` ad
 
 ### `src/lib/shared/utils/linkify.ts`
 
-| Function                  | Description                                                                 |
-| ------------------------- | --------------------------------------------------------------------------- |
-| `linkify(text)`           | Wraps URLs in `<a>` tags with short labels; returns HTML-safe string        |
+| Function                  | Description                                                                  |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `linkify(text)`           | Wraps URLs in `<a>` tags with short labels; returns HTML-safe string         |
 | `installLinkifyHandler()` | Idempotent document-level click handler for `file://` links (clipboard copy) |
 
 ## API Endpoints
 
-| Method   | Endpoint                                    | Purpose                                      |
-| -------- | ------------------------------------------- | -------------------------------------------- |
+| Method   | Endpoint                                    | Purpose                                              |
+| -------- | ------------------------------------------- | ---------------------------------------------------- |
 | `GET`    | `/tasks/tree`                               | Active project/task tree (accepts `?min_priority=N`) |
 | `GET`    | `/tasks/tasks/by-due-date`                  | Tasks sorted by due date (accepts `?min_priority=N`) |
-| `GET`    | `/tasks/projects`                           | Root projects list                           |
-| `GET`    | `/tasks/projects/{id}`                      | Project detail with time_spent               |
-| `GET`    | `/tasks/projects/{id}/children`             | Project + child tasks/sub-projects           |
-| `POST`   | `/tasks/projects`                           | Create project                               |
-| `PATCH`  | `/tasks/projects/{id}`                      | Update project                               |
-| `DELETE` | `/tasks/projects/{id}`                      | Delete project                               |
-| `GET`    | `/tasks/tasks/list-fast`                    | All unfinished tasks (id, name only)         |
-| `GET`    | `/tasks/tasks/{id}`                         | Task detail with todos + dependencies        |
-| `POST`   | `/tasks/tasks`                              | Create task (accepts `depends_on: int[]`)    |
-| `PATCH`  | `/tasks/tasks/{id}`                         | Update task (accepts `depends_on: int[]`)    |
-| `DELETE` | `/tasks/tasks/{id}`                         | Delete task                                  |
-| CRUD     | `/tasks/todos`                              | Todo management                              |
-| CRUD     | `/tasks/time-entries`                       | Time entry management                        |
-| `GET`    | `/tasks/time-entries/active`                | Currently running time entry                 |
-| `GET`    | `/tasks/time-entries/summary`               | Today + week totals                          |
-| `GET`    | `/tasks/time-entries/history`               | Aggregated history (daily/weekly/monthly)    |
-| `GET`    | `/tasks/time-entries?start_time=&end_time=` | Time entries with task/project info (agenda) |
+| `GET`    | `/tasks/projects`                           | Root projects list                                   |
+| `GET`    | `/tasks/projects/{id}`                      | Project detail with time_spent                       |
+| `GET`    | `/tasks/projects/{id}/children`             | Project + child tasks/sub-projects                   |
+| `POST`   | `/tasks/projects`                           | Create project                                       |
+| `PATCH`  | `/tasks/projects/{id}`                      | Update project                                       |
+| `DELETE` | `/tasks/projects/{id}`                      | Delete project                                       |
+| `GET`    | `/tasks/tasks/list-fast`                    | All unfinished tasks (id, name only)                 |
+| `GET`    | `/tasks/tasks/{id}`                         | Task detail with todos + dependencies                |
+| `POST`   | `/tasks/tasks`                              | Create task (accepts `depends_on: int[]`)            |
+| `PATCH`  | `/tasks/tasks/{id}`                         | Update task (accepts `depends_on: int[]`)            |
+| `DELETE` | `/tasks/tasks/{id}`                         | Delete task                                          |
+| CRUD     | `/tasks/todos`                              | Todo management                                      |
+| CRUD     | `/tasks/time-entries`                       | Time entry management                                |
+| `GET`    | `/tasks/time-entries/active`                | Currently running time entry                         |
+| `GET`    | `/tasks/time-entries/summary`               | Today + week totals                                  |
+| `GET`    | `/tasks/time-entries/history`               | Aggregated history (daily/weekly/monthly)            |
+| `GET`    | `/tasks/time-entries?start_time=&end_time=` | Time entries with task/project info (agenda)         |
 
 ## Floating Reminder
 

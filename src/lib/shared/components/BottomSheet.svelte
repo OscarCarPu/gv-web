@@ -44,7 +44,15 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if visible}
-	<div class="bottom-sheet-backdrop" onclick={close} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') close(); }} role="button" tabindex="-1">
+	<div
+		class="bottom-sheet-backdrop"
+		onclick={close}
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') close();
+		}}
+		role="button"
+		tabindex="-1"
+	>
 		<div
 			class="bottom-sheet"
 			class:bottom-sheet-constrained={constrained}

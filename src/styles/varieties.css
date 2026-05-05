@@ -21,7 +21,9 @@
 .ranking-row {
 	@apply bg-bg flex w-full cursor-pointer items-baseline gap-3 rounded-lg px-3 py-2 text-left text-sm;
 	border: 1px solid transparent;
-	transition: border-color 0.2s ease, background 0.2s ease;
+	transition:
+		border-color 0.2s ease,
+		background 0.2s ease;
 }
 
 .ranking-row:hover {
@@ -80,7 +82,9 @@
 .variety-card {
 	@apply bg-bg-light flex flex-col gap-3 rounded-xl px-4 py-4;
 	border: 1px solid var(--color-border);
-	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	transition:
+		border-color 0.2s ease,
+		box-shadow 0.2s ease;
 	scroll-margin-top: 1rem;
 }
 
@@ -120,7 +124,7 @@
 	}
 
 	.detail-field label {
-		@apply text-center text-xs uppercase tracking-wide;
+		@apply text-center text-xs tracking-wide uppercase;
 	}
 }
 

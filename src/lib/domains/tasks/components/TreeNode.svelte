@@ -13,7 +13,14 @@
 		isTimerRunning?: boolean;
 	}
 
-	let { nodes, onstart, ontoggle, ondetail, oncreatetask, isTimerRunning = false }: Props = $props();
+	let {
+		nodes,
+		onstart,
+		ontoggle,
+		ondetail,
+		oncreatetask,
+		isTimerRunning = false,
+	}: Props = $props();
 
 	let expandedIds: Set<number> = $state(new Set());
 

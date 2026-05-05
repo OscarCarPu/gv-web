@@ -15,7 +15,14 @@
 		ondatechange: () => void;
 	}
 
-	let { frequencies, frequency, startAt = $bindable(), endAt = $bindable(), onfrequencychange, ondatechange }: Props = $props();
+	let {
+		frequencies,
+		frequency,
+		startAt = $bindable(),
+		endAt = $bindable(),
+		onfrequencychange,
+		ondatechange,
+	}: Props = $props();
 </script>
 
 <div class="history-controls">

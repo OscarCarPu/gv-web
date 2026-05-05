@@ -1,5 +1,8 @@
 import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
-import type { CreateTimeEntryRequest, UpdateTimeEntryRequest } from '$lib/domains/tasks/types/Task.types';
+import type {
+	CreateTimeEntryRequest,
+	UpdateTimeEntryRequest,
+} from '$lib/domains/tasks/types/Task.types';
 
 export interface TaskTimerApi {
 	createTimeEntry: (input: CreateTimeEntryRequest) => Promise<{ id: number }>;
@@ -39,7 +42,10 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	async function stopTimer() {
 		if (timerInterval) clearInterval(timerInterval);
 		timerInterval = null;
-		if (commentTimeout) { clearTimeout(commentTimeout); commentTimeout = null; }
+		if (commentTimeout) {
+			clearTimeout(commentTimeout);
+			commentTimeout = null;
+		}
 
 		const entryId = activeTimeEntryId;
 		const finalComment = comment;
@@ -56,7 +62,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		if (entryId) {
 			await api.updateTimeEntry(entryId, {
 				finished_at: finishedAt,
-				comment: finalComment || null
+				comment: finalComment || null,
 			});
 		}
 	}
@@ -72,7 +78,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 			const entry = await api.createTimeEntry({
 				task_id: taskId,
 				started_at: new Date(startedAt).toISOString(),
-				comment: comment || null
+				comment: comment || null,
 			});
 			activeTimeEntryId = entry.id;
 		} else if (!activeTimeEntryId) {
@@ -81,7 +87,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 			const entry = await api.createTimeEntry({
 				task_id: taskId,
 				started_at: new Date(startedAt!).toISOString(),
-				comment: comment || null
+				comment: comment || null,
 			});
 			activeTimeEntryId = entry.id;
 		} else {
@@ -91,7 +97,14 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		}
 	}
 
-	function restore(timeEntryId: number, taskId: number, entryStartedAt: string, taskName: string, projectName?: string | null, entryComment?: string | null) {
+	function restore(
+		timeEntryId: number,
+		taskId: number,
+		entryStartedAt: string,
+		taskName: string,
+		projectName?: string | null,
+		entryComment?: string | null
+	) {
 		selectedTaskId = taskId;
 		selectedTaskDisplay = projectName ? `${taskName} - ${projectName}` : taskName;
 		activeTimeEntryId = timeEntryId;
@@ -102,8 +115,12 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	}
 
 	function formatTime(seconds: number): string {
-		const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-		const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+		const h = Math.floor(seconds / 3600)
+			.toString()
+			.padStart(2, '0');
+		const m = Math.floor((seconds % 3600) / 60)
+			.toString()
+			.padStart(2, '0');
 		const s = (seconds % 60).toString().padStart(2, '0');
 		return `${h}:${m}:${s}`;
 	}
@@ -120,7 +137,10 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	async function cancelTimer() {
 		if (timerInterval) clearInterval(timerInterval);
 		timerInterval = null;
-		if (commentTimeout) { clearTimeout(commentTimeout); commentTimeout = null; }
+		if (commentTimeout) {
+			clearTimeout(commentTimeout);
+			commentTimeout = null;
+		}
 
 		const entryId = activeTimeEntryId;
 
@@ -140,7 +160,10 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	function reset() {
 		if (timerInterval) clearInterval(timerInterval);
 		timerInterval = null;
-		if (commentTimeout) { clearTimeout(commentTimeout); commentTimeout = null; }
+		if (commentTimeout) {
+			clearTimeout(commentTimeout);
+			commentTimeout = null;
+		}
 		isRunning = false;
 		elapsedSeconds = 0;
 		startedAt = null;
@@ -151,14 +174,30 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	}
 
 	return {
-		get selectedTaskId() { return selectedTaskId; },
-		get selectedTaskDisplay() { return selectedTaskDisplay; },
-		get activeTimeEntryId() { return activeTimeEntryId; },
-		get isRunning() { return isRunning; },
-		get elapsedSeconds() { return elapsedSeconds; },
-		get formattedTime() { return formatTime(elapsedSeconds); },
-		get startedAtDate() { return startedAt ? new Date(startedAt) : null; },
-		get comment() { return comment; },
+		get selectedTaskId() {
+			return selectedTaskId;
+		},
+		get selectedTaskDisplay() {
+			return selectedTaskDisplay;
+		},
+		get activeTimeEntryId() {
+			return activeTimeEntryId;
+		},
+		get isRunning() {
+			return isRunning;
+		},
+		get elapsedSeconds() {
+			return elapsedSeconds;
+		},
+		get formattedTime() {
+			return formatTime(elapsedSeconds);
+		},
+		get startedAtDate() {
+			return startedAt ? new Date(startedAt) : null;
+		},
+		get comment() {
+			return comment;
+		},
 		setComment(value: string) {
 			comment = value;
 			if (activeTimeEntryId) {

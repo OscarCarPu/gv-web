@@ -76,9 +76,7 @@
 			</span>
 			<span class="priority-badge p-{task.priority}">P{task.priority}</span>
 			{#if hasOwnDue}
-				<span class="task-due"
-					><Icon name="calendar" /> {formatDateShort(task.due_at!)}</span
-				>
+				<span class="task-due"><Icon name="calendar" /> {formatDateShort(task.due_at!)}</span>
 			{/if}
 			<span class="task-time"><Icon name="clock" /> {formattedTime()}</span>
 		</div>

@@ -91,7 +91,7 @@
 		{frequency}
 		bind:startAt
 		bind:endAt
-		onfrequencychange={(v) => frequencyOverride = v}
+		onfrequencychange={(v) => (frequencyOverride = v)}
 		ondatechange={fetchHistory}
 	/>
 
@@ -113,7 +113,7 @@
 				x="date"
 				y="value"
 				xScale={scaleTime()}
-				yDomain={yDomain}
+				{yDomain}
 				padding={{ top: 10, right: 15, bottom: 30, left: 40 }}
 				custom={{ frequency }}
 			>

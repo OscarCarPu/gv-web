@@ -17,9 +17,7 @@
 
 	const selectedIds = $derived(new Set(selected.map((d) => d.id)));
 
-	const available = $derived(
-		allTasks.filter((t) => t.id !== excludeId && !selectedIds.has(t.id))
-	);
+	const available = $derived(allTasks.filter((t) => t.id !== excludeId && !selectedIds.has(t.id)));
 
 	interface TaskGroup {
 		label: string;
@@ -35,7 +33,7 @@
 			if (!groupMap.has(key)) {
 				groupMap.set(key, {
 					label: t.project_name ?? 'Sin proyecto',
-					tasks: []
+					tasks: [],
 				});
 			}
 			groupMap.get(key)!.tasks.push(t);
@@ -77,13 +75,17 @@
 </script>
 
 <div class="detail-field">
-	<span class="label text-sm text-text-muted font-medium">{label}</span>
+	<span class="label text-text-muted text-sm font-medium">{label}</span>
 	{#if selected.length > 0}
 		<div class="dep-selected-pills">
 			{#each selected as dep (dep.id)}
 				<span class="dep-pill">
 					{dep.name}
-					<button class="dep-pill-remove" onclick={() => remove(dep.id)} aria-label="Quitar {dep.name}">
+					<button
+						class="dep-pill-remove"
+						onclick={() => remove(dep.id)}
+						aria-label="Quitar {dep.name}"
+					>
 						<Icon name="xmark" />
 					</button>
 				</span>

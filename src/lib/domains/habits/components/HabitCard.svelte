@@ -105,7 +105,11 @@
 </script>
 
 <div class="habit-card">
-	<button class="history-btn" onclick={() => showHistory = !showHistory} aria-label="Ver historial">
+	<button
+		class="history-btn"
+		onclick={() => (showHistory = !showHistory)}
+		aria-label="Ver historial"
+	>
 		<Icon name="chart-line" />
 	</button>
 	<div class="habit-header">
@@ -123,20 +127,28 @@
 	{/if}
 
 	<div class="value-controls">
-		<button class="adjust-btn" onclick={() => logValue(displayValue - 1)} aria-label="Decrease value">
+		<button
+			class="adjust-btn"
+			onclick={() => logValue(displayValue - 1)}
+			aria-label="Decrease value"
+		>
 			<Icon name="minus" />
 		</button>
 		<div class="value-input">
 			<input type="number" value={displayValue} onchange={handleValueChange} />
 		</div>
-		<button class="adjust-btn" onclick={() => logValue(displayValue + 1)} aria-label="Increase value">
+		<button
+			class="adjust-btn"
+			onclick={() => logValue(displayValue + 1)}
+			aria-label="Increase value"
+		>
 			<Icon name="plus" />
 		</button>
 	</div>
 
 	{#if hasTarget}
 		<div class="progress-section">
-			<div class="progress-track" class:met={targetMet} class:exceeded={exceeded}>
+			<div class="progress-track" class:met={targetMet} class:exceeded>
 				<div class="progress-fill" style="width: {progressPct}%"></div>
 			</div>
 			<span class="progress-text">{progressText}</span>
@@ -148,13 +160,15 @@
 	{#if hasTarget}
 		<div class="streaks">
 			<span class="streak current" class:active={habit.current_streak > 0}>
-				<Icon name="fire" /> {habit.current_streak}
+				<Icon name="fire" />
+				{habit.current_streak}
 			</span>
 			<span class="streak longest">
-				<Icon name="trophy" /> {habit.longest_streak}
+				<Icon name="trophy" />
+				{habit.longest_streak}
 			</span>
 		</div>
 	{/if}
 </div>
 
-<HabitHistoryModal {habit} open={showHistory} onclose={() => showHistory = false} />
+<HabitHistoryModal {habit} open={showHistory} onclose={() => (showHistory = false)} />

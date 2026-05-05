@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('$lib/shared/api/client', () => ({
-	fetchAPI: vi.fn()
+	fetchAPI: vi.fn(),
 }));
 
 import { fetchAPI } from '$lib/shared/api/client';
@@ -17,7 +17,9 @@ describe('tasksApi', () => {
 	it('getRootProjects calls correct endpoint', async () => {
 		mockFetchAPI.mockResolvedValue([]);
 		await tasksApi.getRootProjects('tok');
-		expect(mockFetchAPI).toHaveBeenCalledWith('/tasks/projects', expect.anything(), { token: 'tok' });
+		expect(mockFetchAPI).toHaveBeenCalledWith('/tasks/projects', expect.anything(), {
+			token: 'tok',
+		});
 	});
 
 	it('createTask sends POST with body', async () => {
@@ -26,7 +28,7 @@ describe('tasksApi', () => {
 		expect(mockFetchAPI).toHaveBeenCalledWith('/tasks/tasks', expect.anything(), {
 			method: 'POST',
 			body: '{"name":"T1"}',
-			token: 'tok'
+			token: 'tok',
 		});
 	});
 
@@ -35,7 +37,7 @@ describe('tasksApi', () => {
 		await tasksApi.deleteTask(1, 'tok');
 		expect(mockFetchAPI).toHaveBeenCalledWith('/tasks/tasks/1', expect.anything(), {
 			method: 'DELETE',
-			token: 'tok'
+			token: 'tok',
 		});
 	});
 
@@ -45,7 +47,7 @@ describe('tasksApi', () => {
 		expect(mockFetchAPI).toHaveBeenCalledWith('/tasks/time-entries', expect.anything(), {
 			method: 'POST',
 			body: '{"task_id":1,"started_at":"2026-01-01T00:00:00Z"}',
-			token: 'tok'
+			token: 'tok',
 		});
 	});
 

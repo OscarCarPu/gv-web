@@ -95,7 +95,7 @@
 					Aún no hay variedades. Pulsa <strong>+</strong> para añadir la primera.
 				</p>
 			{:else}
-				<div class="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
+				<div class="grid [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))] gap-4">
 					{#each data.varieties as variety (variety.id)}
 						<VarietyCard {variety} highlighted={highlightedId === variety.id} />
 					{/each}

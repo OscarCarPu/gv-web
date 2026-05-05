@@ -31,11 +31,11 @@ Renders time-based tick labels along the bottom edge.
 
 **Frequency-aware formatting:**
 
-| Frequency | Format | Example |
-|---|---|---|
-| `daily` | `dd mon` (es-ES locale) | `27 oct` |
-| `weekly` | `Sem. {ISO week}` | `Sem. 12` |
-| `monthly` | Full month name (Spanish) | `Enero` |
+| Frequency | Format                    | Example   |
+| --------- | ------------------------- | --------- |
+| `daily`   | `dd mon` (es-ES locale)   | `27 oct`  |
+| `weekly`  | `Sem. {ISO week}`         | `Sem. 12` |
+| `monthly` | Full month name (Spanish) | `Enero`   |
 
 **Boundary tick merging** — the component ensures the first and last data points always have labels. It computes d3's default ticks, then prepends/appends domain boundaries if they're far enough from existing ticks (>8% of chart width) to avoid overlap.
 
@@ -58,12 +58,14 @@ Same path as Line but closed to the bottom of the chart, filled with `--color-pr
 Renders interactive data point circles with hover tooltips.
 
 **Hit area pattern** — each point has two overlapping circles:
+
 1. An invisible circle (`r=20`, `fill="transparent"`) that captures pointer events
 2. A visible circle (`r=3`, `pointer-events: none`) that animates to `r=5` on hover
 
 This ensures the hover target is large enough for both mouse and touch input.
 
 **Tooltip** — on hover, a `<g>` group appears above the point containing:
+
 - A rect background (`--color-bg` fill, muted border)
 - Text showing `{value} · {formatted date}`
 

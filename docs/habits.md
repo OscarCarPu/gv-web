@@ -8,30 +8,30 @@ Date-based habit tracking. View habits as cards, log numeric values per day. Sup
 
 **`HabitWithLog`** — the core type returned by the API:
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | number | Habit ID |
-| `name` | string | Habit name |
-| `description` | string \| null | Optional description |
-| `frequency` | string | Tracking frequency: `daily`, `weekly`, or `monthly` |
-| `target_min` | number \| null | Minimum target value per period |
-| `target_max` | number \| null | Maximum target value per period |
-| `recording_required` | boolean | Whether missing days break the streak |
-| `log_value` | number \| null | Logged value for the selected date (`null` if unlogged) |
-| `period_value` | number | Sum of log values within the current period |
-| `current_streak` | number | Consecutive completed periods |
-| `longest_streak` | number | All-time highest streak |
+| Field                | Type           | Description                                             |
+| -------------------- | -------------- | ------------------------------------------------------- |
+| `id`                 | number         | Habit ID                                                |
+| `name`               | string         | Habit name                                              |
+| `description`        | string \| null | Optional description                                    |
+| `frequency`          | string         | Tracking frequency: `daily`, `weekly`, or `monthly`     |
+| `target_min`         | number \| null | Minimum target value per period                         |
+| `target_max`         | number \| null | Maximum target value per period                         |
+| `recording_required` | boolean        | Whether missing days break the streak                   |
+| `log_value`          | number \| null | Logged value for the selected date (`null` if unlogged) |
+| `period_value`       | number         | Sum of log values within the current period             |
+| `current_streak`     | number         | Consecutive completed periods                           |
+| `longest_streak`     | number         | All-time highest streak                                 |
 
 **`CreateHabitRequest`** — payload for creating a new habit:
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `name` | string | yes | Habit name |
-| `description` | string \| null | no | Optional description |
-| `frequency` | string | no | `daily` (default), `weekly`, or `monthly` |
-| `target_min` | number \| null | no | Minimum target per period |
-| `target_max` | number \| null | no | Maximum target per period |
-| `recording_required` | boolean | no | Default `true` |
+| Field                | Type           | Required | Description                               |
+| -------------------- | -------------- | -------- | ----------------------------------------- |
+| `name`               | string         | yes      | Habit name                                |
+| `description`        | string \| null | no       | Optional description                      |
+| `frequency`          | string         | no       | `daily` (default), `weekly`, or `monthly` |
+| `target_min`         | number \| null | no       | Minimum target per period                 |
+| `target_max`         | number \| null | no       | Maximum target per period                 |
+| `recording_required` | boolean        | no       | Default `true`                            |
 
 ## Floating Reminder
 
@@ -82,29 +82,29 @@ Only displayed when the habit has at least one target (`target_min` or `target_m
 
 **Progress calculation** varies by target type:
 
-| Target Type | Progress Formula |
-|---|---|
+| Target Type           | Progress Formula                     |
+| --------------------- | ------------------------------------ |
 | Range (`min` + `max`) | Position within `[min, max]`, 0–100% |
-| Min-only | `periodValue / min`, capped at 100% |
-| Max-only | `periodValue / max`, capped at 100% |
+| Min-only              | `periodValue / min`, capped at 100%  |
+| Max-only              | `periodValue / max`, capped at 100%  |
 
 **Color states** (mutually exclusive):
 
-| State | CSS Class | Color | Condition |
-|---|---|---|---|
-| Default | — | Blue (`bg-primary`) | Target not yet met |
-| Met | `.met` | Green (`bg-green-500`) | Period value satisfies target criteria |
-| Exceeded | `.exceeded` | Red (`bg-red-500`) | Period value exceeds `target_max` |
+| State    | CSS Class   | Color                  | Condition                              |
+| -------- | ----------- | ---------------------- | -------------------------------------- |
+| Default  | —           | Blue (`bg-primary`)    | Target not yet met                     |
+| Met      | `.met`      | Green (`bg-green-500`) | Period value satisfies target criteria |
+| Exceeded | `.exceeded` | Red (`bg-red-500`)     | Period value exceeds `target_max`      |
 
 `targetMet` returns `false` when value > max, so `met` and `exceeded` are mutually exclusive.
 
 **Progress text** shows the current period value alongside the target:
 
-| Target Type | Format | Example |
-|---|---|---|
-| Range | `value (min-max)` | `3 (2-5)` |
-| Min-only | `value/min` | `3/5` |
-| Max-only | `value/max` | `1500/2000` |
+| Target Type | Format            | Example     |
+| ----------- | ----------------- | ----------- |
+| Range       | `value (min-max)` | `3 (2-5)`   |
+| Min-only    | `value/min`       | `3/5`       |
+| Max-only    | `value/max`       | `1500/2000` |
 
 ### Streaks
 
@@ -115,13 +115,13 @@ Shown only for habits with targets. Two indicators:
 
 ## API Endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/habits?date=YYYY-MM-DD` | Fetch habits with log values for a date |
-| `POST` | `/habits` | Create a new habit |
-| `POST` | `/habits/log` | Log a value for a habit on a date |
-| `DELETE` | `/habits/{id}` | Delete a habit and its logs |
-| `GET` | `/habits/{id}/history?frequency=&start_at=&end_at=` | Fetch aggregated history (see [chart.md](chart.md)) |
+| Method   | Endpoint                                            | Purpose                                             |
+| -------- | --------------------------------------------------- | --------------------------------------------------- |
+| `GET`    | `/habits?date=YYYY-MM-DD`                           | Fetch habits with log values for a date             |
+| `POST`   | `/habits`                                           | Create a new habit                                  |
+| `POST`   | `/habits/log`                                       | Log a value for a habit on a date                   |
+| `DELETE` | `/habits/{id}`                                      | Delete a habit and its logs                         |
+| `GET`    | `/habits/{id}/history?frequency=&start_at=&end_at=` | Fetch aggregated history (see [chart.md](chart.md)) |
 
 ## User Flow
 

@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { toLocalDateString, toLocalDatetime, toISOString, formatTime } from '$shared/utils/datetime';
+import {
+	toLocalDateString,
+	toLocalDatetime,
+	toISOString,
+	formatTime,
+} from '$shared/utils/datetime';
 
 describe('toLocalDateString', () => {
 	it('should return YYYY-MM-DD for today when called without args', () => {

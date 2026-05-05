@@ -3,31 +3,22 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  plugins: [
-    sveltekit(),
-    tailwindcss()
-  ],
+	plugins: [sveltekit(), tailwindcss()],
 
-  resolve: {
-    conditions: ['browser']
-  },
+	resolve: {
+		conditions: ['browser'],
+	},
 
-  test: {
-    include: ['tests/**/*.{test,spec}.{js,ts}'],
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./tests/setup.ts'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'json-summary', 'html'],
-      include: ['src/lib/**/*.ts'],
-      exclude: ['tests/**', '**/*.config.*', '**/*.d.ts']
-    }
-  },
+	test: {
+		include: ['tests/**/*.{test,spec}.{js,ts}'],
+		environment: 'jsdom',
+		globals: true,
+		setupFiles: ['./tests/setup.ts'],
+	},
 
-  build: {
-    target: 'esnext',
-    minify: 'esbuild',
-    cssMinify: 'lightningcss'
-  }
+	build: {
+		target: 'esnext',
+		minify: 'esbuild',
+		cssMinify: 'lightningcss',
+	},
 });

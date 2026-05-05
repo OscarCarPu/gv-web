@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('$lib/shared/api/client', () => ({
-	fetchAPI: vi.fn()
+	fetchAPI: vi.fn(),
 }));
 
 import { fetchAPI } from '$lib/shared/api/client';
@@ -17,7 +17,9 @@ describe('habitsApi', () => {
 	it('getHabits appends date query param', async () => {
 		mockFetchAPI.mockResolvedValue([]);
 		await habitsApi.getHabits('2026-03-16', 'tok');
-		expect(mockFetchAPI).toHaveBeenCalledWith('/habits?date=2026-03-16', expect.anything(), { token: 'tok' });
+		expect(mockFetchAPI).toHaveBeenCalledWith('/habits?date=2026-03-16', expect.anything(), {
+			token: 'tok',
+		});
 	});
 
 	it('getHabits without date', async () => {
@@ -32,7 +34,7 @@ describe('habitsApi', () => {
 		expect(mockFetchAPI).toHaveBeenCalledWith('/habits', expect.anything(), {
 			method: 'POST',
 			body: '{"name":"Read"}',
-			token: 'tok'
+			token: 'tok',
 		});
 	});
 
@@ -41,7 +43,7 @@ describe('habitsApi', () => {
 		await habitsApi.deleteHabit(1, 'tok');
 		expect(mockFetchAPI).toHaveBeenCalledWith('/habits/1', expect.anything(), {
 			method: 'DELETE',
-			token: 'tok'
+			token: 'tok',
 		});
 	});
 });

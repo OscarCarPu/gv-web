@@ -8,7 +8,13 @@
 {#if toasts.length > 0}
 	<div class="toast-container">
 		{#each toasts as toast (toast.id)}
-			<div class="toast" class:toast-success={toast.type === 'success'} class:toast-error={toast.type === 'error'} role="status" aria-live="polite">
+			<div
+				class="toast"
+				class:toast-success={toast.type === 'success'}
+				class:toast-error={toast.type === 'error'}
+				role="status"
+				aria-live="polite"
+			>
 				<Icon name={toast.type === 'success' ? 'check-circle' : 'circle-exclamation'} />
 				{toast.message}
 			</div>

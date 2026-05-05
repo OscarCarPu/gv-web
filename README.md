@@ -26,11 +26,11 @@ Copy `.env.example` and adjust values:
 cp .env.example .env
 ```
 
-| Variable | Purpose |
-|---|---|
-| `VITE_API_URL` | API URL used by the browser (e.g. `http://localhost:8080`) |
-| `API_URL` | API URL used by the server / Docker (e.g. `http://gv-api:8080`) |
-| `ORIGIN` | Public URL of this app for CSRF (e.g. `http://localhost:3000`) |
+| Variable       | Purpose                                                         |
+| -------------- | --------------------------------------------------------------- |
+| `VITE_API_URL` | API URL used by the browser (e.g. `http://localhost:8080`)      |
+| `API_URL`      | API URL used by the server / Docker (e.g. `http://gv-api:8080`) |
+| `ORIGIN`       | Public URL of this app for CSRF (e.g. `http://localhost:3000`)  |
 
 ### Development
 
@@ -56,23 +56,23 @@ To deploy, merge `develop` into `main` and push — the workflow handles the res
 
 ## Coverage
 
-| File | Coverage |
-| :--- | :---: |
-| `src/lib/config/env.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| `src/lib/domains/auth/schemas/auth.schemas.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| `src/lib/domains/auth/types/Auth.types.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| `src/lib/domains/habits/api/habits.api.ts` | ![41.66%](https://img.shields.io/badge/41.66%25-brightgreen) |
-| `src/lib/domains/habits/api/habits.schemas.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| `src/lib/domains/habits/types/Habit.types.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| `src/lib/domains/tasks/api/tasks.api.ts` | ![22.22%](https://img.shields.io/badge/22.22%25-red) |
-| `src/lib/domains/tasks/api/tasks.schemas.ts` | ![94.44%](https://img.shields.io/badge/94.44%25-brightgreen) |
-| `src/lib/domains/tasks/taskTimer.svelte.ts` | ![69.41%](https://img.shields.io/badge/69.41%25-brightgreen) |
-| `src/lib/domains/tasks/types/Task.types.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| `src/lib/index.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| `src/lib/shared/api/client.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| `src/lib/shared/stores/auth.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| `src/lib/shared/utils/dateNavigation.svelte.ts` | ![100%](https://img.shields.io/badge/100%25-brightgreen) |
-| **Total** | ![68.39%](https://img.shields.io/badge/68.39%25-brightgreen) |
+| File                                            |                           Coverage                           |
+| :---------------------------------------------- | :----------------------------------------------------------: |
+| `src/lib/config/env.ts`                         |   ![100%](https://img.shields.io/badge/100%25-brightgreen)   |
+| `src/lib/domains/auth/schemas/auth.schemas.ts`  |   ![100%](https://img.shields.io/badge/100%25-brightgreen)   |
+| `src/lib/domains/auth/types/Auth.types.ts`      |   ![100%](https://img.shields.io/badge/100%25-brightgreen)   |
+| `src/lib/domains/habits/api/habits.api.ts`      | ![41.66%](https://img.shields.io/badge/41.66%25-brightgreen) |
+| `src/lib/domains/habits/api/habits.schemas.ts`  |   ![100%](https://img.shields.io/badge/100%25-brightgreen)   |
+| `src/lib/domains/habits/types/Habit.types.ts`   |   ![100%](https://img.shields.io/badge/100%25-brightgreen)   |
+| `src/lib/domains/tasks/api/tasks.api.ts`        |     ![22.22%](https://img.shields.io/badge/22.22%25-red)     |
+| `src/lib/domains/tasks/api/tasks.schemas.ts`    | ![94.44%](https://img.shields.io/badge/94.44%25-brightgreen) |
+| `src/lib/domains/tasks/taskTimer.svelte.ts`     | ![69.41%](https://img.shields.io/badge/69.41%25-brightgreen) |
+| `src/lib/domains/tasks/types/Task.types.ts`     |   ![100%](https://img.shields.io/badge/100%25-brightgreen)   |
+| `src/lib/index.ts`                              |   ![100%](https://img.shields.io/badge/100%25-brightgreen)   |
+| `src/lib/shared/api/client.ts`                  |   ![100%](https://img.shields.io/badge/100%25-brightgreen)   |
+| `src/lib/shared/stores/auth.ts`                 |   ![100%](https://img.shields.io/badge/100%25-brightgreen)   |
+| `src/lib/shared/utils/dateNavigation.svelte.ts` |   ![100%](https://img.shields.io/badge/100%25-brightgreen)   |
+| **Total**                                       | ![68.39%](https://img.shields.io/badge/68.39%25-brightgreen) |
 
 ## Documentation
 

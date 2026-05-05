@@ -55,9 +55,7 @@
 				>{node.name}</button
 			>
 			{#if node.due_at}
-				<span class="tree-project-due"
-					><Icon name="calendar" /> {formatDate(node.due_at)}</span
-				>
+				<span class="tree-project-due"><Icon name="calendar" /> {formatDate(node.due_at)}</span>
 			{/if}
 		</div>
 		<button class="btn-primary btn-sm" onclick={() => oncreatetask?.(node.id)} title="Agregar tarea"
@@ -124,9 +122,7 @@
 					<span class="priority-badge p-{node.priority}">P{node.priority}</span>
 				{/if}
 				{#if node.due_at}
-					<span class="task-due"
-						><Icon name="calendar" /> {formatDate(node.due_at)}</span
-					>
+					<span class="task-due"><Icon name="calendar" /> {formatDate(node.due_at)}</span>
 				{/if}
 			</div>
 		</div>

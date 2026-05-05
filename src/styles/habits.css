@@ -1,97 +1,93 @@
 @reference "./app.css";
 
 .habit-list {
-    @apply grid gap-4 mt-6;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	@apply mt-6 grid gap-4;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 }
 
 .habit-card {
-    @apply relative flex flex-col justify-between items-center p-5 rounded-xl bg-bg-light gap-1 h-full transition-all duration-200;
-    border: 1px solid var(--color-border);
+	@apply bg-bg-light relative flex h-full flex-col items-center justify-between gap-1 rounded-xl p-5 transition-all duration-200;
+	border: 1px solid var(--color-border);
 
-    &:hover {
-        border-color: rgba(255, 255, 255, 0.1);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
+	&:hover {
+		border-color: rgba(255, 255, 255, 0.1);
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	}
 
-    .history-btn {
-        @apply absolute top-2 right-2 w-7 h-7 flex items-center justify-center
-               rounded-full text-text-muted/50 hover:text-primary
-               transition-colors cursor-pointer bg-transparent border-none text-sm;
-    }
+	.history-btn {
+		@apply text-text-muted/50 hover:text-primary absolute top-2 right-2 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-sm transition-colors;
+	}
 
-    .habit-header {
-        @apply flex items-center gap-2 justify-center w-full;
-    }
+	.habit-header {
+		@apply flex w-full items-center justify-center gap-2;
+	}
 
-    .title {
-        @apply text-lg font-semibold text-center line-clamp-1;
-    }
+	.title {
+		@apply line-clamp-1 text-center text-lg font-semibold;
+	}
 
-    .required-flag {
-        @apply text-xs text-warning;
-    }
+	.required-flag {
+		@apply text-warning text-xs;
+	}
 
-    .frequency-badge {
-        @apply text-xs font-medium px-2 py-0.5 rounded-full border border-current/25 bg-secondary/15 text-secondary shrink-0;
-    }
+	.frequency-badge {
+		@apply bg-secondary/15 text-secondary shrink-0 rounded-full border border-current/25 px-2 py-0.5 text-xs font-medium;
+	}
 
-    .description {
-        @apply text-sm text-text-muted text-center w-full flex items-center justify-center mb-1 leading-tight;
-        @apply overflow-hidden text-ellipsis line-clamp-2;
-    }
+	.description {
+		@apply text-text-muted mb-1 flex w-full items-center justify-center text-center text-sm leading-tight;
+		@apply line-clamp-2 overflow-hidden text-ellipsis;
+	}
 
-    .value-controls {
-        @apply flex items-center justify-center gap-2 mt-2 w-full;
+	.value-controls {
+		@apply mt-2 flex w-full items-center justify-center gap-2;
 
-        .adjust-btn {
-            @apply w-10 h-10 flex items-center justify-center rounded-full border border-text-muted/30 text-text-muted
-                   hover:border-primary hover:text-primary transition-colors cursor-pointer bg-transparent text-sm;
-        }
+		.adjust-btn {
+			@apply border-text-muted/30 text-text-muted hover:border-primary hover:text-primary flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border bg-transparent text-sm transition-colors;
+		}
 
-        .value-input {
-            @apply flex flex-col items-center;
+		.value-input {
+			@apply flex flex-col items-center;
 
-            input {
-                @apply text-center bg-transparent border-none focus:outline-none w-24 text-xl font-bold p-0;
-                -moz-appearance: textfield;
-                appearance: textfield;
+			input {
+				@apply w-24 border-none bg-transparent p-0 text-center text-xl font-bold focus:outline-none;
+				-moz-appearance: textfield;
+				appearance: textfield;
 
-                &::-webkit-outer-spin-button,
-                &::-webkit-inner-spin-button {
-                    -webkit-appearance: none;
-                    margin: 0;
-                }
-            }
-        }
-    }
+				&::-webkit-outer-spin-button,
+				&::-webkit-inner-spin-button {
+					-webkit-appearance: none;
+					margin: 0;
+				}
+			}
+		}
+	}
 
-    .period-value {
-        @apply text-xs font-medium text-text-muted mt-2;
-    }
+	.period-value {
+		@apply text-text-muted mt-2 text-xs font-medium;
+	}
 
-    .progress-section {
-        @apply flex items-center gap-2 w-full mt-2;
+	.progress-section {
+		@apply mt-2 flex w-full items-center gap-2;
 
-        .progress-text {
-            @apply text-xs font-medium text-text-muted shrink-0;
-        }
-    }
+		.progress-text {
+			@apply text-text-muted shrink-0 text-xs font-medium;
+		}
+	}
 
-    .streaks {
-        @apply flex items-center gap-4 mt-2 text-sm;
+	.streaks {
+		@apply mt-2 flex items-center gap-4 text-sm;
 
-        .streak {
-            @apply flex items-center gap-1 text-text-muted;
+		.streak {
+			@apply text-text-muted flex items-center gap-1;
 
-            &.current.active {
-                @apply text-warning;
-            }
+			&.current.active {
+				@apply text-warning;
+			}
 
-            &.longest {
-                @apply text-text-muted/60 text-xs;
-            }
-        }
-    }
+			&.longest {
+				@apply text-text-muted/60 text-xs;
+			}
+		}
+	}
 }
-

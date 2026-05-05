@@ -20,24 +20,24 @@ Feature CSS files use `@reference "./app.css"` to access theme tokens without du
 ## Theme Tokens (`app.css`)
 
 ```css
---color-primary: #3b82f6;      /* Blue — buttons, links, active states */
---color-secondary: #a78bfa;    /* Purple — badges, secondary highlights */
---color-bg: #0b0f1a;           /* Ultra-dark background */
---color-bg-light: #141926;     /* Card/panel background */
---color-surface: #1a2033;      /* Elevated surface */
---color-text: #e8ecf4;         /* Primary text */
---color-text-muted: #7b8ba5;   /* Secondary text */
---color-success: #34d399;      /* Completed/met states */
---color-info: #3b82f6;         /* Informational */
---color-danger: #f87171;       /* Destructive/exceeded */
---color-warning: #fbbf24;      /* Caution/flags */
---color-continuous: #2dd4bf;   /* Teal — continuous task type badge */
---color-recurring: #f59e0b;    /* Amber — recurring task type badge */
---color-border: rgba(255, 255, 255, 0.06);       /* Default borders */
+--color-primary: #3b82f6; /* Blue — buttons, links, active states */
+--color-secondary: #a78bfa; /* Purple — badges, secondary highlights */
+--color-bg: #0b0f1a; /* Ultra-dark background */
+--color-bg-light: #141926; /* Card/panel background */
+--color-surface: #1a2033; /* Elevated surface */
+--color-text: #e8ecf4; /* Primary text */
+--color-text-muted: #7b8ba5; /* Secondary text */
+--color-success: #34d399; /* Completed/met states */
+--color-info: #3b82f6; /* Informational */
+--color-danger: #f87171; /* Destructive/exceeded */
+--color-warning: #fbbf24; /* Caution/flags */
+--color-continuous: #2dd4bf; /* Teal — continuous task type badge */
+--color-recurring: #f59e0b; /* Amber — recurring task type badge */
+--color-border: rgba(255, 255, 255, 0.06); /* Default borders */
 --color-border-light: rgba(255, 255, 255, 0.08); /* Slightly visible borders */
---font-sans: 'Inter';          /* Body text */
+--font-sans: 'Inter'; /* Body text */
 --font-mono: 'JetBrains Mono'; /* Timers, numbers */
---breakpoint-desktop: 1000px;  /* Single breakpoint */
+--breakpoint-desktop: 1000px; /* Single breakpoint */
 ```
 
 ## Z-Index Scale
@@ -57,18 +57,19 @@ z-50  Modals, bottom sheets, right sheets, overlays
 
 ```css
 .varieties-layout {
-  display: grid;
-  grid-template-columns: 1fr;          /* default */
+	display: grid;
+	grid-template-columns: 1fr; /* default */
 }
 
 @media (min-width: 1000px) {
-  .varieties-layout {
-    grid-template-columns: 320px 1fr;  /* desktop */
-  }
+	.varieties-layout {
+		grid-template-columns: 320px 1fr; /* desktop */
+	}
 }
 ```
 
 **Don't:**
+
 - Introduce extra breakpoints (`sm`, `md`, `lg`, `tablet`, etc.).
 - Write `max-width` queries for "mobile" — write the default rule unconditionally and override for `desktop`.
 - Refer to viewport states as "mobile" or "tablet" in code, classes, comments, or docs. Use "default" / "desktop".
@@ -132,23 +133,23 @@ State classes on the element:
 
 ### Layout
 
-| Class              | Description                                                          |
-| ------------------ | -------------------------------------------------------------------- |
-| `.app-header`      | Sticky nav bar with `.app-nav`, `.nav-link`, `.logout-btn`           |
+| Class              | Description                                                           |
+| ------------------ | --------------------------------------------------------------------- |
+| `.app-header`      | Sticky nav bar with `.app-nav`, `.nav-link`, `.logout-btn`            |
 | `.container`       | Full-width wrapper with responsive padding (4px default, 10% desktop) |
-| `.date-navigation` | Centered date picker bar                                             |
+| `.date-navigation` | Centered date picker bar                                              |
 
 ### Buttons
 
-| Class            | Description                            |
-| ---------------- | -------------------------------------- |
-| `.btn-primary`   | Primary CTA (blue)                     |
-| `.btn-danger`    | Destructive action (red)               |
-| `.btn-outline`   | Muted/secondary action                 |
-| `.btn-cancel`    | Small 36px icon button (danger tinted) |
-| `.btn-sm`        | Size modifier (smaller text + padding) |
-| `.btn-start`     | Color modifier (success green)         |
-| `.btn-action-sm` | Compact action with subtle bg          |
+| Class            | Description                                              |
+| ---------------- | -------------------------------------------------------- |
+| `.btn-primary`   | Primary CTA (blue)                                       |
+| `.btn-danger`    | Destructive action (red)                                 |
+| `.btn-outline`   | Muted/secondary action                                   |
+| `.btn-cancel`    | Small 36px icon button (danger tinted)                   |
+| `.btn-sm`        | Size modifier (smaller text + padding)                   |
+| `.btn-start`     | Color modifier (success green)                           |
+| `.btn-action-sm` | Compact action with subtle bg                            |
 | `.btn-icon`      | Icon-only button (transparent bg, muted → text on hover) |
 
 ### Inputs
@@ -219,23 +220,23 @@ State classes on the parent element:
 
 ### Miscellaneous
 
-| Class           | Description                                                     |
-| --------------- | --------------------------------------------------------------- |
+| Class           | Description                                                                                |
+| --------------- | ------------------------------------------------------------------------------------------ |
 | `.status-badge` | Status pill (via `@utility`) with `.started`/`.continuous`/`.recurring`/`.finished` states |
-| `.back-link`    | Navigation link with icon + text                                |
-| `.field-error`  | Validation ring (danger border + ring)                          |
+| `.back-link`    | Navigation link with icon + text                                                           |
+| `.field-error`  | Validation ring (danger border + ring)                                                     |
 
 ### Forms (shared)
 
-| Class                  | Description                                                    |
-| ---------------------- | -------------------------------------------------------------- |
-| `.detail-form`         | Form container (column flex)                                   |
+| Class                  | Description                                                     |
+| ---------------------- | --------------------------------------------------------------- |
+| `.detail-form`         | Form container (column flex)                                    |
 | `.detail-field`        | Field wrapper (label + input/textarea/select with theme inputs) |
-| `.detail-field-header` | Header row inside a field (label + inline action button)       |
-| `.detail-actions`      | Form button group (right-aligned)                              |
-| `.section-header`      | Section heading row (title + trailing controls)                |
-| `.desc-edit-btn`       | Small pen-icon "edit" toggle next to a label                   |
-| `.desc-view`           | Read-only text block (pre-wrap, used with `linkify()`)         |
+| `.detail-field-header` | Header row inside a field (label + inline action button)        |
+| `.detail-actions`      | Form button group (right-aligned)                               |
+| `.section-header`      | Section heading row (title + trailing controls)                 |
+| `.desc-edit-btn`       | Small pen-icon "edit" toggle next to a label                    |
+| `.desc-view`           | Read-only text block (pre-wrap, used with `linkify()`)          |
 | `.linkify-link`        | Anchor styling produced by `linkify()` (primary blue underline) |
 
 ## Habits (`habits.css`)
@@ -280,19 +281,19 @@ State classes on the parent element:
 
 ### Task Lists
 
-| Class             | Description                              |
-| ----------------- | ---------------------------------------- |
-| `.tasks-content`  | 2-column grid (1 below desktop)          |
-| `.tasks-section`  | Section card with heading                |
-| `.section-header` | Section title + create button            |
-| `.task-list`      | Vertical list container                  |
-| `.task-item`      | Single task row                          |
-| `.task-info`      | Task name + project + description        |
-| `.task-meta`      | Status + due date + time badges          |
-| `.task-actions`   | Action buttons group                     |
-| `.show-more-btn`  | Expandable list divider (line-pill-line) |
+| Class              | Description                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| `.tasks-content`   | 2-column grid (1 below desktop)                                                            |
+| `.tasks-section`   | Section card with heading                                                                  |
+| `.section-header`  | Section title + create button                                                              |
+| `.task-list`       | Vertical list container                                                                    |
+| `.task-item`       | Single task row                                                                            |
+| `.task-info`       | Task name + project + description                                                          |
+| `.task-meta`       | Status + due date + time badges                                                            |
+| `.task-actions`    | Action buttons group                                                                       |
+| `.show-more-btn`   | Expandable list divider (line-pill-line)                                                   |
 | `.priority-filter` | Pill group for filtering by priority (in `.section-header`) — buttons take `.active` state |
-| `.priority-badge`  | `P{n}` pill next to `.status-badge` — `.p-1` danger, `.p-2` warning, muted otherwise |
+| `.priority-badge`  | `P{n}` pill next to `.status-badge` — `.p-1` danger, `.p-2` warning, muted otherwise       |
 
 ### Tree View
 
@@ -312,12 +313,12 @@ State classes on the parent element:
 
 `.detail-form` / `.detail-field` / `.detail-actions` are defined in `components.css` (shared). The classes below are tasks-specific.
 
-| Class                                                             | Description                                   |
-| ----------------------------------------------------------------- | --------------------------------------------- |
-| `.detail-inline-row`                                              | Horizontal field layout                       |
-| `.detail-info-row`                                                | Read-only info display                        |
-| `.detail-info-item` / `.detail-info-label` / `.detail-info-value` | Info item parts                               |
-| `.detail-title-row`                                               | Title row with project link                   |
+| Class                                                             | Description                 |
+| ----------------------------------------------------------------- | --------------------------- |
+| `.detail-inline-row`                                              | Horizontal field layout     |
+| `.detail-info-row`                                                | Read-only info display      |
+| `.detail-info-item` / `.detail-info-label` / `.detail-info-value` | Info item parts             |
+| `.detail-title-row`                                               | Title row with project link |
 
 ### Todos
 
@@ -354,29 +355,29 @@ State classes on the parent element:
 
 ### Agenda Right Sheet
 
-| Class                    | Description                                            |
-| ------------------------ | ------------------------------------------------------ |
-| `.agenda-title`          | Sheet heading (lg bold, right padding for close btn)   |
-| `.agenda-subtitle-row`   | Flex row: subtitle text + mode toggle                  |
-| `.agenda-subtitle`       | Muted subtitle text                                    |
-| `.agenda-mode-toggle`    | Day/week toggle button (inline with subtitle)          |
-| `.agenda-timeline`       | Vertical timeline container                            |
-| `.agenda-row`            | Flex row: hour label + entry/gap                       |
-| `.agenda-hour-label`     | Monospace hour label (bottom-aligned, 40px)            |
+| Class                    | Description                                                              |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `.agenda-title`          | Sheet heading (lg bold, right padding for close btn)                     |
+| `.agenda-subtitle-row`   | Flex row: subtitle text + mode toggle                                    |
+| `.agenda-subtitle`       | Muted subtitle text                                                      |
+| `.agenda-mode-toggle`    | Day/week toggle button (inline with subtitle)                            |
+| `.agenda-timeline`       | Vertical timeline container                                              |
+| `.agenda-row`            | Flex row: hour label + entry/gap                                         |
+| `.agenda-hour-label`     | Monospace hour label (bottom-aligned, 40px)                              |
 | `.agenda-day-divider`    | Day boundary divider (line—label—line), also used in "Próximas a vencer" |
 | `.agenda-day-line`       | Horizontal line in day divider                                           |
 | `.agenda-day-label`      | Uppercase date label (e.g. "Miércoles 8/4")                              |
-| `.agenda-gap`            | Idle gap indicator (line—duration—line)                 |
-| `.agenda-gap-line`       | Horizontal line in gap                                 |
-| `.agenda-gap-label`      | Muted mono duration text in gap                        |
-| `.agenda-entry`          | Clickable entry row (bar + content)                    |
-| `.agenda-entry-bar`      | Colored left bar (`.finished` green, `.running` pulse) |
-| `.agenda-entry-content`  | Name + project + meta                                  |
-| `.agenda-entry-name`     | Task name (semibold, truncated)                        |
-| `.agenda-entry-project`  | Project name (muted, truncated)                        |
-| `.agenda-entry-row`      | Time + status badge + duration row                     |
-| `.agenda-entry-time`     | Monospace time range                                   |
-| `.agenda-entry-duration` | Right-aligned duration                                 |
+| `.agenda-gap`            | Idle gap indicator (line—duration—line)                                  |
+| `.agenda-gap-line`       | Horizontal line in gap                                                   |
+| `.agenda-gap-label`      | Muted mono duration text in gap                                          |
+| `.agenda-entry`          | Clickable entry row (bar + content)                                      |
+| `.agenda-entry-bar`      | Colored left bar (`.finished` green, `.running` pulse)                   |
+| `.agenda-entry-content`  | Name + project + meta                                                    |
+| `.agenda-entry-name`     | Task name (semibold, truncated)                                          |
+| `.agenda-entry-project`  | Project name (muted, truncated)                                          |
+| `.agenda-entry-row`      | Time + status badge + duration row                                       |
+| `.agenda-entry-time`     | Monospace time range                                                     |
+| `.agenda-entry-duration` | Right-aligned duration                                                   |
 
 ### Create Sheet
 
@@ -389,15 +390,15 @@ State classes on the parent element:
 
 Reuses `.section-header` / `.detail-field` / `.detail-field-header` / `.desc-edit-btn` / `.desc-view` / `.linkify-link` / `.btn-icon` from `components.css`. Only layout and distinctive visual classes live here.
 
-| Class                   | Description                                                              |
-| ----------------------- | ------------------------------------------------------------------------ |
-| `.varieties-layout`     | Outer grid: 1 column default, `320px 1fr` at desktop                     |
-| `.ranking-list`         | Left column surface card holding the ranking                             |
-| `.ranking-row`          | Clickable rank row (`<button>`) — rank + name + score + price; `.podium` for #1; clicking scrolls/highlights the matching `.variety-card` |
-| `.variety-card`         | Single variety card; `.saving` border during a pending PUT, `.highlight` flash when targeted from the ranking |
-| `.score-badge`          | Computed puntuación pill (primary blue)                                  |
-| `.score-grid`           | 2×2 grid; nested rules tighten the four `.detail-field` score inputs (centered, mono, smaller padding) |
-| `.comments-empty`       | Dashed placeholder button shown when comments are empty                  |
+| Class               | Description                                                                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `.varieties-layout` | Outer grid: 1 column default, `320px 1fr` at desktop                                                                                      |
+| `.ranking-list`     | Left column surface card holding the ranking                                                                                              |
+| `.ranking-row`      | Clickable rank row (`<button>`) — rank + name + score + price; `.podium` for #1; clicking scrolls/highlights the matching `.variety-card` |
+| `.variety-card`     | Single variety card; `.saving` border during a pending PUT, `.highlight` flash when targeted from the ranking                             |
+| `.score-badge`      | Computed puntuación pill (primary blue)                                                                                                   |
+| `.score-grid`       | 2×2 grid; nested rules tighten the four `.detail-field` score inputs (centered, mono, smaller padding)                                    |
+| `.comments-empty`   | Dashed placeholder button shown when comments are empty                                                                                   |
 
 ## Login (`login.css`)
 

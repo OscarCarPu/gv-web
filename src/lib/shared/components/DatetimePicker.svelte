@@ -44,7 +44,10 @@
 	function onHoursInput(e: Event) {
 		const input = e.target as HTMLInputElement;
 		let val = parseInt(input.value);
-		if (isNaN(val)) { hours = ''; return; }
+		if (isNaN(val)) {
+			hours = '';
+			return;
+		}
 		hours = Math.max(0, Math.min(23, val)).toString();
 		applyTime();
 	}
@@ -52,7 +55,10 @@
 	function onMinutesInput(e: Event) {
 		const input = e.target as HTMLInputElement;
 		let val = parseInt(input.value);
-		if (isNaN(val)) { minutes = ''; return; }
+		if (isNaN(val)) {
+			minutes = '';
+			return;
+		}
 		minutes = Math.max(0, Math.min(59, val)).toString();
 		applyTime();
 	}
@@ -82,14 +88,22 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="pill-time" onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
 		<input
-			type="number" min="0" max="23" step="1"
-			placeholder="HH" value={hours}
+			type="number"
+			min="0"
+			max="23"
+			step="1"
+			placeholder="HH"
+			value={hours}
 			oninput={onHoursInput}
 		/>
 		<span class="colon">:</span>
 		<input
-			type="number" min="0" max="59" step="1"
-			placeholder="MM" value={minutes}
+			type="number"
+			min="0"
+			max="59"
+			step="1"
+			placeholder="MM"
+			value={minutes}
 			oninput={onMinutesInput}
 		/>
 	</div>

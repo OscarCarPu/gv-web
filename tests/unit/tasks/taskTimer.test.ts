@@ -9,7 +9,7 @@ function createMockApi(): TaskTimerApi & {
 	return {
 		createTimeEntry: vi.fn().mockResolvedValue({ id: 42 }),
 		updateTimeEntry: vi.fn().mockResolvedValue({}),
-		deleteTimeEntry: vi.fn().mockResolvedValue(undefined)
+		deleteTimeEntry: vi.fn().mockResolvedValue(undefined),
 	};
 }
 
@@ -91,7 +91,7 @@ describe('createTaskTimer', () => {
 
 			expect(api.updateTimeEntry).toHaveBeenCalledWith(42, {
 				finished_at: '2026-03-10T10:00:10.000Z',
-				comment: null
+				comment: null,
 			});
 			expect(timer.isRunning).toBe(false);
 			expect(timer.elapsedSeconds).toBe(0);
@@ -113,7 +113,7 @@ describe('createTaskTimer', () => {
 			expect(api.createTimeEntry).toHaveBeenCalledWith({
 				task_id: 1,
 				started_at: '2026-03-10T10:00:00.000Z',
-				comment: null
+				comment: null,
 			});
 		});
 
@@ -147,7 +147,7 @@ describe('createTaskTimer', () => {
 			expect(api.createTimeEntry).toHaveBeenCalledWith({
 				task_id: 5,
 				started_at: '2026-03-10T10:00:00.000Z',
-				comment: null
+				comment: null,
 			});
 		});
 	});
@@ -219,7 +219,7 @@ describe('createTaskTimer', () => {
 			expect(api.createTimeEntry).toHaveBeenCalledWith({
 				task_id: 10,
 				started_at: '2026-03-10T10:00:00.000Z',
-				comment: null
+				comment: null,
 			});
 
 			// 3. Reassign to another task
@@ -232,7 +232,7 @@ describe('createTaskTimer', () => {
 			await timer.stopTimer();
 			expect(api.updateTimeEntry).toHaveBeenCalledWith(77, {
 				finished_at: '2026-03-10T10:05:00.000Z',
-				comment: null
+				comment: null,
 			});
 			expect(timer.isRunning).toBe(false);
 			expect(timer.elapsedSeconds).toBe(0);

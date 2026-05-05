@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { LoginResponseSchema, Verify2FAResponseSchema } from '$lib/domains/auth/schemas/auth.schemas';
+import {
+	LoginResponseSchema,
+	Verify2FAResponseSchema,
+} from '$lib/domains/auth/schemas/auth.schemas';
 
 describe('auth schemas', () => {
 	it('LoginResponseSchema parses tmp kind', () => {

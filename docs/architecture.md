@@ -2,15 +2,15 @@
 
 ## Tech Stack
 
-| Technology | Version | Purpose |
-|---|---|---|
-| SvelteKit | 2 | Application framework (SSR, routing, server hooks) |
-| Svelte | 5 | UI framework (runes API: `$state`, `$derived`, `$effect`) |
-| Tailwind CSS | 4 | Utility-first styling (Vite plugin, `@theme` directive) |
-| Zod | 4 | Runtime schema validation for API responses |
-| Flowbite Svelte | 1.x | UI component primitives |
-| FontAwesome | 7 | Icon library |
-| TypeScript | 5 | Type safety |
+| Technology      | Version | Purpose                                                   |
+| --------------- | ------- | --------------------------------------------------------- |
+| SvelteKit       | 2       | Application framework (SSR, routing, server hooks)        |
+| Svelte          | 5       | UI framework (runes API: `$state`, `$derived`, `$effect`) |
+| Tailwind CSS    | 4       | Utility-first styling (Vite plugin, `@theme` directive)   |
+| Zod             | 4       | Runtime schema validation for API responses               |
+| Flowbite Svelte | 1.x     | UI component primitives                                   |
+| FontAwesome     | 7       | Icon library                                              |
+| TypeScript      | 5       | Type safety                                               |
 
 ## Project Structure
 
@@ -46,14 +46,14 @@ src/
 
 ## Routing
 
-| Route | Purpose |
-|---|---|
-| `/login` | Password authentication |
-| `/login/2fa` | Two-factor authentication |
-| `/habits` | Habit tracking (default after login) |
-| `/tasks` | Task/time management |
-| `/tasks/projects/[id]` | Project detail and children |
-| `/logout` | Session termination |
+| Route                  | Purpose                              |
+| ---------------------- | ------------------------------------ |
+| `/login`               | Password authentication              |
+| `/login/2fa`           | Two-factor authentication            |
+| `/habits`              | Habit tracking (default after login) |
+| `/tasks`               | Task/time management                 |
+| `/tasks/projects/[id]` | Project detail and children          |
+| `/logout`              | Session termination                  |
 
 ## API Layer
 
@@ -101,8 +101,8 @@ See [styling.md](styling.md) for theme tokens, `@utility` directives, and the fu
 
 ## Environment
 
-| Variable | Context | Purpose |
-|---|---|---|
-| `VITE_API_URL` | Browser (Vite-injected) | API base URL for client-side fetch |
-| `API_URL` | Server (Node.js) | API base URL for SSR fetch (Docker service name in production) |
-| `ORIGIN` | Server (adapter-node) | Public origin for SvelteKit CSRF protection |
+| Variable       | Context                 | Purpose                                                        |
+| -------------- | ----------------------- | -------------------------------------------------------------- |
+| `VITE_API_URL` | Browser (Vite-injected) | API base URL for client-side fetch                             |
+| `API_URL`      | Server (Node.js)        | API base URL for SSR fetch (Docker service name in production) |
+| `ORIGIN`       | Server (adapter-node)   | Public origin for SvelteKit CSRF protection                    |

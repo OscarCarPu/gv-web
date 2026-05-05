@@ -29,19 +29,25 @@
 	function onHoursInput(e: Event) {
 		const input = e.target as HTMLInputElement;
 		let val = parseInt(input.value);
-		if (isNaN(val)) { hours = ''; return; }
+		if (isNaN(val)) {
+			hours = '';
+			return;
+		}
 		hours = Math.max(0, Math.min(23, val)).toString();
 	}
 
 	function onMinutesInput(e: Event) {
 		const input = e.target as HTMLInputElement;
 		let val = parseInt(input.value);
-		if (isNaN(val)) { minutes = ''; return; }
+		if (isNaN(val)) {
+			minutes = '';
+			return;
+		}
 		minutes = Math.max(0, Math.min(59, val)).toString();
 	}
 
 	function handleFocusOut(e: FocusEvent) {
-		const editor = (e.currentTarget as HTMLElement);
+		const editor = e.currentTarget as HTMLElement;
 		const newTarget = e.relatedTarget as Node | null;
 		if (!newTarget || !editor.contains(newTarget)) {
 			apply();
@@ -55,14 +61,22 @@
 		<span class="pill-divider"></span>
 		<div class="pill-time">
 			<input
-				type="number" min="0" max="23" step="1"
-				placeholder="HH" value={hours}
+				type="number"
+				min="0"
+				max="23"
+				step="1"
+				placeholder="HH"
+				value={hours}
 				oninput={onHoursInput}
 			/>
 			<span class="colon">:</span>
 			<input
-				type="number" min="0" max="59" step="1"
-				placeholder="MM" value={minutes}
+				type="number"
+				min="0"
+				max="59"
+				step="1"
+				placeholder="MM"
+				value={minutes}
 				oninput={onMinutesInput}
 			/>
 		</div>

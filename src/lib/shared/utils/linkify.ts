@@ -3,7 +3,11 @@ import { addToast } from '$shared/stores/toast.svelte';
 const URL_RE = /((https?|file):\/\/[^\s<>"]*[^\s<>".,;:!?)])/g;
 
 function escapeAttr(s: string): string {
-	return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	return s
+		.replace(/&/g, '&amp;')
+		.replace(/"/g, '&quot;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;');
 }
 
 function escapeText(s: string): string {
@@ -19,7 +23,9 @@ function shortLabel(url: string): string {
 			return last ? `…/${decodeURIComponent(last)}` : url;
 		}
 		if (last) {
-			return hostname ? `${hostname}/…/${decodeURIComponent(last)}` : `…/${decodeURIComponent(last)}`;
+			return hostname
+				? `${hostname}/…/${decodeURIComponent(last)}`
+				: `…/${decodeURIComponent(last)}`;
 		}
 		return hostname || url;
 	} catch {

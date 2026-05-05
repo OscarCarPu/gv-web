@@ -3,7 +3,7 @@
 	import { habitsApi } from '$habits/api/habits.api';
 	import HabitCard from '$habits/components/HabitCard.svelte';
 	import DateNavigation from '$shared/components/DateNavigation.svelte';
-import { toLocalDateString } from '$shared/utils/datetime';
+	import { toLocalDateString } from '$shared/utils/datetime';
 
 	let { data }: { data: { habits: HabitWithLog[] } } = $props();
 	let fetchedHabits: HabitWithLog[] | null = $state(null);
