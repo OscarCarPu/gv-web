@@ -65,16 +65,20 @@ let listenerInstalled = false;
 export function installLinkifyHandler(): void {
 	if (listenerInstalled || typeof document === 'undefined') return;
 	listenerInstalled = true;
-	document.addEventListener('click', (e) => {
-		const target = e.target as HTMLElement | null;
-		const anchor = target?.closest('a.linkify-file') as HTMLAnchorElement | null;
-		if (!anchor) return;
-		const url = anchor.dataset.fileUrl;
-		if (!url) return;
-		e.preventDefault();
-		navigator.clipboard
-			.writeText(url)
-			.then(() => addToast('Ruta copiada al portapapeles', 'success'))
-			.catch(() => addToast('No se pudo copiar la ruta', 'error'));
-	});
+	document.addEventListener(
+		'click',
+		(e) => {
+			const target = e.target as HTMLElement | null;
+			const anchor = target?.closest('a.linkify-file') as HTMLAnchorElement | null;
+			if (!anchor) return;
+			const url = anchor.dataset.fileUrl;
+			if (!url) return;
+			e.preventDefault();
+			navigator.clipboard
+				.writeText(url)
+				.then(() => addToast('Ruta copiada al portapapeles', 'success'))
+				.catch(() => addToast('No se pudo copiar la ruta', 'error'));
+		},
+		true,
+	);
 }
