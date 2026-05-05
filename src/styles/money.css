@@ -1,0 +1,87 @@
+@reference "./app.css";
+
+.money-content {
+	@apply desktop:grid-cols-[2fr_1fr] mt-3 grid grid-cols-1 gap-6;
+}
+
+.money-side {
+	@apply flex flex-col gap-6;
+}
+
+.money-tx-row {
+	@apply px-3 py-2;
+}
+
+.money-tx-info {
+	@apply flex min-w-0 flex-1 items-center gap-2;
+}
+
+.money-tx-account {
+	@apply truncate;
+}
+
+.money-tx-category {
+	@apply text-text-muted truncate text-sm;
+}
+
+.money-tiles-wrap {
+	@apply mb-4;
+}
+
+.money-tiles {
+	@apply flex gap-3;
+}
+
+.money-tile {
+	@apply bg-bg flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-3 py-3 text-center;
+	border: 1px solid var(--color-border);
+	transition: border-color 0.15s ease;
+}
+
+.money-tile:hover {
+	border-color: var(--color-border-light);
+}
+
+.money-tile .detail-info-value {
+	@apply truncate text-base;
+	max-width: 100%;
+}
+
+.money-group-label {
+	@apply text-text-muted mt-2 mb-2 text-xs font-semibold tracking-wide uppercase;
+}
+
+.money-type-toggle button.active.income {
+	@apply bg-success text-white;
+}
+
+.money-type-toggle button.active.expense {
+	@apply bg-danger text-white;
+}
+
+.money-type-toggle button.active.transfer {
+	@apply bg-primary text-white;
+}
+
+.money-category-groups {
+	@apply flex flex-col gap-4;
+}
+
+.money-category-group {
+	@apply flex flex-col gap-1;
+}
+
+.amount-positive {
+	color: var(--color-success);
+	@apply font-semibold tabular-nums;
+}
+
+.amount-negative {
+	color: var(--color-danger);
+	@apply font-semibold tabular-nums;
+}
+
+.amount-neutral {
+	color: var(--color-text);
+	@apply font-semibold tabular-nums;
+}

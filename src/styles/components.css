@@ -368,6 +368,10 @@
 	&.finished {
 		@apply bg-success/20 text-success;
 	}
+
+	&.expense {
+		@apply bg-danger/20 text-danger;
+	}
 }
 
 /* Form Layout */

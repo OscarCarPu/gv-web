@@ -79,6 +79,6 @@ export function installLinkifyHandler(): void {
 				.then(() => addToast('Ruta copiada al portapapeles', 'success'))
 				.catch(() => addToast('No se pudo copiar la ruta', 'error'));
 		},
-		true,
+		true
 	);
 }

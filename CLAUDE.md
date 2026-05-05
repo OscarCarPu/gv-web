@@ -23,10 +23,11 @@ SvelteKit 2 + Svelte 5 (runes API) personal productivity app with habit tracking
 ### Domain-Driven Structure
 
 ```
-src/lib/domains/{auth,habits,tasks}/
+src/lib/domains/{auth,habits,tasks,money}/
   api/       — API methods + Zod response schemas
   types/     — TypeScript interfaces and request types
   components/ — Domain-specific Svelte components
+  utils/     — Domain helpers (e.g. money/utils/categoryTree.ts)
 src/lib/shared/
   api/client.ts   — fetchAPI<T>(endpoint, schema, options?) core HTTP client
   components/     — Reusable UI (BottomSheet, RightSheet, Modal, DatetimePicker, chart/*)
@@ -84,6 +85,20 @@ Full detail in [docs/tasks.md](docs/tasks.md). Non-obvious rules to remember whi
 - **Task types**: `standard` / `continuous` / `recurring`. Recurring requires `recurrence: number` (days). In "Próximas a vencer" + "Proyectos activos", recurring tasks show "Renovar" (reschedules `due_at = today + recurrence`) instead of "Acabar". Everywhere else, Finalizar sets `finished_at` normally. Use `getStatusLabel()` for badges
 - **Priority**: 1 (highest) to 5 (lowest), default `3`. Create omits when default (consistent with `task_type`); update always sends. Client-side priority filter on `/tasks` sections — projects in the tree are always kept regardless of children's priorities
 - **Overdue**: `TaskItem` applies `.overdue` class (red) when `due_at < today` on "Próximas a vencer"
+
+## Money domain — quick rules
+
+Route: `/money` (private). API base: `/finance/*`. Visible label: "Dinero" (Spanish UI), but the URL, folder (`src/lib/domains/money/`), styles (`src/styles/money.css`), and `moneyApi` follow the English-URL convention used by `/tasks`, `/habits`, `/varieties`.
+
+- **Money values are strings**: every monetary field (`total`, `amount`, `accounts_total`, `month.income/expense/balance`) is `NUMERIC(15,2)` serialized as a JSON string. Keep them as strings end-to-end and only `parseFloat` at format time. Use `formatMoney()` from `$shared/utils/money.ts` (`Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', useGrouping: 'always' })` → `1.234,56 €`). There is no per-account currency — the API removed it; everything is EUR
+- **Transaction types**: `income` / `expense` / `transfer`. The transaction's category `type` MUST match the transaction's `type` (server enforces). The form filters category options client-side by selected type and resets `category_id` when the type changes
+- **Transfers**: `to_account_id` is required iff `type === 'transfer'`, must differ from `account_id`, and must be `null` for income/expense. Hide the destination select unless the type is transfer
+- **`occurred_at`**: optional on `POST` (server defaults to `now()`), but **required on `PUT`** — always send it from update flows. Use `toISOString()` / `toLocalDatetime()` from `$shared/utils/datetime.ts` exactly like task `due_at`
+- **Account totals are server-maintained**: a Postgres trigger updates `accounts.total` on every transaction insert/update/delete. After any transaction mutation call `invalidateAll()` so the SSR loader refetches `/finance/overview` and account totals reflect the new state
+- **Delete conflicts (409)**: `DELETE /finance/accounts/:id` and `DELETE /finance/categories/:id` return `409` when referenced by transactions or other categories. Catch the error message (`includes('transactions')` / `includes('referenced')`) and surface a Spanish toast — don't show a confirmation dialog
+- **Category tree**: categories are flat (`parent_id` self-FK). Use `buildCategoryOptions()` from `$lib/domains/money/utils/categoryTree.ts` to flatten into a depth-first list with NBSP-indented `label`s for `<select>` options. The category form's parent picker also walks descendants and excludes them to prevent cycles. The Categorías card renders a real expandable tree via `CategoryTreeNode` using the existing `.tree-project-row` / `.tree-children` / `.tree-chevron-btn` classes from `tasks.css`
+- **CSS reuse**: `/money` reuses `.tasks-section`, `.task-list`, `.task-item`, `.show-more-btn`, `.tree-*`, `.agenda-day-divider/line/label` from `tasks.css`. The `/money/+layout.svelte` imports both `tasks.css` and `money.css` — root layout does NOT import them. Money-specific additions in `money.css` only: `.money-content` (desktop:`grid-cols-[2fr_1fr]`, mobile single column), `.money-side` (right column with stacked accounts+categories), `.money-tiles` / `.money-tile` (single-row KPI tiles), `.money-tx-row` / `.money-tx-info` / `.money-tx-category` (single-line transaction rows), `.money-type-toggle` (income→success / expense→danger / transfer→primary color overrides on the segmented control), `.amount-positive` / `.amount-negative` / `.amount-neutral`. Also added `.status-badge.expense` modifier in `components.css`
+- **Recent transactions**: `/finance/overview.recent_transactions` returns the last 30 days. The list folds at 15 with the standard show-more pattern and is grouped by day using `.agenda-day-divider` (today's group highlighted), reusing the tasks "Próximas a vencer" pattern
 
 ## Deployment
 

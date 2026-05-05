@@ -30,6 +30,9 @@
 				<a href="/tasks" class="nav-link" class:active={page.url.pathname.startsWith('/tasks')}
 					>Tareas</a
 				>
+				<a href="/money" class="nav-link" class:active={page.url.pathname.startsWith('/money')}
+					>Dinero</a
+				>
 			{/if}
 			<a
 				href="/varieties"
