@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, invalidate } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
@@ -51,7 +51,7 @@
 				due_at: toISOString(dueAt),
 			});
 			addNotification('Proyecto actualizado', 'success');
-			invalidate('app:tasks');
+			await invalidateAll();
 		} catch {
 			addToast('Error al guardar proyecto', 'error');
 		} finally {
@@ -66,7 +66,7 @@
 		addNotification('Proyecto iniciado', 'success');
 		try {
 			await tasksApi.updateProject(id, { started_at: now });
-			invalidate('app:tasks');
+			await invalidateAll();
 		} catch {
 			addToast('Error al iniciar proyecto', 'error');
 		}
@@ -79,7 +79,7 @@
 		addNotification('Proyecto finalizado', 'success');
 		try {
 			await tasksApi.updateProject(id, { finished_at: now });
-			invalidate('app:tasks');
+			await invalidateAll();
 		} catch {
 			addToast('Error al finalizar proyecto', 'error');
 		}
@@ -92,10 +92,10 @@
 		goto('/tasks');
 		try {
 			await tasksApi.deleteProject(id);
-			invalidate('app:tasks');
+			await invalidateAll();
 		} catch {
 			addToast('Error al eliminar proyecto', 'error');
-			invalidate('app:tasks');
+			await invalidateAll();
 		}
 	}
 

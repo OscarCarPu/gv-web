@@ -84,18 +84,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
+	const response = await resolve(event);
+
 	let apiOrigin = env.API_URL;
 	try {
 		apiOrigin = new URL(env.API_URL).origin;
 	} catch (e) {
 		console.warn('Invalid API URL for CSP');
 	}
-
-	const preconnectTag = apiOrigin ? `<link rel="preconnect" href="${apiOrigin}" crossorigin>` : '';
-
-	const response = await resolve(event, {
-		transformPageChunk: ({ html }) => html.replace('%api.preconnect%', preconnectTag),
-	});
 
 	// Security headers
 	response.headers.set('X-Content-Type-Options', 'nosniff');

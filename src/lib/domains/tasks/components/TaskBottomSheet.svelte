@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, invalidate } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import {
@@ -60,7 +60,13 @@
 		dependsOn = [...t.depends_on];
 		blocks = [...t.blocks];
 		initialBlocks = [...t.blocks];
-		projectName = t.project_name;
+		if (t.project_id) {
+			tasksApi.getProject(t.project_id).then((p) => {
+				projectName = p.name;
+			});
+		} else {
+			projectName = null;
+		}
 	}
 
 	$effect(() => {
@@ -82,7 +88,7 @@
 		addNotification('Tarea iniciada', 'success');
 		try {
 			await tasksApi.updateTask(id, { started_at: now });
-			await Promise.all([loadTask(), invalidate('app:tasks')]);
+			await Promise.all([loadTask(), invalidateAll()]);
 		} catch {
 			if (task) task.started_at = prev;
 			addToast('Error al iniciar tarea', 'error');
@@ -98,7 +104,7 @@
 		addNotification('Tarea finalizada', 'success');
 		try {
 			await tasksApi.updateTask(id, { finished_at: now });
-			await Promise.all([loadTask(), invalidate('app:tasks')]);
+			await Promise.all([loadTask(), invalidateAll()]);
 		} catch {
 			if (task) task.finished_at = prev;
 			addToast('Error al finalizar tarea', 'error');
@@ -113,28 +119,51 @@
 		}
 		saving = true;
 		try {
-			const initialIds = new Set(initialBlocks.map((d) => d.id));
-			const currentIds = new Set(blocks.map((d) => d.id));
-			const blocksChanged =
-				blocks.length !== initialBlocks.length || [...currentIds].some((id) => !initialIds.has(id));
-			await tasksApi.updateTask(taskId, {
-				name,
-				description: description || null,
-				due_at: toISOString(dueAt),
-				depends_on: dependsOn.map((d) => d.id),
-				blocks: blocksChanged ? blocks.map((d) => d.id) : undefined,
-				task_type: taskType,
-				recurrence: taskType === 'recurring' ? recurrence : undefined,
-				priority,
-			});
+			await Promise.all([
+				tasksApi.updateTask(taskId, {
+					name,
+					description: description || null,
+					due_at: toISOString(dueAt),
+					depends_on: dependsOn.map((d) => d.id),
+					task_type: taskType,
+					recurrence: taskType === 'recurring' ? recurrence : undefined,
+					priority,
+				}),
+				syncReverseDepends(),
+			]);
 			addNotification('Tarea actualizada', 'success');
+			await invalidateAll();
 			onclose();
-			invalidate('app:tasks');
 		} catch {
 			addToast('Error al guardar tarea', 'error');
 		} finally {
 			saving = false;
 		}
+	}
+
+	async function syncReverseDepends() {
+		if (taskId == null) return;
+		const initialIds = new Set(initialBlocks.map((d) => d.id));
+		const currentIds = new Set(blocks.map((d) => d.id));
+		const added = blocks.filter((d) => !initialIds.has(d.id));
+		const removed = initialBlocks.filter((d) => !currentIds.has(d.id));
+		if (added.length === 0 && removed.length === 0) return;
+
+		const targets = [...added, ...removed];
+		const fetched = await Promise.all(targets.map((d) => tasksApi.getTask(d.id)));
+		const updates: Promise<unknown>[] = [];
+		for (let i = 0; i < added.length; i++) {
+			const otherDeps = fetched[i].depends_on.map((d) => d.id);
+			if (!otherDeps.includes(taskId)) {
+				updates.push(tasksApi.updateTask(added[i].id, { depends_on: [...otherDeps, taskId] }));
+			}
+		}
+		for (let i = 0; i < removed.length; i++) {
+			const other = fetched[added.length + i];
+			const otherDeps = other.depends_on.map((d) => d.id).filter((id) => id !== taskId);
+			updates.push(tasksApi.updateTask(removed[i].id, { depends_on: otherDeps }));
+		}
+		await Promise.all(updates);
 	}
 
 	async function remove() {
@@ -144,10 +173,10 @@
 		addNotification('Tarea eliminada', 'success');
 		try {
 			await tasksApi.deleteTask(id);
-			invalidate('app:tasks');
+			await invalidateAll();
 		} catch {
 			addToast('Error al eliminar tarea', 'error');
-			invalidate('app:tasks');
+			await invalidateAll();
 		}
 	}
 

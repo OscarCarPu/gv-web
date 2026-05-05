@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { goto, invalidate } from '$app/navigation';
-	import { addToast } from '$lib/shared/stores/toast.svelte';
+	import { goto, invalidateAll } from '$app/navigation';
 	import TimePicker from '$lib/shared/components/TimePicker.svelte';
 	import TaskItem from '$lib/domains/tasks/components/TaskItem.svelte';
 	import TreeNode from '$lib/domains/tasks/components/TreeNode.svelte';
@@ -241,54 +240,21 @@
 	async function handleTaskToggle(taskId: number, action: 'start' | 'finish') {
 		const now = new Date().toISOString();
 		const task = data.tasksByDueDate.find((t) => t.id === taskId);
-		if (!task) return;
-
-		if (action === 'start') {
-			const prev = task.started_at;
-			task.started_at = now;
-			addNotification('Tarea iniciada', 'success');
-			try {
-				await tasksApi.updateTask(taskId, { started_at: now });
-			} catch {
-				task.started_at = prev;
-				addToast('Error al iniciar tarea', 'error');
-			}
-			return;
-		}
-
-		if (task.task_type === 'recurring' && task.recurrence) {
-			const prev = task.due_at;
-			const newDueAt = buildRecurringDueAt(task.recurrence);
-			task.due_at = newDueAt;
-			addNotification('Tarea renovada', 'success');
-			try {
-				await tasksApi.updateTask(taskId, { due_at: newDueAt });
-			} catch {
-				task.due_at = prev;
-				addToast('Error al renovar tarea', 'error');
-			}
-			return;
-		}
-
 		pendingTaskIds.add(taskId);
-		addNotification('Tarea finalizada', 'success');
 		try {
-			await tasksApi.updateTask(taskId, { finished_at: now });
-		} catch {
-			pendingTaskIds.delete(taskId);
-			addToast('Error al finalizar tarea', 'error');
-		}
-	}
-
-	function findTreeProject(nodes: ActiveTreeNode[], id: number): ActiveTreeNode | undefined {
-		for (const node of nodes) {
-			if (node.type === 'project') {
-				if (node.id === id) return node;
-				if (node.children) {
-					const found = findTreeProject(node.children, id);
-					if (found) return found;
-				}
+			if (action === 'start') {
+				addNotification('Tarea iniciada', 'success');
+				await tasksApi.updateTask(taskId, { started_at: now });
+			} else if (task?.task_type === 'recurring' && task.recurrence) {
+				addNotification('Tarea renovada', 'success');
+				await tasksApi.updateTask(taskId, { due_at: buildRecurringDueAt(task.recurrence) });
+			} else {
+				addNotification('Tarea finalizada', 'success');
+				await tasksApi.updateTask(taskId, { finished_at: now });
 			}
+			await invalidateAll();
+		} finally {
+			pendingTaskIds.delete(taskId);
 		}
 	}
 
@@ -298,67 +264,32 @@
 		action: 'start' | 'finish'
 	) {
 		const now = new Date().toISOString();
-
-		if (type === 'project') {
-			const project = findTreeProject(data.activeTree, id);
-			if (action === 'start') {
-				const prev = project?.started_at;
-				if (project) project.started_at = now;
-				addNotification('Proyecto iniciado', 'success');
-				try {
-					await tasksApi.updateProject(id, { started_at: now });
-				} catch {
-					if (project) project.started_at = prev ?? null;
-					addToast('Error al iniciar proyecto', 'error');
-				}
-				return;
-			}
-			pendingProjectIds.add(id);
-			addNotification('Proyecto finalizado', 'success');
-			try {
-				await tasksApi.updateProject(id, { finished_at: now });
-			} catch {
-				pendingProjectIds.delete(id);
-				addToast('Error al finalizar proyecto', 'error');
-			}
-			return;
-		}
-
-		const task = findTreeTask(data.activeTree, id);
-		if (action === 'start') {
-			const prev = task?.started_at;
-			if (task) task.started_at = now;
-			addNotification('Tarea iniciada', 'success');
-			try {
-				await tasksApi.updateTask(id, { started_at: now });
-			} catch {
-				if (task) task.started_at = prev ?? null;
-				addToast('Error al iniciar tarea', 'error');
-			}
-			return;
-		}
-
-		if (task?.task_type === 'recurring' && task.recurrence) {
-			const prev = task.due_at;
-			const newDueAt = buildRecurringDueAt(task.recurrence);
-			task.due_at = newDueAt;
-			addNotification('Tarea renovada', 'success');
-			try {
-				await tasksApi.updateTask(id, { due_at: newDueAt });
-			} catch {
-				task.due_at = prev;
-				addToast('Error al renovar tarea', 'error');
-			}
-			return;
-		}
-
-		pendingTaskIds.add(id);
-		addNotification('Tarea finalizada', 'success');
+		const pendingSet = type === 'project' ? pendingProjectIds : pendingTaskIds;
+		pendingSet.add(id);
 		try {
-			await tasksApi.updateTask(id, { finished_at: now });
-		} catch {
-			pendingTaskIds.delete(id);
-			addToast('Error al finalizar tarea', 'error');
+			if (type === 'project') {
+				const payload = action === 'start' ? { started_at: now } : { finished_at: now };
+				addNotification(
+					action === 'start' ? 'Proyecto iniciado' : 'Proyecto finalizado',
+					'success'
+				);
+				await tasksApi.updateProject(id, payload);
+			} else if (action === 'start') {
+				addNotification('Tarea iniciada', 'success');
+				await tasksApi.updateTask(id, { started_at: now });
+			} else {
+				const task = findTreeTask(data.activeTree, id);
+				if (task?.task_type === 'recurring' && task.recurrence) {
+					addNotification('Tarea renovada', 'success');
+					await tasksApi.updateTask(id, { due_at: buildRecurringDueAt(task.recurrence) });
+				} else {
+					addNotification('Tarea finalizada', 'success');
+					await tasksApi.updateTask(id, { finished_at: now });
+				}
+			}
+			await invalidateAll();
+		} finally {
+			pendingSet.delete(id);
 		}
 	}
 

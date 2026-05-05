@@ -120,7 +120,6 @@ export interface UpdateTaskRequest {
 	started_at?: string | null;
 	finished_at?: string | null;
 	depends_on?: number[];
-	blocks?: number[];
 	task_type?: string;
 	recurrence?: number | null;
 	priority?: number | null;
@@ -173,7 +172,6 @@ export interface TaskDetailResponse {
 export interface TaskFullResponse {
 	id: number;
 	project_id: number | null;
-	project_name: string | null;
 	name: string;
 	description: string | null;
 	due_at: string | null;

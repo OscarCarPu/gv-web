@@ -1,8 +1,7 @@
 import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ cookies, params, depends }) => {
-	depends('app:tasks');
+export const load: PageServerLoad = async ({ cookies, params }) => {
 	const token = cookies.get('session');
 	const id = Number(params.id);
 

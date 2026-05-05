@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { invalidate } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { varietiesApi } from '$lib/domains/varieties/api/varieties.api';
 	import type { Variety } from '$lib/domains/varieties/types/Variety.types';
 	import { linkify } from '$lib/shared/utils/linkify';
@@ -59,7 +59,7 @@
 				judge: judge.trim() || variety.judge,
 			});
 			addNotification('Variedad actualizada', 'success');
-			invalidate('app:varieties');
+			await invalidateAll();
 		} catch {
 			addToast('Error al guardar', 'error');
 		} finally {
@@ -71,7 +71,7 @@
 		try {
 			await varietiesApi.deleteVariety(variety.id);
 			addNotification('Variedad eliminada', 'success');
-			invalidate('app:varieties');
+			await invalidateAll();
 		} catch {
 			addToast('Error al eliminar', 'error');
 		}

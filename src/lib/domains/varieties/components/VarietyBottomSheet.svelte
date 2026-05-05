@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidate } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import { varietiesApi } from '$lib/domains/varieties/api/varieties.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
@@ -61,7 +61,7 @@
 			});
 			addNotification('Variedad creada', 'success');
 			onclose();
-			invalidate('app:varieties');
+			await invalidateAll();
 		} catch {
 			addToast('Error al crear', 'error');
 		} finally {
