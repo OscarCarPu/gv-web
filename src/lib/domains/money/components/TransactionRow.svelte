@@ -17,19 +17,18 @@
 		sign === 'pos' ? 'amount-positive' : sign === 'neg' ? 'amount-negative' : 'amount-neutral'
 	);
 	let prefix = $derived(sign === 'pos' ? '+' : sign === 'neg' ? '−' : '');
+	let name = $derived(tx.description?.trim() || tx.category_name || '—');
 </script>
 
 <div class="task-item money-tx-row">
 	<div class="money-tx-info">
 		<span class="status-badge {getTypeBadgeClass(tx.type)}">{getTypeLabel(tx.type)}</span>
-		<button class="task-name-btn money-tx-account" onclick={() => onedit(tx.id)}>
-			{tx.account_name}{#if tx.to_account_name}
-				&nbsp;→ {tx.to_account_name}
-			{/if}
+		<button class="task-name-btn money-tx-text" onclick={() => onedit(tx.id)}>
+			<span class="money-tx-name">{name}</span>
+			<span class="money-tx-account">
+				· {tx.account_name}{#if tx.to_account_name}&nbsp;→ {tx.to_account_name}{/if}
+			</span>
 		</button>
-		<span class="money-tx-category">
-			· {#if tx.category_name}{tx.category_name}{:else}—{/if}
-		</span>
 	</div>
 	<div class="task-actions">
 		<span class={amountClass}>{prefix}{formatMoney(tx.amount)}</span>

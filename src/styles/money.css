@@ -16,12 +16,12 @@
 	@apply flex min-w-0 flex-1 items-center gap-2;
 }
 
-.money-tx-account {
-	@apply truncate;
+.money-tx-text {
+	@apply min-w-0 flex-1 truncate text-left;
 }
 
-.money-tx-category {
-	@apply text-text-muted truncate text-sm;
+.money-tx-account {
+	@apply text-text-muted text-sm font-normal;
 }
 
 .money-tiles-wrap {
@@ -71,17 +71,20 @@
 	@apply flex flex-col gap-1;
 }
 
-.amount-positive {
+.amount-positive,
+.detail-info-value.amount-positive {
 	color: var(--color-success);
 	@apply font-semibold tabular-nums;
 }
 
-.amount-negative {
+.amount-negative,
+.detail-info-value.amount-negative {
 	color: var(--color-danger);
 	@apply font-semibold tabular-nums;
 }
 
-.amount-neutral {
+.amount-neutral,
+.detail-info-value.amount-neutral {
 	color: var(--color-text);
 	@apply font-semibold tabular-nums;
 }
