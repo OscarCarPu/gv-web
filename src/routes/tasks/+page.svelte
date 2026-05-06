@@ -539,10 +539,6 @@
 			<div class="section-header">
 				<h2>Próximas a vencer <span class="summary-pace">{dueTodayCount}</span></h2>
 				<div class="priority-filter">
-					<button
-						class:active={dueDatePriorityFilter === null}
-						onclick={() => (dueDatePriorityFilter = null)}>Todas</button
-					>
 					{#each [1, 2, 3, 4] as p (p)}
 						<button
 							class:active={dueDatePriorityFilter === p}
@@ -550,6 +546,10 @@
 							aria-label="Prioridad hasta {p}">≤{p}</button
 						>
 					{/each}
+					<button
+						class:active={dueDatePriorityFilter === null}
+						onclick={() => (dueDatePriorityFilter = null)}>Todas</button
+					>
 				</div>
 				<button
 					class="btn-primary btn-sm"
