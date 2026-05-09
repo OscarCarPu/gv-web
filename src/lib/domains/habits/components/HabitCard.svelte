@@ -11,10 +11,12 @@
 		habit,
 		currentDate = toLocalDateString(),
 		onRefresh,
+		onEdit,
 	}: {
 		habit: HabitWithLog;
 		currentDate?: string;
 		onRefresh?: () => void;
+		onEdit?: () => void;
 	} = $props();
 
 	let optimisticValue: number | null = $state(null);
@@ -105,6 +107,11 @@
 </script>
 
 <div class="habit-card">
+	{#if onEdit}
+		<button class="edit-btn" onclick={onEdit} aria-label="Editar hábito">
+			<Icon name="pen" />
+		</button>
+	{/if}
 	<button
 		class="history-btn"
 		onclick={() => (showHistory = !showHistory)}

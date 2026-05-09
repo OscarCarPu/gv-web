@@ -21,6 +21,15 @@ export interface CreateHabitRequest {
 	recording_required?: boolean;
 }
 
+export interface UpdateHabitRequest {
+	name: string;
+	description: string | null;
+	frequency: string;
+	target_min: number | null;
+	target_max: number | null;
+	recording_required: boolean;
+}
+
 export interface LogUpsertRequest {
 	habit_id: number;
 	date: string;

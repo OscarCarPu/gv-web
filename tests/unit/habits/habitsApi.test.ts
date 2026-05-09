@@ -46,4 +46,25 @@ describe('habitsApi', () => {
 			token: 'tok',
 		});
 	});
+
+	it('updateHabit sends PUT to /habits/{id}', async () => {
+		mockFetchAPI.mockResolvedValue({ id: 7, name: 'Run', description: null });
+		await habitsApi.updateHabit(
+			7,
+			{
+				name: 'Run',
+				description: null,
+				frequency: 'weekly',
+				target_min: 2,
+				target_max: null,
+				recording_required: true,
+			},
+			'tok'
+		);
+		expect(mockFetchAPI).toHaveBeenCalledWith('/habits/7', expect.anything(), {
+			method: 'PUT',
+			body: '{"name":"Run","description":null,"frequency":"weekly","target_min":2,"target_max":null,"recording_required":true}',
+			token: 'tok',
+		});
+	});
 });

@@ -9,6 +9,7 @@ import {
 import type {
 	HabitWithLog,
 	CreateHabitRequest,
+	UpdateHabitRequest,
 	LogUpsertRequest,
 	HabitHistoryResponse,
 } from '../types/Habit.types';
@@ -25,6 +26,18 @@ export const habitsApi = {
 	): Promise<{ id: number; name: string; description: string | null }> {
 		return fetchAPI('/habits', CreateHabitResponseSchema, {
 			method: 'POST',
+			body: JSON.stringify(input),
+			token,
+		});
+	},
+
+	async updateHabit(
+		id: number,
+		input: UpdateHabitRequest,
+		token?: string
+	): Promise<{ id: number; name: string; description: string | null }> {
+		return fetchAPI(`/habits/${id}`, CreateHabitResponseSchema, {
+			method: 'PUT',
 			body: JSON.stringify(input),
 			token,
 		});
