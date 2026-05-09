@@ -17,8 +17,8 @@
 	let name = $state('');
 	let description = $state('');
 	let frequency = $state<'daily' | 'weekly' | 'monthly'>('daily');
-	let targetMin = $state<string>('');
-	let targetMax = $state<string>('');
+	let targetMin: number | null = $state(null);
+	let targetMax: number | null = $state(null);
 	let recordingRequired = $state(true);
 	let saving = $state(false);
 	let nameError = $state(false);
@@ -29,32 +29,21 @@
 			name = habit?.name ?? '';
 			description = habit?.description ?? '';
 			frequency = (habit?.frequency as 'daily' | 'weekly' | 'monthly') ?? 'daily';
-			targetMin = habit?.target_min != null ? String(habit.target_min) : '';
-			targetMax = habit?.target_max != null ? String(habit.target_max) : '';
+			targetMin = habit?.target_min ?? null;
+			targetMax = habit?.target_max ?? null;
 			recordingRequired = habit?.recording_required ?? true;
 			nameError = false;
 			targetError = false;
 		}
 	});
 
-	function parseTarget(v: string): number | null {
-		const trimmed = v.trim();
-		if (trimmed === '') return null;
-		const n = parseFloat(trimmed);
-		return Number.isFinite(n) ? n : null;
-	}
-
 	async function save() {
 		if (!name.trim()) {
 			nameError = true;
 			return;
 		}
-		const min = parseTarget(targetMin);
-		const max = parseTarget(targetMax);
-		if ((targetMin.trim() !== '' && min === null) || (targetMax.trim() !== '' && max === null)) {
-			targetError = true;
-			return;
-		}
+		const min = targetMin;
+		const max = targetMax;
 		if (min !== null && min < 0) {
 			targetError = true;
 			return;
