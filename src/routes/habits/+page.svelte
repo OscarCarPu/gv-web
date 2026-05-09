@@ -49,11 +49,11 @@
 </svelte:head>
 
 <div class="container">
-	<div class="habits-header">
-		<h1>Habitos</h1>
+	<h1>Habitos</h1>
+	<div class="habits-toolbar">
+		<DateNavigation onDateChange={handleDateChange} />
 		<button class="btn-primary" onclick={openCreate}>+ Nuevo hábito</button>
 	</div>
-	<DateNavigation onDateChange={handleDateChange} />
 
 	<div class="habit-list">
 		{#each habits as habit (habit.id)}

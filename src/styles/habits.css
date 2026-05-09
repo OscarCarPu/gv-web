@@ -1,7 +1,11 @@
 @reference "./app.css";
 
-.habits-header {
-	@apply flex items-center justify-between gap-4;
+.habits-toolbar {
+	@apply mt-6 flex flex-wrap items-center justify-center gap-4;
+
+	.date-navigation {
+		@apply mt-0;
+	}
 }
 
 .habit-list {
