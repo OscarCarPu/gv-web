@@ -6,6 +6,10 @@
 	let { data } = $props();
 </script>
 
+<svelte:head>
+	<title>Dinero</title>
+</svelte:head>
+
 <div class="container">
 	<h1>Dinero</h1>
 
