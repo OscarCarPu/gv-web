@@ -223,17 +223,17 @@
 						</div>
 						<div class="plan-block-actions">
 							{#if b.task_id !== null}
-								<button
-									class="btn-primary btn-sm"
-									onclick={() => handleToggle(b)}
-									disabled={finished}
-								>
-									{toggleLabel(b)}
-								</button>
-								<button class="btn-primary btn-sm" onclick={() => handleTimer(b)}>
-									<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />
-									{isTimerRunning ? 'Asignar' : 'Iniciar'}
-								</button>
+								{#if finished}
+									<button class="btn-primary btn-sm" disabled>Terminado</button>
+								{:else}
+									<button class="btn-primary btn-sm" onclick={() => handleToggle(b)}>
+										{toggleLabel(b)}
+									</button>
+									<button class="btn-primary btn-sm" onclick={() => handleTimer(b)}>
+										<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />
+										{isTimerRunning ? 'Asignar' : 'Iniciar'}
+									</button>
+								{/if}
 							{/if}
 							<button class="btn-icon" onclick={() => openEdit(b)} aria-label="Editar bloque">
 								<Icon name="pen" />

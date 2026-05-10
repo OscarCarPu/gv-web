@@ -378,3 +378,7 @@
 .nw-tooltip-value {
 	@apply text-text text-base font-semibold tabular-nums;
 }
+
+.nw-tooltip-pct {
+	@apply text-xs font-medium tabular-nums;
+}

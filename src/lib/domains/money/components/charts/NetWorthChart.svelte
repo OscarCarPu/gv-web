@@ -74,6 +74,13 @@
 
 	let hover = $state<HoverInfo | null>(null);
 
+	const hoverPct = $derived.by(() => {
+		if (!hover || chartData.length === 0) return null;
+		const start = chartData[0].value;
+		if (start === 0) return null;
+		return ((hover.point.value - start) / start) * 100;
+	});
+
 	const tooltipLeft = $derived.by(() => {
 		if (!hover) return 0;
 		const x = padding.left + hover.x;
@@ -120,6 +127,15 @@
 			<div class="nw-tooltip" style="left: {tooltipLeft}px; top: {tooltipTop}px">
 				<div class="nw-tooltip-date">{formatTooltipDate(hover.point.date)}</div>
 				<div class="nw-tooltip-value">{formatMoney(hover.point.value.toFixed(2))}</div>
+				{#if hoverPct !== null}
+					<div
+						class="nw-tooltip-pct"
+						class:amount-positive={hoverPct > 0}
+						class:amount-negative={hoverPct < 0}
+					>
+						{hoverPct >= 0 ? '+' : '−'}{Math.abs(hoverPct).toFixed(1)}%
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>

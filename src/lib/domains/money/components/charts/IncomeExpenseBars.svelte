@@ -103,7 +103,7 @@
 	});
 
 	const TOOLTIP_W = 200;
-	const TOOLTIP_H_EST = 110;
+	const TOOLTIP_H_EST = 130;
 
 	const tooltipLeft = $derived.by(() => {
 		if (!hoveredPos) return 0;
@@ -273,6 +273,18 @@
 						)}
 					</span>
 				</div>
+				{#if parseFloat(d.income) > 0}
+					{@const savingsPct = (parseFloat(d.balance) / parseFloat(d.income)) * 100}
+					<div class="ie-tooltip-row">
+						<span>Ahorro</span>
+						<span
+							class:amount-positive={savingsPct > 0}
+							class:amount-negative={savingsPct < 0}
+						>
+							{savingsPct >= 0 ? '+' : '−'}{Math.abs(savingsPct).toFixed(1)}%
+						</span>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>
