@@ -39,4 +39,11 @@ export const planApi = {
 			token,
 		});
 	},
+
+	async deleteFutureBlocks(token?: string): Promise<void> {
+		return fetchAPI('/plan/blocks/future', z.void(), {
+			method: 'DELETE',
+			token,
+		});
+	},
 };

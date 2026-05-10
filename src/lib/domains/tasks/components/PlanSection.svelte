@@ -90,6 +90,16 @@
 		}
 	}
 
+	async function handleCleanFuture() {
+		try {
+			await planApi.deleteFutureBlocks();
+			await refresh();
+		} catch (e: unknown) {
+			const msg = e instanceof Error ? e.message : 'Error al limpiar';
+			addToast(msg, 'error');
+		}
+	}
+
 	function openCreate() {
 		editingBlock = null;
 		editorOpen = true;
@@ -162,9 +172,19 @@
 				<Icon name="arrow-up" />
 			</button>
 		</div>
-		<button class="btn-primary btn-sm" onclick={openCreate}>
-			<Icon name="plus" /> Bloque
-		</button>
+		<div class="section-actions">
+			<button
+				class="btn-icon"
+				onclick={handleCleanFuture}
+				title="Limpiar bloques futuros"
+				aria-label="Limpiar bloques futuros"
+			>
+				<Icon name="trash" />
+			</button>
+			<button class="btn-primary btn-sm" onclick={openCreate}>
+				<Icon name="plus" /> Bloque
+			</button>
+		</div>
 	</div>
 
 	{#if data === null}
