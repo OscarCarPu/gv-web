@@ -589,3 +589,142 @@
 .priority-badge.p-2 {
 	@apply bg-warning/20 text-warning;
 }
+
+/* --- Plan section --- */
+
+.tasks-content.tasks-content-wide {
+	grid-template-columns: 1fr;
+}
+
+.plan-summary {
+	@apply mt-3 flex flex-col gap-2;
+}
+
+.plan-summary-row {
+	@apply flex items-center gap-3;
+}
+
+.plan-summary-row .progress-track {
+	@apply flex-1;
+}
+
+.plan-summary-label {
+	@apply text-text-muted w-14 shrink-0 text-xs tracking-wide uppercase;
+}
+
+.plan-summary-value {
+	@apply text-text shrink-0 font-mono text-sm tabular-nums;
+}
+
+.plan-summary-row.goal-reached .progress-fill {
+	background: color-mix(in srgb, var(--color-primary) 80%, transparent);
+}
+
+.plan-list {
+	@apply mt-4 flex flex-col gap-2;
+}
+
+.plan-block {
+	@apply bg-bg flex items-center gap-3 rounded-lg px-3 py-2;
+	border: 1px solid transparent;
+
+	&:hover {
+		border-color: rgba(255, 255, 255, 0.04);
+		@apply bg-bg/80;
+	}
+}
+
+.plan-block-free {
+	background: color-mix(in srgb, var(--color-text-muted) 5%, var(--color-bg));
+}
+
+.plan-block-finished {
+	@apply opacity-60;
+}
+
+.plan-block-current {
+	border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+	background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg));
+
+	&:hover {
+		border-color: color-mix(in srgb, var(--color-primary) 75%, transparent);
+		background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg));
+	}
+}
+
+.plan-block-time {
+	@apply text-text-muted shrink-0 text-center font-mono text-[11px] leading-tight tabular-nums;
+	min-width: 3.25rem;
+}
+
+.plan-block-body {
+	@apply flex min-w-0 flex-1 flex-col gap-0.5;
+}
+
+.plan-block-name {
+	@apply text-text truncate text-sm font-semibold;
+}
+
+.plan-block-meta {
+	@apply text-text-muted flex min-w-0 items-baseline gap-1.5 overflow-hidden text-xs;
+}
+
+.plan-block-note {
+	@apply min-w-0 flex-1 truncate italic;
+}
+
+.plan-block-actions {
+	@apply flex shrink-0 items-center gap-1.5;
+}
+
+.plan-now-divider {
+	@apply my-1 flex items-center gap-3;
+}
+
+.plan-now-line {
+	@apply h-px flex-1;
+	background: color-mix(in srgb, var(--color-primary) 55%, transparent);
+}
+
+.plan-now-label {
+	@apply font-mono text-[11px] font-semibold tabular-nums;
+	color: var(--color-primary);
+}
+
+/* --- Plan Block Editor (modal) --- */
+
+.plan-editor {
+	@apply flex flex-col gap-3;
+}
+
+.plan-editor-title {
+	@apply text-text text-lg font-bold;
+}
+
+.plan-editor-mode {
+	@apply border-border inline-flex overflow-hidden rounded border;
+
+	button {
+		@apply text-text-muted flex-1 cursor-pointer border-none bg-transparent px-3 py-1.5 text-sm transition-colors;
+	}
+
+	button.active {
+		@apply bg-primary/15 text-primary;
+	}
+}
+
+.plan-editor-times {
+	@apply flex gap-3;
+
+	label {
+		@apply flex flex-1 flex-col gap-1;
+	}
+
+	input {
+		@apply border-border bg-bg rounded border px-2 py-1.5;
+	}
+}
+
+.plan-editor-actions {
+	@apply mt-2 flex justify-end gap-2;
+}

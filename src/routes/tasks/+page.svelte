@@ -11,11 +11,18 @@
 	import StartedAtEditor from '$lib/domains/tasks/components/StartedAtEditor.svelte';
 	import TimeHistoryModal from '$lib/domains/tasks/components/TimeHistoryModal.svelte';
 	import AgendaRightSheet from '$lib/domains/tasks/components/AgendaRightSheet.svelte';
+	import PlanSection from '$lib/domains/tasks/components/PlanSection.svelte';
 	import type {
 		ActiveTreeNode,
 		TimeEntrySummaryResponse,
 	} from '$lib/domains/tasks/types/Task.types';
-	import { toLocalDateString, toISOString, formatDueDay } from '$lib/shared/utils/datetime';
+	import {
+		toLocalDateString,
+		toISOString,
+		formatDueDay,
+		formatTime,
+	} from '$lib/shared/utils/datetime';
+	import { buildPaceTooltip } from '$lib/domains/tasks/utils/paceLabel';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -96,62 +103,9 @@
 	}
 
 	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
-
-	let isWeekend = $derived.by(() => {
-		const day = new Date().getDay();
-		return day === 0 || day === 6;
-	});
-	let dailyTarget = $derived(isWeekend ? 28800 : 43200);
-	let dailyTargetLabel = $derived(isWeekend ? '8h' : '12h');
-
-	let weekTargetTooltip = $derived.by(() => {
-		const remaining = 288000 - summary.week;
-		if (remaining <= 0) return 'Meta alcanzada ✓';
-
-		const now = new Date();
-		const jsDay = now.getDay(); // 0=Sun, 1=Mon...6=Sat
-		const day = jsDay === 0 ? 7 : jsDay; // 1=Mon...7=Sun
-		const currentHour = now.getHours() + now.getMinutes() / 60;
-		const wakingHoursLeft = Math.max(0, 24 - currentHour);
-
-		const isWeekendDay = (d: number) => d >= 6; // 6=Sat, 7=Sun
-		const wakingHours = (d: number) => (isWeekendDay(d) ? 12 : 17);
-
-		// Uniform calculation (all days equal, 17h)
-		const uniformWaking = 17;
-		const uniformFractionToday = Math.min(wakingHoursLeft, uniformWaking) / uniformWaking;
-		const remainingFullDays = 7 - day;
-		const uniformTotalDays = uniformFractionToday + remainingFullDays;
-
-		// Weighted calculation (weekdays=17h, weekends=12h)
-		const todayWaking = wakingHours(day);
-		const weightedToday = Math.min(wakingHoursLeft, todayWaking);
-		let weightedTotal = weightedToday;
-		for (let d = day + 1; d <= 7; d++) {
-			weightedTotal += wakingHours(d);
-		}
-
-		if (uniformTotalDays <= 0) return 'Meta alcanzada ✓';
-
-		if (remainingFullDays === 0) {
-			return `${formatTime(Math.round(remaining))} hoy`;
-		}
-
-		const uniformPerDay = remaining / uniformTotalDays;
-		const uniformToday = uniformPerDay * uniformFractionToday;
-
-		const weightedTodayShare = remaining * (weightedToday / weightedTotal);
-		const weightedPerDayWeekday = remaining * (17 / weightedTotal);
-		const weightedPerDayWeekend = remaining * (12 / weightedTotal);
-
-		return `${formatTime(Math.round(uniformPerDay))}/día · ${formatTime(Math.round(uniformToday))} hoy | ${formatTime(Math.round(weightedPerDayWeekday))} L-V · ${formatTime(Math.round(weightedPerDayWeekend))} S-D · ${formatTime(Math.round(weightedTodayShare))} hoy`;
-	});
-
-	function formatTime(seconds: number): string {
-		const h = Math.floor(seconds / 3600);
-		const m = Math.floor((seconds % 3600) / 60);
-		return m > 0 ? `${h}h ${m}m` : `${h}h`;
-	}
+	let dailyTarget = $derived(summary.daily_target_seconds);
+	let dailyTargetLabel = $derived(formatTime(summary.daily_target_seconds));
+	let weekTargetTooltip = $derived(buildPaceTooltip(summary));
 
 	async function handleStop() {
 		commentExpanded = false;
@@ -508,15 +462,17 @@
 				</div>
 				<span class="summary-value">{formatTime(summary.today)} / {dailyTargetLabel}</span>
 			</div>
-			<div class="summary-item" class:completed={summary.week >= 288000}>
+			<div class="summary-item" class:completed={summary.week >= summary.weekly_target_seconds}>
 				<span class="summary-label">Semana</span>
 				<div class="progress-track bg-bg">
 					<div
 						class="progress-fill"
-						style="width: {Math.min((summary.week / 288000) * 100, 100)}%"
+						style="width: {Math.min((summary.week / summary.weekly_target_seconds) * 100, 100)}%"
 					></div>
 				</div>
-				<span class="summary-value">{formatTime(summary.week)} / 80h</span>
+				<span class="summary-value"
+					>{formatTime(summary.week)} / {formatTime(summary.weekly_target_seconds)}</span
+				>
 			</div>
 			<div class="summary-actions">
 				<span class="summary-pace">{weekTargetTooltip}</span>
@@ -538,6 +494,7 @@
 		<div class="tasks-section">
 			<div class="section-header">
 				<h2>Próximas a vencer <span class="summary-pace">{dueTodayCount}</span></h2>
+
 				<div class="priority-filter">
 					{#each [1, 2, 3, 4] as p (p)}
 						<button
@@ -601,6 +558,15 @@
 			</div>
 		</div>
 
+		<PlanSection
+			initial={data.plan}
+			ontimerstart={handleTaskStartWithNotification}
+			onafterchange={() => invalidateAll()}
+			isTimerRunning={timer.isRunning}
+		/>
+	</div>
+
+	<div class="tasks-content tasks-content-wide">
 		<div class="tasks-section">
 			<div class="section-header">
 				<h2>Proyectos activos</h2>

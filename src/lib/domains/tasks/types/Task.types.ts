@@ -228,9 +228,22 @@ export interface ProjectChildrenResponse {
 	children: ProjectChildNode[];
 }
 
+export interface PaceBreakdown {
+	uniform_per_day_seconds: number;
+	uniform_today_share_seconds: number;
+	weighted_weekday_seconds: number;
+	weighted_weekend_seconds: number;
+	weighted_today_share_seconds: number;
+	remaining_full_days: number;
+	goal_reached: boolean;
+}
+
 export interface TimeEntrySummaryResponse {
 	today: number;
 	week: number;
+	daily_target_seconds: number;
+	weekly_target_seconds: number;
+	pace: PaceBreakdown;
 }
 
 export interface ActiveTreeNode {

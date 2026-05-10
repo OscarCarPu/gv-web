@@ -195,9 +195,22 @@ export const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
 
 // --- Summary schemas ---
 
+export const PaceBreakdownSchema = z.object({
+	uniform_per_day_seconds: z.number(),
+	uniform_today_share_seconds: z.number(),
+	weighted_weekday_seconds: z.number(),
+	weighted_weekend_seconds: z.number(),
+	weighted_today_share_seconds: z.number(),
+	remaining_full_days: z.number(),
+	goal_reached: z.boolean(),
+});
+
 export const TimeEntrySummaryResponseSchema = z.object({
 	today: z.number(),
 	week: z.number(),
+	daily_target_seconds: z.number(),
+	weekly_target_seconds: z.number(),
+	pace: PaceBreakdownSchema,
 });
 
 // --- Query schemas ---

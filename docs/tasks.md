@@ -53,22 +53,29 @@ Tasks have a `priority: number` field, 1 (highest/most urgent) to 5 (lowest), de
 
 **Filtering on `/tasks`**: "Próximas a vencer" and "Proyectos activos" each have a `.priority-filter` pill group (`Todas · ≤1 · ≤2 · ≤3 · ≤4`). Filtering is **client-side** via `$derived` on the already-loaded SSR data — instant, no round-trip. The tree filter keeps all projects regardless of their children's priorities (matches the API's `min_priority` semantics on `/tasks/tree`). Server-side support exists (`?min_priority=N` on `/tasks/tree` and `/tasks/tasks/by-due-date`) but is currently unused from the frontend.
 
-### Key Types (`src/lib/domains/tasks/types/Task.types.ts`)
+### Key Types (`src/lib/domains/tasks/types/Task.types.ts`, `Plan.types.ts`)
 
-| Type                      | Key Fields                                                                                                                            |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `ProjectResponse`         | id, name, description, due_at, parent_id, started_at, finished_at                                                                     |
-| `ProjectDetailResponse`   | Same + time_spent (aggregated)                                                                                                        |
-| `ProjectChildrenResponse` | project + children[] (mixed tasks and sub-projects)                                                                                   |
-| `TaskDepRef`              | id, name, due_at (dependency reference)                                                                                               |
-| `TaskListItem`            | id, name, project_id, project_name, task_type?, recurrence?, priority? (for list-fast endpoint)                                       |
-| `TaskResponse`            | id, name, description, due_at, project_id, started_at, finished_at, task_type, recurrence?, priority, depends_on[], blocks[], blocked |
-| `TaskFullResponse`        | Same + time_spent, todos[]                                                                                                            |
-| `TodoResponse`            | id, task_id, name, is_done                                                                                                            |
-| `TimeEntryResponse`       | id, task_id, started_at, finished_at, comment                                                                                         |
-| `ActiveTreeNode`          | Recursive tree: id, type, name, task_type?, recurrence?, priority?, children[], depends_on[], blocks[], blocked                       |
-| `TaskByDueDateResponse`   | Task with project_name, project_due_at, task_type, recurrence?, priority, depends_on[], blocks[], blocked                             |
-| `TimeEntryWithTask`       | Time entry with task_name, project_name, task_finished_at, time_spent                                                                 |
+| Type                       | Key Fields                                                                                                                                                                                               |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ProjectResponse`          | id, name, description, due_at, parent_id, started_at, finished_at                                                                                                                                        |
+| `ProjectDetailResponse`    | Same + time_spent (aggregated)                                                                                                                                                                           |
+| `ProjectChildrenResponse`  | project + children[] (mixed tasks and sub-projects)                                                                                                                                                      |
+| `TaskDepRef`               | id, name, due_at (dependency reference)                                                                                                                                                                  |
+| `TaskListItem`             | id, name, project_id, project_name, task_type?, recurrence?, priority? (for list-fast endpoint)                                                                                                          |
+| `TaskResponse`             | id, name, description, due_at, project_id, started_at, finished_at, task_type, recurrence?, priority, depends_on[], blocks[], blocked                                                                    |
+| `TaskFullResponse`         | Same + time_spent, todos[]                                                                                                                                                                               |
+| `TodoResponse`             | id, task_id, name, is_done                                                                                                                                                                               |
+| `TimeEntryResponse`        | id, task_id, started_at, finished_at, comment                                                                                                                                                            |
+| `ActiveTreeNode`           | Recursive tree: id, type, name, task_type?, recurrence?, priority?, children[], depends_on[], blocks[], blocked                                                                                          |
+| `TaskByDueDateResponse`    | Task with project_name, project_due_at, task_type, recurrence?, priority, depends_on[], blocks[], blocked                                                                                                |
+| `TimeEntryWithTask`        | Time entry with task_name, project_name, task_finished_at, time_spent                                                                                                                                    |
+| `PaceBreakdown`            | uniform_per_day_seconds, uniform_today_share_seconds, weighted_weekday_seconds, weighted_weekend_seconds, weighted_today_share_seconds, remaining_full_days, goal_reached                                |
+| `TimeEntrySummaryResponse` | today, week, daily_target_seconds, weekly_target_seconds, pace (PaceBreakdown). Computed server-side — see [Plan Block subsystem](#plan-block-subsystem)                                                 |
+| `PlanBlockResponse`        | id, started_at, ended_at, task_id, task_name, label, note, task_type, task_recurrence, task_started_at, task_finished_at (joined task fields are read-only, always present, `null` for free-time blocks) |
+| `PlanTotals`               | task_seconds (sum of linked-block durations), free_seconds (sum of free-time-block durations)                                                                                                            |
+| `PlanTodayResponse`        | date (YYYY-MM-DD), blocks[], totals (PlanTotals), budget (TimeEntrySummaryResponse)                                                                                                                      |
+| `CreatePlanBlockRequest`   | started_at, ended_at, task_id?, label?, note?                                                                                                                                                            |
+| `UpdatePlanBlockRequest`   | started_at?, ended_at?, task_id?, clear_task?, label?, note?, clear_note?                                                                                                                                |
 
 ## Routes
 
@@ -89,18 +96,28 @@ Tasks have a `priority: number` field, 1 (highest/most urgent) to 5 (lowest), de
 │  00:12:34  [Started at]  [▶ Play]   │  ← Timer controls
 │  Hoy: ██░░  Semana: ████░░  [📊][📅]│  ← Summary bars + agenda
 ├────────────────────────┬────────────────────────┤
-│ Próximas a vencer      │ Proyectos activos      │
-│ [Todas ≤1 ≤2 ≤3 ≤4][+] │ [Todas ≤1 ≤2 ≤3 ≤4][+] │
-│                        │                        │
-│ Task items (with P{n}) │ Tree view (with P{n})  │
-│ (click→sheet)          │ (proj→navigate,        │
-│                        │  task→sheet)           │
-└────────────────────────┴────────────────────────┘
+│ Próximas a vencer      │ Plan de hoy            │
+│ [Todas ≤1 ≤2 ≤3 ≤4][+] │ [+ Bloque]             │
+│                        │ Estim: ██░░ / 11h 52m  │
+│ Task items (with P{n}) │ Libre: 2h              │
+│ (click→sheet)          │ ───────────────────    │
+│                        │ Plan blocks (current   │
+│                        │ block has primary      │
+│                        │ border; "now" line     │
+│                        │ shown only when no     │
+│                        │ block is in progress)  │
+├────────────────────────┴────────────────────────┤
+│ Proyectos activos                   [+ Proyecto]│
+│ [Todas ≤1 ≤2 ≤3 ≤4]                             │
+│ Tree view (with P{n})                           │
+│ (proj→navigate, task→sheet)                     │
+└─────────────────────────────────────────────────┘
 ```
 
-- **"+" buttons**: Open CreateBottomSheet in task or project mode
+- **"+" buttons**: Open CreateBottomSheet in task or project mode (or PlanBlockEditor for "+ Bloque")
 - **Task click**: Opens TaskBottomSheet (half-modal)
 - **Project click**: Navigates to `/tasks/projects/{id}`
+- **Layout**: "Próximas a vencer" and "Plan de hoy" share the top row (2-col on desktop, stacked on mobile); "Proyectos activos" is a full-width section below (`.tasks-content.tasks-content-wide`)
 
 ### TaskBottomSheet (`src/lib/domains/tasks/components/TaskBottomSheet.svelte`)
 
@@ -222,6 +239,70 @@ Right-sliding panel showing a chronological timeline of time entries (most recen
 - Click: if task has a project, navigates to `/tasks/projects/{id}?task={taskId}` (auto-opens TaskBottomSheet); otherwise opens TaskBottomSheet in place
 - Calls `tasksApi.getTimeEntries({ start_time })` with `toLocalDateString(now - 24h|7d)`
 
+## Plan Block subsystem
+
+Always-visible "Plan de hoy" section on `/tasks`. The plan is a list of time-boxed blocks scheduled across today; each block is either **linked** (points at a task — gets ▶/✓ shortcuts that call the existing task endpoints) or **free-time** (carries only a label like "comer", "thing 1"). The plan never mutates `tasks` or `time_entries` — it is a read-only mirror of intent.
+
+### Server-side rendering and data flow
+
+- `+page.server.ts` calls `planApi.getToday(token)` in parallel with the existing tasks/summary loads and adds `plan` to the page data. Falls back to `null` on error.
+- `PlanSection` reads `data.plan` via `let data = $derived(initial)` — single source of truth on the server. After every CRUD mutation (create/update/delete in the editor, ▶/✓ on a linked block, ▶ Iniciar timer), the section calls `onafterchange()` which the page wires to `invalidateAll()`. SvelteKit re-runs the server load, the new `data.plan` propagates through the prop, and the `$derived` data updates without any local refetch.
+- This client-loaded variant (calling `planApi.getToday()` from a `$effect` on mount) was abandoned because it raced with `setClientToken()` in the root layout — the `Authorization` header was empty on first mount and the API returned 401.
+
+### Estimate row + "now" line
+
+- `nowMs` is a `$state` updated every 60 s by an interval inside `$effect` (cleaned up on unmount). Drives the estimate calculation and the "now" line.
+- The summary shows two rows: **Estim.** = `summary.today` (real, finished time entries) + `futureTaskSeconds` (sum of durations of linked plan blocks where `started_at >= now`) over `daily_target_seconds`; **Libre** = `totals.free_seconds`. The progress bar turns primary-green when `estimatedTotal >= daily_target_seconds` (going over target is _not_ red — exceeding the goal is the goal).
+- The block list highlights the current block (where `started_at <= now < ended_at`) with `.plan-block-current` (primary-tinted border + background, same look as `.task-item.today`). When no block is currently active, a horizontal "now" line is rendered before the first block whose `started_at > now` (or after the last block if `now` is past everything). The line never appears when a current block exists — the highlighted border is the visual cue instead.
+
+### Components
+
+#### PlanSection (`src/lib/domains/tasks/components/PlanSection.svelte`)
+
+- Props: `initial: PlanTodayResponse | null`, `ontimerstart`, `onafterchange`, `isTimerRunning`.
+- Renders the section header ("Plan de hoy" + `+ Bloque` button), the summary rows, and the block list.
+- Linked block actions: Empezar / Acabar / Renovar (matches `TaskItem` semantics — uses the joined `task_started_at`, `task_type`, `task_recurrence` to choose the label) and Iniciar / Asignar (timer). Both are implemented inside the section by calling `tasksApi.updateTask(...)` and the `ontimerstart` prop directly — no proxy through the plan service. Disabled when `task_finished_at` is set.
+- Free-time blocks render the label, duration, and an inline note (truncated). No action buttons, just edit/delete.
+- All edit/delete go through `planApi`, then `await onafterchange()` to refresh the SSR data.
+
+#### PlanBlockEditor (`src/lib/domains/tasks/components/PlanBlockEditor.svelte`)
+
+Modal for creating and editing a single block.
+
+- Mode toggle: **Tarea** / **Tiempo libre**. Switches between showing a task selector + optional label override, or a free-text "Qué harás" label.
+- Two `<input type="time">` for start/end (today's date is implied — the section is today-only).
+- Task selector loads via `tasksApi.listTasksFast()` on open (same source as `DepSelector`), grouped by project name.
+- Selecting a task auto-fills the label with the task's name; the user can override.
+- On submit, calls `planApi.createBlock` or `planApi.updateBlock`. Backend validation errors (`ended_at must be after started_at`, `plan block overlaps with an existing one`, `task not found`, etc.) are surfaced via toast.
+- Cancel uses `.btn-outline` (proper-width text button) — not `.btn-cancel` which is icon-shaped.
+
+### API client (`src/lib/domains/tasks/api/plan.api.ts`)
+
+Standard `fetchAPI` wrappers, all behind the full-private auth token.
+
+| Method | Endpoint            | Wrapper                              |
+| ------ | ------------------- | ------------------------------------ |
+| GET    | `/plan/today`       | `planApi.getToday(token?)`           |
+| POST   | `/plan/blocks`      | `planApi.createBlock(input, token?)` |
+| PUT    | `/plan/blocks/{id}` | `planApi.updateBlock(id, input)`     |
+| DELETE | `/plan/blocks/{id}` | `planApi.deleteBlock(id)`            |
+
+Zod schemas live in `src/lib/domains/tasks/api/plan.schemas.ts` (`PlanBlockResponseSchema`, `PlanTotalsSchema`, `PlanTodayResponseSchema`); reuses `TimeEntrySummaryResponseSchema` for the `budget` field.
+
+### Pace tooltip (`src/lib/domains/tasks/utils/paceLabel.ts`)
+
+`buildPaceTooltip(summary)` is a pure formatter that builds the Spanish pace tooltip rendered next to the weekly progress bar in the timer panel. It only consumes the numbers from `summary.pace` and `summary.weekly_target_seconds - summary.week`, applying `formatTime()` for each segment. All math (uniform-per-day, today's share, weekday/weekend distribution under the 80h/week goal) lives on the server in `internal/tasks/budget.go`.
+
+Three rendering branches:
+
+| Condition                        | Output                                                                                                                              |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `pace.goal_reached === true`     | `Meta alcanzada ✓`                                                                                                                  |
+| `pace.remaining_full_days === 0` | `{remaining} hoy` — last day of the week, every remaining second has to land today                                                  |
+| Otherwise                        | `{uniform_per_day}/día · {uniform_today_share} hoy \| {weighted_weekday} L-V · {weighted_weekend} S-D · {weighted_today_share} hoy` |
+
+This replaces ~40 lines of arithmetic that previously lived in `+page.svelte`. Constants (`288000`, `43200`, `28800`, `17h/12h waking`) are now exclusively on the server.
+
 ## Timer (`src/lib/domains/tasks/taskTimer.svelte.ts`)
 
 Client-side timer state using Svelte runes:
@@ -278,29 +359,39 @@ Tasks with `due_at < today` appear in red on "Próximas a vencer". `TaskItem` ad
 | `linkify(text)`           | Wraps URLs in `<a>` tags with short labels; returns HTML-safe string         |
 | `installLinkifyHandler()` | Idempotent document-level click handler for `file://` links (clipboard copy) |
 
+### `src/lib/domains/tasks/utils/paceLabel.ts`
+
+| Function                    | Description                                                                                                                                                 |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildPaceTooltip(summary)` | Formats the Spanish pace tooltip from `summary.pace`. Pure formatter — no arithmetic. See [Pace tooltip](#pace-tooltip-srclibdomainstasksutilspacelabelts). |
+
 ## API Endpoints
 
-| Method   | Endpoint                                    | Purpose                                              |
-| -------- | ------------------------------------------- | ---------------------------------------------------- |
-| `GET`    | `/tasks/tree`                               | Active project/task tree (accepts `?min_priority=N`) |
-| `GET`    | `/tasks/tasks/by-due-date`                  | Tasks sorted by due date (accepts `?min_priority=N`) |
-| `GET`    | `/tasks/projects`                           | Root projects list                                   |
-| `GET`    | `/tasks/projects/{id}`                      | Project detail with time_spent                       |
-| `GET`    | `/tasks/projects/{id}/children`             | Project + child tasks/sub-projects                   |
-| `POST`   | `/tasks/projects`                           | Create project                                       |
-| `PATCH`  | `/tasks/projects/{id}`                      | Update project                                       |
-| `DELETE` | `/tasks/projects/{id}`                      | Delete project                                       |
-| `GET`    | `/tasks/tasks/list-fast`                    | All unfinished tasks (id, name only)                 |
-| `GET`    | `/tasks/tasks/{id}`                         | Task detail with todos + dependencies                |
-| `POST`   | `/tasks/tasks`                              | Create task (accepts `depends_on: int[]`)            |
-| `PATCH`  | `/tasks/tasks/{id}`                         | Update task (accepts `depends_on: int[]`)            |
-| `DELETE` | `/tasks/tasks/{id}`                         | Delete task                                          |
-| CRUD     | `/tasks/todos`                              | Todo management                                      |
-| CRUD     | `/tasks/time-entries`                       | Time entry management                                |
-| `GET`    | `/tasks/time-entries/active`                | Currently running time entry                         |
-| `GET`    | `/tasks/time-entries/summary`               | Today + week totals                                  |
-| `GET`    | `/tasks/time-entries/history`               | Aggregated history (daily/weekly/monthly)            |
-| `GET`    | `/tasks/time-entries?start_time=&end_time=` | Time entries with task/project info (agenda)         |
+| Method   | Endpoint                                    | Purpose                                                    |
+| -------- | ------------------------------------------- | ---------------------------------------------------------- |
+| `GET`    | `/tasks/tree`                               | Active project/task tree (accepts `?min_priority=N`)       |
+| `GET`    | `/tasks/tasks/by-due-date`                  | Tasks sorted by due date (accepts `?min_priority=N`)       |
+| `GET`    | `/tasks/projects`                           | Root projects list                                         |
+| `GET`    | `/tasks/projects/{id}`                      | Project detail with time_spent                             |
+| `GET`    | `/tasks/projects/{id}/children`             | Project + child tasks/sub-projects                         |
+| `POST`   | `/tasks/projects`                           | Create project                                             |
+| `PATCH`  | `/tasks/projects/{id}`                      | Update project                                             |
+| `DELETE` | `/tasks/projects/{id}`                      | Delete project                                             |
+| `GET`    | `/tasks/tasks/list-fast`                    | All unfinished tasks (id, name only)                       |
+| `GET`    | `/tasks/tasks/{id}`                         | Task detail with todos + dependencies                      |
+| `POST`   | `/tasks/tasks`                              | Create task (accepts `depends_on: int[]`)                  |
+| `PATCH`  | `/tasks/tasks/{id}`                         | Update task (accepts `depends_on: int[]`)                  |
+| `DELETE` | `/tasks/tasks/{id}`                         | Delete task                                                |
+| CRUD     | `/tasks/todos`                              | Todo management                                            |
+| CRUD     | `/tasks/time-entries`                       | Time entry management                                      |
+| `GET`    | `/tasks/time-entries/active`                | Currently running time entry                               |
+| `GET`    | `/tasks/time-entries/summary`               | Today + week totals + daily/weekly target + pace breakdown |
+| `GET`    | `/tasks/time-entries/history`               | Aggregated history (daily/weekly/monthly)                  |
+| `GET`    | `/tasks/time-entries?start_time=&end_time=` | Time entries with task/project info (agenda)               |
+| `GET`    | `/plan/today`                               | Today's plan blocks + totals + budget                      |
+| `POST`   | `/plan/blocks`                              | Create a plan block                                        |
+| `PUT`    | `/plan/blocks/{id}`                         | Update a plan block                                        |
+| `DELETE` | `/plan/blocks/{id}`                         | Delete a plan block                                        |
 
 ## Floating Reminder
 
