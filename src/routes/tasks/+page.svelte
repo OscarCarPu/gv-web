@@ -26,6 +26,7 @@
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
+	import { linkify } from '$lib/shared/utils/linkify';
 
 	let { data } = $props();
 
@@ -126,13 +127,22 @@
 		await timer.updateStartedAt(newDate);
 	}
 
+	function scrollToSection(id: string) {
+		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
+
+	function scrollToTop() {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
 	async function handleTaskStartWithNotification(
 		taskId: number,
 		taskName: string,
-		projectName?: string | null
+		projectName?: string | null,
+		taskDescription?: string | null
 	) {
 		addNotification('Temporizador iniciado', 'success');
-		await timer.handleTaskStart(taskId, taskName, projectName);
+		await timer.handleTaskStart(taskId, taskName, projectName, taskDescription);
 	}
 
 	let selectedTaskId = $state<number | null>(null);
@@ -171,7 +181,8 @@
 				entry.started_at,
 				entry.task_name,
 				entry.project_name,
-				entry.comment
+				entry.comment,
+				entry.task_description
 			);
 		}
 	});
@@ -373,121 +384,147 @@
 <div class="container">
 	<h1>Tareas</h1>
 
-	<div class="task-timer-panel">
-		<div class="task-header">
-			<button
-				class="comment-toggle"
-				class:has-comment={timer.comment.length > 0}
-				onclick={() => {
-					commentExpanded = !commentExpanded;
-				}}
-				title="Comentario"
-			>
-				<Icon name="comment" />
-			</button>
-			<button
-				class="task-selector"
-				class:active={timer.selectedTaskDisplay !== null}
-				onclick={() => {
-					if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId);
-				}}
-				disabled={!timer.selectedTaskId}
-			>
-				{timer.selectedTaskDisplay ?? 'Seleccionar Tarea'}
-			</button>
-			<button
-				class="btn-cancel"
-				onclick={handleCancel}
-				disabled={!timer.activeTimeEntryId}
-				title="Cancelar entrada"><Icon name="xmark" /></button
-			>
-		</div>
-		{#if commentExpanded || timer.comment.length > 0}
-			<input
-				class="comment-input"
-				type="text"
-				placeholder="Comentario..."
-				value={timer.comment}
-				oninput={(e) => timer.setComment(e.currentTarget.value)}
-			/>
-		{/if}
-
-		<div class="timer-row">
-			<div class="time-entries">
-				{#each timeEntries as entry (entry.id)}
-					<TimePicker value={entry.start} onchange={(v) => (entry.start = v)} />
-					<span class="time-separator">-</span>
-					<TimePicker value={entry.end} onchange={(v) => (entry.end = v)} />
-				{/each}
-				<button class="btn-primary" onclick={submitTimeEntry} disabled={!timer.activeTimeEntryId}
-					><Icon name="plus" /> Agregar</button
-				>
-			</div>
-
-			<div class="timer-controls">
-				<span id="timer-display-trigger" class="timer-display" class:clickable={timer.isRunning}>
-					{timer.formattedTime}
-				</span>
-				{#if timer.isRunning && timer.startedAtDate}
-					<StartedAtEditor startedAt={timer.startedAtDate} onchange={handleStartedAtChange} />
-				{/if}
-				{#if timer.isRunning}
-					<button class="btn-primary running" onclick={handleStop}>
-						<Icon name="stop" />
-						Stop
-					</button>
-				{:else}
-					<button class="btn-primary" onclick={timer.startTimer}>
-						<Icon name="play" />
-						Iniciar
-					</button>
-				{/if}
-			</div>
-		</div>
-
-		<div class="time-summary">
-			<div
-				class="summary-item"
-				class:danger={summary.today < (dailyTarget * 5) / 6}
-				class:warning={summary.today >= (dailyTarget * 5) / 6 &&
-					summary.today <= (dailyTarget * 11) / 12}
-				class:completed={summary.today > (dailyTarget * 11) / 12}
-			>
-				<span class="summary-label">Hoy</span>
-				<div class="progress-track bg-bg">
-					<div
-						class="progress-fill"
-						style="width: {Math.min((summary.today / dailyTarget) * 100, 100)}%"
-					></div>
-				</div>
-				<span class="summary-value">{formatTime(summary.today)} / {dailyTargetLabel}</span>
-			</div>
-			<div class="summary-item" class:completed={summary.week >= summary.weekly_target_seconds}>
-				<span class="summary-label">Semana</span>
-				<div class="progress-track bg-bg">
-					<div
-						class="progress-fill"
-						style="width: {Math.min((summary.week / summary.weekly_target_seconds) * 100, 100)}%"
-					></div>
-				</div>
-				<span class="summary-value"
-					>{formatTime(summary.week)} / {formatTime(summary.weekly_target_seconds)}</span
-				>
-			</div>
-			<div class="summary-actions">
-				<span class="summary-pace">{weekTargetTooltip}</span>
+	<div class="task-timer-row">
+		<div class="task-timer-panel">
+			<div class="task-header">
 				<button
-					class="btn-icon"
-					onclick={() => (showTimeHistory = true)}
-					aria-label="Ver historial"
+					class="comment-toggle"
+					class:has-comment={timer.comment.length > 0}
+					onclick={() => {
+						commentExpanded = !commentExpanded;
+					}}
+					title="Comentario"
 				>
-					<Icon name="chart-line" />
+					<Icon name="comment" />
 				</button>
-				<button class="btn-icon" onclick={() => (showAgenda = true)} aria-label="Ver agenda">
-					<Icon name="calendar-day" />
+				<button
+					class="task-selector"
+					class:active={timer.selectedTaskDisplay !== null}
+					onclick={() => {
+						if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId);
+					}}
+					disabled={!timer.selectedTaskId}
+				>
+					{timer.selectedTaskDisplay ?? 'Seleccionar Tarea'}
 				</button>
+				<button
+					class="btn-cancel"
+					onclick={handleCancel}
+					disabled={!timer.activeTimeEntryId}
+					title="Cancelar entrada"><Icon name="xmark" /></button
+				>
+			</div>
+			{#if timer.selectedTaskDescription}
+				<div class="timer-task-description">
+					{@html linkify(timer.selectedTaskDescription)}
+				</div>
+			{/if}
+			{#if commentExpanded || timer.comment.length > 0}
+				<input
+					class="comment-input"
+					type="text"
+					placeholder="Comentario..."
+					value={timer.comment}
+					oninput={(e) => timer.setComment(e.currentTarget.value)}
+				/>
+			{/if}
+
+			<div class="timer-row">
+				<div class="time-entries">
+					{#each timeEntries as entry (entry.id)}
+						<TimePicker value={entry.start} onchange={(v) => (entry.start = v)} />
+						<span class="time-separator">-</span>
+						<TimePicker value={entry.end} onchange={(v) => (entry.end = v)} />
+					{/each}
+					<button class="btn-primary" onclick={submitTimeEntry} disabled={!timer.activeTimeEntryId}
+						><Icon name="plus" /> Agregar</button
+					>
+				</div>
+
+				<div class="timer-controls">
+					<span id="timer-display-trigger" class="timer-display" class:clickable={timer.isRunning}>
+						{timer.formattedTime}
+					</span>
+					{#if timer.isRunning && timer.startedAtDate}
+						<StartedAtEditor startedAt={timer.startedAtDate} onchange={handleStartedAtChange} />
+					{/if}
+					{#if timer.isRunning}
+						<button class="btn-primary running" onclick={handleStop}>
+							<Icon name="stop" />
+							Stop
+						</button>
+					{:else}
+						<button class="btn-primary" onclick={timer.startTimer}>
+							<Icon name="play" />
+							Iniciar
+						</button>
+					{/if}
+				</div>
+			</div>
+
+			<div class="time-summary">
+				<div
+					class="summary-item"
+					class:danger={summary.today < (dailyTarget * 5) / 6}
+					class:warning={summary.today >= (dailyTarget * 5) / 6 &&
+						summary.today <= (dailyTarget * 11) / 12}
+					class:completed={summary.today > (dailyTarget * 11) / 12}
+				>
+					<span class="summary-label">Hoy</span>
+					<div class="progress-track bg-bg">
+						<div
+							class="progress-fill"
+							style="width: {Math.min((summary.today / dailyTarget) * 100, 100)}%"
+						></div>
+					</div>
+					<span class="summary-value">{formatTime(summary.today)} / {dailyTargetLabel}</span>
+				</div>
+				<div class="summary-item" class:completed={summary.week >= summary.weekly_target_seconds}>
+					<span class="summary-label">Semana</span>
+					<div class="progress-track bg-bg">
+						<div
+							class="progress-fill"
+							style="width: {Math.min((summary.week / summary.weekly_target_seconds) * 100, 100)}%"
+						></div>
+					</div>
+					<span class="summary-value"
+						>{formatTime(summary.week)} / {formatTime(summary.weekly_target_seconds)}</span
+					>
+				</div>
+				<div class="summary-actions">
+					<span class="summary-pace">{weekTargetTooltip}</span>
+					<button
+						class="btn-icon"
+						onclick={() => (showTimeHistory = true)}
+						aria-label="Ver historial"
+					>
+						<Icon name="chart-line" />
+					</button>
+					<button class="btn-icon" onclick={() => (showAgenda = true)} aria-label="Ver agenda">
+						<Icon name="calendar-day" />
+					</button>
+				</div>
 			</div>
 		</div>
+
+		<aside class="task-shortcuts-panel" aria-label="Accesos rápidos">
+			<button
+				class="task-shortcut"
+				onclick={() => scrollToSection('plan-section')}
+				title="Ir a Plan de hoy"
+			>
+				<Icon name="calendar-day" />
+				<span>Plan</span>
+			</button>
+			<button
+				class="task-shortcut"
+				onclick={() => scrollToSection('active-projects-section')}
+				title="Ir a Proyectos activos"
+			>
+				<Icon name="folder" />
+				<span>Proyectos</span>
+			</button>
+		</aside>
 	</div>
 
 	<div class="tasks-content">
@@ -539,7 +576,13 @@
 						{task}
 						{isToday}
 						{isOverdue}
-						onstart={() => handleTaskStartWithNotification(task.id, task.name, task.project_name)}
+						onstart={() =>
+							handleTaskStartWithNotification(
+								task.id,
+								task.name,
+								task.project_name,
+								task.description
+							)}
 						ontoggle={handleTaskToggle}
 						ondetail={openTaskDetail}
 						isTimerRunning={timer.isRunning}
@@ -567,9 +610,14 @@
 	</div>
 
 	<div class="tasks-content tasks-content-wide">
-		<div class="tasks-section">
+		<div id="active-projects-section" class="tasks-section">
 			<div class="section-header">
-				<h2>Proyectos activos</h2>
+				<div class="section-title">
+					<h2>Proyectos activos</h2>
+					<button class="btn-icon back-to-top" onclick={scrollToTop} title="Volver arriba">
+						<Icon name="arrow-up" />
+					</button>
+				</div>
 				<div class="priority-filter">
 					<button
 						class:active={activeTreePriorityFilter === null}

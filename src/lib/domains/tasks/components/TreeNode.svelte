@@ -6,7 +6,12 @@
 
 	interface Props {
 		nodes: ActiveTreeNode[];
-		onstart?: (taskId: number, taskName: string, projectName?: string) => void;
+		onstart?: (
+			taskId: number,
+			taskName: string,
+			projectName?: string,
+			taskDescription?: string | null
+		) => void;
 		ontoggle?: (id: number, type: 'project' | 'task', action: 'start' | 'finish') => void;
 		ondetail?: (id: number, type: 'project' | 'task') => void;
 		oncreatetask?: (projectId: number) => void;

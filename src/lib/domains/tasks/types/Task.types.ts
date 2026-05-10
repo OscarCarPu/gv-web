@@ -97,6 +97,7 @@ export interface ActiveTimeEntryResponse {
 	finished_at: string | null;
 	comment: string | null;
 	task_name: string;
+	task_description: string | null;
 	task_type: string;
 	recurrence?: number | null;
 	priority: number;

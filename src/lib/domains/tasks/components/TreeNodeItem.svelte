@@ -11,7 +11,12 @@
 		node: ActiveTreeNode;
 		parentProjectName?: string;
 		parentProjectDueAt?: string | null;
-		onstart?: (taskId: number, taskName: string, projectName?: string) => void;
+		onstart?: (
+			taskId: number,
+			taskName: string,
+			projectName?: string,
+			taskDescription?: string | null
+		) => void;
 		ontoggle?: (id: number, type: 'project' | 'task', action: 'start' | 'finish') => void;
 		ondetail?: (id: number, type: 'project' | 'task') => void;
 		oncreatetask?: (projectId: number) => void;
@@ -142,7 +147,7 @@
 			{/if}
 			<button
 				class="btn-primary"
-				onclick={() => onstart?.(node.id, node.name, parentProjectName)}
+				onclick={() => onstart?.(node.id, node.name, parentProjectName, node.description)}
 				disabled={node.blocked}
 			>
 				<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />

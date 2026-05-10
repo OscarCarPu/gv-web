@@ -1,5 +1,31 @@
 @reference "./app.css";
 
+.task-timer-row {
+	@apply mx-auto mt-6 flex w-full max-w-3xl items-stretch gap-3;
+}
+
+.task-timer-row > .task-timer-panel {
+	@apply mx-0 mt-0 flex-1;
+}
+
+.task-shortcuts-panel {
+	@apply bg-bg-light flex flex-col gap-2 rounded-xl px-3 py-4;
+	border: 1px solid var(--color-border);
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+
+	.task-shortcut {
+		@apply text-text-muted hover:text-primary hover:bg-bg flex cursor-pointer items-center gap-2 rounded-lg border-none bg-transparent px-3 py-2 text-sm font-medium transition-colors duration-200;
+
+		& > span {
+			@apply whitespace-nowrap;
+		}
+	}
+}
+
+.section-header .back-to-top {
+	@apply text-text-muted hover:text-primary cursor-pointer rounded border-none bg-transparent p-1 transition-colors duration-200;
+}
+
 .task-timer-panel {
 	@apply bg-bg-light mx-auto mt-6 flex w-full max-w-3xl flex-col items-center gap-4 rounded-xl px-6 py-5;
 	border: 1px solid var(--color-border);
@@ -28,6 +54,10 @@
 		&.has-comment {
 			@apply text-primary;
 		}
+	}
+
+	.timer-task-description {
+		@apply text-text-muted w-full text-sm whitespace-pre-wrap;
 	}
 
 	.comment-input {

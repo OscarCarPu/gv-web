@@ -150,9 +150,18 @@
 	});
 </script>
 
-<div class="tasks-section">
+<div id="plan-section" class="tasks-section">
 	<div class="section-header">
-		<h2>Plan de hoy</h2>
+		<div class="section-title">
+			<h2>Plan de hoy</h2>
+			<button
+				class="btn-icon back-to-top"
+				onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+				title="Volver arriba"
+			>
+				<Icon name="arrow-up" />
+			</button>
+		</div>
 		<button class="btn-primary btn-sm" onclick={openCreate}>
 			<Icon name="plus" /> Bloque
 		</button>

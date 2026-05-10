@@ -21,6 +21,7 @@ export interface TaskTimerState {
 export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 	let selectedTaskId: number | null = $state(null);
 	let selectedTaskDisplay: string | null = $state(null);
+	let selectedTaskDescription: string | null = $state(null);
 	let activeTimeEntryId: number | null = $state(null);
 	let isRunning = $state(false);
 	let elapsedSeconds = $state(0);
@@ -56,6 +57,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		startedAt = null;
 		selectedTaskId = null;
 		selectedTaskDisplay = null;
+		selectedTaskDescription = null;
 		activeTimeEntryId = null;
 		comment = '';
 
@@ -67,12 +69,18 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		}
 	}
 
-	async function handleTaskStart(taskId: number, taskName: string, projectName?: string | null) {
+	async function handleTaskStart(
+		taskId: number,
+		taskName: string,
+		projectName?: string | null,
+		taskDescription?: string | null
+	) {
 		const display = projectName ? `${taskName} - ${projectName}` : taskName;
 
 		if (!isRunning) {
 			selectedTaskId = taskId;
 			selectedTaskDisplay = display;
+			selectedTaskDescription = taskDescription ?? null;
 			startedAt = Date.now();
 			startTimer();
 			const entry = await api.createTimeEntry({
@@ -84,6 +92,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		} else if (!activeTimeEntryId) {
 			selectedTaskId = taskId;
 			selectedTaskDisplay = display;
+			selectedTaskDescription = taskDescription ?? null;
 			const entry = await api.createTimeEntry({
 				task_id: taskId,
 				started_at: new Date(startedAt!).toISOString(),
@@ -93,6 +102,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		} else {
 			selectedTaskId = taskId;
 			selectedTaskDisplay = display;
+			selectedTaskDescription = taskDescription ?? null;
 			await api.updateTimeEntry(activeTimeEntryId, { task_id: taskId });
 		}
 	}
@@ -103,10 +113,12 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		entryStartedAt: string,
 		taskName: string,
 		projectName?: string | null,
-		entryComment?: string | null
+		entryComment?: string | null,
+		taskDescription?: string | null
 	) {
 		selectedTaskId = taskId;
 		selectedTaskDisplay = projectName ? `${taskName} - ${projectName}` : taskName;
+		selectedTaskDescription = taskDescription ?? null;
 		activeTimeEntryId = timeEntryId;
 		startedAt = new Date(entryStartedAt).getTime();
 		elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
@@ -149,6 +161,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		startedAt = null;
 		selectedTaskId = null;
 		selectedTaskDisplay = null;
+		selectedTaskDescription = null;
 		activeTimeEntryId = null;
 		comment = '';
 
@@ -169,6 +182,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		startedAt = null;
 		selectedTaskId = null;
 		selectedTaskDisplay = null;
+		selectedTaskDescription = null;
 		activeTimeEntryId = null;
 		comment = '';
 	}
@@ -179,6 +193,9 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		},
 		get selectedTaskDisplay() {
 			return selectedTaskDisplay;
+		},
+		get selectedTaskDescription() {
+			return selectedTaskDescription;
 		},
 		get activeTimeEntryId() {
 			return activeTimeEntryId;

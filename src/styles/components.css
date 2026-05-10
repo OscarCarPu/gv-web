@@ -408,6 +408,14 @@
 	& > h2 {
 		@apply text-lg font-semibold;
 	}
+
+	.section-title {
+		@apply flex items-center gap-2;
+
+		& > h2 {
+			@apply text-lg font-semibold;
+		}
+	}
 }
 
 .detail-field-header {

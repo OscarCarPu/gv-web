@@ -64,6 +64,7 @@ export const ActiveTimeEntryResponseSchema = z.object({
 	finished_at: z.string().nullable(),
 	comment: z.string().nullable(),
 	task_name: z.string(),
+	task_description: z.string().nullable(),
 	task_type: z.string(),
 	recurrence: z.number().nullable().optional(),
 	priority: z.number(),
