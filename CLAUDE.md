@@ -99,6 +99,36 @@ Route: `/money` (private). API base: `/finance/*`. Visible label: "Dinero" (Span
 - **Category tree**: categories are flat (`parent_id` self-FK). Use `buildCategoryOptions()` from `$lib/domains/money/utils/categoryTree.ts` to flatten into a depth-first list with NBSP-indented `label`s for `<select>` options. The category form's parent picker also walks descendants and excludes them to prevent cycles. The Categorías card renders a real expandable tree via `CategoryTreeNode` using the existing `.tree-project-row` / `.tree-children` / `.tree-chevron-btn` classes from `tasks.css`
 - **CSS reuse**: `/money` reuses `.tasks-section`, `.task-list`, `.task-item`, `.show-more-btn`, `.tree-*`, `.agenda-day-divider/line/label` from `tasks.css`. The `/money/+layout.svelte` imports both `tasks.css` and `money.css` — root layout does NOT import them. Money-specific additions in `money.css` only: `.money-content` (desktop:`grid-cols-[2fr_1fr]`, mobile single column), `.money-side` (right column with stacked accounts+categories), `.money-tiles` / `.money-tile` (single-row KPI tiles), `.money-tx-row` / `.money-tx-info` / `.money-tx-category` (single-line transaction rows), `.money-type-toggle` (income→success / expense→danger / transfer→primary color overrides on the segmented control), `.amount-positive` / `.amount-negative` / `.amount-neutral`. Also added `.status-badge.expense` modifier in `components.css`
 - **Recent transactions**: `/finance/overview.recent_transactions` returns the last 30 days. The list folds at 15 with the standard show-more pattern and is grouped by day using `.agenda-day-divider` (today's group highlighted), reusing the tasks "Próximas a vencer" pattern
+- **Overview tiles & MoM change**: `/finance/overview` returns both `month` and `previous_month` (same shape: `income` / `expense` / `balance`). `OverviewCard` renders 6 tiles — Total / Ingresos / Gastos / Balance / **Ahorro** (`balance / income * 100`) / **% vs mes anterior** (`(balance − prev.balance) / |prev.balance| * 100`, "—" when prev is `0`). All client-derived; no extra request
+
+### Stats sheets — three BottomSheets opened from the OverviewCard header
+
+The Resumen header has three `btn-icon` buttons left of "+ Movimiento":
+
+- `chart-line` → **NetWorthSheet** (Evolución del patrimonio): line+area via LayerCake. Range toggle `3M / 6M / 1A / YTD / Todo` shared with MonthlyTrendSheet (CSS class `.create-mode-toggle.sheet-range-toggle`). 4 KPI tiles: Actual / Cambio / % Cambio / Máximo. **Hover** = vertical guide + dot + HTML tooltip with formatted date and value, implemented as `NetWorthHoverLayer.svelte` inside `<Svg>` reading `getContext('LayerCake')`. Granularity is derived: `3M`/`6M` → `week`, `1A`/`YTD`/`Todo` → `month`
+- `chart-pie` → **CategoryBreakdownSheet** (Por categoría · este mes): toggle Gastos / Ingresos / Transferencias (`.create-mode-toggle.money-type-toggle`). 2 KPI tiles: Total / Movimientos. Tree rendered as a flat indented list with `--cat-depth` CSS variable; chevron expands children. Bar colors switch via `.cat-tree-income .cat-tree-fill` / `.cat-tree-transfer .cat-tree-fill` overrides on the parent `<ul>`
+- `chart-column` → **MonthlyTrendSheet** (Ingresos vs gastos por mes): hand-rolled SVG (no LayerCake) with `bind:clientWidth` for crisp text — never use `viewBox` + `preserveAspectRatio="none"` for charts that contain text, it stretches glyphs. Two grouped bars per month (success / danger) plus tendency polylines connecting bar tops. Account selector uses a hidden `<span class="select-fit-mirror">` to size the native `<select>` to its selected option + arrow padding. Hover tooltip is positioned near the cursor (`tooltipLeft = clamp(centerX − 100, 4, containerWidth − 204)`), not pinned to a corner
+
+### Stats sheets — shared patterns
+
+- **Date ranges**: `3M` / `6M` / `1A` are inclusive month boundaries — `3M` from today *15 abril* means the **first day of `month − 2`** (so 1 feb), not 90 days ago. `YTD` = 1 enero year actual. `Todo` omits `from` so the backend defaults to the earliest transaction date. Build the start date as `new Date(y, m - (N - 1), 1)`
+- **Anti-flicker on filter change**: each sheet uses `let initialLoading = $state(true)` (NOT `loading`). The spinner only shows on the very first fetch; subsequent refetches keep the previous chart rendered until the new data arrives. Reset `initialLoading = true` and `data = []` in the `else` branch of the open `$effect` so reopening starts from a clean slate
+- **API fallbacks for SSR errors**: when extending `Overview` (or any other server-loaded shape) update *both* the Zod schema in `api/money.schemas.ts` *and* the catch fallback in `routes/money/+page.server.ts` — otherwise SSR breaks when the API is down
+
+### Stats charts — implementation files
+
+```
+src/lib/domains/money/components/
+  NetWorthSheet.svelte         CategoryBreakdownSheet.svelte    MonthlyTrendSheet.svelte
+  charts/
+    NetWorthChart.svelte       — LayerCake Area+Line with hover overlay
+    NetWorthHoverLayer.svelte  — getContext('LayerCake'), emits hover info up
+    AxisYMoney.svelte          — money-aware Y axis (1k/10k/etc shorthand)
+    IncomeExpenseBars.svelte   — pure SVG, bind:clientWidth, polylines + tooltip
+    CategoryBars.svelte        — horizontal bars (CSS widths, no SVG)
+```
+
+Backend endpoints: `GET /finance/stats/networth`, `/by-category`, `/monthly`. Date ranges follow the rule "missing `from` → earliest transaction date" so omitting `from` is the canonical way to request "All time" data — don't send a sentinel like `2000-01-01`
 
 ## Deployment
 

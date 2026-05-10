@@ -8,6 +8,9 @@ import {
 	TransactionSchema,
 	TransactionListSchema,
 	OverviewSchema,
+	NetWorthSeriesSchema,
+	CategoryStatsSchema,
+	MonthlyStatsSchema,
 } from './money.schemas';
 import type {
 	Account,
@@ -20,6 +23,10 @@ import type {
 	UpdateCategoryRequest,
 	CreateTransactionRequest,
 	UpdateTransactionRequest,
+	NetWorthPoint,
+	CategoryStat,
+	MonthlyStat,
+	StatsGranularity,
 } from '../types/Money.types';
 
 export const moneyApi = {
@@ -123,5 +130,55 @@ export const moneyApi = {
 			method: 'DELETE',
 			token,
 		});
+	},
+
+	// --- Stats ---
+
+	async getNetWorthStats(
+		params: { from?: string; to?: string; granularity?: StatsGranularity } = {},
+		token?: string
+	): Promise<NetWorthPoint[]> {
+		const qs = new URLSearchParams();
+		if (params.from) qs.set('from', params.from);
+		if (params.to) qs.set('to', params.to);
+		if (params.granularity) qs.set('granularity', params.granularity);
+		const suffix = qs.toString() ? `?${qs}` : '';
+		return fetchAPI(`/finance/stats/networth${suffix}`, NetWorthSeriesSchema, { token });
+	},
+
+	async getCategoryStats(
+		params: {
+			type?: 'income' | 'expense' | 'transfer';
+			from?: string;
+			to?: string;
+			account_id?: number | null;
+		} = {},
+		token?: string
+	): Promise<CategoryStat[]> {
+		const qs = new URLSearchParams();
+		if (params.type) qs.set('type', params.type);
+		if (params.from) qs.set('from', params.from);
+		if (params.to) qs.set('to', params.to);
+		if (params.account_id != null) qs.set('account_id', String(params.account_id));
+		const suffix = qs.toString() ? `?${qs}` : '';
+		return fetchAPI(`/finance/stats/by-category${suffix}`, CategoryStatsSchema, { token });
+	},
+
+	async getMonthlyStats(
+		params: {
+			from?: string;
+			to?: string;
+			account_id?: number | null;
+			category_id?: number | null;
+		} = {},
+		token?: string
+	): Promise<MonthlyStat[]> {
+		const qs = new URLSearchParams();
+		if (params.from) qs.set('from', params.from);
+		if (params.to) qs.set('to', params.to);
+		if (params.account_id != null) qs.set('account_id', String(params.account_id));
+		if (params.category_id != null) qs.set('category_id', String(params.category_id));
+		const suffix = qs.toString() ? `?${qs}` : '';
+		return fetchAPI(`/finance/stats/monthly${suffix}`, MonthlyStatsSchema, { token });
 	},
 };

@@ -8,6 +8,9 @@
 	import { formatDueDay, toLocalDateString } from '$lib/shared/utils/datetime';
 	import TransactionRow from './TransactionRow.svelte';
 	import TransactionFormSheet from './TransactionFormSheet.svelte';
+	import NetWorthSheet from './NetWorthSheet.svelte';
+	import CategoryBreakdownSheet from './CategoryBreakdownSheet.svelte';
+	import MonthlyTrendSheet from './MonthlyTrendSheet.svelte';
 	import type {
 		Account,
 		Category,
@@ -22,6 +25,10 @@
 	}
 
 	let { overview, accounts, categories }: Props = $props();
+
+	let netWorthOpen = $state(false);
+	let categoryBreakdownOpen = $state(false);
+	let monthlyTrendOpen = $state(false);
 
 	const FOLD_LIMIT = 15;
 	const EXPAND_STEP = 10;
@@ -42,6 +49,15 @@
 	let balanceNum = $derived(parseFloat(overview.month.balance));
 	let balancePrefix = $derived(balanceNum > 0 ? '+' : balanceNum < 0 ? '−' : '');
 	let balanceAbs = $derived(formatMoney(Math.abs(balanceNum).toFixed(2)));
+
+	let incomeNum = $derived(parseFloat(overview.month.income));
+	let savingsRate = $derived(incomeNum > 0 ? (balanceNum / incomeNum) * 100 : 0);
+
+	let prevBalanceNum = $derived(parseFloat(overview.previous_month.balance));
+	let balanceChangePct = $derived(
+		prevBalanceNum !== 0 ? ((balanceNum - prevBalanceNum) / Math.abs(prevBalanceNum)) * 100 : 0
+	);
+	let hasPrevBalance = $derived(prevBalanceNum !== 0);
 
 	const todayKey = toLocalDateString();
 
@@ -83,9 +99,35 @@
 <section class="tasks-section">
 	<div class="section-header">
 		<h2>Resumen</h2>
-		<button class="btn-primary btn-sm" onclick={openCreate} disabled={accounts.length === 0}>
-			<Icon name="plus" /> Movimiento
-		</button>
+		<div class="section-actions">
+			<button
+				class="btn-icon"
+				onclick={() => (netWorthOpen = true)}
+				aria-label="Evolución del patrimonio"
+				title="Evolución del patrimonio"
+			>
+				<Icon name="chart-line" />
+			</button>
+			<button
+				class="btn-icon"
+				onclick={() => (categoryBreakdownOpen = true)}
+				aria-label="Gastos por categoría"
+				title="Gastos por categoría"
+			>
+				<Icon name="chart-pie" />
+			</button>
+			<button
+				class="btn-icon"
+				onclick={() => (monthlyTrendOpen = true)}
+				aria-label="Ingresos vs gastos por mes"
+				title="Ingresos vs gastos por mes"
+			>
+				<Icon name="chart-column" />
+			</button>
+			<button class="btn-primary btn-sm" onclick={openCreate} disabled={accounts.length === 0}>
+				<Icon name="plus" /> Movimiento
+			</button>
+		</div>
 	</div>
 
 	<div class="money-tiles money-tiles-wrap">
@@ -116,6 +158,30 @@
 			>
 				{balancePrefix}{balanceAbs}
 			</span>
+		</div>
+		<div class="money-tile">
+			<span class="detail-info-label">Ahorro</span>
+			<span
+				class="detail-info-value"
+				class:amount-positive={savingsRate > 0}
+				class:amount-negative={savingsRate < 0}
+			>
+				{savingsRate.toFixed(1)}%
+			</span>
+		</div>
+		<div class="money-tile">
+			<span class="detail-info-label">% vs mes anterior</span>
+			{#if hasPrevBalance}
+				<span
+					class="detail-info-value"
+					class:amount-positive={balanceChangePct > 0}
+					class:amount-negative={balanceChangePct < 0}
+				>
+					{balanceChangePct >= 0 ? '+' : '−'}{Math.abs(balanceChangePct).toFixed(1)}%
+				</span>
+			{:else}
+				<span class="detail-info-value amount-neutral">—</span>
+			{/if}
 		</div>
 	</div>
 
@@ -159,3 +225,11 @@
 	{accounts}
 	{categories}
 />
+
+<NetWorthSheet open={netWorthOpen} onclose={() => (netWorthOpen = false)} />
+<CategoryBreakdownSheet
+	open={categoryBreakdownOpen}
+	onclose={() => (categoryBreakdownOpen = false)}
+	{categories}
+/>
+<MonthlyTrendSheet open={monthlyTrendOpen} onclose={() => (monthlyTrendOpen = false)} {accounts} />

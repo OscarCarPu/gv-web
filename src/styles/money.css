@@ -88,3 +88,293 @@
 	color: var(--color-text);
 	@apply font-semibold tabular-nums;
 }
+
+/* --- Section actions (header right side) --- */
+
+.section-actions {
+	@apply flex items-center gap-2;
+}
+
+/* --- Stats sheet shared controls --- */
+
+.stats-range-row {
+	@apply bg-bg flex items-center gap-1 rounded-lg p-1;
+	border: 1px solid var(--color-border);
+}
+
+.stats-range-btn {
+	@apply text-text-muted hover:text-text cursor-pointer rounded-md border-none bg-transparent px-3 py-1 text-sm transition-colors;
+}
+
+.stats-range-btn.active {
+	@apply text-text bg-text-muted/15 font-medium;
+}
+
+.stats-summary-row {
+	@apply mb-4 flex flex-wrap gap-4;
+}
+
+.stats-summary-item {
+	@apply flex flex-col gap-0.5;
+}
+
+/* --- Sheet controls (range pills + filter select) --- */
+
+.sheet-controls-row {
+	@apply mt-3 mb-3 flex flex-wrap items-center gap-3;
+}
+
+.sheet-range-toggle {
+	@apply mt-0;
+	flex: 0 0 auto;
+}
+
+.sheet-range-toggle button {
+	@apply px-3 py-1.5 text-sm;
+}
+
+.sheet-account-filter {
+	@apply text-text-muted flex items-center gap-2 text-sm;
+	flex: 0 0 auto;
+}
+
+.sheet-account-filter label {
+	@apply text-xs font-semibold tracking-wide uppercase;
+}
+
+.sheet-account-filter select {
+	@apply bg-bg text-text rounded-md px-2 py-1 text-sm;
+	border: 1px solid var(--color-border);
+	font-family: inherit;
+	max-width: 14rem;
+}
+
+.select-fit {
+	position: relative;
+	display: inline-block;
+}
+
+.select-fit-mirror {
+	position: absolute;
+	top: 0;
+	left: 0;
+	white-space: pre;
+	visibility: hidden;
+	pointer-events: none;
+	@apply px-2 py-1 text-sm;
+	font-family: inherit;
+}
+
+.sheet-account-filter select:focus {
+	@apply outline-none;
+	border-color: var(--color-primary);
+}
+
+.chart-empty {
+	@apply text-text-muted flex items-center justify-center py-8 text-sm;
+}
+
+/* --- Category bars --- */
+
+.cat-bars {
+	@apply m-0 flex list-none flex-col gap-3 p-0;
+}
+
+.cat-bar {
+	@apply flex flex-col gap-1;
+}
+
+.cat-bar-head {
+	@apply flex items-baseline justify-between gap-2;
+}
+
+.cat-bar-name {
+	@apply text-text text-sm font-medium;
+}
+
+.cat-bar-amount {
+	@apply text-sm tabular-nums;
+}
+
+.cat-bar-track {
+	@apply bg-text-muted/10 relative h-2 w-full overflow-hidden rounded-full;
+}
+
+.cat-bar-fill {
+	@apply h-full rounded-full;
+	background: var(--color-danger);
+	opacity: 0.85;
+	transition: width 0.4s ease;
+}
+
+.cat-bars-income .cat-bar-fill {
+	background: var(--color-success);
+}
+
+.cat-bar-foot {
+	@apply flex justify-end;
+}
+
+.cat-bar-share {
+	@apply text-text-muted text-xs tabular-nums;
+}
+
+/* --- Income vs expense bars --- */
+
+.ie-bars {
+	@apply relative w-full;
+}
+
+.ie-svg {
+	display: block;
+}
+
+.ie-tooltip {
+	@apply bg-bg-light pointer-events-none absolute flex flex-col gap-1 rounded-lg px-3 py-2 text-xs;
+	border: 1px solid var(--color-border);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+	width: 200px;
+	z-index: 2;
+}
+
+.ie-tooltip-month {
+	@apply text-text mb-1 text-sm font-semibold;
+}
+
+.ie-tooltip-row {
+	@apply flex items-center gap-2;
+}
+
+.ie-tooltip-row > span:nth-child(2) {
+	@apply text-text-muted flex-1;
+}
+
+.ie-tooltip-balance {
+	@apply mt-1 pt-1;
+	border-top: 1px solid var(--color-border);
+}
+
+.ie-tooltip-balance > span:first-child {
+	@apply text-text-muted flex-1;
+}
+
+.ie-legend {
+	@apply mt-2 flex items-center justify-center gap-4 text-xs;
+}
+
+.ie-legend-item {
+	@apply text-text-muted flex items-center gap-1.5;
+}
+
+.ie-dot {
+	@apply inline-block h-2.5 w-2.5 rounded-sm;
+}
+
+.ie-dot-income {
+	background: var(--color-success);
+}
+
+.ie-dot-expense {
+	background: var(--color-danger);
+}
+
+/* --- Category breakdown sheet specifics --- */
+
+.cat-breakdown-toggle {
+	@apply mt-3 mb-3;
+}
+
+.cat-tree {
+	@apply m-0 mt-2 flex list-none flex-col gap-2 p-0;
+}
+
+.cat-tree-row {
+	@apply flex flex-col gap-1;
+	padding-left: calc(var(--cat-depth, 0) * 1.25rem);
+}
+
+.cat-tree-row-child {
+	border-left: 1px dashed var(--color-border);
+	margin-left: calc(var(--cat-depth, 0) * 1.25rem - 1px);
+	padding-left: 0.75rem;
+}
+
+.cat-tree-head {
+	@apply flex items-center gap-2;
+}
+
+.tree-chevron-spacer {
+	@apply inline-block;
+	width: 1.75rem;
+	flex-shrink: 0;
+}
+
+.cat-tree-name {
+	@apply text-text min-w-0 flex-1 truncate text-sm font-medium;
+}
+
+.cat-tree-row-child .cat-tree-name {
+	@apply text-text-muted font-normal;
+}
+
+.cat-tree-meta {
+	@apply flex items-center gap-3 text-sm tabular-nums;
+}
+
+.cat-tree-count {
+	@apply text-text-muted bg-text-muted/10 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs;
+}
+
+.cat-tree-share {
+	@apply text-text-muted text-xs;
+	min-width: 2.5rem;
+	text-align: right;
+}
+
+.cat-tree-amount {
+	@apply font-semibold;
+	min-width: 5.5rem;
+	text-align: right;
+}
+
+.cat-tree-track {
+	@apply bg-text-muted/10 relative h-1.5 w-full overflow-hidden rounded-full;
+}
+
+.cat-tree-fill {
+	@apply h-full rounded-full;
+	background: var(--color-danger);
+	opacity: 0.85;
+	transition: width 0.4s ease;
+}
+
+.cat-tree-income .cat-tree-fill {
+	background: var(--color-success);
+}
+
+.cat-tree-transfer .cat-tree-fill {
+	background: var(--color-primary);
+}
+
+/* --- Net worth chart hover tooltip --- */
+
+.nw-chart {
+	position: relative;
+}
+
+.nw-tooltip {
+	@apply bg-bg-light pointer-events-none absolute flex flex-col gap-0.5 rounded-lg px-3 py-2 text-xs;
+	border: 1px solid var(--color-border);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+	white-space: nowrap;
+	transform: translateY(-50%);
+	z-index: 2;
+}
+
+.nw-tooltip-date {
+	@apply text-text-muted text-xs;
+}
+
+.nw-tooltip-value {
+	@apply text-text text-base font-semibold tabular-nums;
+}

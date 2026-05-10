@@ -2,7 +2,7 @@
 
 ## Overview
 
-SVG chart system built on [LayerCake](https://layercake.graphics/) for rendering time-series history data. Used inside `HabitHistoryModal` (habit card chart icon) and `TimeHistoryModal` (task summary chart icon).
+SVG chart system built on [LayerCake](https://layercake.graphics/) for rendering time-series history data. Used inside `HabitHistoryModal` (habit card chart icon), `TimeHistoryModal` (task summary chart icon), and the money-domain stats sheets (`NetWorthChart`).
 
 The chart renders time-series data as a line with a filled area below, interactive hover points with tooltips, and frequency-aware axis labels.
 
@@ -107,3 +107,26 @@ Chart styles live in `src/styles/components.css`:
 - `.frequency-toggle` — segmented control with 3 icon buttons
 - `.frequency-toggle button.active` — primary background for selected frequency
 - `.history-dates` — date input pair with dash separator
+
+## Money-domain charts
+
+The money domain extends the LayerCake stack with three chart components in `src/lib/domains/money/components/charts/`:
+
+### `NetWorthChart.svelte` (LayerCake)
+
+Renders net-worth evolution from `GetNetWorthSeries` data. Uses `Area` + `Line` from the shared chart primitives, plus two domain-specific layers:
+
+- **`AxisYMoney.svelte`** — replaces the generic `AxisY` with money-aware tick labels (`5k €`, `12k €`, `1.5k €`, etc). Reads `$custom.formatTick` from LayerCake context if provided; otherwise falls back to `shortMoney(v)`.
+- **`NetWorthHoverLayer.svelte`** — transparent `<rect>` overlay that captures `mousemove`, finds the nearest data point by x via the LayerCake `xScale` store, draws a vertical dashed guide line + circle marker at the point, and emits a `HoverInfo` callback to the parent. The parent (`NetWorthChart`) renders an HTML tooltip absolutely-positioned over the chart container with formatted date and value, side-flipping when near the right edge.
+
+### `IncomeExpenseBars.svelte` (no LayerCake)
+
+Pure SVG with `bind:clientWidth` on the wrapper for crisp text. **Do not use `viewBox` + `preserveAspectRatio="none"` for charts that contain text** — it stretches glyphs horizontally. Coordinates are in real pixels via `width={containerWidth}` directly on `<svg>`.
+
+Bar layout per month: two grouped bars (`var(--color-success)` for income, `var(--color-danger)` for expense) of width `Math.max(2, Math.min(18, (slotW - 4) / 2))`. Trend polylines (`<polyline>`) connect the top center of each income bar and each expense bar across months, with circle markers at each point. Month labels stride dynamically (`Math.ceil(38 / slotW)`) to avoid overlap when many months are visible.
+
+The hover tooltip is positioned near the cursor: `tooltipLeft = clamp(centerX − TOOLTIP_W/2, 4, containerWidth − TOOLTIP_W − 4)`, `tooltipTop = above the highest bar or below if there's no room`.
+
+### `CategoryBars.svelte` (no SVG)
+
+Horizontal bars implemented with CSS widths only — no chart library needed. Each row is a `<li>` with a `.cat-bar-track` background and `.cat-bar-fill` whose `width: {pct}%` is set inline. Color switches via parent class: `.cat-bars-income .cat-bar-fill { background: var(--color-success) }` and `.cat-tree-transfer .cat-tree-fill { background: var(--color-primary) }` (used in the related `CategoryBreakdownSheet` tree view).

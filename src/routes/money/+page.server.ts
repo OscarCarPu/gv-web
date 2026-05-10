@@ -10,6 +10,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 			return {
 				accounts_total: '0.00',
 				month: { income: '0.00', expense: '0.00', balance: '0.00' },
+				previous_month: { income: '0.00', expense: '0.00', balance: '0.00' },
 				recent_transactions: [],
 			};
 		}),

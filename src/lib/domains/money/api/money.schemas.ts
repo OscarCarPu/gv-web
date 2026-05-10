@@ -55,15 +55,53 @@ export const OverviewTransactionSchema = z.object({
 	occurred_at: z.string(),
 });
 
+const OverviewMonthSchema = z.object({
+	income: z.string(),
+	expense: z.string(),
+	balance: z.string(),
+});
+
 export const OverviewSchema = z.object({
 	accounts_total: z.string(),
-	month: z.object({
-		income: z.string(),
-		expense: z.string(),
-		balance: z.string(),
-	}),
+	month: OverviewMonthSchema,
+	previous_month: OverviewMonthSchema,
 	recent_transactions: z
 		.array(OverviewTransactionSchema)
 		.nullable()
 		.transform((v) => v ?? []),
 });
+
+export const NetWorthPointSchema = z.object({
+	date: z.string(),
+	total: z.string(),
+});
+
+export const NetWorthSeriesSchema = z
+	.array(NetWorthPointSchema)
+	.nullable()
+	.transform((v) => v ?? []);
+
+export const CategoryStatSchema = z.object({
+	category_id: z.number().nullable(),
+	name: z.string(),
+	amount: z.string(),
+	share: z.number(),
+	tx_count: z.number(),
+});
+
+export const CategoryStatsSchema = z
+	.array(CategoryStatSchema)
+	.nullable()
+	.transform((v) => v ?? []);
+
+export const MonthlyStatSchema = z.object({
+	month: z.string(),
+	income: z.string(),
+	expense: z.string(),
+	balance: z.string(),
+});
+
+export const MonthlyStatsSchema = z
+	.array(MonthlyStatSchema)
+	.nullable()
+	.transform((v) => v ?? []);
