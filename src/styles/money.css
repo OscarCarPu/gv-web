@@ -125,12 +125,12 @@
 }
 
 .sheet-range-toggle {
-	@apply mt-0;
+	@apply mt-0 p-0.5;
 	flex: 0 0 auto;
 }
 
 .sheet-range-toggle button {
-	@apply px-3 py-1.5 text-sm;
+	@apply px-3 py-1 text-sm whitespace-nowrap;
 }
 
 .sheet-account-filter {
@@ -142,7 +142,8 @@
 	@apply text-xs font-semibold tracking-wide uppercase;
 }
 
-.sheet-account-filter select {
+.sheet-account-filter select,
+.sheet-account-filter input {
 	@apply bg-bg text-text rounded-md px-2 py-1 text-sm;
 	border: 1px solid var(--color-border);
 	font-family: inherit;
@@ -165,7 +166,8 @@
 	font-family: inherit;
 }
 
-.sheet-account-filter select:focus {
+.sheet-account-filter select:focus,
+.sheet-account-filter input:focus {
 	@apply outline-none;
 	border-color: var(--color-primary);
 }
@@ -382,3 +384,10 @@
 .nw-tooltip-pct {
 	@apply text-xs font-medium tabular-nums;
 }
+
+.est-badge {
+	@apply text-text-muted ml-1 rounded px-1.5 py-0.5 text-[10px] tracking-wide uppercase;
+	background: var(--color-bg);
+	border: 1px solid var(--color-border);
+}
+

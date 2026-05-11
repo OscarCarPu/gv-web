@@ -117,6 +117,20 @@ export interface MonthlyStat {
 	balance: string;
 }
 
+export type EstimationMode = 'rate' | 'saving';
+
+export interface EstimationPoint {
+	date: string;
+	total: string;
+	estimated: boolean;
+}
+
+export interface EstimationResult {
+	points: EstimationPoint[];
+	rate: string;
+	saving: string;
+}
+
 export interface StatsRangeSummary {
 	income: string;
 	expense: string;

@@ -11,6 +11,7 @@
 	import NetWorthSheet from './NetWorthSheet.svelte';
 	import CategoryBreakdownSheet from './CategoryBreakdownSheet.svelte';
 	import MonthlyTrendSheet from './MonthlyTrendSheet.svelte';
+	import EstimationSheet from './EstimationSheet.svelte';
 	import type {
 		Account,
 		Category,
@@ -29,6 +30,7 @@
 	let netWorthOpen = $state(false);
 	let categoryBreakdownOpen = $state(false);
 	let monthlyTrendOpen = $state(false);
+	let estimationOpen = $state(false);
 
 	const FOLD_LIMIT = 15;
 	const EXPAND_STEP = 10;
@@ -123,6 +125,14 @@
 				title="Ingresos vs gastos por mes"
 			>
 				<Icon name="chart-column" />
+			</button>
+			<button
+				class="btn-icon"
+				onclick={() => (estimationOpen = true)}
+				aria-label="Estimación del patrimonio"
+				title="Estimación del patrimonio"
+			>
+				<Icon name="arrow-trend-up" />
 			</button>
 			<button class="btn-primary btn-sm" onclick={openCreate} disabled={accounts.length === 0}>
 				<Icon name="plus" /> Movimiento
@@ -233,3 +243,4 @@
 	{categories}
 />
 <MonthlyTrendSheet open={monthlyTrendOpen} onclose={() => (monthlyTrendOpen = false)} {accounts} />
+<EstimationSheet open={estimationOpen} onclose={() => (estimationOpen = false)} />

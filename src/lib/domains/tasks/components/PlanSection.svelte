@@ -15,13 +15,7 @@
 		activeStartedAt: string | null;
 	}
 
-	let {
-		initial,
-		ontimerstart,
-		onafterchange,
-		isTimerRunning,
-		activeStartedAt,
-	}: Props = $props();
+	let { initial, ontimerstart, onafterchange, isTimerRunning, activeStartedAt }: Props = $props();
 
 	let data = $derived(initial);
 	let editorOpen = $state(false);

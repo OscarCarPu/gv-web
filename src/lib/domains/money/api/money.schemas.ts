@@ -105,3 +105,18 @@ export const MonthlyStatsSchema = z
 	.array(MonthlyStatSchema)
 	.nullable()
 	.transform((v) => v ?? []);
+
+export const EstimationPointSchema = z.object({
+	date: z.string(),
+	total: z.string(),
+	estimated: z.boolean(),
+});
+
+export const EstimationResultSchema = z.object({
+	points: z
+		.array(EstimationPointSchema)
+		.nullable()
+		.transform((v) => v ?? []),
+	rate: z.string(),
+	saving: z.string(),
+});

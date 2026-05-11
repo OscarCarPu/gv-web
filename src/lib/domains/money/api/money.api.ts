@@ -11,6 +11,7 @@ import {
 	NetWorthSeriesSchema,
 	CategoryStatsSchema,
 	MonthlyStatsSchema,
+	EstimationResultSchema,
 } from './money.schemas';
 import type {
 	Account,
@@ -27,6 +28,8 @@ import type {
 	CategoryStat,
 	MonthlyStat,
 	StatsGranularity,
+	EstimationMode,
+	EstimationResult,
 } from '../types/Money.types';
 
 export const moneyApi = {
@@ -180,5 +183,20 @@ export const moneyApi = {
 		if (params.category_id != null) qs.set('category_id', String(params.category_id));
 		const suffix = qs.toString() ? `?${qs}` : '';
 		return fetchAPI(`/finance/stats/monthly${suffix}`, MonthlyStatsSchema, { token });
+	},
+
+	async getEstimation(
+		params: {
+			start_month: string;
+			end_month: string;
+			mode: EstimationMode;
+		},
+		token?: string
+	): Promise<EstimationResult> {
+		const qs = new URLSearchParams();
+		qs.set('start_month', params.start_month);
+		qs.set('end_month', params.end_month);
+		qs.set('mode', params.mode);
+		return fetchAPI(`/finance/stats/estimation?${qs}`, EstimationResultSchema, { token });
 	},
 };

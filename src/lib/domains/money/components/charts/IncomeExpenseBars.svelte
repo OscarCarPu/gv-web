@@ -277,10 +277,7 @@
 					{@const savingsPct = (parseFloat(d.balance) / parseFloat(d.income)) * 100}
 					<div class="ie-tooltip-row">
 						<span>Ahorro</span>
-						<span
-							class:amount-positive={savingsPct > 0}
-							class:amount-negative={savingsPct < 0}
-						>
+						<span class:amount-positive={savingsPct > 0} class:amount-negative={savingsPct < 0}>
 							{savingsPct >= 0 ? '+' : '−'}{Math.abs(savingsPct).toFixed(1)}%
 						</span>
 					</div>
