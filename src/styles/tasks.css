@@ -651,7 +651,7 @@
 }
 
 .plan-summary-row.goal-reached .progress-fill {
-	background: color-mix(in srgb, var(--color-primary) 80%, transparent);
+	background: var(--color-success);
 }
 
 .plan-list {
