@@ -253,9 +253,13 @@
 						<div class="plan-block-actions">
 							{#if b.task_id !== null}
 								{#if finished}
-									<button class="btn-primary btn-sm" disabled>Terminado</button>
+									<button class="btn-primary btn-start btn-sm" disabled>Terminado</button>
 								{:else}
-									<button class="btn-primary btn-sm" onclick={() => handleToggle(b)}>
+									<button
+										class="btn-primary btn-sm"
+										class:btn-start={!isStarted(b)}
+										onclick={() => handleToggle(b)}
+									>
 										{toggleLabel(b)}
 									</button>
 									<button class="btn-primary btn-sm" onclick={() => handleTimer(b)}>
