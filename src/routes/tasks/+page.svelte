@@ -606,6 +606,7 @@
 			ontimerstart={handleTaskStartWithNotification}
 			onafterchange={() => invalidateAll()}
 			isTimerRunning={timer.isRunning}
+			activeStartedAt={timer.isRunning ? (timer.startedAtDate?.toISOString() ?? null) : null}
 		/>
 	</div>
 

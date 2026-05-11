@@ -12,9 +12,16 @@
 		ontimerstart: (taskId: number, taskName: string, projectName?: string | null) => Promise<void>;
 		onafterchange: () => Promise<void> | void;
 		isTimerRunning: boolean;
+		activeStartedAt: string | null;
 	}
 
-	let { initial, ontimerstart, onafterchange, isTimerRunning }: Props = $props();
+	let {
+		initial,
+		ontimerstart,
+		onafterchange,
+		isTimerRunning,
+		activeStartedAt,
+	}: Props = $props();
 
 	let data = $derived(initial);
 	let editorOpen = $state(false);
@@ -115,18 +122,26 @@
 
 	// Done so far today (real time entries, not the plan).
 	const doneTodaySeconds = $derived(data?.budget.today ?? 0);
-	// Future task work according to the plan: linked blocks whose start is now or later.
+	// Future task work according to the plan: linked blocks whose end is in the future.
+	// Full duration if the block hasn't started yet, only the remaining part if it's in progress.
 	const futureTaskSeconds = $derived.by(() => {
 		if (!data) return 0;
 		let s = 0;
 		for (const b of data.blocks) {
 			if (b.task_id === null) continue;
-			if (new Date(b.started_at).getTime() < nowMs) continue;
-			s += (new Date(b.ended_at).getTime() - new Date(b.started_at).getTime()) / 1000;
+			const start = new Date(b.started_at).getTime();
+			const end = new Date(b.ended_at).getTime();
+			if (end <= nowMs) continue;
+			s += (end - Math.max(start, nowMs)) / 1000;
 		}
 		return s;
 	});
-	const estimatedTotal = $derived(doneTodaySeconds + futureTaskSeconds);
+	// Elapsed time of the currently running time entry (not yet finished).
+	const activeRunningSeconds = $derived.by(() => {
+		if (!activeStartedAt) return 0;
+		return Math.max(0, (nowMs - new Date(activeStartedAt).getTime()) / 1000);
+	});
+	const estimatedTotal = $derived(doneTodaySeconds + activeRunningSeconds + futureTaskSeconds);
 	const estimatedPct = $derived(
 		dailyTarget > 0 ? Math.min((estimatedTotal / dailyTarget) * 100, 100) : 0
 	);
