@@ -1,8 +1,10 @@
 <script lang="ts">
 	import Modal from '$lib/shared/components/Modal.svelte';
+	import TimeInput from '$lib/shared/components/TimeInput.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { planApi } from '$lib/domains/tasks/api/plan.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
+	import { hhmmToISO, isoToHHmm, isValidHHmm } from '$lib/shared/utils/datetime';
 	import type { TaskListItem } from '$lib/domains/tasks/types/Task.types';
 	import type {
 		CreatePlanBlockRequest,
@@ -34,8 +36,8 @@
 			mode = block.task_id !== null ? 'task' : 'free';
 			taskId = block.task_id;
 			label = block.label;
-			startTime = formatHHmm(block.started_at);
-			endTime = formatHHmm(block.ended_at);
+			startTime = isoToHHmm(block.started_at);
+			endTime = isoToHHmm(block.ended_at);
 			note = block.note ?? '';
 		} else {
 			mode = 'task';
@@ -59,18 +61,6 @@
 		return `${h}:00`;
 	}
 
-	function formatHHmm(iso: string): string {
-		const d = new Date(iso);
-		return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-	}
-
-	function timeToISO(hhmm: string): string {
-		const d = new Date();
-		const [h, m] = hhmm.split(':').map(Number);
-		d.setHours(h, m, 0, 0);
-		return d.toISOString();
-	}
-
 	interface TaskGroup {
 		label: string;
 		tasks: TaskListItem[];
@@ -91,8 +81,12 @@
 	async function save() {
 		if (saving) return;
 
-		const startedAt = timeToISO(startTime);
-		const endedAt = timeToISO(endTime);
+		if (!isValidHHmm(startTime) || !isValidHHmm(endTime, true)) {
+			addToast('Formato de hora inválido (HH:MM, fin admite 24:00)', 'error');
+			return;
+		}
+		const startedAt = hhmmToISO(startTime);
+		const endedAt = hhmmToISO(endTime);
 		if (new Date(endedAt) <= new Date(startedAt)) {
 			addToast('La hora final debe ser posterior a la inicial', 'error');
 			return;
@@ -152,11 +146,11 @@
 		<div class="plan-editor-times">
 			<label>
 				<span class="text-text-muted text-sm">Desde</span>
-				<input type="time" bind:value={startTime} />
+				<TimeInput bind:value={startTime} />
 			</label>
 			<label>
 				<span class="text-text-muted text-sm">Hasta</span>
-				<input type="time" bind:value={endTime} />
+				<TimeInput bind:value={endTime} allowMidnight />
 			</label>
 		</div>
 
