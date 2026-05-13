@@ -1,10 +1,9 @@
 <script lang="ts">
 	import Modal from '$lib/shared/components/Modal.svelte';
-	import TimeInput from '$lib/shared/components/TimeInput.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { planApi } from '$lib/domains/tasks/api/plan.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import { hhmmToISO, isoToHHmm, isValidHHmm } from '$lib/shared/utils/datetime';
+	import { hhmmToISO, isoToHHmm } from '$lib/shared/utils/datetime';
 	import type { TaskListItem } from '$lib/domains/tasks/types/Task.types';
 	import type {
 		CreatePlanBlockRequest,
@@ -81,12 +80,8 @@
 	async function save() {
 		if (saving) return;
 
-		if (!isValidHHmm(startTime) || !isValidHHmm(endTime, true)) {
-			addToast('Formato de hora inválido (HH:MM, fin admite 24:00)', 'error');
-			return;
-		}
 		const startedAt = hhmmToISO(startTime);
-		const endedAt = hhmmToISO(endTime);
+		const endedAt = hhmmToISO(endTime, true);
 		if (new Date(endedAt) <= new Date(startedAt)) {
 			addToast('La hora final debe ser posterior a la inicial', 'error');
 			return;
@@ -146,11 +141,11 @@
 		<div class="plan-editor-times">
 			<label>
 				<span class="text-text-muted text-sm">Desde</span>
-				<TimeInput bind:value={startTime} />
+				<input type="time" bind:value={startTime} />
 			</label>
 			<label>
 				<span class="text-text-muted text-sm">Hasta</span>
-				<TimeInput bind:value={endTime} allowMidnight />
+				<input type="time" bind:value={endTime} />
 			</label>
 		</div>
 

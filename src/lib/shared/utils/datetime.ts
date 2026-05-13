@@ -22,22 +22,13 @@ export function formatTime(seconds: number): string {
 	return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
-export const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
-export const HHMM_OR_MIDNIGHT_RE = /^(?:([01]\d|2[0-3]):[0-5]\d|24:00)$/;
-
-export function isValidHHmm(s: string, allowMidnight = false): boolean {
-	return (allowMidnight ? HHMM_OR_MIDNIGHT_RE : HHMM_RE).test(s);
-}
-
-/** Converts "HH:MM" (00:00–24:00) into an ISO string anchored to today. 24:00 rolls to next-day 00:00. */
-export function hhmmToISO(hhmm: string): string {
+/** Converts "HH:MM" into an ISO string anchored to today. If `endOfDay` and the value is "00:00", rolls to next-day 00:00. */
+export function hhmmToISO(hhmm: string, endOfDay = false): string {
 	const d = new Date();
 	const [h, m] = hhmm.split(':').map(Number);
-	if (h === 24 && m === 0) {
-		d.setHours(0, 0, 0, 0);
+	d.setHours(h, m, 0, 0);
+	if (endOfDay && h === 0 && m === 0) {
 		d.setDate(d.getDate() + 1);
-	} else {
-		d.setHours(h, m, 0, 0);
 	}
 	return d.toISOString();
 }
