@@ -90,8 +90,12 @@
 					due_at: toISOString(dueAt),
 					parent_id: selectedParentId,
 				});
-				await tasksApi.updateProject(created.id, { started_at: new Date().toISOString() });
-				addNotification('Proyecto creado e iniciado', 'success');
+				if (startNow) {
+					await tasksApi.updateProject(created.id, { started_at: new Date().toISOString() });
+					addNotification('Proyecto creado e iniciado', 'success');
+				} else {
+					addNotification('Proyecto creado', 'success');
+				}
 			}
 
 			onclose();
@@ -198,18 +202,12 @@
 		{/if}
 
 		<div class="detail-actions">
-			{#if currentMode === 'task'}
-				<button
-					class="start-now-toggle mr-auto"
-					type="button"
-					onclick={() => (startNow = !startNow)}
-				>
-					<div class="toggle toggle-sm" class:on={startNow} class:off={!startNow}>
-						<div class="knob"></div>
-					</div>
-					Empezar ya
-				</button>
-			{/if}
+			<button class="start-now-toggle mr-auto" type="button" onclick={() => (startNow = !startNow)}>
+				<div class="toggle toggle-sm" class:on={startNow} class:off={!startNow}>
+					<div class="knob"></div>
+				</div>
+				Empezar ya
+			</button>
 			<button class="btn-primary" onclick={create} disabled={saving}>Crear</button>
 		</div>
 	</div>

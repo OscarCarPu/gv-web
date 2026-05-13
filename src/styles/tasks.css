@@ -351,6 +351,14 @@
 	@apply text-text text-base font-semibold;
 }
 
+.detail-info-value-row {
+	@apply flex items-center gap-1.5;
+}
+
+.value-clear-btn {
+	@apply text-text-muted hover:text-danger flex cursor-pointer items-center border-none bg-transparent p-0.5 text-xs transition-colors;
+}
+
 .start-now-toggle {
 	@apply text-text flex cursor-pointer items-center gap-3 border-none bg-transparent p-0 text-sm font-medium;
 }

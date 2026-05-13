@@ -72,6 +72,18 @@
 		}
 	}
 
+	async function clearStarted() {
+		if (!project) return;
+		const id = project.id;
+		addNotification('Inicio quitado', 'success');
+		try {
+			await tasksApi.updateProject(id, { started_at: null });
+			await invalidateAll();
+		} catch {
+			addToast('Error al quitar inicio', 'error');
+		}
+	}
+
 	async function setFinished() {
 		if (!project) return;
 		const id = project.id;
@@ -158,7 +170,12 @@
 					<div class="detail-info-item">
 						<span class="detail-info-label">Inicio</span>
 						{#if project.started_at}
-							<span class="detail-info-value">{formatDateFull(project.started_at)}</span>
+							<div class="detail-info-value-row">
+								<span class="detail-info-value">{formatDateFull(project.started_at)}</span>
+								<button class="value-clear-btn" onclick={clearStarted} title="Quitar inicio">
+									<Icon name="xmark" />
+								</button>
+							</div>
 						{:else}
 							<button class="btn-action-sm btn-start" onclick={setStarted}>Empezar</button>
 						{/if}
