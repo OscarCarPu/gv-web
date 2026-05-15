@@ -283,7 +283,11 @@
 /* --- Category breakdown sheet specifics --- */
 
 .cat-breakdown-toggle {
-	@apply mt-3 mb-3;
+	@apply mt-2 mb-3;
+}
+
+.cat-breakdown-month-row {
+	@apply mt-3 mb-0 justify-center;
 }
 
 .cat-tree {

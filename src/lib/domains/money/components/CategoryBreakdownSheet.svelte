@@ -17,17 +17,24 @@
 	let stats = $state<CategoryStat[]>([]);
 	let initialLoading = $state(true);
 
-	function monthStart(): string {
+	function currentMonth(): string {
 		const d = new Date();
-		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+	}
+
+	let selectedMonth = $state(currentMonth());
+
+	function monthBounds(ym: string): { from: string; to: string } {
+		const [y, m] = ym.split('-').map(Number);
+		const last = new Date(y, m, 0).getDate();
+		const mm = String(m).padStart(2, '0');
+		return { from: `${y}-${mm}-01`, to: `${y}-${mm}-${String(last).padStart(2, '0')}` };
 	}
 
 	async function fetchStats() {
 		try {
-			stats = await moneyApi.getCategoryStats({
-				type,
-				from: monthStart(),
-			});
+			const { from, to } = monthBounds(selectedMonth);
+			stats = await moneyApi.getCategoryStats({ type, from, to });
 		} catch {
 			stats = [];
 		} finally {
@@ -38,11 +45,13 @@
 	$effect(() => {
 		if (open) {
 			void type;
+			void selectedMonth;
 			void categories;
 			fetchStats();
 		} else {
 			initialLoading = true;
 			stats = [];
+			selectedMonth = currentMonth();
 		}
 	});
 
@@ -157,7 +166,14 @@
 </script>
 
 <BottomSheet {open} {onclose}>
-	<h3 class="modal-title">Por categoría · este mes</h3>
+	<h3 class="modal-title">Por categoría</h3>
+
+	<div class="sheet-controls-row cat-breakdown-month-row">
+		<div class="sheet-account-filter">
+			<label for="cat-month">Mes</label>
+			<input id="cat-month" type="month" bind:value={selectedMonth} />
+		</div>
+	</div>
 
 	<div class="create-mode-toggle money-type-toggle cat-breakdown-toggle">
 		<button class="expense" class:active={type === 'expense'} onclick={() => (type = 'expense')}>
