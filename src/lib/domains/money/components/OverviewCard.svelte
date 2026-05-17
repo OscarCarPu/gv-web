@@ -241,6 +241,9 @@
 	open={categoryBreakdownOpen}
 	onclose={() => (categoryBreakdownOpen = false)}
 	{categories}
+	{accounts}
+	onedittransaction={openEdit}
+	ondeletetransaction={onDelete}
 />
 <MonthlyTrendSheet open={monthlyTrendOpen} onclose={() => (monthlyTrendOpen = false)} {accounts} />
 <EstimationSheet open={estimationOpen} onclose={() => (estimationOpen = false)} />

@@ -103,9 +103,24 @@ export const moneyApi = {
 
 	// --- Transactions ---
 
-	async listTransactions(accountId?: number, token?: string): Promise<Transaction[]> {
-		const qs = accountId ? `?account_id=${accountId}` : '';
-		return fetchAPI(`/finance/transactions${qs}`, TransactionListSchema, { token });
+	async listTransactions(
+		params: {
+			accountId?: number;
+			categoryId?: number;
+			type?: 'income' | 'expense' | 'transfer';
+			from?: string;
+			to?: string;
+		} = {},
+		token?: string
+	): Promise<Transaction[]> {
+		const qs = new URLSearchParams();
+		if (params.accountId != null) qs.set('account_id', String(params.accountId));
+		if (params.categoryId != null) qs.set('category_id', String(params.categoryId));
+		if (params.type) qs.set('type', params.type);
+		if (params.from) qs.set('from', params.from);
+		if (params.to) qs.set('to', params.to);
+		const suffix = qs.toString() ? `?${qs}` : '';
+		return fetchAPI(`/finance/transactions${suffix}`, TransactionListSchema, { token });
 	},
 
 	async createTransaction(input: CreateTransactionRequest, token?: string): Promise<Transaction> {

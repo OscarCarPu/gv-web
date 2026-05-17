@@ -1,17 +1,29 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import BottomSheet from '$shared/components/BottomSheet.svelte';
 	import Icon from '$shared/components/Icon.svelte';
 	import { moneyApi } from '$lib/domains/money/api/money.api';
 	import { formatMoney } from '$shared/utils/money';
-	import type { Category, CategoryStat } from '../types/Money.types';
+	import TransactionRow from './TransactionRow.svelte';
+	import type {
+		Account,
+		Category,
+		CategoryStat,
+		OverviewTransaction,
+		Transaction,
+	} from '../types/Money.types';
 
 	interface Props {
 		open: boolean;
 		onclose: () => void;
 		categories: Category[];
+		accounts: Account[];
+		onedittransaction?: (id: number) => void;
+		ondeletetransaction?: (id: number) => void;
 	}
 
-	let { open, onclose, categories }: Props = $props();
+	let { open, onclose, categories, accounts, onedittransaction, ondeletetransaction }: Props =
+		$props();
 
 	let type = $state<'expense' | 'income' | 'transfer'>('expense');
 	let stats = $state<CategoryStat[]>([]);
@@ -31,6 +43,13 @@
 		return { from: `${y}-${mm}-01`, to: `${y}-${mm}-${String(last).padStart(2, '0')}` };
 	}
 
+	function monthLabel(ym: string): string {
+		const [y, m] = ym.split('-').map(Number);
+		const d = new Date(y, m - 1, 1);
+		const s = d.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+		return s.replace('.', '');
+	}
+
 	async function fetchStats() {
 		try {
 			const { from, to } = monthBounds(selectedMonth);
@@ -41,19 +60,6 @@
 			initialLoading = false;
 		}
 	}
-
-	$effect(() => {
-		if (open) {
-			void type;
-			void selectedMonth;
-			void categories;
-			fetchStats();
-		} else {
-			initialLoading = true;
-			stats = [];
-			selectedMonth = currentMonth();
-		}
-	});
 
 	type Node = {
 		category: Category;
@@ -66,6 +72,52 @@
 		depth: number;
 		children: Node[];
 	};
+
+	let selectedNode = $state<Node | null>(null);
+	let categoryTx = $state<Transaction[]>([]);
+	let txLoading = $state(false);
+
+	async function openCategory(node: Node) {
+		selectedNode = node;
+		txLoading = true;
+		categoryTx = [];
+		try {
+			const { from, to } = monthBounds(selectedMonth);
+			categoryTx = await moneyApi.listTransactions({
+				categoryId: node.category.id,
+				type,
+				from,
+				to,
+			});
+		} catch {
+			categoryTx = [];
+		} finally {
+			txLoading = false;
+		}
+	}
+
+	function back() {
+		selectedNode = null;
+		categoryTx = [];
+	}
+
+	$effect(() => {
+		if (open) {
+			void type;
+			void selectedMonth;
+			void categories;
+			untrack(() => {
+				if (selectedNode !== null) back();
+			});
+			fetchStats();
+		} else {
+			initialLoading = true;
+			stats = [];
+			selectedMonth = currentMonth();
+			selectedNode = null;
+			categoryTx = [];
+		}
+	});
 
 	const tree = $derived.by((): Node[] => {
 		const filtered = categories.filter((c) => c.type === type);
@@ -138,6 +190,7 @@
 		hasChildren: boolean;
 		barPct: number;
 		sharePct: number;
+		ownSharePct: number;
 	};
 
 	const flatRows = $derived.by((): FlatRow[] => {
@@ -145,8 +198,9 @@
 		function walk(node: Node) {
 			const barPct = rootMax > 0 ? (node.totalAmount / rootMax) * 100 : 0;
 			const sharePct = total > 0 ? (node.totalAmount / total) * 100 : 0;
+			const ownSharePct = total > 0 ? (node.ownAmount / total) * 100 : 0;
 			const hasChildren = node.children.length > 0;
-			out.push({ node, hasChildren, barPct, sharePct });
+			out.push({ node, hasChildren, barPct, sharePct, ownSharePct });
 			if (hasChildren && expanded[node.category.id]) {
 				for (const k of node.children) walk(k);
 			}
@@ -163,99 +217,187 @@
 				? 'amount-negative'
 				: 'amount-neutral'
 	);
+
+	const accountById = $derived(Object.fromEntries(accounts.map((a) => [a.id, a.name])));
+	const categoryById = $derived(Object.fromEntries(categories.map((c) => [c.id, c.name])));
+
+	const detailRows = $derived<OverviewTransaction[]>(
+		categoryTx.map((tx) => ({
+			id: tx.id,
+			type: tx.type,
+			amount: tx.amount,
+			account_name: accountById[tx.account_id] ?? '',
+			to_account_name: tx.to_account_id != null ? (accountById[tx.to_account_id] ?? null) : null,
+			category_name: tx.category_id != null ? (categoryById[tx.category_id] ?? null) : null,
+			description: tx.description,
+			occurred_at: tx.occurred_at,
+		}))
+	);
 </script>
 
 <BottomSheet {open} {onclose}>
-	<h3 class="modal-title">Por categoría</h3>
+	{#if selectedNode === null}
+		<header class="cat-sheet-header">
+			<h3 class="modal-title">Por categoría</h3>
+			<input
+				id="cat-sheet-month"
+				name="cat-sheet-month"
+				class="cat-sheet-month"
+				type="month"
+				bind:value={selectedMonth}
+			/>
+		</header>
 
-	<div class="sheet-controls-row cat-breakdown-month-row">
-		<div class="sheet-account-filter">
-			<label for="cat-month">Mes</label>
-			<input id="cat-month" type="month" bind:value={selectedMonth} />
+		<div class="create-mode-toggle money-type-toggle cat-sheet-type">
+			<button class="expense" class:active={type === 'expense'} onclick={() => (type = 'expense')}>
+				Gastos
+			</button>
+			<button class="income" class:active={type === 'income'} onclick={() => (type = 'income')}>
+				Ingresos
+			</button>
+			<button
+				class="transfer"
+				class:active={type === 'transfer'}
+				onclick={() => (type = 'transfer')}
+			>
+				Transferencias
+			</button>
 		</div>
-	</div>
 
-	<div class="create-mode-toggle money-type-toggle cat-breakdown-toggle">
-		<button class="expense" class:active={type === 'expense'} onclick={() => (type = 'expense')}>
-			Gastos
-		</button>
-		<button class="income" class:active={type === 'income'} onclick={() => (type = 'income')}>
-			Ingresos
-		</button>
-		<button class="transfer" class:active={type === 'transfer'} onclick={() => (type = 'transfer')}>
-			Transferencias
-		</button>
-	</div>
+		<div class="cat-sheet-tiles">
+			<div class="money-tile">
+				<span class="detail-info-label">Total</span>
+				<span class="detail-info-value {amountClass}">
+					{sign}{formatMoney(total.toFixed(2))}
+				</span>
+			</div>
+			<div class="money-tile">
+				<span class="detail-info-label">Movimientos</span>
+				<span class="detail-info-value">{totalTx}</span>
+			</div>
+		</div>
 
-	<div class="money-tiles money-tiles-wrap">
-		<div class="money-tile">
-			<span class="detail-info-label">Total</span>
-			<span class="detail-info-value {amountClass}">
-				{sign}{formatMoney(total.toFixed(2))}
-			</span>
-		</div>
-		<div class="money-tile">
-			<span class="detail-info-label">Movimientos</span>
-			<span class="detail-info-value">{totalTx}</span>
-		</div>
-	</div>
+		{#if initialLoading}
+			<div class="history-loading">
+				<div class="spinner"></div>
+				Cargando...
+			</div>
+		{:else if tree.length === 0}
+			<div class="history-empty">
+				<Icon name="chart-pie" />
+				<span>Sin categorías de este tipo</span>
+			</div>
+		{:else}
+			<ul
+				class="cat-tree"
+				class:cat-tree-income={type === 'income'}
+				class:cat-tree-transfer={type === 'transfer'}
+			>
+				{#each flatRows as row (row.node.category.id)}
+					{@const n = row.node}
+					{@const isExpanded = expanded[n.category.id] === true}
+					<li
+						class="cat-tree-row"
+						class:cat-tree-row-child={n.depth > 0}
+						style="--cat-depth: {n.depth}"
+					>
+						<div class="cat-tree-head">
+							{#if row.hasChildren}
+								<button
+									type="button"
+									class="tree-chevron-btn"
+									onclick={() => toggle(n.category.id)}
+									aria-label={isExpanded ? 'Colapsar' : 'Expandir'}
+								>
+									<Icon
+										name="chevron-right"
+										class={`tree-chevron${isExpanded ? ' expanded' : ''}`}
+									/>
+								</button>
+							{:else}
+								<span class="tree-chevron-spacer"></span>
+							{/if}
 
-	{#if initialLoading}
-		<div class="history-loading">
-			<div class="spinner"></div>
-			Cargando...
-		</div>
-	{:else if tree.length === 0}
-		<div class="history-empty">
-			<Icon name="chart-pie" />
-			<span>Sin categorías de este tipo</span>
-		</div>
-	{:else}
-		<ul
-			class="cat-tree"
-			class:cat-tree-income={type === 'income'}
-			class:cat-tree-transfer={type === 'transfer'}
-		>
-			{#each flatRows as row (row.node.category.id)}
-				{@const n = row.node}
-				{@const isExpanded = expanded[n.category.id] === true}
-				<li
-					class="cat-tree-row"
-					class:cat-tree-row-child={n.depth > 0}
-					style="--cat-depth: {n.depth}"
-				>
-					<div class="cat-tree-head">
-						{#if row.hasChildren}
 							<button
 								type="button"
-								class="tree-chevron-btn"
-								onclick={() => toggle(n.category.id)}
-								aria-label={isExpanded ? 'Colapsar' : 'Expandir'}
+								class="cat-tree-name-btn"
+								onclick={() => openCategory(n)}
+								aria-label="Ver movimientos de {n.category.name}"
 							>
-								<Icon name="chevron-right" class={`tree-chevron${isExpanded ? ' expanded' : ''}`} />
+								<span class="cat-tree-name">{n.category.name}</span>
 							</button>
-						{:else}
-							<span class="tree-chevron-spacer"></span>
-						{/if}
 
-						<span class="cat-tree-name">
-							{n.category.name}
-						</span>
-
-						<span class="cat-tree-meta">
-							<span class="cat-tree-count" title="Movimientos">{n.totalCount}</span>
-							<span class="cat-tree-share">{row.sharePct.toFixed(1)}%</span>
-							<span class="cat-tree-amount {amountClass}">
-								{sign}{formatMoney(n.totalAmount.toFixed(2))}
+							<span class="cat-tree-meta">
+								<span class="cat-tree-count">
+									{n.ownCount}{#if row.hasChildren}<span class="cat-tree-sub">/{n.totalCount}</span>{/if}
+								</span>
+								<span class="cat-tree-share">
+									{row.ownSharePct.toFixed(1)}%{#if row.hasChildren}<span class="cat-tree-sub">/{row.sharePct.toFixed(1)}%</span>{/if}
+								</span>
+								<span class="cat-tree-amount {amountClass}">
+									{sign}{formatMoney(n.ownAmount.toFixed(2))}{#if row.hasChildren}<span class="cat-tree-sub">/{sign}{formatMoney(n.totalAmount.toFixed(2))}</span>{/if}
+								</span>
 							</span>
-						</span>
-					</div>
 
-					<div class="cat-tree-track">
-						<div class="cat-tree-fill" style="width: {row.barPct}%"></div>
-					</div>
-				</li>
-			{/each}
-		</ul>
+							<button
+								type="button"
+								class="cat-tree-drill"
+								onclick={() => openCategory(n)}
+								aria-label="Ver movimientos"
+							>
+								<Icon name="chevron-right" />
+							</button>
+						</div>
+
+						<div class="cat-tree-track">
+							<div class="cat-tree-fill" style="width: {row.barPct}%"></div>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	{:else}
+		<header class="cat-detail-header">
+			<button class="cat-detail-back" onclick={back} aria-label="Volver al árbol">
+				<Icon name="arrow-left" />
+				<span>{selectedNode.category.name}</span>
+			</button>
+			<span class="cat-detail-month">{monthLabel(selectedMonth)}</span>
+		</header>
+
+		<div class="cat-sheet-tiles">
+			<div class="money-tile">
+				<span class="detail-info-label">Total propio</span>
+				<span class="detail-info-value {amountClass}">
+					{sign}{formatMoney(selectedNode.ownAmount.toFixed(2))}
+				</span>
+			</div>
+			<div class="money-tile">
+				<span class="detail-info-label">Movimientos</span>
+				<span class="detail-info-value">{selectedNode.ownCount}</span>
+			</div>
+		</div>
+
+		{#if txLoading}
+			<div class="history-loading">
+				<div class="spinner"></div>
+				Cargando...
+			</div>
+		{:else if detailRows.length === 0}
+			<div class="history-empty">
+				<Icon name="folder" />
+				<span>Sin movimientos este mes</span>
+			</div>
+		{:else}
+			<div class="task-list cat-detail-list">
+				{#each detailRows as tx (tx.id)}
+					<TransactionRow
+						{tx}
+						onedit={(id) => onedittransaction?.(id)}
+						ondelete={(id) => ondeletetransaction?.(id)}
+					/>
+				{/each}
+			</div>
+		{/if}
 	{/if}
 </BottomSheet>

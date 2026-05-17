@@ -282,27 +282,58 @@
 
 /* --- Category breakdown sheet specifics --- */
 
-.cat-breakdown-toggle {
-	@apply mt-2 mb-3;
+.cat-sheet-header {
+	@apply mt-1 mb-3 flex items-center justify-between gap-3 pr-10;
 }
 
-.cat-breakdown-month-row {
-	@apply mt-3 mb-0 justify-center;
+.cat-sheet-header .modal-title {
+	@apply m-0 truncate;
+}
+
+.cat-sheet-month {
+	@apply bg-bg text-text rounded-md px-2 py-1 text-sm tabular-nums;
+	border: 1px solid var(--color-border);
+	font-family: inherit;
+}
+
+.cat-sheet-month:focus {
+	@apply outline-none;
+	border-color: var(--color-primary);
+}
+
+.cat-sheet-type {
+	@apply mb-3;
+}
+
+.cat-sheet-tiles {
+	@apply mb-4 flex gap-3;
 }
 
 .cat-tree {
-	@apply m-0 mt-2 flex list-none flex-col gap-2 p-0;
+	@apply m-0 mt-1 flex list-none flex-col gap-1 p-0;
 }
 
 .cat-tree-row {
-	@apply flex flex-col gap-1;
-	padding-left: calc(var(--cat-depth, 0) * 1.25rem);
+	@apply flex flex-col gap-1.5 rounded-lg py-2 pr-1 pl-2 transition-colors;
+	padding-left: calc(0.5rem + var(--cat-depth, 0) * 1rem);
+}
+
+.cat-tree-row:hover {
+	background: var(--color-bg);
 }
 
 .cat-tree-row-child {
+	position: relative;
+}
+
+.cat-tree-row-child::before {
+	content: '';
+	position: absolute;
+	top: 0.6rem;
+	bottom: 0.6rem;
+	left: calc(0.25rem + (var(--cat-depth, 0) - 1) * 1rem);
+	width: 0;
 	border-left: 1px dashed var(--color-border);
-	margin-left: calc(var(--cat-depth, 0) * 1.25rem - 1px);
-	padding-left: 0.75rem;
 }
 
 .cat-tree-head {
@@ -315,8 +346,12 @@
 	flex-shrink: 0;
 }
 
+.cat-tree-name-btn {
+	@apply min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-left;
+}
+
 .cat-tree-name {
-	@apply text-text min-w-0 flex-1 truncate text-sm font-medium;
+	@apply text-text block truncate text-sm font-medium;
 }
 
 .cat-tree-row-child .cat-tree-name {
@@ -343,6 +378,19 @@
 	text-align: right;
 }
 
+.cat-tree-sub {
+	@apply text-text-muted text-xs font-normal;
+}
+
+.cat-tree-drill {
+	@apply text-text-muted hover:text-text flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-none bg-transparent transition-colors;
+	flex-shrink: 0;
+}
+
+.cat-tree-drill:hover {
+	background: var(--color-border);
+}
+
 .cat-tree-track {
 	@apply bg-text-muted/10 relative h-1.5 w-full overflow-hidden rounded-full;
 }
@@ -360,6 +408,28 @@
 
 .cat-tree-transfer .cat-tree-fill {
 	background: var(--color-primary);
+}
+
+/* --- Category breakdown drill-down detail view --- */
+
+.cat-detail-header {
+	@apply mt-1 mb-3 flex items-center justify-between gap-3 pr-10;
+}
+
+.cat-detail-back {
+	@apply text-text hover:bg-text-muted/10 -ml-1 flex min-w-0 cursor-pointer items-center gap-1 rounded-md border-none bg-transparent px-1 py-1 text-base font-semibold transition-colors;
+}
+
+.cat-detail-back span {
+	@apply truncate;
+}
+
+.cat-detail-month {
+	@apply text-text-muted text-sm tabular-nums;
+}
+
+.cat-detail-list {
+	@apply mt-1;
 }
 
 /* --- Net worth chart hover tooltip --- */
