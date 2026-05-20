@@ -15,6 +15,7 @@
 		TaskFullResponse,
 		TodoResponse,
 		TaskDepRef,
+		ProjectListItem,
 	} from '$lib/domains/tasks/types/Task.types';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import DepSelector from './DepSelector.svelte';
@@ -35,6 +36,8 @@
 	let dueAt = $state('');
 	let newTodoName = $state('');
 	let projectName = $state<string | null>(null);
+	let projects = $state<ProjectListItem[]>([]);
+	let selectedProjectId = $state<number | null>(null);
 	let saving = $state(false);
 	let nameError = $state(false);
 	let taskType = $state<'standard' | 'continuous' | 'recurring'>('standard');
@@ -47,8 +50,12 @@
 
 	async function loadTask() {
 		if (taskId == null) return;
-		const t = await tasksApi.getTask(taskId);
+		const [t, ps] = await Promise.all([
+			tasksApi.getTask(taskId),
+			projects.length === 0 ? tasksApi.listProjectsFast() : Promise.resolve(projects),
+		]);
 		task = t;
+		projects = ps;
 		todos = sortTodos([...t.todos]);
 		name = t.name;
 		description = t.description ?? '';
@@ -60,22 +67,19 @@
 		dependsOn = [...t.depends_on];
 		blocks = [...t.blocks];
 		initialBlocks = [...t.blocks];
-		if (t.project_id) {
-			tasksApi.getProject(t.project_id).then((p) => {
-				projectName = p.name;
-			});
-		} else {
-			projectName = null;
-		}
+		selectedProjectId = t.project_id;
+		projectName = ps.find((p) => p.id === t.project_id)?.name ?? null;
 	}
 
 	$effect(() => {
 		if (taskId != null) {
 			projectName = null;
+			selectedProjectId = null;
 			nameError = false;
 			loadTask();
 		} else {
 			task = null;
+			projects = [];
 		}
 	});
 
@@ -128,6 +132,7 @@
 					task_type: taskType,
 					recurrence: taskType === 'recurring' ? recurrence : undefined,
 					priority,
+					project_id: selectedProjectId,
 				}),
 				syncReverseDepends(),
 			]);
@@ -263,6 +268,15 @@
 				<div class="detail-field">
 					<label for="dtp-task-due">Fecha límite</label>
 					<DatetimePicker bind:value={dueAt} id="task-due" />
+				</div>
+				<div class="detail-field">
+					<label for="task-project">Proyecto</label>
+					<select id="task-project" bind:value={selectedProjectId}>
+						<option value={null}>Sin proyecto</option>
+						{#each projects as project (project.id)}
+							<option value={project.id}>{project.name}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="detail-field">
 					<label for="task-type">Tipo</label>
