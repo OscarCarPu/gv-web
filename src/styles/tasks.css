@@ -618,6 +618,43 @@
 	}
 }
 
+/* Project filter select — inside .priority-filter, matches pill aesthetic */
+
+.filter-sep {
+	color: var(--color-border-light);
+	font-size: 0.6rem;
+	margin-inline: 2px;
+	user-select: none;
+}
+
+.project-filter-select {
+	background-color: var(--color-bg);
+	border: 1px solid var(--color-border);
+	border-radius: 9999px;
+	color: var(--color-text-muted);
+	color-scheme: dark;
+	cursor: pointer;
+	font-family: inherit;
+	font-size: 0.75rem;
+	font-weight: 500;
+	max-width: 9rem;
+	padding: 0.125rem 0.625rem;
+	transition:
+		color 0.15s,
+		border-color 0.15s,
+		background-color 0.15s;
+
+	&:focus {
+		outline: none;
+	}
+
+	&.active {
+		background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+		border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+		color: var(--color-primary);
+	}
+}
+
 /* Priority badge shown next to status-badge on task rows */
 
 .priority-badge {

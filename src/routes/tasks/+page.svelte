@@ -41,15 +41,62 @@
 	const EXPAND_STEP = 10;
 	let dueDateVisibleCount = $state(FOLD_LIMIT);
 	let dueDatePriorityFilter = $state<number | null>(null);
+	let dueDateProjectFilter = $state<number | null>(null);
 	let activeTreePriorityFilter = $state<number | null>(null);
 	let pendingTaskIds = $state(new SvelteSet<number>());
 	let pendingProjectIds = $state(new SvelteSet<number>());
+
+	function flattenProjectsFromTree(
+		nodes: ActiveTreeNode[],
+		depth = 0
+	): { id: number; name: string; depth: number }[] {
+		const result: { id: number; name: string; depth: number }[] = [];
+		for (const node of nodes) {
+			if (node.type === 'project') {
+				result.push({ id: node.id, name: node.name, depth });
+				if (node.children) result.push(...flattenProjectsFromTree(node.children, depth + 1));
+			}
+		}
+		return result;
+	}
+
+	function collectProjectIds(nodes: ActiveTreeNode[], targetId: number): Set<number> {
+		const ids = new Set<number>();
+		function gather(node: ActiveTreeNode) {
+			if (node.type === 'project') {
+				ids.add(node.id);
+				node.children?.forEach(gather);
+			}
+		}
+		function find(ns: ActiveTreeNode[]): boolean {
+			for (const node of ns) {
+				if (node.type === 'project' && node.id === targetId) {
+					gather(node);
+					return true;
+				}
+				if (node.children && find(node.children)) return true;
+			}
+			return false;
+		}
+		find(nodes);
+		return ids;
+	}
+
+	let dueDateProjectOptions = $derived(flattenProjectsFromTree(data.activeTree));
+	let dueDateProjectIds = $derived(
+		dueDateProjectFilter === null ? null : collectProjectIds(data.activeTree, dueDateProjectFilter)
+	);
 
 	let filteredByDueDate = $derived(
 		(dueDatePriorityFilter === null
 			? data.tasksByDueDate
 			: data.tasksByDueDate.filter((t) => t.priority <= dueDatePriorityFilter!)
-		).filter((t) => !pendingTaskIds.has(t.id))
+		)
+			.filter((t) => !pendingTaskIds.has(t.id))
+			.filter((t) => {
+				if (dueDateProjectIds === null) return true;
+				return t.project_id !== null && dueDateProjectIds.has(t.project_id);
+			})
 	);
 	let visibleDueDateTasks = $derived(filteredByDueDate.slice(0, dueDateVisibleCount));
 	let todayKey = $derived(toLocalDateString());
@@ -67,6 +114,7 @@
 
 	$effect(() => {
 		dueDatePriorityFilter;
+		dueDateProjectFilter;
 		dueDateVisibleCount = FOLD_LIMIT;
 	});
 
@@ -544,6 +592,20 @@
 						class:active={dueDatePriorityFilter === null}
 						onclick={() => (dueDatePriorityFilter = null)}>Todas</button
 					>
+					{#if dueDateProjectOptions.length > 0}
+						<span class="filter-sep" aria-hidden="true">|</span>
+						<select
+							class="project-filter-select"
+							class:active={dueDateProjectFilter !== null}
+							bind:value={dueDateProjectFilter}
+							aria-label="Filtrar por proyecto"
+						>
+							<option value={null}>Proyecto</option>
+							{#each dueDateProjectOptions as opt (opt.id)}
+								<option value={opt.id}>{' '.repeat(opt.depth * 2)}{opt.name}</option>
+							{/each}
+						</select>
+					{/if}
 				</div>
 				<button
 					class="btn-primary btn-sm"
