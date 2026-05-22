@@ -13,7 +13,21 @@ main:has(.welcome-page) {
 	@apply desktop:px-[10%] flex min-h-0 flex-1 flex-col gap-5 overflow-hidden px-4 py-6;
 }
 
+.welcome-avatar {
+	@apply rounded-lg object-cover object-top;
+	width: 96px;
+	height: 96px;
+	flex-shrink: 0;
+	border: 2px solid var(--color-border-light);
+}
+
+.welcome-hero-text {
+	@apply flex flex-col;
+}
+
 .welcome-hero {
+	@apply flex items-center gap-4;
+
 	h1 {
 		@apply mb-0.5 text-2xl font-bold;
 		color: var(--color-text);

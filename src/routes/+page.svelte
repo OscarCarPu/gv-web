@@ -45,6 +45,8 @@
 <div class="welcome-page">
 	<div class="welcome-content">
 		<div class="welcome-hero">
+			<img src="/perfil.jpeg" alt="Oscar Carballo" class="welcome-avatar" />
+			<div class="welcome-hero-text">
 			<h1>Oscar Carballo Puebla</h1>
 			<p class="welcome-tagline">Backend Developer · Data pipelines · Big Data</p>
 			<div class="welcome-hero-links">
@@ -60,6 +62,7 @@
 					<Icon name="arrow-up" class="rotate-down" />
 					CV
 				</a>
+			</div>
 			</div>
 		</div>
 
