@@ -38,15 +38,15 @@ export function isoToHHmm(iso: string): string {
 	return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-const shortFormatter = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
-const fullFormatter = new Intl.DateTimeFormat('es', {
+const shortFormatter = new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short' });
+const fullFormatter = new Intl.DateTimeFormat('en', {
 	day: 'numeric',
 	month: 'short',
 	year: 'numeric',
 	hour: '2-digit',
 	minute: '2-digit',
 });
-const weekdayFormatter = new Intl.DateTimeFormat('es', { weekday: 'long' });
+const weekdayFormatter = new Intl.DateTimeFormat('en', { weekday: 'long' });
 
 const shortCache = new Map<string, string>();
 const fullCache = new Map<string, string>();
@@ -72,7 +72,7 @@ export function formatDateFull(iso: string): string {
 }
 
 export function formatDueDay(iso: string | null): string {
-	if (!iso) return 'Sin fecha';
+	if (!iso) return 'No date';
 	const hit = dueDayCache.get(iso);
 	if (hit !== undefined) return hit;
 	const d = new Date(iso);

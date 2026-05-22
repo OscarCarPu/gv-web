@@ -5,6 +5,6 @@ export const actions = {
 	default: async ({ cookies }: RequestEvent) => {
 		cookies.delete('session', { path: '/' });
 		cookies.delete('semiprivate', { path: '/' });
-		redirect(StatusCodes.SEE_OTHER, '/login');
+		redirect(StatusCodes.SEE_OTHER, '/');
 	},
 };

@@ -19,7 +19,7 @@
 </script>
 
 {#if visible.length === 0}
-	<div class="chart-empty">Sin movimientos en este período</div>
+	<div class="chart-empty">No transactions in this period</div>
 {:else}
 	<ul class="cat-bars" class:cat-bars-income={variant === 'income'}>
 		{#each visible as row (row.category_id ?? row.name)}

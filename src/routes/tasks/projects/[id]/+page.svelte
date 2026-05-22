@@ -50,10 +50,10 @@
 				description: description || null,
 				due_at: toISOString(dueAt),
 			});
-			addNotification('Proyecto actualizado', 'success');
+			addNotification('Project updated', 'success');
 			await invalidateAll();
 		} catch {
-			addToast('Error al guardar proyecto', 'error');
+			addToast('Error saving project', 'error');
 		} finally {
 			saving = false;
 		}
@@ -63,24 +63,24 @@
 		if (!project) return;
 		const id = project.id;
 		const now = new Date().toISOString();
-		addNotification('Proyecto iniciado', 'success');
+		addNotification('Project started', 'success');
 		try {
 			await tasksApi.updateProject(id, { started_at: now });
 			await invalidateAll();
 		} catch {
-			addToast('Error al iniciar proyecto', 'error');
+			addToast('Error starting project', 'error');
 		}
 	}
 
 	async function clearStarted() {
 		if (!project) return;
 		const id = project.id;
-		addNotification('Inicio quitado', 'success');
+		addNotification('Start removed', 'success');
 		try {
 			await tasksApi.updateProject(id, { started_at: null });
 			await invalidateAll();
 		} catch {
-			addToast('Error al quitar inicio', 'error');
+			addToast('Error removing start', 'error');
 		}
 	}
 
@@ -88,25 +88,25 @@
 		if (!project) return;
 		const id = project.id;
 		const now = new Date().toISOString();
-		addNotification('Proyecto finalizado', 'success');
+		addNotification('Project finished', 'success');
 		try {
 			await tasksApi.updateProject(id, { finished_at: now });
 			await invalidateAll();
 		} catch {
-			addToast('Error al finalizar proyecto', 'error');
+			addToast('Error finishing project', 'error');
 		}
 	}
 
 	async function remove() {
 		if (!project) return;
 		const id = project.id;
-		addNotification('Proyecto eliminado', 'success');
+		addNotification('Project deleted', 'success');
 		goto('/tasks');
 		try {
 			await tasksApi.deleteProject(id);
 			await invalidateAll();
 		} catch {
-			addToast('Error al eliminar proyecto', 'error');
+			addToast('Error deleting project', 'error');
 			await invalidateAll();
 		}
 	}
@@ -132,19 +132,19 @@
 />
 
 <svelte:head>
-	<title>{project?.name ?? 'Proyecto'}</title>
+	<title>{project?.name ?? 'Project'}</title>
 </svelte:head>
 
 <div class="container">
 	<div class="project-nav">
 		<a href="/tasks" class="back-link">
 			<Icon name="arrow-left" />
-			Tareas
+			Tasks
 		</a>
 		{#if project?.parent_id}
 			<a href="/tasks/projects/{project.parent_id}" class="back-link">
 				<Icon name="arrow-left" />
-				Proyecto padre
+				Parent Project
 			</a>
 		{/if}
 	</div>
@@ -154,70 +154,70 @@
 			<div class="detail-form">
 				<div class="detail-inline-row">
 					<div class="detail-field flex-1">
-						<label for="project-name">Nombre</label>
+						<label for="project-name">Name</label>
 						<input id="project-name" type="text" bind:value={name} maxlength={40} />
 					</div>
 					<div class="detail-field">
-						<label for="dtp-project-due">Fecha límite</label>
+						<label for="dtp-project-due">Due date</label>
 						<DatetimePicker bind:value={dueAt} id="project-due" />
 					</div>
 				</div>
 				<div class="detail-field">
-					<label for="project-desc">Descripción</label>
+					<label for="project-desc">Description</label>
 					<textarea id="project-desc" bind:value={description} rows="2"></textarea>
 				</div>
 				<div class="detail-info-row">
 					<div class="detail-info-item">
-						<span class="detail-info-label">Inicio</span>
+						<span class="detail-info-label">Start</span>
 						{#if project.started_at}
 							<div class="detail-info-value-row">
 								<span class="detail-info-value">{formatDateFull(project.started_at)}</span>
-								<button class="value-clear-btn" onclick={clearStarted} title="Quitar inicio">
+								<button class="value-clear-btn" onclick={clearStarted} title="Remove start">
 									<Icon name="xmark" />
 								</button>
 							</div>
 						{:else}
-							<button class="btn-action-sm btn-start" onclick={setStarted}>Empezar</button>
+							<button class="btn-action-sm btn-start" onclick={setStarted}>Start</button>
 						{/if}
 					</div>
 					<div class="detail-info-item">
-						<span class="detail-info-label">Fin</span>
+						<span class="detail-info-label">End</span>
 						{#if project.finished_at}
 							<span class="detail-info-value">{formatDateFull(project.finished_at)}</span>
 						{:else}
-							<button class="btn-action-sm" onclick={setFinished}>Finalizar</button>
+							<button class="btn-action-sm" onclick={setFinished}>Finish</button>
 						{/if}
 					</div>
 					{#if project.time_spent > 0}
 						<div class="detail-info-item">
-							<span class="detail-info-label">Tiempo</span>
+							<span class="detail-info-label">Time</span>
 							<span class="detail-info-value">{formatTime(project.time_spent)}</span>
 						</div>
 					{/if}
 				</div>
 
 				<div class="detail-actions">
-					<button class="btn-danger mr-auto" onclick={remove} disabled={saving}>Eliminar</button>
-					<button class="btn-primary" onclick={save} disabled={saving}>Guardar</button>
+					<button class="btn-danger mr-auto" onclick={remove} disabled={saving}>Delete</button>
+					<button class="btn-primary" onclick={save} disabled={saving}>Save</button>
 				</div>
 			</div>
 		</div>
 
 		<div class="project-children-section">
 			<div class="project-children-header">
-				<h2>Hijos</h2>
+				<h2>Children</h2>
 				<div class="project-children-actions">
 					<button class="btn-primary btn-sm" onclick={openCreateTask}>
-						<Icon name="plus" /> Tarea
+						<Icon name="plus" /> Task
 					</button>
 					<button class="btn-primary btn-sm" onclick={openCreateSubproject}>
-						<Icon name="plus" /> Sub-proyecto
+						<Icon name="plus" /> Sub-project
 					</button>
 				</div>
 			</div>
 
 			{#if children.length === 0}
-				<div class="project-children-empty">Sin hijos</div>
+				<div class="project-children-empty">No children</div>
 			{:else}
 				<div class="project-children-list">
 					{#each children as child (child.id + '-' + child.type)}
@@ -241,10 +241,10 @@
 									class:finished={child.finished_at != null}
 								>
 									{child.finished_at
-										? 'Completado'
+										? 'Completed'
 										: child.started_at
-											? 'En progreso'
-											: 'Pendiente'}
+											? 'In progress'
+											: 'Pending'}
 								</span>
 								<Icon name="chevron-right" class="child-chevron" />
 							</a>
@@ -254,7 +254,7 @@
 									<Icon name="check-circle" class="child-task-icon" />
 									<span class="child-name">{child.name}</span>
 									{#if child.blocked}
-										<Icon name="ban" class="blocked-icon" title="Bloqueada" />
+										<Icon name="ban" class="blocked-icon" title="Blocked" />
 									{/if}
 									{#if child.depends_on?.length}
 										<DepBadges
@@ -282,7 +282,7 @@
 										class:finished={child.finished_at != null}
 									>
 										{child.finished_at
-											? 'Completado'
+											? 'Completed'
 											: getStatusLabel(child.started_at, child.task_type, child.recurrence)}
 									</span>
 									{#if child.priority && child.priority <= 2}
@@ -302,7 +302,7 @@
 			{/if}
 		</div>
 	{:else}
-		<div class="project-children-empty">Proyecto no encontrado</div>
+		<div class="project-children-empty">Project not found</div>
 	{/if}
 </div>
 

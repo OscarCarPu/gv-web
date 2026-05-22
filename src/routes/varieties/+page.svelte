@@ -31,7 +31,7 @@
 </svelte:head>
 
 <div class="container">
-	<h1>Maria</h1>
+	<h1>Varieties</h1>
 
 	<div class="varieties-layout">
 		<aside class="ranking-list">
@@ -40,7 +40,7 @@
 				<span class="text-text-muted font-mono text-xs tabular-nums">{rated.length}</span>
 			</div>
 			{#if rated.length === 0}
-				<p class="text-text-muted py-6 text-center text-sm">Sin variedades puntuadas</p>
+				<p class="text-text-muted py-6 text-center text-sm">No rated varieties</p>
 			{:else}
 				<ol class="m-0 flex list-none flex-col gap-1 p-0">
 					{#each rated as v, i (v.id)}
@@ -65,7 +65,7 @@
 
 			{#if unrated.length > 0}
 				<div class="section-header mt-5">
-					<h2>Por puntuar</h2>
+					<h2>To rate</h2>
 					<span class="text-text-muted font-mono text-xs tabular-nums">{unrated.length}</span>
 				</div>
 				<ul class="m-0 flex list-none flex-col gap-1 p-0">
@@ -84,15 +84,15 @@
 
 		<section>
 			<div class="section-header">
-				<h2>Variedades</h2>
+				<h2>Varieties</h2>
 				<button class="btn-primary btn-sm" onclick={() => (showCreate = true)}>
-					<Icon name="plus" /> Variedad
+					<Icon name="plus" /> Variety
 				</button>
 			</div>
 
 			{#if data.varieties.length === 0}
 				<p class="text-text-muted py-12 text-center text-sm">
-					Aún no hay variedades. Pulsa <strong>+</strong> para añadir la primera.
+					No varieties yet. Press <strong>+</strong> to add the first one.
 				</p>
 			{:else}
 				<div class="grid [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))] gap-4">

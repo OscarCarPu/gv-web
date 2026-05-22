@@ -7,11 +7,11 @@
 </script>
 
 <svelte:head>
-	<title>Dinero</title>
+	<title>Money</title>
 </svelte:head>
 
 <div class="container">
-	<h1>Dinero</h1>
+	<h1>Money</h1>
 
 	<div class="money-content">
 		<OverviewCard overview={data.overview} accounts={data.accounts} categories={data.categories} />

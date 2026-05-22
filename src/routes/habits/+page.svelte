@@ -45,14 +45,14 @@
 </script>
 
 <svelte:head>
-	<title>Habitos</title>
+	<title>Habits</title>
 </svelte:head>
 
 <div class="container">
-	<h1>Habitos</h1>
+	<h1>Habits</h1>
 	<div class="habits-toolbar">
 		<DateNavigation onDateChange={handleDateChange} />
-		<button class="btn-primary" onclick={openCreate}>+ Nuevo hábito</button>
+		<button class="btn-primary" onclick={openCreate}>+ New habit</button>
 	</div>
 
 	<div class="habit-list">

@@ -70,7 +70,7 @@
 		for (const t of tasks) {
 			const key = t.project_id;
 			if (!map.has(key)) {
-				map.set(key, { label: t.project_name ?? 'Sin proyecto', tasks: [] });
+				map.set(key, { label: t.project_name ?? 'No project', tasks: [] });
 			}
 			map.get(key)!.tasks.push(t);
 		}
@@ -83,16 +83,16 @@
 		const startedAt = hhmmToISO(startTime);
 		const endedAt = hhmmToISO(endTime, true);
 		if (new Date(endedAt) <= new Date(startedAt)) {
-			addToast('La hora final debe ser posterior a la inicial', 'error');
+			addToast('End time must be after start time', 'error');
 			return;
 		}
 
 		if (mode === 'task' && taskId === null) {
-			addToast('Elige una tarea o cambia a tiempo libre', 'error');
+			addToast('Choose a task or switch to free time', 'error');
 			return;
 		}
 		if (mode === 'free' && label.trim() === '') {
-			addToast('Escribe qué harás durante el tiempo libre', 'error');
+			addToast('Describe what you will do during free time', 'error');
 			return;
 		}
 
@@ -121,7 +121,7 @@
 			onsaved();
 			onclose();
 		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Error al guardar';
+			const msg = e instanceof Error ? e.message : 'Error saving';
 			addToast(msg, 'error');
 		} finally {
 			saving = false;
@@ -131,27 +131,27 @@
 
 <Modal {open} {onclose}>
 	<div class="plan-editor">
-		<h3 class="plan-editor-title">{block ? 'Editar bloque' : 'Nuevo bloque'}</h3>
+		<h3 class="plan-editor-title">{block ? 'Edit block' : 'New block'}</h3>
 
 		<div class="plan-editor-mode">
-			<button class:active={mode === 'task'} onclick={() => (mode = 'task')}>Tarea</button>
-			<button class:active={mode === 'free'} onclick={() => (mode = 'free')}>Tiempo libre</button>
+			<button class:active={mode === 'task'} onclick={() => (mode = 'task')}>Task</button>
+			<button class:active={mode === 'free'} onclick={() => (mode = 'free')}>Free time</button>
 		</div>
 
 		<div class="plan-editor-times">
 			<label>
-				<span class="text-text-muted text-sm">Desde</span>
+				<span class="text-text-muted text-sm">From</span>
 				<input type="time" bind:value={startTime} />
 			</label>
 			<label>
-				<span class="text-text-muted text-sm">Hasta</span>
+				<span class="text-text-muted text-sm">Until</span>
 				<input type="time" bind:value={endTime} />
 			</label>
 		</div>
 
 		{#if mode === 'task'}
 			<label class="detail-field">
-				<span class="text-text-muted text-sm font-medium">Tarea</span>
+				<span class="text-text-muted text-sm font-medium">Task</span>
 				<select
 					bind:value={taskId}
 					onchange={(e) => {
@@ -160,7 +160,7 @@
 						if (t) label = t.name;
 					}}
 				>
-					<option value={null}>Selecciona una tarea...</option>
+					<option value={null}>Select a task...</option>
 					{#each grouped as g (g.label)}
 						<optgroup label={g.label}>
 							{#each g.tasks as t (t.id)}
@@ -172,25 +172,25 @@
 			</label>
 
 			<label class="detail-field">
-				<span class="text-text-muted text-sm font-medium">Etiqueta (opcional)</span>
-				<input type="text" bind:value={label} placeholder="Por defecto el nombre de la tarea" />
+				<span class="text-text-muted text-sm font-medium">Label (optional)</span>
+				<input type="text" bind:value={label} placeholder="Defaults to the task name" />
 			</label>
 		{:else}
 			<label class="detail-field">
-				<span class="text-text-muted text-sm font-medium">Qué harás</span>
-				<input type="text" bind:value={label} placeholder="comer, paseo, gym..." />
+				<span class="text-text-muted text-sm font-medium">What you will do</span>
+				<input type="text" bind:value={label} placeholder="lunch, walk, gym..." />
 			</label>
 		{/if}
 
 		<label class="detail-field">
-			<span class="text-text-muted text-sm font-medium">Nota (opcional)</span>
+			<span class="text-text-muted text-sm font-medium">Note (optional)</span>
 			<textarea bind:value={note} rows="2"></textarea>
 		</label>
 
 		<div class="plan-editor-actions">
-			<button class="btn-outline" onclick={onclose} disabled={saving}>Cancelar</button>
+			<button class="btn-outline" onclick={onclose} disabled={saving}>Cancel</button>
 			<button class="btn-primary" onclick={save} disabled={saving}>
-				{block ? 'Guardar' : 'Crear'}
+				{block ? 'Save' : 'Create'}
 			</button>
 		</div>
 	</div>

@@ -20,31 +20,44 @@
 	});
 </script>
 
-{#if data.token || data.semiprivateToken}
+{#if data.token || data.semiprivateToken || page.url.pathname === '/'}
 	<header class="app-header">
 		<nav class="app-nav">
 			{#if data.token}
 				<a href="/habits" class="nav-link" class:active={page.url.pathname.startsWith('/habits')}
-					>Hábitos</a
+					>Habits</a
 				>
 				<a href="/tasks" class="nav-link" class:active={page.url.pathname.startsWith('/tasks')}
-					>Tareas</a
+					>Tasks</a
 				>
 				<a href="/money" class="nav-link" class:active={page.url.pathname.startsWith('/money')}
-					>Dinero</a
+					>Money</a
 				>
 			{/if}
-			<a
-				href="/varieties"
-				class="nav-link"
-				class:active={page.url.pathname.startsWith('/varieties')}>Maria</a
-			>
+			{#if data.token || data.semiprivateToken}
+				<a
+					href="/varieties"
+					class="nav-link"
+					class:active={page.url.pathname.startsWith('/varieties')}>Varieties</a
+				>
+			{/if}
 		</nav>
-		<form method="POST" action="/logout" use:enhance>
-			<button type="submit" class="logout-btn" title="Logout">
-				<Icon name="sign-out" />
-			</button>
-		</form>
+		<div class="header-actions">
+			{#if data.token || data.semiprivateToken}
+				<a href="/" class="home-btn" title="Home">
+					<Icon name="house" />
+				</a>
+				<form method="POST" action="/logout" use:enhance>
+					<button type="submit" class="logout-btn" title="Logout">
+						<Icon name="sign-out" />
+					</button>
+				</form>
+			{:else}
+				<a href="/login" class="logout-btn" title="Login">
+					<Icon name="lock" />
+				</a>
+			{/if}
+		</div>
 	</header>
 {/if}
 

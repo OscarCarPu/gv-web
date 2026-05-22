@@ -3,11 +3,11 @@ import type { TransactionType } from '../types/Money.types';
 export function getTypeLabel(type: TransactionType): string {
 	switch (type) {
 		case 'income':
-			return 'Ingreso';
+			return 'Income';
 		case 'expense':
-			return 'Gasto';
+			return 'Expense';
 		case 'transfer':
-			return 'Transferencia';
+			return 'Transfer';
 	}
 }
 

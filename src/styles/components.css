@@ -50,6 +50,14 @@
 		}
 	}
 
+	.header-actions {
+		@apply flex items-center gap-1;
+	}
+
+	.home-btn {
+		@apply text-text-muted hover:text-text p-2 text-lg transition-colors;
+	}
+
 	.logout-btn {
 		@apply text-text-muted hover:text-danger p-2 text-lg transition-colors;
 	}

@@ -1,0 +1,154 @@
+@reference "./app.css";
+
+main:has(.welcome-page) {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+.welcome-page {
+	background-color: var(--color-bg);
+}
+
+.welcome-content {
+	@apply desktop:px-[10%] flex min-h-0 flex-1 flex-col gap-5 overflow-hidden px-4 py-6;
+}
+
+.welcome-hero {
+	h1 {
+		@apply mb-0.5 text-2xl font-bold;
+		color: var(--color-text);
+	}
+
+	.welcome-tagline {
+		@apply text-sm;
+		color: var(--color-text-muted);
+	}
+
+	.welcome-hero-links {
+		@apply mt-2 flex items-center gap-1;
+	}
+
+	.rotate-down {
+		transform: rotate(180deg);
+	}
+
+	.hero-link {
+		@apply flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors;
+		color: var(--color-text-muted);
+		text-decoration: none;
+
+		&:hover {
+			color: var(--color-text);
+			background-color: rgba(255, 255, 255, 0.05);
+		}
+	}
+}
+
+.welcome-section {
+	h2 {
+		@apply mb-2 text-xs font-semibold uppercase tracking-widest;
+		color: var(--color-text-muted);
+	}
+
+	p {
+		@apply leading-relaxed;
+		color: var(--color-text);
+	}
+
+	.mt {
+		@apply mt-2;
+	}
+}
+
+.skill-chips {
+	@apply flex flex-wrap gap-1.5;
+}
+
+.skill-chip {
+	@apply rounded-full px-3 py-1 text-sm font-medium;
+	background-color: var(--color-surface);
+	border: 1px solid var(--color-border-light);
+	color: var(--color-text-muted);
+}
+
+.lang-chips {
+	@apply mt-2 flex flex-wrap gap-1.5;
+}
+
+.lang-chip {
+	@apply rounded-full px-2.5 py-0.5 text-xs;
+	background-color: rgba(255, 255, 255, 0.03);
+	border: 1px solid var(--color-border);
+	color: var(--color-text-muted);
+
+	.lang-name {
+		@apply font-semibold;
+		color: var(--color-text);
+	}
+}
+
+.welcome-cards {
+	@apply grid gap-2;
+
+	@media (min-width: 1000px) {
+		grid-template-columns: repeat(4, 1fr);
+	}
+}
+
+.welcome-card {
+	@apply rounded-lg p-4;
+	background-color: var(--color-surface);
+	border: 1px solid var(--color-border);
+
+	.welcome-card-title {
+		@apply mb-1 text-sm font-semibold;
+		color: var(--color-text);
+	}
+
+	.welcome-card-sub {
+		@apply text-xs;
+		color: var(--color-text-muted);
+	}
+}
+
+.project-grid {
+	@apply grid gap-2;
+
+	@media (min-width: 1000px) {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+.project-item {
+	@apply rounded-lg p-3 transition-colors;
+	background-color: var(--color-surface);
+	border: 1px solid var(--color-border);
+	text-decoration: none;
+	display: flex;
+	flex-direction: column;
+
+	&:hover {
+		border-color: var(--color-border-light);
+		background-color: rgba(59, 130, 246, 0.04);
+	}
+
+	.project-name {
+		@apply mb-2 flex items-center gap-1.5 text-sm font-semibold;
+		color: var(--color-primary);
+	}
+
+	.project-desc {
+		@apply flex-1 text-sm leading-relaxed;
+		color: var(--color-text-muted);
+	}
+
+	.project-lang {
+		@apply mt-3 text-xs;
+		color: var(--color-text-muted);
+
+		span {
+			@apply inline-block rounded-full px-2 py-0.5;
+			background-color: rgba(255, 255, 255, 0.05);
+		}
+	}
+}

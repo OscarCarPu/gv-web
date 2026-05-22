@@ -102,7 +102,7 @@
 			const occurredISO = toISOString(occurredAt);
 			if (transaction) {
 				if (!occurredISO) {
-					addToast('La fecha es obligatoria', 'error');
+					addToast('Date is required', 'error');
 					saving = false;
 					return;
 				}
@@ -115,7 +115,7 @@
 					description: description.trim() || null,
 					occurred_at: occurredISO,
 				});
-				addNotification('Movimiento actualizado', 'success');
+				addNotification('Transaction updated', 'success');
 			} else {
 				await moneyApi.createTransaction({
 					type,
@@ -126,12 +126,12 @@
 					description: description.trim() || null,
 					occurred_at: occurredISO ?? undefined,
 				});
-				addNotification('Movimiento creado', 'success');
+				addNotification('Transaction created', 'success');
 			}
 			onclose();
 			await invalidateAll();
 		} catch {
-			addToast('Error al guardar el movimiento', 'error');
+			addToast('Error saving transaction', 'error');
 		} finally {
 			saving = false;
 		}
@@ -139,24 +139,24 @@
 </script>
 
 <BottomSheet {open} {onclose} constrained>
-	<h3 class="modal-title">{transaction ? 'Editar movimiento' : 'Nuevo movimiento'}</h3>
+	<h3 class="modal-title">{transaction ? 'Edit transaction' : 'New transaction'}</h3>
 
 	<div class="create-mode-toggle money-type-toggle">
 		<button class="income" class:active={type === 'income'} onclick={() => setType('income')}
-			>Ingreso</button
+			>Income</button
 		>
 		<button class="expense" class:active={type === 'expense'} onclick={() => setType('expense')}
-			>Gasto</button
+			>Expense</button
 		>
 		<button class="transfer" class:active={type === 'transfer'} onclick={() => setType('transfer')}
-			>Transferencia</button
+			>Transfer</button
 		>
 	</div>
 
 	<div class="detail-form">
 		<div class="detail-inline-row">
 			<div class="detail-field flex-1">
-				<label for="tx-amount">Importe</label>
+				<label for="tx-amount">Amount</label>
 				<input
 					id="tx-amount"
 					type="number"
@@ -169,20 +169,20 @@
 				/>
 			</div>
 			<div class="detail-field flex-1">
-				<label for="dtp-tx-occurred">Fecha</label>
+				<label for="dtp-tx-occurred">Date</label>
 				<DatetimePicker bind:value={occurredAt} id="tx-occurred" />
 			</div>
 		</div>
 
 		<div class="detail-field">
-			<label for="tx-account">{type === 'transfer' ? 'Cuenta origen' : 'Cuenta'}</label>
+			<label for="tx-account">{type === 'transfer' ? 'Source account' : 'Account'}</label>
 			<select
 				id="tx-account"
 				bind:value={accountId}
 				class:field-error={accountError}
 				onchange={() => (accountError = false)}
 			>
-				<option value={null}>Selecciona una cuenta</option>
+				<option value={null}>Select an account</option>
 				{#each accounts as account (account.id)}
 					<option value={account.id}>{account.name}</option>
 				{/each}
@@ -191,14 +191,14 @@
 
 		{#if type === 'transfer'}
 			<div class="detail-field">
-				<label for="tx-to-account">Cuenta destino</label>
+				<label for="tx-to-account">Destination account</label>
 				<select
 					id="tx-to-account"
 					bind:value={toAccountId}
 					class:field-error={toAccountError}
 					onchange={() => (toAccountError = false)}
 				>
-					<option value={null}>Selecciona una cuenta destino</option>
+					<option value={null}>Select a destination account</option>
 					{#each toAccountOptions as account (account.id)}
 						<option value={account.id}>{account.name}</option>
 					{/each}
@@ -207,14 +207,14 @@
 		{/if}
 
 		<div class="detail-field">
-			<label for="tx-category">Categoría</label>
+			<label for="tx-category">Category</label>
 			<select
 				id="tx-category"
 				bind:value={categoryId}
 				class:field-error={categoryError}
 				onchange={() => (categoryError = false)}
 			>
-				<option value={null}>Selecciona una categoría</option>
+				<option value={null}>Select a category</option>
 				{#each categoryOptions as cat (cat.id)}
 					<option value={cat.id}>{cat.label}</option>
 				{/each}
@@ -222,13 +222,13 @@
 		</div>
 
 		<div class="detail-field">
-			<label for="tx-desc">Descripción</label>
+			<label for="tx-desc">Description</label>
 			<textarea id="tx-desc" bind:value={description} rows="2"></textarea>
 		</div>
 
 		<div class="detail-actions">
 			<button class="btn-primary" onclick={save} disabled={saving}>
-				{transaction ? 'Guardar' : 'Crear'}
+				{transaction ? 'Save' : 'Create'}
 			</button>
 		</div>
 	</div>

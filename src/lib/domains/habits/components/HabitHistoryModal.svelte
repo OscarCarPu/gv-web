@@ -98,13 +98,13 @@
 	{#if loading}
 		<div class="history-loading">
 			<div class="spinner"></div>
-			Cargando...
+			Loading...
 		</div>
 	{:else if chartData.length === 0}
 		<div class="history-empty">
 			<Icon name="chart-line" class="text-2xl" />
-			<span>Sin datos para este período</span>
-			<span class="text-sm">Prueba ajustar las fechas</span>
+			<span>No data for this period</span>
+			<span class="text-sm">Try adjusting the dates</span>
 		</div>
 	{:else}
 		<div class="chart-container">

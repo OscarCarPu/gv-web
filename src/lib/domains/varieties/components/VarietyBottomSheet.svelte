@@ -59,11 +59,11 @@
 				comments: comments.trim() ? comments.trim() : null,
 				judge: judge.trim() || 'Oscar',
 			});
-			addNotification('Variedad creada', 'success');
+			addNotification('Variety created', 'success');
 			onclose();
 			await invalidateAll();
 		} catch {
-			addToast('Error al crear', 'error');
+			addToast('Error creating', 'error');
 		} finally {
 			saving = false;
 		}
@@ -71,11 +71,11 @@
 </script>
 
 <BottomSheet {open} {onclose} constrained>
-	<h3 class="modal-title">Nueva variedad</h3>
+	<h3 class="modal-title">New variety</h3>
 
 	<div class="detail-form">
 		<div class="detail-field">
-			<label for="variety-name">Nombre</label>
+			<label for="variety-name">Name</label>
 			<input
 				id="variety-name"
 				type="text"
@@ -89,19 +89,19 @@
 
 		<div class="grid [grid-template-columns:repeat(auto-fit,minmax(120px,1fr))] gap-3">
 			<div class="detail-field">
-				<label for="variety-scent">Aroma</label>
+				<label for="variety-scent">Scent</label>
 				<input id="variety-scent" type="number" min="0" max="10" step="0.1" bind:value={scent} />
 			</div>
 			<div class="detail-field">
-				<label for="variety-flavor">Sabor</label>
+				<label for="variety-flavor">Flavor</label>
 				<input id="variety-flavor" type="number" min="0" max="10" step="0.1" bind:value={flavor} />
 			</div>
 			<div class="detail-field">
-				<label for="variety-power">Potencia</label>
+				<label for="variety-power">Potency</label>
 				<input id="variety-power" type="number" min="0" max="10" step="0.1" bind:value={power} />
 			</div>
 			<div class="detail-field">
-				<label for="variety-quality">Efecto</label>
+				<label for="variety-quality">Effect</label>
 				<input
 					id="variety-quality"
 					type="number"
@@ -112,23 +112,23 @@
 				/>
 			</div>
 			<div class="detail-field">
-				<label for="variety-price">Precio</label>
+				<label for="variety-price">Price</label>
 				<input id="variety-price" type="number" min="0" step="0.01" bind:value={price} />
 			</div>
 		</div>
 
 		<div class="detail-field">
-			<label for="variety-judge">Puntuado por</label>
+			<label for="variety-judge">Rated by</label>
 			<input id="variety-judge" type="text" bind:value={judge} maxlength={40} />
 		</div>
 
 		<div class="detail-field">
-			<label for="variety-comments">Comentarios</label>
+			<label for="variety-comments">Comments</label>
 			<textarea id="variety-comments" bind:value={comments} rows="3"></textarea>
 		</div>
 
 		<div class="detail-actions">
-			<button class="btn-primary" onclick={create} disabled={saving}>Crear</button>
+			<button class="btn-primary" onclick={create} disabled={saving}>Create</button>
 		</div>
 	</div>
 </BottomSheet>

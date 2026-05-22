@@ -36,6 +36,10 @@
 
 /* BASE STYLES */
 
+body {
+	scrollbar-gutter: stable;
+}
+
 .container {
 	@apply desktop:px-[10%] w-full max-w-none px-4;
 
@@ -58,7 +62,7 @@ main {
 	border: 1px solid var(--color-border);
 
 	& > p {
-		@apply min-w-[17rem] cursor-pointer text-center text-lg font-medium;
+		@apply w-[23rem] cursor-pointer text-center text-lg font-medium;
 	}
 
 	& > button {

@@ -3,13 +3,13 @@ export function getStatusLabel(
 	task_type?: string,
 	recurrence?: number | null
 ): string {
-	if (!started_at) return 'Pendiente';
+	if (!started_at) return 'Pending';
 	switch (task_type) {
 		case 'continuous':
-			return 'Continua';
+			return 'Continuous';
 		case 'recurring':
-			return `Recurrente · Cada ${recurrence ?? '?'} días`;
+			return `Recurring · Every ${recurrence ?? '?'} days`;
 		default:
-			return 'En progreso';
+			return 'In progress';
 	}
 }

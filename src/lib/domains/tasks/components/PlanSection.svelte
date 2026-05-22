@@ -45,8 +45,8 @@
 	}
 
 	function toggleLabel(b: PlanBlockResponse): string {
-		if (!isStarted(b)) return 'Empezar';
-		return b.task_type === 'recurring' ? 'Renovar' : 'Acabar';
+		if (!isStarted(b)) return 'Start';
+		return b.task_type === 'recurring' ? 'Renew' : 'Done';
 	}
 
 	function buildRecurringDueAt(recurrence: number): string {
@@ -86,7 +86,7 @@
 			await planApi.deleteBlock(b.id);
 			await refresh();
 		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Error al borrar';
+			const msg = e instanceof Error ? e.message : 'Error deleting';
 			addToast(msg, 'error');
 		}
 	}
@@ -96,7 +96,7 @@
 			await planApi.deleteFutureBlocks();
 			await refresh();
 		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Error al limpiar';
+			const msg = e instanceof Error ? e.message : 'Error cleaning';
 			addToast(msg, 'error');
 		}
 	}
@@ -172,11 +172,11 @@
 <div id="plan-section" class="tasks-section">
 	<div class="section-header">
 		<div class="section-title">
-			<h2>Plan de hoy</h2>
+			<h2>Today's Plan</h2>
 			<button
 				class="btn-icon back-to-top"
 				onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-				title="Volver arriba"
+				title="Back to top"
 			>
 				<Icon name="arrow-up" />
 			</button>
@@ -185,13 +185,13 @@
 			<button
 				class="btn-icon"
 				onclick={handleCleanFuture}
-				title="Limpiar bloques futuros"
-				aria-label="Limpiar bloques futuros"
+				title="Clear future blocks"
+				aria-label="Clear future blocks"
 			>
 				<Icon name="trash" />
 			</button>
 			<button class="btn-primary btn-sm" onclick={openCreate}>
-				<Icon name="plus" /> Bloque
+				<Icon name="plus" /> Block
 			</button>
 		</div>
 	</div>
@@ -199,12 +199,12 @@
 	{#if data === null}
 		<div class="history-empty">
 			<Icon name="calendar-day" class="text-2xl" />
-			<span>No se pudo cargar el plan</span>
+			<span>Plan could not be loaded</span>
 		</div>
 	{:else}
 		<div class="plan-summary">
 			<div class="plan-summary-row" class:goal-reached={estimatedReached}>
-				<span class="plan-summary-label">Estim.</span>
+				<span class="plan-summary-label">Est.</span>
 				<div class="progress-track bg-bg">
 					<div class="progress-fill" style="width: {estimatedPct}%"></div>
 				</div>
@@ -213,7 +213,7 @@
 				</span>
 			</div>
 			<div class="plan-summary-row">
-				<span class="plan-summary-label">Libre</span>
+				<span class="plan-summary-label">Free</span>
 				<span class="plan-summary-value">{formatTime(freeTotal)}</span>
 			</div>
 		</div>
@@ -221,7 +221,7 @@
 		{#if data.blocks.length === 0}
 			<div class="history-empty">
 				<Icon name="calendar-day" class="text-2xl" />
-				<span>Sin bloques para hoy</span>
+				<span>No blocks for today</span>
 			</div>
 		{:else}
 			<div class="plan-list">
@@ -253,7 +253,7 @@
 						<div class="plan-block-actions">
 							{#if b.task_id !== null}
 								{#if finished}
-									<button class="btn-primary btn-start btn-sm" disabled>Terminado</button>
+									<button class="btn-primary btn-start btn-sm" disabled>Done</button>
 								{:else}
 									<button
 										class="btn-primary btn-sm"
@@ -264,14 +264,14 @@
 									</button>
 									<button class="btn-primary btn-sm" onclick={() => handleTimer(b)}>
 										<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />
-										{isTimerRunning ? 'Asignar' : 'Iniciar'}
+										{isTimerRunning ? 'Assign' : 'Start'}
 									</button>
 								{/if}
 							{/if}
-							<button class="btn-icon" onclick={() => openEdit(b)} aria-label="Editar bloque">
+							<button class="btn-icon" onclick={() => openEdit(b)} aria-label="Edit block">
 								<Icon name="pen" />
 							</button>
-							<button class="btn-icon" onclick={() => handleDelete(b)} aria-label="Borrar bloque">
+							<button class="btn-icon" onclick={() => handleDelete(b)} aria-label="Delete block">
 								<Icon name="trash" />
 							</button>
 						</div>

@@ -51,7 +51,7 @@
 	<div class="tree-project-wrapper">
 		<div class="tree-project-row">
 			{#if hasChildren}
-				<button class="tree-chevron-btn" onclick={() => toggle(node.id)} aria-label="Expandir">
+				<button class="tree-chevron-btn" onclick={() => toggle(node.id)} aria-label="Expand">
 					<Icon name="chevron-right" class={`tree-chevron${expanded ? ' expanded' : ''}`} />
 				</button>
 			{/if}
@@ -63,11 +63,11 @@
 				<span class="tree-project-due"><Icon name="calendar" /> {formatDate(node.due_at)}</span>
 			{/if}
 		</div>
-		<button class="btn-primary btn-sm" onclick={() => oncreatetask?.(node.id)} title="Agregar tarea"
+		<button class="btn-primary btn-sm" onclick={() => oncreatetask?.(node.id)} title="Add task"
 			><Icon name="plus" /></button
 		>
 		<button class="btn-primary btn-sm" onclick={() => ontoggle?.(node.id, 'project', 'finish')}
-			>Acabar</button
+			>Done</button
 		>
 	</div>
 
@@ -95,7 +95,7 @@
 					>{node.name}</button
 				>
 				{#if node.blocked}
-					<Icon name="ban" class="blocked-icon" title="Bloqueada" />
+					<Icon name="ban" class="blocked-icon" title="Blocked" />
 				{/if}
 			</div>
 			{#if node.depends_on?.length}
@@ -136,13 +136,13 @@
 				<button
 					class="btn-primary btn-sm"
 					onclick={() => ontoggle?.(node.id, 'task', 'finish')}
-					disabled={node.blocked}>{node.task_type === 'recurring' ? 'Renovar' : 'Acabar'}</button
+					disabled={node.blocked}>{node.task_type === 'recurring' ? 'Renew' : 'Done'}</button
 				>
 			{:else}
 				<button
 					class="btn-primary btn-start btn-sm"
 					onclick={() => ontoggle?.(node.id, 'task', 'start')}
-					disabled={node.blocked}>Empezar</button
+					disabled={node.blocked}>Start</button
 				>
 			{/if}
 			<button
@@ -151,7 +151,7 @@
 				disabled={node.blocked}
 			>
 				<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />
-				{isTimerRunning ? 'Asignar' : 'Iniciar'}
+				{isTimerRunning ? 'Assign' : 'Start'}
 			</button>
 		</div>
 	</div>

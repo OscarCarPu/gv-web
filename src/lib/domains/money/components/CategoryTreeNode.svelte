@@ -24,16 +24,16 @@
 {#if hasChildren}
 	<div class="tree-project-wrapper">
 		<div class="tree-project-row">
-			<button class="tree-chevron-btn" onclick={() => toggle(node.id)} aria-label="Expandir">
+			<button class="tree-chevron-btn" onclick={() => toggle(node.id)} aria-label="Expand">
 				<Icon name="chevron-right" class={`tree-chevron${expanded ? ' expanded' : ''}`} />
 			</button>
 			<Icon name="folder" class="tree-folder-icon" />
 			<button class="task-name-btn" onclick={() => onedit(node)}>{node.name}</button>
 		</div>
-		<button class="btn-icon" title="Editar" onclick={() => onedit(node)}>
+		<button class="btn-icon" title="Edit" onclick={() => onedit(node)}>
 			<Icon name="pen" />
 		</button>
-		<button class="btn-icon" title="Eliminar" onclick={() => ondelete(node)}>
+		<button class="btn-icon" title="Delete" onclick={() => ondelete(node)}>
 			<Icon name="trash" />
 		</button>
 	</div>
@@ -53,10 +53,10 @@
 			</div>
 		</div>
 		<div class="task-actions">
-			<button class="btn-icon" title="Editar" onclick={() => onedit(node)}>
+			<button class="btn-icon" title="Edit" onclick={() => onedit(node)}>
 				<Icon name="pen" />
 			</button>
-			<button class="btn-icon" title="Eliminar" onclick={() => ondelete(node)}>
+			<button class="btn-icon" title="Delete" onclick={() => ondelete(node)}>
 				<Icon name="trash" />
 			</button>
 		</div>

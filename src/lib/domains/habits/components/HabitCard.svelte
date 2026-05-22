@@ -90,11 +90,11 @@
 				date: currentDate,
 				value: newValue,
 			});
-			addNotification('Hábito registrado', 'success');
+			addNotification('Habit logged', 'success');
 			onRefresh?.();
 		} catch {
 			optimisticValue = null;
-			addToast('Error al registrar valor', 'error');
+			addToast('Error logging value', 'error');
 		}
 	}
 
@@ -108,14 +108,14 @@
 
 <div class="habit-card">
 	{#if onEdit}
-		<button class="edit-btn" onclick={onEdit} aria-label="Editar hábito">
+		<button class="edit-btn" onclick={onEdit} aria-label="Edit habit">
 			<Icon name="pen" />
 		</button>
 	{/if}
 	<button
 		class="history-btn"
 		onclick={() => (showHistory = !showHistory)}
-		aria-label="Ver historial"
+		aria-label="View history"
 	>
 		<Icon name="chart-line" />
 	</button>

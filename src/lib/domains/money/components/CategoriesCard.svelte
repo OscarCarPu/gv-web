@@ -40,9 +40,9 @@
 	setContext('money-category-tree', { isExpanded, toggle });
 
 	const TYPE_ORDER: { type: TransactionType; label: string }[] = [
-		{ type: 'income', label: 'Ingresos' },
-		{ type: 'expense', label: 'Gastos' },
-		{ type: 'transfer', label: 'Transferencias' },
+		{ type: 'income', label: 'Income' },
+		{ type: 'expense', label: 'Expenses' },
+		{ type: 'transfer', label: 'Transfers' },
 	];
 
 	function buildTree(items: Category[]): CategoryTree[] {
@@ -82,14 +82,14 @@
 	async function onDelete(category: Category) {
 		try {
 			await moneyApi.deleteCategory(category.id);
-			addNotification('Categoría eliminada', 'success');
+			addNotification('Category deleted', 'success');
 			await invalidateAll();
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : '';
 			if (msg.includes('referenced')) {
-				addToast('La categoría está en uso', 'error');
+				addToast('Category is in use', 'error');
 			} else {
-				addToast('Error al eliminar la categoría', 'error');
+				addToast('Error deleting category', 'error');
 			}
 		}
 	}
@@ -97,14 +97,14 @@
 
 <section class="tasks-section">
 	<div class="section-header">
-		<h2>Categorías</h2>
+		<h2>Categories</h2>
 		<button class="btn-action-sm" onclick={openCreate}>
-			<Icon name="plus" /> Nueva
+			<Icon name="plus" /> New
 		</button>
 	</div>
 
 	{#if categories.length === 0}
-		<div class="project-children-empty">Sin categorías</div>
+		<div class="project-children-empty">No categories</div>
 	{:else}
 		<div class="money-category-groups">
 			{#each groups as group (group.type)}

@@ -68,7 +68,7 @@
 					target_max: max,
 					recording_required: recordingRequired,
 				});
-				addNotification('Hábito actualizado', 'success');
+				addNotification('Habit updated', 'success');
 			} else {
 				await habitsApi.createHabit({
 					name: name.trim(),
@@ -78,12 +78,12 @@
 					target_max: max,
 					recording_required: recordingRequired,
 				});
-				addNotification('Hábito creado', 'success');
+				addNotification('Habit created', 'success');
 			}
 			onclose();
 			await invalidateAll();
 		} catch {
-			addToast('Error al guardar el hábito', 'error');
+			addToast('Error saving habit', 'error');
 		} finally {
 			saving = false;
 		}
@@ -91,11 +91,11 @@
 </script>
 
 <BottomSheet {open} {onclose} constrained>
-	<h3 class="modal-title">{habit ? 'Editar hábito' : 'Nuevo hábito'}</h3>
+	<h3 class="modal-title">{habit ? 'Edit habit' : 'New habit'}</h3>
 
 	<div class="detail-form">
 		<div class="detail-field">
-			<label for="habit-name">Nombre</label>
+			<label for="habit-name">Name</label>
 			<input
 				id="habit-name"
 				type="text"
@@ -107,22 +107,22 @@
 		</div>
 
 		<div class="detail-field">
-			<label for="habit-description">Descripción</label>
+			<label for="habit-description">Description</label>
 			<textarea id="habit-description" bind:value={description} rows="2"></textarea>
 		</div>
 
 		<div class="detail-inline-row">
 			<div class="detail-field flex-1">
-				<label for="habit-frequency">Frecuencia</label>
+				<label for="habit-frequency">Frequency</label>
 				<select id="habit-frequency" bind:value={frequency}>
-					<option value="daily">Diaria</option>
-					<option value="weekly">Semanal</option>
-					<option value="monthly">Mensual</option>
+					<option value="daily">Daily</option>
+					<option value="weekly">Weekly</option>
+					<option value="monthly">Monthly</option>
 				</select>
 			</div>
 
 			<div class="detail-field">
-				<label for="habit-target-min">Objetivo mín</label>
+				<label for="habit-target-min">Min target</label>
 				<input
 					id="habit-target-min"
 					type="number"
@@ -135,7 +135,7 @@
 			</div>
 
 			<div class="detail-field">
-				<label for="habit-target-max">Objetivo máx</label>
+				<label for="habit-target-max">Max target</label>
 				<input
 					id="habit-target-max"
 					type="number"
@@ -156,12 +156,12 @@
 			<div class="toggle toggle-sm" class:on={recordingRequired} class:off={!recordingRequired}>
 				<div class="knob"></div>
 			</div>
-			Requiere registro
+			Recording required
 		</button>
 
 		<div class="detail-actions">
 			<button class="btn-primary" onclick={save} disabled={saving}>
-				{habit ? 'Guardar' : 'Crear'}
+				{habit ? 'Save' : 'Create'}
 			</button>
 		</div>
 	</div>

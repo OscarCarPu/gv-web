@@ -34,15 +34,15 @@
 		try {
 			if (account) {
 				await moneyApi.updateAccount(account.id, { name: name.trim() });
-				addNotification('Cuenta actualizada', 'success');
+				addNotification('Account updated', 'success');
 			} else {
 				await moneyApi.createAccount({ name: name.trim() });
-				addNotification('Cuenta creada', 'success');
+				addNotification('Account created', 'success');
 			}
 			onclose();
 			await invalidateAll();
 		} catch {
-			addToast('Error al guardar la cuenta', 'error');
+			addToast('Error saving account', 'error');
 		} finally {
 			saving = false;
 		}
@@ -50,11 +50,11 @@
 </script>
 
 <BottomSheet {open} {onclose} constrained>
-	<h3 class="modal-title">{account ? 'Editar cuenta' : 'Nueva cuenta'}</h3>
+	<h3 class="modal-title">{account ? 'Edit account' : 'New account'}</h3>
 
 	<div class="detail-form">
 		<div class="detail-field">
-			<label for="account-name">Nombre</label>
+			<label for="account-name">Name</label>
 			<input
 				id="account-name"
 				type="text"
@@ -68,7 +68,7 @@
 
 		<div class="detail-actions">
 			<button class="btn-primary" onclick={save} disabled={saving}>
-				{account ? 'Guardar' : 'Crear'}
+				{account ? 'Save' : 'Create'}
 			</button>
 		</div>
 	</div>

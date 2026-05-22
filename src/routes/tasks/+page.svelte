@@ -158,7 +158,7 @@
 
 	async function handleStop() {
 		commentExpanded = false;
-		addNotification('Tiempo registrado', 'success');
+		addNotification('Time logged', 'success');
 		await timer.stopTimer();
 		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
@@ -166,7 +166,7 @@
 	async function handleCancel() {
 		commentExpanded = false;
 		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
-		addNotification('Tiempo cancelado', 'success');
+		addNotification('Time cancelled', 'success');
 		await timer.cancelTimer();
 		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
@@ -189,7 +189,7 @@
 		projectName?: string | null,
 		taskDescription?: string | null
 	) {
-		addNotification('Temporizador iniciado', 'success');
+		addNotification('Timer started', 'success');
 		await timer.handleTaskStart(taskId, taskName, projectName, taskDescription);
 	}
 
@@ -259,13 +259,13 @@
 		if (action === 'start') {
 			const prev = task.started_at;
 			task.started_at = now;
-			addNotification('Tarea iniciada', 'success');
+			addNotification('Task started', 'success');
 			try {
 				await tasksApi.updateTask(taskId, { started_at: now });
 				await invalidateAll();
 			} catch {
 				task.started_at = prev;
-				addToast('Error al iniciar tarea', 'error');
+				addToast('Error starting task', 'error');
 			}
 			return;
 		}
@@ -274,25 +274,25 @@
 			const prev = task.due_at;
 			const newDueAt = buildRecurringDueAt(task.recurrence);
 			task.due_at = newDueAt;
-			addNotification('Tarea renovada', 'success');
+			addNotification('Task renewed', 'success');
 			try {
 				await tasksApi.updateTask(taskId, { due_at: newDueAt });
 				await invalidateAll();
 			} catch {
 				task.due_at = prev;
-				addToast('Error al renovar tarea', 'error');
+				addToast('Error renewing task', 'error');
 			}
 			return;
 		}
 
 		pendingTaskIds.add(taskId);
-		addNotification('Tarea finalizada', 'success');
+		addNotification('Task finished', 'success');
 		try {
 			await tasksApi.updateTask(taskId, { finished_at: now });
 			await invalidateAll();
 		} catch {
 			pendingTaskIds.delete(taskId);
-			addToast('Error al finalizar tarea', 'error');
+			addToast('Error finishing task', 'error');
 		}
 	}
 
@@ -320,24 +320,24 @@
 			if (action === 'start') {
 				const prev = project?.started_at;
 				if (project) project.started_at = now;
-				addNotification('Proyecto iniciado', 'success');
+				addNotification('Project started', 'success');
 				try {
 					await tasksApi.updateProject(id, { started_at: now });
 					await invalidateAll();
 				} catch {
 					if (project) project.started_at = prev ?? null;
-					addToast('Error al iniciar proyecto', 'error');
+					addToast('Error starting project', 'error');
 				}
 				return;
 			}
 			pendingProjectIds.add(id);
-			addNotification('Proyecto finalizado', 'success');
+			addNotification('Project finished', 'success');
 			try {
 				await tasksApi.updateProject(id, { finished_at: now });
 				await invalidateAll();
 			} catch {
 				pendingProjectIds.delete(id);
-				addToast('Error al finalizar proyecto', 'error');
+				addToast('Error finishing project', 'error');
 			}
 			return;
 		}
@@ -346,13 +346,13 @@
 		if (action === 'start') {
 			const prev = task?.started_at;
 			if (task) task.started_at = now;
-			addNotification('Tarea iniciada', 'success');
+			addNotification('Task started', 'success');
 			try {
 				await tasksApi.updateTask(id, { started_at: now });
 				await invalidateAll();
 			} catch {
 				if (task) task.started_at = prev ?? null;
-				addToast('Error al iniciar tarea', 'error');
+				addToast('Error starting task', 'error');
 			}
 			return;
 		}
@@ -361,25 +361,25 @@
 			const prev = task.due_at;
 			const newDueAt = buildRecurringDueAt(task.recurrence);
 			task.due_at = newDueAt;
-			addNotification('Tarea renovada', 'success');
+			addNotification('Task renewed', 'success');
 			try {
 				await tasksApi.updateTask(id, { due_at: newDueAt });
 				await invalidateAll();
 			} catch {
 				task.due_at = prev;
-				addToast('Error al renovar tarea', 'error');
+				addToast('Error renewing task', 'error');
 			}
 			return;
 		}
 
 		pendingTaskIds.add(id);
-		addNotification('Tarea finalizada', 'success');
+		addNotification('Task finished', 'success');
 		try {
 			await tasksApi.updateTask(id, { finished_at: now });
 			await invalidateAll();
 		} catch {
 			pendingTaskIds.delete(id);
-			addToast('Error al finalizar tarea', 'error');
+			addToast('Error finishing task', 'error');
 		}
 	}
 
@@ -415,7 +415,7 @@
 		timer.reset();
 		commentExpanded = false;
 		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
-		addNotification('Tiempo registrado', 'success');
+		addNotification('Time logged', 'success');
 		await tasksApi.updateTimeEntry(entryId, {
 			started_at: startedAt.toISOString(),
 			finished_at: finishedAt.toISOString(),
@@ -426,11 +426,11 @@
 </script>
 
 <svelte:head>
-	<title>Tareas</title>
+	<title>Tasks</title>
 </svelte:head>
 
 <div class="container">
-	<h1>Tareas</h1>
+	<h1>Tasks</h1>
 
 	<div class="task-timer-row">
 		<div class="task-timer-panel">
@@ -441,7 +441,7 @@
 					onclick={() => {
 						commentExpanded = !commentExpanded;
 					}}
-					title="Comentario"
+					title="Comment"
 				>
 					<Icon name="comment" />
 				</button>
@@ -453,13 +453,13 @@
 					}}
 					disabled={!timer.selectedTaskId}
 				>
-					{timer.selectedTaskDisplay ?? 'Seleccionar Tarea'}
+					{timer.selectedTaskDisplay ?? 'Select Task'}
 				</button>
 				<button
 					class="btn-cancel"
 					onclick={handleCancel}
 					disabled={!timer.activeTimeEntryId}
-					title="Cancelar entrada"><Icon name="xmark" /></button
+					title="Cancel entry"><Icon name="xmark" /></button
 				>
 			</div>
 			{#if timer.selectedTaskDescription}
@@ -471,7 +471,7 @@
 				<input
 					class="comment-input"
 					type="text"
-					placeholder="Comentario..."
+					placeholder="Comment..."
 					value={timer.comment}
 					oninput={(e) => timer.setComment(e.currentTarget.value)}
 				/>
@@ -485,7 +485,7 @@
 						<TimePicker value={entry.end} onchange={(v) => (entry.end = v)} />
 					{/each}
 					<button class="btn-primary" onclick={submitTimeEntry} disabled={!timer.activeTimeEntryId}
-						><Icon name="plus" /> Agregar</button
+						><Icon name="plus" /> Add</button
 					>
 				</div>
 
@@ -504,7 +504,7 @@
 					{:else}
 						<button class="btn-primary" onclick={timer.startTimer}>
 							<Icon name="play" />
-							Iniciar
+							Start
 						</button>
 					{/if}
 				</div>
@@ -518,7 +518,7 @@
 						summary.today <= (dailyTarget * 11) / 12}
 					class:completed={summary.today > (dailyTarget * 11) / 12}
 				>
-					<span class="summary-label">Hoy</span>
+					<span class="summary-label">Today</span>
 					<div class="progress-track bg-bg">
 						<div
 							class="progress-fill"
@@ -528,7 +528,7 @@
 					<span class="summary-value">{formatTime(summary.today)} / {dailyTargetLabel}</span>
 				</div>
 				<div class="summary-item" class:completed={summary.week >= summary.weekly_target_seconds}>
-					<span class="summary-label">Semana</span>
+					<span class="summary-label">Week</span>
 					<div class="progress-track bg-bg">
 						<div
 							class="progress-fill"
@@ -544,22 +544,22 @@
 					<button
 						class="btn-icon"
 						onclick={() => (showTimeHistory = true)}
-						aria-label="Ver historial"
+						aria-label="View history"
 					>
 						<Icon name="chart-line" />
 					</button>
-					<button class="btn-icon" onclick={() => (showAgenda = true)} aria-label="Ver agenda">
+					<button class="btn-icon" onclick={() => (showAgenda = true)} aria-label="View agenda">
 						<Icon name="calendar-day" />
 					</button>
 				</div>
 			</div>
 		</div>
 
-		<aside class="task-shortcuts-panel" aria-label="Accesos rápidos">
+		<aside class="task-shortcuts-panel" aria-label="Quick actions">
 			<button
 				class="task-shortcut"
 				onclick={() => scrollToSection('plan-section')}
-				title="Ir a Plan de hoy"
+				title="Go to Today's Plan"
 			>
 				<Icon name="calendar-day" />
 				<span>Plan</span>
@@ -567,10 +567,10 @@
 			<button
 				class="task-shortcut"
 				onclick={() => scrollToSection('active-projects-section')}
-				title="Ir a Proyectos activos"
+				title="Go to Active Projects"
 			>
 				<Icon name="folder" />
-				<span>Proyectos</span>
+				<span>Projects</span>
 			</button>
 		</aside>
 	</div>
@@ -578,19 +578,19 @@
 	<div class="tasks-content">
 		<div class="tasks-section">
 			<div class="section-header">
-				<h2>Próximas a vencer <span class="summary-pace">{dueTodayCount}</span></h2>
+				<h2>Due Soon <span class="summary-pace">{dueTodayCount}</span></h2>
 
 				<div class="priority-filter">
 					{#each [1, 2, 3, 4] as p (p)}
 						<button
 							class:active={dueDatePriorityFilter === p}
 							onclick={() => (dueDatePriorityFilter = p)}
-							aria-label="Prioridad hasta {p}">≤{p}</button
+							aria-label="Priority up to {p}">≤{p}</button
 						>
 					{/each}
 					<button
 						class:active={dueDatePriorityFilter === null}
-						onclick={() => (dueDatePriorityFilter = null)}>Todas</button
+						onclick={() => (dueDatePriorityFilter = null)}>All</button
 					>
 					{#if dueDateProjectOptions.length > 0}
 						<span class="filter-sep" aria-hidden="true">|</span>
@@ -598,9 +598,9 @@
 							class="project-filter-select"
 							class:active={dueDateProjectFilter !== null}
 							bind:value={dueDateProjectFilter}
-							aria-label="Filtrar por proyecto"
+							aria-label="Filter by project"
 						>
-							<option value={null}>Proyecto</option>
+							<option value={null}>Project</option>
 							{#each dueDateProjectOptions as opt (opt.id)}
 								<option value={opt.id}>{' '.repeat(opt.depth * 2)}{opt.name}</option>
 							{/each}
@@ -615,7 +615,7 @@
 						showCreate = true;
 					}}
 				>
-					<Icon name="plus" /> Tarea
+					<Icon name="plus" /> Task
 				</button>
 			</div>
 			<div class="task-list">
@@ -655,7 +655,7 @@
 						<span class="show-more-line"></span>
 						<span class="show-more-pill">
 							<Icon name="chevron-down" />
-							<span>{remainingDueDateTasks} más</span>
+							<span>{remainingDueDateTasks} more</span>
 						</span>
 						<span class="show-more-line"></span>
 					</button>
@@ -676,21 +676,21 @@
 		<div id="active-projects-section" class="tasks-section">
 			<div class="section-header">
 				<div class="section-title">
-					<h2>Proyectos activos</h2>
-					<button class="btn-icon back-to-top" onclick={scrollToTop} title="Volver arriba">
+					<h2>Active Projects</h2>
+					<button class="btn-icon back-to-top" onclick={scrollToTop} title="Back to top">
 						<Icon name="arrow-up" />
 					</button>
 				</div>
 				<div class="priority-filter">
 					<button
 						class:active={activeTreePriorityFilter === null}
-						onclick={() => (activeTreePriorityFilter = null)}>Todas</button
+						onclick={() => (activeTreePriorityFilter = null)}>All</button
 					>
 					{#each [1, 2, 3, 4] as p (p)}
 						<button
 							class:active={activeTreePriorityFilter === p}
 							onclick={() => (activeTreePriorityFilter = p)}
-							aria-label="Prioridad hasta {p}">≤{p}</button
+							aria-label="Priority up to {p}">≤{p}</button
 						>
 					{/each}
 				</div>
@@ -702,7 +702,7 @@
 						showCreate = true;
 					}}
 				>
-					<Icon name="plus" /> Proyecto
+					<Icon name="plus" /> Project
 				</button>
 			</div>
 			<div class="task-list">

@@ -46,7 +46,7 @@
 		<div class="task-name-row">
 			<button class="task-name-btn" onclick={() => ondetail?.(task.id)}>{task.name}</button>
 			{#if task.blocked}
-				<Icon name="ban" class="blocked-icon" title="Bloqueada" />
+				<Icon name="ban" class="blocked-icon" title="Blocked" />
 			{/if}
 		</div>
 		{#if task.depends_on?.length}
@@ -86,18 +86,18 @@
 			<button
 				class="btn-primary"
 				onclick={() => ontoggle?.(task.id, 'finish')}
-				disabled={task.blocked}>{task.task_type === 'recurring' ? 'Renovar' : 'Acabar'}</button
+				disabled={task.blocked}>{task.task_type === 'recurring' ? 'Renew' : 'Done'}</button
 			>
 		{:else}
 			<button
 				class="btn-primary btn-start"
 				onclick={() => ontoggle?.(task.id, 'start')}
-				disabled={task.blocked}>Empezar</button
+				disabled={task.blocked}>Start</button
 			>
 		{/if}
 		<button class="btn-primary" onclick={onstart} disabled={task.blocked}>
 			<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />
-			{isTimerRunning ? 'Asignar' : 'Iniciar'}
+			{isTimerRunning ? 'Assign' : 'Start'}
 		</button>
 	</div>
 </div>

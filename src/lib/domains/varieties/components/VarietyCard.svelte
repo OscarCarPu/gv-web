@@ -58,10 +58,10 @@
 				comments: comments.trim() ? comments.trim() : null,
 				judge: judge.trim() || variety.judge,
 			});
-			addNotification('Variedad actualizada', 'success');
+			addNotification('Variety updated', 'success');
 			await invalidateAll();
 		} catch {
-			addToast('Error al guardar', 'error');
+			addToast('Error saving', 'error');
 		} finally {
 			saving = false;
 		}
@@ -70,10 +70,10 @@
 	async function handleDelete() {
 		try {
 			await varietiesApi.deleteVariety(variety.id);
-			addNotification('Variedad eliminada', 'success');
+			addNotification('Variety deleted', 'success');
 			await invalidateAll();
 		} catch {
-			addToast('Error al eliminar', 'error');
+			addToast('Error deleting', 'error');
 		}
 	}
 
@@ -99,12 +99,12 @@
 		bind:value={name}
 		oninput={scheduleSave}
 		maxlength={40}
-		aria-label="Nombre de la variedad"
+		aria-label="Variety name"
 	/>
 
 	<div class="score-grid">
 		<div class="detail-field">
-			<label for={`scent-${variety.id}`}>Aroma</label>
+			<label for={`scent-${variety.id}`}>Scent</label>
 			<input
 				id={`scent-${variety.id}`}
 				type="number"
@@ -116,7 +116,7 @@
 			/>
 		</div>
 		<div class="detail-field">
-			<label for={`flavor-${variety.id}`}>Sabor</label>
+			<label for={`flavor-${variety.id}`}>Flavor</label>
 			<input
 				id={`flavor-${variety.id}`}
 				type="number"
@@ -128,7 +128,7 @@
 			/>
 		</div>
 		<div class="detail-field">
-			<label for={`power-${variety.id}`}>Potencia</label>
+			<label for={`power-${variety.id}`}>Potency</label>
 			<input
 				id={`power-${variety.id}`}
 				type="number"
@@ -140,7 +140,7 @@
 			/>
 		</div>
 		<div class="detail-field">
-			<label for={`quality-${variety.id}`}>Efecto</label>
+			<label for={`quality-${variety.id}`}>Effect</label>
 			<input
 				id={`quality-${variety.id}`}
 				type="number"
@@ -154,7 +154,7 @@
 	</div>
 
 	<div class="detail-field">
-		<label for={`price-${variety.id}`}>Precio</label>
+		<label for={`price-${variety.id}`}>Price</label>
 		<input
 			id={`price-${variety.id}`}
 			type="number"
@@ -168,13 +168,13 @@
 	<div class="detail-field">
 		<div class="detail-field-header">
 			<!-- svelte-ignore a11y_label_has_associated_control -->
-			<label>Comentarios</label>
+			<label>Comments</label>
 			{#if !editingComments && variety.comments}
 				<button
 					class="desc-edit-btn"
 					onclick={() => (editingComments = true)}
 					type="button"
-					aria-label="Editar comentarios"
+					aria-label="Edit comments"
 				>
 					<Icon name="pen" />
 				</button>
@@ -187,28 +187,28 @@
 			<div class="desc-view">{@html linkify(variety.comments)}</div>
 		{:else}
 			<button class="comments-empty" onclick={() => (editingComments = true)} type="button">
-				Añadir comentarios…
+				Add comments...
 			</button>
 		{/if}
 	</div>
 
 	<footer class="flex items-center justify-between gap-2 pt-1">
-		<span class="score-badge" title="Puntuación">{variety.score.toFixed(2)}</span>
+		<span class="score-badge" title="Score">{variety.score.toFixed(2)}</span>
 		<label class="judge-label flex min-w-0 flex-1 items-baseline gap-1 text-xs">
-			<span class="text-text-muted shrink-0">Puntuado por</span>
+			<span class="text-text-muted shrink-0">Rated by</span>
 			<input
 				class="text-text focus:bg-bg min-w-0 flex-1 rounded-md border-none bg-transparent px-1 py-0.5 font-medium transition-colors outline-none"
 				type="text"
 				bind:value={judge}
 				oninput={scheduleSave}
 				maxlength={40}
-				aria-label="Juez"
+				aria-label="Judge"
 			/>
 		</label>
 		<button
 			class="btn-icon hover:text-danger"
 			onclick={handleDelete}
-			aria-label="Eliminar variedad"
+			aria-label="Delete variety"
 			title="Eliminar"
 		>
 			<Icon name="trash" />

@@ -133,11 +133,11 @@
 
 	function formatHour(iso: string): string {
 		const d = new Date(iso);
-		return d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+		return d.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
 	}
 
 	function formatDay(d: Date): string {
-		const weekday = d.toLocaleDateString('es', { weekday: 'long' });
+		const weekday = d.toLocaleDateString('en', { weekday: 'long' });
 		const capitalized = weekday.charAt(0).toUpperCase() + weekday.slice(1);
 		return `${capitalized} ${d.getDate()}/${d.getMonth() + 1}`;
 	}
@@ -146,11 +146,11 @@
 <RightSheet {open} {onclose}>
 	<div class="agenda-title">Agenda</div>
 	<div class="agenda-subtitle-row">
-		<span class="agenda-subtitle">{mode === 'day' ? 'Últimas 24 horas' : 'Últimos 7 días'}</span>
+		<span class="agenda-subtitle">{mode === 'day' ? 'Last 24 hours' : 'Last 7 days'}</span>
 		<button
 			class="agenda-mode-toggle"
 			onclick={() => (mode = mode === 'day' ? 'week' : 'day')}
-			aria-label={mode === 'day' ? 'Ver semana' : 'Ver día'}
+			aria-label={mode === 'day' ? 'View week' : 'View day'}
 		>
 			<Icon name={mode === 'day' ? 'calendar-week' : 'calendar-day'} />
 		</button>
@@ -159,12 +159,12 @@
 	{#if loading}
 		<div class="history-loading">
 			<div class="spinner"></div>
-			Cargando...
+			Loading...
 		</div>
 	{:else if entries.length === 0}
 		<div class="history-empty">
 			<Icon name="calendar-day" class="text-2xl" />
-			<span>Sin entradas en las últimas 24 horas</span>
+			<span>No entries in the last 24 hours</span>
 		</div>
 	{:else}
 		<div class="agenda-timeline">
@@ -211,7 +211,7 @@
 									<span class="agenda-entry-time">
 										{formatHour(item.entry.started_at)} – {item.entry.finished_at
 											? formatHour(item.entry.finished_at)
-											: 'ahora'}
+											: 'now'}
 									</span>
 									<span
 										class="status-badge"
@@ -224,12 +224,12 @@
 										class:finished={item.entry.task_finished_at !== null}
 									>
 										{item.entry.task_finished_at !== null
-											? 'Finalizada'
+											? 'Finished'
 											: item.entry.task_type === 'continuous'
-												? 'Continua'
+												? 'Continuous'
 												: item.entry.task_type === 'recurring'
-													? `Recurrente · ${item.entry.recurrence}`
-													: 'En progreso'}
+													? `Recurring · ${item.entry.recurrence}`
+													: 'In progress'}
 									</span>
 									<span class="agenda-entry-duration">{formatTime(item.entry.time_spent)}</span>
 								</div>

@@ -86,13 +86,13 @@
 	const ranges: Array<{ value: Range; label: string }> = [
 		{ value: '3m', label: '3M' },
 		{ value: '6m', label: '6M' },
-		{ value: '1y', label: '1A' },
+		{ value: '1y', label: '1Y' },
 		{ value: 'ytd', label: 'YTD' },
-		{ value: 'all', label: 'Todo' },
+		{ value: 'all', label: 'All' },
 	];
 
 	const selectedAccountLabel = $derived(
-		accountId == null ? 'Todas' : (accounts.find((a) => a.id === accountId)?.name ?? 'Todas')
+		accountId == null ? 'All' : (accounts.find((a) => a.id === accountId)?.name ?? 'All')
 	);
 
 	let mirrorWidth = $state(0);
@@ -101,7 +101,7 @@
 </script>
 
 <BottomSheet {open} {onclose}>
-	<h3 class="modal-title">Ingresos vs gastos por mes</h3>
+	<h3 class="modal-title">Income vs expenses per month</h3>
 
 	<div class="sheet-controls-row">
 		<div class="create-mode-toggle sheet-range-toggle">
@@ -113,13 +113,13 @@
 		</div>
 
 		<div class="sheet-account-filter">
-			<label for="trend-account">Cuenta</label>
+			<label for="trend-account">Account</label>
 			<div class="select-fit">
 				<span class="select-fit-mirror" bind:clientWidth={mirrorWidth} aria-hidden="true">
 					{selectedAccountLabel}
 				</span>
 				<select id="trend-account" bind:value={accountId} style={selectStyle}>
-					<option value={null}>Todas</option>
+					<option value={null}>All</option>
 					{#each accounts as a (a.id)}
 						<option value={a.id}>{a.name}</option>
 					{/each}
@@ -130,12 +130,12 @@
 
 	<div class="money-tiles money-tiles-wrap">
 		<div class="money-tile">
-			<span class="detail-info-label">Ingresos</span>
+			<span class="detail-info-label">Income</span>
 			<span class="detail-info-value amount-positive">+{formatMoney(totals.income.toFixed(2))}</span
 			>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">Gastos</span>
+			<span class="detail-info-label">Expenses</span>
 			<span class="detail-info-value amount-negative"
 				>−{formatMoney(totals.expense.toFixed(2))}</span
 			>
@@ -151,7 +151,7 @@
 			</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">Ahorro</span>
+			<span class="detail-info-label">Savings</span>
 			<span
 				class="detail-info-value"
 				class:amount-positive={totals.savingsRate > 0}
@@ -165,12 +165,12 @@
 	{#if initialLoading}
 		<div class="history-loading">
 			<div class="spinner"></div>
-			Cargando...
+			Loading...
 		</div>
 	{:else if data.length === 0}
 		<div class="history-empty">
 			<Icon name="chart-column" />
-			<span>Sin datos para este período</span>
+			<span>No data for this period</span>
 		</div>
 	{:else}
 		<IncomeExpenseBars {data} />

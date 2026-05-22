@@ -4,7 +4,7 @@
 	@apply flex min-h-screen items-center justify-center px-4;
 
 	form {
-		@apply bg-bg-light w-full max-w-sm rounded-xl p-8;
+		@apply bg-bg-light relative w-full max-w-sm rounded-xl p-8;
 		border: 1px solid var(--color-border-light);
 		box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
 
@@ -45,7 +45,10 @@
 		}
 
 		.back-link {
-			@apply mt-4 justify-center;
+			@apply text-text-muted hover:text-text absolute transition-colors;
+			top: 1rem;
+			left: 1rem;
+			text-decoration: none;
 		}
 	}
 }

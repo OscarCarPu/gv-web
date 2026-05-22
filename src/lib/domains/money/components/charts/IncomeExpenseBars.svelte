@@ -10,18 +10,18 @@
 	let { data, height = 220 }: Props = $props();
 
 	const monthNames = [
-		'Ene',
+		'Jan',
 		'Feb',
 		'Mar',
-		'Abr',
+		'Apr',
 		'May',
 		'Jun',
 		'Jul',
-		'Ago',
+		'Aug',
 		'Sep',
 		'Oct',
 		'Nov',
-		'Dic',
+		'Dec',
 	];
 
 	function monthLabel(m: string): string {
@@ -122,7 +122,7 @@
 </script>
 
 {#if data.length === 0}
-	<div class="chart-empty">Sin datos para este rango</div>
+	<div class="chart-empty">No data for this range</div>
 {:else}
 	<div class="ie-bars" style="height: {height}px" bind:clientWidth={containerWidth}>
 		<svg
@@ -130,7 +130,7 @@
 			{height}
 			class="ie-svg"
 			role="img"
-			aria-label="Ingresos vs gastos por mes"
+			aria-label="Income vs expenses per month"
 		>
 			{#each yTicks as t (t)}
 				{@const y = padding.top + innerHeight - (t / max) * innerHeight}
@@ -254,12 +254,12 @@
 				<div class="ie-tooltip-month">{monthLabel(d.month)}</div>
 				<div class="ie-tooltip-row">
 					<span class="ie-dot ie-dot-income"></span>
-					<span>Ingresos</span>
+					<span>Income</span>
 					<span class="amount-positive">+{formatMoney(d.income)}</span>
 				</div>
 				<div class="ie-tooltip-row">
 					<span class="ie-dot ie-dot-expense"></span>
-					<span>Gastos</span>
+					<span>Expenses</span>
 					<span class="amount-negative">−{formatMoney(d.expense)}</span>
 				</div>
 				<div class="ie-tooltip-row ie-tooltip-balance">
@@ -276,7 +276,7 @@
 				{#if parseFloat(d.income) > 0}
 					{@const savingsPct = (parseFloat(d.balance) / parseFloat(d.income)) * 100}
 					<div class="ie-tooltip-row">
-						<span>Ahorro</span>
+						<span>Savings</span>
 						<span class:amount-positive={savingsPct > 0} class:amount-negative={savingsPct < 0}>
 							{savingsPct >= 0 ? '+' : '−'}{Math.abs(savingsPct).toFixed(1)}%
 						</span>
@@ -287,7 +287,7 @@
 	</div>
 
 	<div class="ie-legend">
-		<span class="ie-legend-item"><span class="ie-dot ie-dot-income"></span> Ingresos</span>
-		<span class="ie-legend-item"><span class="ie-dot ie-dot-expense"></span> Gastos</span>
+		<span class="ie-legend-item"><span class="ie-dot ie-dot-income"></span> Income</span>
+		<span class="ie-legend-item"><span class="ie-dot ie-dot-expense"></span> Expenses</span>
 	</div>
 {/if}

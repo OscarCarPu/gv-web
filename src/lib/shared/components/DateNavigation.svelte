@@ -30,17 +30,17 @@
 </script>
 
 <div class="date-navigation">
-	<button title="Volver a hoy" onclick={handleReturnToday}>
+	<button title="Return to today" onclick={handleReturnToday}>
 		<Icon name="rotate-left" />
 	</button>
-	<button title="Un dia atrás" onclick={handleSubOneDay}>
+	<button title="One day back" onclick={handleSubOneDay}>
 		<Icon name="arrow-left" />
 	</button>
 	<p id="date-trigger">{navDate.formatted}</p>
 	<Popover triggeredBy="#date-trigger" trigger="click">
-		<Datepicker value={navDate.current} onselect={handleDatepickerSelect} inline locale="es-ES" />
+		<Datepicker value={navDate.current} onselect={handleDatepickerSelect} inline locale="en-US" firstDayOfWeek={0} />
 	</Popover>
-	<button title="Un dia adelante" onclick={handleAddOneDay}>
+	<button title="One day forward" onclick={handleAddOneDay}>
 		<Icon name="arrow-right" />
 	</button>
 </div>

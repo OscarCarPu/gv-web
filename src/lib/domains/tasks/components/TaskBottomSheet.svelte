@@ -89,13 +89,13 @@
 		const now = new Date().toISOString();
 		const prev = task.started_at;
 		task.started_at = now;
-		addNotification('Tarea iniciada', 'success');
+		addNotification('Task started', 'success');
 		try {
 			await tasksApi.updateTask(id, { started_at: now });
 			await Promise.all([loadTask(), invalidateAll()]);
 		} catch {
 			if (task) task.started_at = prev;
-			addToast('Error al iniciar tarea', 'error');
+			addToast('Error starting task', 'error');
 		}
 	}
 
@@ -105,13 +105,13 @@
 		const now = new Date().toISOString();
 		const prev = task.finished_at;
 		task.finished_at = now;
-		addNotification('Tarea finalizada', 'success');
+		addNotification('Task finished', 'success');
 		try {
 			await tasksApi.updateTask(id, { finished_at: now });
 			await Promise.all([loadTask(), invalidateAll()]);
 		} catch {
 			if (task) task.finished_at = prev;
-			addToast('Error al finalizar tarea', 'error');
+			addToast('Error finishing task', 'error');
 		}
 	}
 
@@ -136,11 +136,11 @@
 				}),
 				syncReverseDepends(),
 			]);
-			addNotification('Tarea actualizada', 'success');
+			addNotification('Task updated', 'success');
 			await invalidateAll();
 			onclose();
 		} catch {
-			addToast('Error al guardar tarea', 'error');
+			addToast('Error saving task', 'error');
 		} finally {
 			saving = false;
 		}
@@ -175,12 +175,12 @@
 		if (taskId == null) return;
 		const id = taskId;
 		onclose();
-		addNotification('Tarea eliminada', 'success');
+		addNotification('Task deleted', 'success');
 		try {
 			await tasksApi.deleteTask(id);
 			await invalidateAll();
 		} catch {
-			addToast('Error al eliminar tarea', 'error');
+			addToast('Error deleting task', 'error');
 			await invalidateAll();
 		}
 	}
@@ -192,25 +192,25 @@
 	async function toggleTodo(todo: TodoResponse) {
 		const newDone = !todo.is_done;
 		todos = sortTodos(todos.map((t) => (t.id === todo.id ? { ...t, is_done: newDone } : t)));
-		addNotification(newDone ? 'Todo completado' : 'Todo pendiente', 'success');
+		addNotification(newDone ? 'Todo completed' : 'Todo pending', 'success');
 		try {
 			const updated = await tasksApi.updateTodo(todo.id, { is_done: newDone });
 			todos = sortTodos(todos.map((t) => (t.id === updated.id ? updated : t)));
 		} catch {
 			todos = sortTodos(todos.map((t) => (t.id === todo.id ? todo : t)));
-			addToast('Error al actualizar todo', 'error');
+			addToast('Error updating todo', 'error');
 		}
 	}
 
 	async function deleteTodo(id: number) {
 		const removed = todos.find((t) => t.id === id);
 		todos = todos.filter((t) => t.id !== id);
-		addNotification('Todo eliminado', 'success');
+		addNotification('Todo deleted', 'success');
 		try {
 			await tasksApi.deleteTodo(id);
 		} catch {
 			if (removed) todos = sortTodos([...todos, removed]);
-			addToast('Error al eliminar todo', 'error');
+			addToast('Error deleting todo', 'error');
 		}
 	}
 
@@ -222,13 +222,13 @@
 		const optimistic: TodoResponse = { id: tempId, task_id: id, name, is_done: false };
 		todos = [...todos, optimistic];
 		newTodoName = '';
-		addNotification('Todo agregado', 'success');
+		addNotification('Todo added', 'success');
 		try {
 			const created = await tasksApi.createTodo({ task_id: id, name });
 			todos = todos.map((t) => (t.id === tempId ? created : t));
 		} catch {
 			todos = todos.filter((t) => t.id !== tempId);
-			addToast('Error al agregar todo', 'error');
+			addToast('Error adding todo', 'error');
 		}
 	}
 
@@ -249,13 +249,13 @@
 					{projectName}
 				</button>
 			{/if}
-			<h3 class="modal-title">Detalle de tarea</h3>
+			<h3 class="modal-title">Task details</h3>
 		</div>
 
 		<div class="detail-form">
 			<div class="detail-inline-row">
 				<div class="detail-field flex-1">
-					<label for="task-name">Nombre</label>
+					<label for="task-name">Name</label>
 					<input
 						id="task-name"
 						type="text"
@@ -266,52 +266,52 @@
 					/>
 				</div>
 				<div class="detail-field">
-					<label for="dtp-task-due">Fecha límite</label>
+					<label for="dtp-task-due">Due date</label>
 					<DatetimePicker bind:value={dueAt} id="task-due" />
 				</div>
 				<div class="detail-field">
-					<label for="task-project">Proyecto</label>
+					<label for="task-project">Project</label>
 					<select id="task-project" bind:value={selectedProjectId}>
-						<option value={null}>Sin proyecto</option>
+						<option value={null}>No project</option>
 						{#each projects as project (project.id)}
 							<option value={project.id}>{project.name}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="detail-field">
-					<label for="task-type">Tipo</label>
+					<label for="task-type">Type</label>
 					<select id="task-type" bind:value={taskType}>
-						<option value="standard">Estándar</option>
-						<option value="continuous">Continua</option>
-						<option value="recurring">Recurrente</option>
+						<option value="standard">Standard</option>
+						<option value="continuous">Continuous</option>
+						<option value="recurring">Recurring</option>
 					</select>
 				</div>
 				{#if taskType === 'recurring'}
 					<div class="detail-field">
-						<label for="task-recurrence">Cada (días)</label>
+						<label for="task-recurrence">Every (days)</label>
 						<input id="task-recurrence" type="number" min="1" bind:value={recurrence} />
 					</div>
 				{/if}
 				<div class="detail-field">
-					<label for="task-priority">Prioridad</label>
+					<label for="task-priority">Priority</label>
 					<select id="task-priority" bind:value={priority}>
-						<option value={1}>1 · Urgente</option>
-						<option value={2}>2 · Alta</option>
-						<option value={3}>3 · Media</option>
-						<option value={4}>4 · Baja</option>
-						<option value={5}>5 · Muy baja</option>
+						<option value={1}>1 · Urgent</option>
+						<option value={2}>2 · High</option>
+						<option value={3}>3 · Medium</option>
+						<option value={4}>4 · Low</option>
+						<option value={5}>5 · Very low</option>
 					</select>
 				</div>
 			</div>
 			<div class="detail-field">
 				<div class="detail-field-header">
-					<label for="task-desc">Descripción</label>
+					<label for="task-desc">Description</label>
 					{#if description && !editingDescription}
 						<button
 							type="button"
 							class="desc-edit-btn"
 							onclick={() => (editingDescription = true)}
-							aria-label="Editar descripción"
+							aria-label="Edit description"
 						>
 							<Icon name="pen" />
 						</button>
@@ -333,24 +333,24 @@
 
 			<div class="detail-info-row">
 				<div class="detail-info-item">
-					<span class="detail-info-label">Inicio</span>
+					<span class="detail-info-label">Start</span>
 					{#if task.started_at}
 						<span class="detail-info-value">{formatDateFull(task.started_at)}</span>
 					{:else}
-						<button class="btn-action-sm btn-start" onclick={setStarted}>Empezar</button>
+						<button class="btn-action-sm btn-start" onclick={setStarted}>Start</button>
 					{/if}
 				</div>
 				<div class="detail-info-item">
-					<span class="detail-info-label">Fin</span>
+					<span class="detail-info-label">End</span>
 					{#if task.finished_at}
 						<span class="detail-info-value">{formatDateFull(task.finished_at)}</span>
 					{:else}
-						<button class="btn-action-sm" onclick={setFinished}>Finalizar</button>
+						<button class="btn-action-sm" onclick={setFinished}>Finish</button>
 					{/if}
 				</div>
 				{#if task.time_spent > 0}
 					<div class="detail-info-item">
-						<span class="detail-info-label">Tiempo</span>
+						<span class="detail-info-label">Time</span>
 						<span class="detail-info-value">{formatTime(task.time_spent)}</span>
 					</div>
 				{/if}
@@ -362,7 +362,7 @@
 						selected={dependsOn}
 						onchange={(deps) => (dependsOn = deps)}
 						excludeId={taskId!}
-						label="Depende de"
+						label="Depends on"
 						projectId={task?.project_id}
 					/>
 				</div>
@@ -371,7 +371,7 @@
 						selected={blocks}
 						onchange={(deps) => (blocks = deps)}
 						excludeId={taskId!}
-						label="Bloquea a"
+						label="Blocks"
 						projectId={task?.project_id}
 					/>
 				</div>
@@ -397,17 +397,17 @@
 				<div class="todo-add">
 					<input
 						type="text"
-						placeholder="Nuevo todo..."
+						placeholder="New todo..."
 						bind:value={newTodoName}
 						onkeydown={(e) => e.key === 'Enter' && addTodo()}
 					/>
-					<button class="btn-primary btn-sm" onclick={addTodo}>Agregar</button>
+					<button class="btn-primary btn-sm" onclick={addTodo}>Add</button>
 				</div>
 			</div>
 
 			<div class="detail-actions">
-				<button class="btn-danger mr-auto" onclick={remove} disabled={saving}>Eliminar</button>
-				<button class="btn-primary" onclick={save} disabled={saving}>Guardar</button>
+				<button class="btn-danger mr-auto" onclick={remove} disabled={saving}>Delete</button>
+				<button class="btn-primary" onclick={save} disabled={saving}>Save</button>
 			</div>
 		</div>
 	{/if}

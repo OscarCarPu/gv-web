@@ -47,18 +47,18 @@
 	}
 
 	const monthNames = [
-		'Enero',
-		'Febrero',
-		'Marzo',
-		'Abril',
-		'Mayo',
-		'Junio',
-		'Julio',
-		'Agosto',
-		'Septiembre',
-		'Octubre',
-		'Noviembre',
-		'Diciembre',
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December',
 	];
 
 	function getISOWeek(d: Date): number {
@@ -70,12 +70,12 @@
 
 	function formatTick(d: Date) {
 		if (freq === 'weekly') {
-			return `Sem. ${getISOWeek(d)}`;
+			return `Wk. ${getISOWeek(d)}`;
 		}
 		if (freq === 'monthly') {
 			return monthNames[d.getMonth()];
 		}
-		return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+		return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
 	}
 </script>
 

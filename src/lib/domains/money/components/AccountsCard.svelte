@@ -30,14 +30,14 @@
 	async function onDelete(account: Account) {
 		try {
 			await moneyApi.deleteAccount(account.id);
-			addNotification('Cuenta eliminada', 'success');
+			addNotification('Account deleted', 'success');
 			await invalidateAll();
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : '';
 			if (msg.includes('transactions')) {
-				addToast('La cuenta tiene movimientos asociados', 'error');
+				addToast('Account has associated transactions', 'error');
 			} else {
-				addToast('Error al eliminar la cuenta', 'error');
+				addToast('Error deleting account', 'error');
 			}
 		}
 	}
@@ -45,14 +45,14 @@
 
 <section class="tasks-section">
 	<div class="section-header">
-		<h2>Cuentas</h2>
+		<h2>Accounts</h2>
 		<button class="btn-action-sm" onclick={openCreate}>
-			<Icon name="plus" /> Nueva
+			<Icon name="plus" /> New
 		</button>
 	</div>
 
 	{#if accounts.length === 0}
-		<div class="project-children-empty">Sin cuentas</div>
+		<div class="project-children-empty">No accounts</div>
 	{:else}
 		<div class="task-list">
 			{#each accounts as account (account.id)}

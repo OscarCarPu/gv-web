@@ -79,9 +79,9 @@
 				});
 				if (startNow) {
 					await tasksApi.updateTask(created.id, { started_at: new Date().toISOString() });
-					addNotification('Tarea creada e iniciada', 'success');
+					addNotification('Task created and started', 'success');
 				} else {
-					addNotification('Tarea creada', 'success');
+					addNotification('Task created', 'success');
 				}
 			} else {
 				const created = await tasksApi.createProject({
@@ -92,16 +92,16 @@
 				});
 				if (startNow) {
 					await tasksApi.updateProject(created.id, { started_at: new Date().toISOString() });
-					addNotification('Proyecto creado e iniciado', 'success');
+					addNotification('Project created and started', 'success');
 				} else {
-					addNotification('Proyecto creado', 'success');
+					addNotification('Project created', 'success');
 				}
 			}
 
 			onclose();
 			await invalidateAll();
 		} catch {
-			addToast('Error al crear', 'error');
+			addToast('Error creating', 'error');
 		} finally {
 			saving = false;
 		}
@@ -109,20 +109,20 @@
 </script>
 
 <BottomSheet {open} {onclose} constrained>
-	<h3 class="modal-title">{currentMode === 'task' ? 'Nueva tarea' : 'Nuevo proyecto'}</h3>
+	<h3 class="modal-title">{currentMode === 'task' ? 'New task' : 'New project'}</h3>
 
 	<div class="create-mode-toggle">
 		<button class:active={currentMode === 'task'} onclick={() => (currentMode = 'task')}
-			>Tarea</button
+			>Task</button
 		>
 		<button class:active={currentMode === 'project'} onclick={() => (currentMode = 'project')}
-			>Proyecto</button
+			>Project</button
 		>
 	</div>
 
 	<div class="detail-form">
 		<div class="detail-field">
-			<label for="create-name">Nombre</label>
+			<label for="create-name">Name</label>
 			<input
 				id="create-name"
 				type="text"
@@ -134,55 +134,55 @@
 			/>
 		</div>
 		<div class="detail-field">
-			<label for="create-desc">Descripción</label>
+			<label for="create-desc">Description</label>
 			<textarea id="create-desc" bind:value={description} rows="2"></textarea>
 		</div>
 
 		<div class="detail-inline-row">
 			<div class="detail-field">
-				<label for="dtp-create-due">Fecha límite</label>
+				<label for="dtp-create-due">Due date</label>
 				<DatetimePicker bind:value={dueAt} id="create-due" />
 			</div>
 
 			{#if currentMode === 'task'}
 				<div class="detail-field flex-1">
-					<label for="create-project">Proyecto</label>
+					<label for="create-project">Project</label>
 					<select id="create-project" bind:value={selectedProjectId}>
-						<option value={null}>Sin proyecto</option>
+						<option value={null}>No project</option>
 						{#each projects as project (project.id)}
 							<option value={project.id}>{project.name}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="detail-field">
-					<label for="create-task-type">Tipo</label>
+					<label for="create-task-type">Type</label>
 					<select id="create-task-type" bind:value={taskType}>
-						<option value="standard">Estándar</option>
-						<option value="continuous">Continua</option>
-						<option value="recurring">Recurrente</option>
+						<option value="standard">Standard</option>
+						<option value="continuous">Continuous</option>
+						<option value="recurring">Recurring</option>
 					</select>
 				</div>
 				{#if taskType === 'recurring'}
 					<div class="detail-field">
-						<label for="create-recurrence">Cada (días)</label>
+						<label for="create-recurrence">Every (days)</label>
 						<input id="create-recurrence" type="number" min="1" bind:value={recurrence} />
 					</div>
 				{/if}
 				<div class="detail-field">
-					<label for="create-priority">Prioridad</label>
+					<label for="create-priority">Priority</label>
 					<select id="create-priority" bind:value={priority}>
-						<option value={1}>1 · Urgente</option>
-						<option value={2}>2 · Alta</option>
-						<option value={3}>3 · Media</option>
-						<option value={4}>4 · Baja</option>
-						<option value={5}>5 · Muy baja</option>
+						<option value={1}>1 · Urgent</option>
+						<option value={2}>2 · High</option>
+						<option value={3}>3 · Medium</option>
+						<option value={4}>4 · Low</option>
+						<option value={5}>5 · Very low</option>
 					</select>
 				</div>
 			{:else}
 				<div class="detail-field flex-1">
-					<label for="create-parent">Proyecto padre</label>
+					<label for="create-parent">Parent project</label>
 					<select id="create-parent" bind:value={selectedParentId}>
-						<option value={null}>Raíz</option>
+						<option value={null}>Root</option>
 						{#each projects as project (project.id)}
 							<option value={project.id}>{project.name}</option>
 						{/each}
@@ -196,7 +196,7 @@
 				selected={selectedDeps}
 				onchange={(deps) => (selectedDeps = deps)}
 				excludeId={-1}
-				label="Depende de"
+				label="Depends on"
 				projectId={selectedProjectId}
 			/>
 		{/if}
@@ -206,9 +206,9 @@
 				<div class="toggle toggle-sm" class:on={startNow} class:off={!startNow}>
 					<div class="knob"></div>
 				</div>
-				Empezar ya
+				Start now
 			</button>
-			<button class="btn-primary" onclick={create} disabled={saving}>Crear</button>
+			<button class="btn-primary" onclick={create} disabled={saving}>Create</button>
 		</div>
 	</div>
 </BottomSheet>

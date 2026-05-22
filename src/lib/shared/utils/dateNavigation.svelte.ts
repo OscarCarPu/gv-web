@@ -5,7 +5,7 @@ export type DateNavigation = ReturnType<typeof createDateNavigation>;
 export function createDateNavigation(initialDate?: Date) {
 	const date = new SvelteDate(initialDate ?? Date.now());
 
-	const formatter = new Intl.DateTimeFormat('es-ES', {
+	const formatter = new Intl.DateTimeFormat('en-US', {
 		weekday: 'long',
 		day: 'numeric',
 		month: 'long',

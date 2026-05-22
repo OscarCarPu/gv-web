@@ -81,14 +81,14 @@
 	const ranges: Array<{ value: Range; label: string }> = [
 		{ value: '3m', label: '3M' },
 		{ value: '6m', label: '6M' },
-		{ value: '1y', label: '1A' },
+		{ value: '1y', label: '1Y' },
 		{ value: 'ytd', label: 'YTD' },
-		{ value: 'all', label: 'Todo' },
+		{ value: 'all', label: 'All' },
 	];
 </script>
 
 <BottomSheet {open} {onclose}>
-	<h3 class="modal-title">Evolución del patrimonio</h3>
+	<h3 class="modal-title">Net worth evolution</h3>
 
 	<div class="sheet-controls-row">
 		<div class="create-mode-toggle sheet-range-toggle">
@@ -102,11 +102,11 @@
 
 	<div class="money-tiles money-tiles-wrap">
 		<div class="money-tile">
-			<span class="detail-info-label">Actual</span>
+			<span class="detail-info-label">Current</span>
 			<span class="detail-info-value">{formatMoney(last.toFixed(2))}</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">Cambio</span>
+			<span class="detail-info-label">Change</span>
 			<span
 				class="detail-info-value"
 				class:amount-positive={delta > 0}
@@ -116,7 +116,7 @@
 			</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">% Cambio</span>
+			<span class="detail-info-label">% Change</span>
 			<span
 				class="detail-info-value"
 				class:amount-positive={delta > 0}
@@ -126,7 +126,7 @@
 			</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">Máximo</span>
+			<span class="detail-info-label">Maximum</span>
 			<span class="detail-info-value">{formatMoney(peak.toFixed(2))}</span>
 		</div>
 	</div>
@@ -134,12 +134,12 @@
 	{#if initialLoading}
 		<div class="history-loading">
 			<div class="spinner"></div>
-			Cargando...
+			Loading...
 		</div>
 	{:else if data.length === 0}
 		<div class="history-empty">
 			<Icon name="chart-line" />
-			<span>Sin datos para este período</span>
+			<span>No data for this period</span>
 		</div>
 	{:else}
 		<NetWorthChart {data} {granularity} />

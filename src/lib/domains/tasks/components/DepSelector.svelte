@@ -32,7 +32,7 @@
 			const key = t.project_id;
 			if (!groupMap.has(key)) {
 				groupMap.set(key, {
-					label: t.project_name ?? 'Sin proyecto',
+					label: t.project_name ?? 'No project',
 					tasks: [],
 				});
 			}
@@ -84,7 +84,7 @@
 					<button
 						class="dep-pill-remove"
 						onclick={() => remove(dep.id)}
-						aria-label="Quitar {dep.name}"
+						aria-label="Remove {dep.name}"
 					>
 						<Icon name="xmark" />
 					</button>
@@ -93,7 +93,7 @@
 		</div>
 	{/if}
 	<select onchange={add}>
-		<option value="">Agregar tarea...</option>
+		<option value="">Add task...</option>
 		{#each grouped as group}
 			<optgroup label={group.label}>
 				{#each group.tasks as task (task.id)}

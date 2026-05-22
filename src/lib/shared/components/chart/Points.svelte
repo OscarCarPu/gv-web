@@ -6,18 +6,18 @@
 	let hoveredIndex: number | null = $state(null);
 
 	const monthNames = [
-		'Enero',
-		'Febrero',
-		'Marzo',
-		'Abril',
-		'Mayo',
-		'Junio',
-		'Julio',
-		'Agosto',
-		'Septiembre',
-		'Octubre',
-		'Noviembre',
-		'Diciembre',
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December',
 	];
 
 	function getISOWeek(d: Date): number {
@@ -29,8 +29,8 @@
 
 	function formatDate(d: Date, freq: string): string {
 		if (freq === 'monthly') return monthNames[d.getMonth()];
-		if (freq === 'weekly') return `Sem. ${getISOWeek(d)}`;
-		return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+		if (freq === 'weekly') return `Wk. ${getISOWeek(d)}`;
+		return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
 	}
 </script>
 

@@ -15,8 +15,8 @@
 
 	let displayDate = $derived(
 		dateObj
-			? dateObj.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })
-			: 'Sin fecha'
+			? dateObj.toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' })
+			: 'No date'
 	);
 
 	let hours = $state('');
@@ -108,7 +108,7 @@
 		/>
 	</div>
 	{#if value}
-		<button type="button" class="pill-clear" onclick={clear} title="Quitar fecha">
+		<button type="button" class="pill-clear" onclick={clear} title="Clear date">
 			<Icon name="xmark" />
 		</button>
 	{/if}
@@ -117,7 +117,7 @@
 			value={dateObj ?? undefined}
 			onselect={handleDateSelect}
 			inline
-			locale="es-ES"
+			locale="en-US"
 			firstDayOfWeek={1}
 		/>
 	</Popover>

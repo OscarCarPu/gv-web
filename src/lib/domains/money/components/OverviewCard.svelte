@@ -75,13 +75,13 @@
 			const list = await moneyApi.listTransactions();
 			const found = list.find((t) => t.id === id) ?? null;
 			if (!found) {
-				addToast('Movimiento no encontrado', 'error');
+				addToast('Transaction not found', 'error');
 				return;
 			}
 			editingTx = found;
 			sheetOpen = true;
 		} catch {
-			addToast('Error al cargar el movimiento', 'error');
+			addToast('Error loading transaction', 'error');
 		} finally {
 			loadingEdit = false;
 		}
@@ -90,77 +90,77 @@
 	async function onDelete(id: number) {
 		try {
 			await moneyApi.deleteTransaction(id);
-			addNotification('Movimiento eliminado', 'success');
+			addNotification('Transaction deleted', 'success');
 			await invalidateAll();
 		} catch {
-			addToast('Error al eliminar el movimiento', 'error');
+			addToast('Error deleting transaction', 'error');
 		}
 	}
 </script>
 
 <section class="tasks-section">
 	<div class="section-header">
-		<h2>Resumen</h2>
+		<h2>Summary</h2>
 		<div class="section-actions">
 			<button
 				class="btn-icon"
 				onclick={() => (netWorthOpen = true)}
-				aria-label="Evolución del patrimonio"
-				title="Evolución del patrimonio"
+				aria-label="Net worth evolution"
+				title="Net worth evolution"
 			>
 				<Icon name="chart-line" />
 			</button>
 			<button
 				class="btn-icon"
 				onclick={() => (categoryBreakdownOpen = true)}
-				aria-label="Gastos por categoría"
-				title="Gastos por categoría"
+				aria-label="Expenses by category"
+				title="Expenses by category"
 			>
 				<Icon name="chart-pie" />
 			</button>
 			<button
 				class="btn-icon"
 				onclick={() => (monthlyTrendOpen = true)}
-				aria-label="Ingresos vs gastos por mes"
-				title="Ingresos vs gastos por mes"
+				aria-label="Income vs expenses per month"
+				title="Income vs expenses per month"
 			>
 				<Icon name="chart-column" />
 			</button>
 			<button
 				class="btn-icon"
 				onclick={() => (estimationOpen = true)}
-				aria-label="Estimación del patrimonio"
-				title="Estimación del patrimonio"
+				aria-label="Net worth estimation"
+				title="Net worth estimation"
 			>
 				<Icon name="arrow-trend-up" />
 			</button>
 			<button class="btn-primary btn-sm" onclick={openCreate} disabled={accounts.length === 0}>
-				<Icon name="plus" /> Movimiento
+				<Icon name="plus" /> Transaction
 			</button>
 		</div>
 	</div>
 
 	<div class="money-tiles money-tiles-wrap">
 		<div class="money-tile">
-			<span class="detail-info-label">Total cuentas</span>
+			<span class="detail-info-label">Total accounts</span>
 			<span class="detail-info-value">
 				{formatMoney(overview.accounts_total)}
 			</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">Ingresos del mes</span>
+			<span class="detail-info-label">Monthly income</span>
 			<span class="detail-info-value amount-positive">
 				+{formatMoney(overview.month.income)}
 			</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">Gastos del mes</span>
+			<span class="detail-info-label">Monthly expenses</span>
 			<span class="detail-info-value amount-negative">
 				−{formatMoney(overview.month.expense)}
 			</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">Balance del mes</span>
+			<span class="detail-info-label">Monthly balance</span>
 			<span
 				class="detail-info-value"
 				class:amount-positive={balanceNum > 0}
@@ -170,7 +170,7 @@
 			</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">Ahorro</span>
+			<span class="detail-info-label">Savings</span>
 			<span
 				class="detail-info-value"
 				class:amount-positive={savingsRate > 0}
@@ -180,7 +180,7 @@
 			</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">% vs mes anterior</span>
+			<span class="detail-info-label">% vs prev month</span>
 			{#if hasPrevBalance}
 				<span
 					class="detail-info-value"
@@ -195,10 +195,10 @@
 		</div>
 	</div>
 
-	<h3 class="money-group-label">Movimientos recientes</h3>
+	<h3 class="money-group-label">Recent transactions</h3>
 
 	{#if overview.recent_transactions.length === 0}
-		<div class="project-children-empty">Sin movimientos en los últimos 30 días</div>
+		<div class="project-children-empty">No transactions in the last 30 days</div>
 	{:else}
 		<div class="task-list">
 			{#each visible as tx, i (tx.id)}
@@ -220,7 +220,7 @@
 				<span class="show-more-line"></span>
 				<span class="show-more-pill">
 					<Icon name="chevron-down" />
-					<span>{remaining} más</span>
+					<span>{remaining} more</span>
 				</span>
 				<span class="show-more-line"></span>
 			</button>

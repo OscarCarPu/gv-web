@@ -1,7 +1,22 @@
 @reference "./app.css";
 
 .habits-toolbar {
-	@apply mt-6 flex flex-wrap items-center justify-center gap-4;
+	@apply mt-6 flex flex-col items-center gap-4;
+
+	@media (min-width: 1000px) {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+
+		.date-navigation {
+			grid-column: 2;
+		}
+
+		> button {
+			grid-column: 3;
+			justify-self: end;
+		}
+	}
 
 	.date-navigation {
 		@apply mt-0;

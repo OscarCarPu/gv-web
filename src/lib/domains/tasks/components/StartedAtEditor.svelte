@@ -57,7 +57,7 @@
 
 <Popover triggeredBy="#timer-display-trigger" trigger="click" class="started-at-popover">
 	<div class="pill-container m-1" onfocusout={handleFocusOut}>
-		<span class="pill-label">Inicio</span>
+		<span class="pill-label">Start</span>
 		<span class="pill-divider"></span>
 		<div class="pill-time">
 			<input

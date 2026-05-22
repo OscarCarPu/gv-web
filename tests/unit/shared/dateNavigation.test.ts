@@ -24,8 +24,8 @@ describe('createDateNavigation', () => {
 		vi.resetModules();
 	});
 
-	it('should format the current date in Spanish', () => {
-		expect(dateNavigation.formatted).toBe('jueves, 26 de diciembre de 2024');
+	it('should format the current date in English', () => {
+		expect(dateNavigation.formatted).toBe('Thursday, December 26, 2024');
 	});
 
 	it('should return the current date', () => {
@@ -38,13 +38,13 @@ describe('createDateNavigation', () => {
 	it('should subtract one day', () => {
 		dateNavigation.subOneDay();
 		expect(dateNavigation.current.getDate()).toBe(25);
-		expect(dateNavigation.formatted).toBe('miércoles, 25 de diciembre de 2024');
+		expect(dateNavigation.formatted).toBe('Wednesday, December 25, 2024');
 	});
 
 	it('should add one day', () => {
 		dateNavigation.addOneDay();
 		expect(dateNavigation.current.getDate()).toBe(27);
-		expect(dateNavigation.formatted).toBe('viernes, 27 de diciembre de 2024');
+		expect(dateNavigation.formatted).toBe('Friday, December 27, 2024');
 	});
 
 	it('should return to today', () => {

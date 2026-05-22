@@ -45,7 +45,7 @@
 
 	async function fetchData() {
 		if (!rangeValid) {
-			errorMsg = 'Mes fin debe ser igual o posterior a mes inicio';
+			errorMsg = 'End month must be the same as or after start month';
 			result = null;
 			initialLoading = false;
 			return;
@@ -93,35 +93,35 @@
 </script>
 
 <BottomSheet {open} {onclose}>
-	<h3 class="modal-title">Estimación del patrimonio</h3>
+	<h3 class="modal-title">Net worth estimation</h3>
 
 	<div class="sheet-controls-row">
 		<div class="create-mode-toggle sheet-range-toggle">
 			<button type="button" class:active={mode === 'rate'} onclick={() => (mode = 'rate')}>
-				Tasa %/mes
+				Rate %/mo
 			</button>
 			<button type="button" class:active={mode === 'saving'} onclick={() => (mode = 'saving')}>
-				Ahorro €/mes
+				Saving €/mo
 			</button>
 		</div>
 
 		<div class="sheet-account-filter">
-			<label for="est-start">Inicio</label>
+			<label for="est-start">Start</label>
 			<input id="est-start" type="month" bind:value={startMonth} />
 		</div>
 		<div class="sheet-account-filter">
-			<label for="est-end">Fin</label>
+			<label for="est-end">End</label>
 			<input id="est-end" type="month" bind:value={endMonth} />
 		</div>
 	</div>
 
 	<div class="money-tiles money-tiles-wrap">
 		<div class="money-tile">
-			<span class="detail-info-label">Actual</span>
+			<span class="detail-info-label">Current</span>
 			<span class="detail-info-value">{formatMoney(lastActual.toFixed(2))}</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">{mode === 'rate' ? 'Tasa mensual' : 'Ahorro mensual'}</span>
+			<span class="detail-info-label">{mode === 'rate' ? 'Monthly rate' : 'Monthly saving'}</span>
 			<span
 				class="detail-info-value"
 				class:amount-positive={(mode === 'rate' ? rateNum : savingNum) > 0}
@@ -135,11 +135,11 @@
 			</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">Estimado final</span>
+			<span class="detail-info-label">Final estimate</span>
 			<span class="detail-info-value">{formatMoney(lastEstimated.toFixed(2))}</span>
 		</div>
 		<div class="money-tile">
-			<span class="detail-info-label">% Cambio</span>
+			<span class="detail-info-label">% Change</span>
 			<span
 				class="detail-info-value"
 				class:amount-positive={delta > 0}
@@ -158,12 +158,12 @@
 	{:else if initialLoading}
 		<div class="history-loading">
 			<div class="spinner"></div>
-			Cargando...
+			Loading...
 		</div>
 	{:else if data.length === 0}
 		<div class="history-empty">
 			<Icon name="arrow-trend-up" />
-			<span>Sin datos para este período</span>
+			<span>No data for this period</span>
 		</div>
 	{:else}
 		<EstimationChart {data} />

@@ -46,7 +46,7 @@
 	function monthLabel(ym: string): string {
 		const [y, m] = ym.split('-').map(Number);
 		const d = new Date(y, m - 1, 1);
-		const s = d.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+		const s = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 		return s.replace('.', '');
 	}
 
@@ -238,7 +238,7 @@
 <BottomSheet {open} {onclose}>
 	{#if selectedNode === null}
 		<header class="cat-sheet-header">
-			<h3 class="modal-title">Por categoría</h3>
+			<h3 class="modal-title">By category</h3>
 			<input
 				id="cat-sheet-month"
 				name="cat-sheet-month"
@@ -250,17 +250,17 @@
 
 		<div class="create-mode-toggle money-type-toggle cat-sheet-type">
 			<button class="expense" class:active={type === 'expense'} onclick={() => (type = 'expense')}>
-				Gastos
+				Expenses
 			</button>
 			<button class="income" class:active={type === 'income'} onclick={() => (type = 'income')}>
-				Ingresos
+				Income
 			</button>
 			<button
 				class="transfer"
 				class:active={type === 'transfer'}
 				onclick={() => (type = 'transfer')}
 			>
-				Transferencias
+				Transfers
 			</button>
 		</div>
 
@@ -272,7 +272,7 @@
 				</span>
 			</div>
 			<div class="money-tile">
-				<span class="detail-info-label">Movimientos</span>
+				<span class="detail-info-label">Transactions</span>
 				<span class="detail-info-value">{totalTx}</span>
 			</div>
 		</div>
@@ -280,12 +280,12 @@
 		{#if initialLoading}
 			<div class="history-loading">
 				<div class="spinner"></div>
-				Cargando...
+				Loading...
 			</div>
 		{:else if tree.length === 0}
 			<div class="history-empty">
 				<Icon name="chart-pie" />
-				<span>Sin categorías de este tipo</span>
+				<span>No categories of this type</span>
 			</div>
 		{:else}
 			<ul
@@ -307,7 +307,7 @@
 									type="button"
 									class="tree-chevron-btn"
 									onclick={() => toggle(n.category.id)}
-									aria-label={isExpanded ? 'Colapsar' : 'Expandir'}
+									aria-label={isExpanded ? 'Collapse' : 'Expand'}
 								>
 									<Icon
 										name="chevron-right"
@@ -322,7 +322,7 @@
 								type="button"
 								class="cat-tree-name-btn"
 								onclick={() => openCategory(n)}
-								aria-label="Ver movimientos de {n.category.name}"
+								aria-label="View transactions for {n.category.name}"
 							>
 								<span class="cat-tree-name">{n.category.name}</span>
 							</button>
@@ -343,7 +343,7 @@
 								type="button"
 								class="cat-tree-drill"
 								onclick={() => openCategory(n)}
-								aria-label="Ver movimientos"
+								aria-label="View transactions"
 							>
 								<Icon name="chevron-right" />
 							</button>
@@ -358,7 +358,7 @@
 		{/if}
 	{:else}
 		<header class="cat-detail-header">
-			<button class="cat-detail-back" onclick={back} aria-label="Volver al árbol">
+			<button class="cat-detail-back" onclick={back} aria-label="Back to list">
 				<Icon name="arrow-left" />
 				<span>{selectedNode.category.name}</span>
 			</button>
@@ -367,13 +367,13 @@
 
 		<div class="cat-sheet-tiles">
 			<div class="money-tile">
-				<span class="detail-info-label">Total propio</span>
+				<span class="detail-info-label">Own total</span>
 				<span class="detail-info-value {amountClass}">
 					{sign}{formatMoney(selectedNode.ownAmount.toFixed(2))}
 				</span>
 			</div>
 			<div class="money-tile">
-				<span class="detail-info-label">Movimientos</span>
+				<span class="detail-info-label">Transactions</span>
 				<span class="detail-info-value">{selectedNode.ownCount}</span>
 			</div>
 		</div>
@@ -381,12 +381,12 @@
 		{#if txLoading}
 			<div class="history-loading">
 				<div class="spinner"></div>
-				Cargando...
+				Loading...
 			</div>
 		{:else if detailRows.length === 0}
 			<div class="history-empty">
 				<Icon name="folder" />
-				<span>Sin movimientos este mes</span>
+				<span>No transactions this month</span>
 			</div>
 		{:else}
 			<div class="task-list cat-detail-list">

@@ -47,25 +47,25 @@
 	}
 
 	const monthNames = [
-		'Ene',
+		'Jan',
 		'Feb',
 		'Mar',
-		'Abr',
+		'Apr',
 		'May',
 		'Jun',
 		'Jul',
-		'Ago',
+		'Aug',
 		'Sep',
 		'Oct',
 		'Nov',
-		'Dic',
+		'Dec',
 	];
 
 	function formatTooltipDate(d: Date): string {
 		if (granularity === 'month') {
 			return `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
 		}
-		return d.toLocaleDateString('es-ES', {
+		return d.toLocaleDateString('en-US', {
 			day: '2-digit',
 			month: 'short',
 			year: 'numeric',
@@ -96,7 +96,7 @@
 </script>
 
 {#if chartData.length === 0}
-	<div class="chart-empty">Sin datos en este período</div>
+	<div class="chart-empty">No data for this period</div>
 {:else}
 	<div class="chart-container nw-chart">
 		<LayerCake

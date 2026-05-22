@@ -67,19 +67,19 @@
 					type,
 					parent_id: parentId,
 				});
-				addNotification('Categoría actualizada', 'success');
+				addNotification('Category updated', 'success');
 			} else {
 				await moneyApi.createCategory({
 					name: name.trim(),
 					type,
 					parent_id: parentId ?? undefined,
 				});
-				addNotification('Categoría creada', 'success');
+				addNotification('Category created', 'success');
 			}
 			onclose();
 			await invalidateAll();
 		} catch {
-			addToast('Error al guardar la categoría', 'error');
+			addToast('Error saving category', 'error');
 		} finally {
 			saving = false;
 		}
@@ -87,23 +87,23 @@
 </script>
 
 <BottomSheet {open} {onclose} constrained>
-	<h3 class="modal-title">{category ? 'Editar categoría' : 'Nueva categoría'}</h3>
+	<h3 class="modal-title">{category ? 'Edit category' : 'New category'}</h3>
 
 	<div class="create-mode-toggle money-type-toggle">
 		<button class="income" class:active={type === 'income'} onclick={() => (type = 'income')}
-			>Ingreso</button
+			>Income</button
 		>
 		<button class="expense" class:active={type === 'expense'} onclick={() => (type = 'expense')}
-			>Gasto</button
+			>Expense</button
 		>
 		<button class="transfer" class:active={type === 'transfer'} onclick={() => (type = 'transfer')}
-			>Transferencia</button
+			>Transfer</button
 		>
 	</div>
 
 	<div class="detail-form">
 		<div class="detail-field">
-			<label for="category-name">Nombre</label>
+			<label for="category-name">Name</label>
 			<input
 				id="category-name"
 				type="text"
@@ -116,9 +116,9 @@
 		</div>
 
 		<div class="detail-field">
-			<label for="category-parent">Categoría padre</label>
+			<label for="category-parent">Parent category</label>
 			<select id="category-parent" bind:value={parentId}>
-				<option value={null}>Sin padre</option>
+				<option value={null}>No parent</option>
 				{#each parentOptions as parent (parent.id)}
 					<option value={parent.id}>{parent.label}</option>
 				{/each}
@@ -127,7 +127,7 @@
 
 		<div class="detail-actions">
 			<button class="btn-primary" onclick={save} disabled={saving}>
-				{category ? 'Guardar' : 'Crear'}
+				{category ? 'Save' : 'Create'}
 			</button>
 		</div>
 	</div>

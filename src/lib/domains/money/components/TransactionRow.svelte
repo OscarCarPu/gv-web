@@ -32,7 +32,7 @@
 	</div>
 	<div class="task-actions">
 		<span class={amountClass}>{prefix}{formatMoney(tx.amount)}</span>
-		<button class="btn-icon" title="Eliminar" onclick={() => ondelete(tx.id)}>
+		<button class="btn-icon" title="Delete" onclick={() => ondelete(tx.id)}>
 			<Icon name="trash" />
 		</button>
 	</div>

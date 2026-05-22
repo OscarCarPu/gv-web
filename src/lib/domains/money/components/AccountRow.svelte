@@ -20,10 +20,10 @@
 	</div>
 	<div class="task-actions">
 		<span class="amount-neutral">{formatMoney(account.total)}</span>
-		<button class="btn-icon" title="Editar" onclick={() => onedit(account)}>
+		<button class="btn-icon" title="Edit" onclick={() => onedit(account)}>
 			<Icon name="pen" />
 		</button>
-		<button class="btn-icon" title="Eliminar" onclick={() => ondelete(account)}>
+		<button class="btn-icon" title="Delete" onclick={() => ondelete(account)}>
 			<Icon name="trash" />
 		</button>
 	</div>
