@@ -61,8 +61,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 		pathname.startsWith('/api') ||
 		event.request.headers.get('accept')?.includes('application/json');
 
-	if (isAuthOnlyRoute || isOpenRoute) {
-		// pass through — no redirect in either direction
+	if (isAuthOnlyRoute) {
+		// pass through regardless of auth state
+	} else if (isOpenRoute) {
+		if (validSession) {
+			redirect(StatusCodes.SEE_OTHER, '/tasks');
+		} else if (validSemiprivate) {
+			redirect(StatusCodes.SEE_OTHER, '/varieties');
+		}
 	} else if (isPublicRoute) {
 		if (validSession) {
 			redirect(StatusCodes.SEE_OTHER, '/habits');

@@ -48,7 +48,7 @@ Login (password) returns `{ token, kind: 'tmp' | 'semi' }` (`LoginResponseSchema
 - **Public** (`PUBLIC_ROUTES`): `/login`, `/login/2fa` — accessible without auth; redirect to `/habits` if `session` valid, to `/varieties` if `semiprivate` valid.
 - **Semiprivate** (`SEMIPRIVATE_ROUTES`): `/varieties` — accessible with either `session` or `semiprivate`.
 - **Auth-only** (`AUTH_ONLY_ROUTES`): `/logout` — passes through regardless of auth state; the action clears both cookies and redirects to `/`.
-- **Open** (`OPEN_ROUTES`): `/` — passes through with no redirect in either direction; accessible to everyone.
+- **Open** (`OPEN_ROUTES`): `/` — if `session` valid, redirects to `/tasks`; if `semiprivate` valid, redirects to `/varieties`; otherwise passes through (unauthenticated landing page).
 - **Private** (everything else): requires valid `session`.
 
 ### Styling System
