@@ -6,7 +6,6 @@ import { env } from '$lib/config/env';
 const PUBLIC_ROUTES = ['/login', '/login/2fa'];
 const SEMIPRIVATE_ROUTES = ['/varieties'];
 const AUTH_ONLY_ROUTES = ['/logout'];
-const OPEN_ROUTES = ['/'];
 
 function isValidJWT(token: string): boolean {
 	try {
@@ -55,25 +54,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isPublicRoute = matchesRoute(pathname, PUBLIC_ROUTES);
 	const isSemiprivateRoute = matchesRoute(pathname, SEMIPRIVATE_ROUTES);
 	const isAuthOnlyRoute = matchesRoute(pathname, AUTH_ONLY_ROUTES);
-	const isOpenRoute = matchesRoute(pathname, OPEN_ROUTES);
 
 	const isApiRequest =
 		pathname.startsWith('/api') ||
 		event.request.headers.get('accept')?.includes('application/json');
 
 	if (isAuthOnlyRoute) {
-		// pass through regardless of auth state
-	} else if (isOpenRoute) {
+	} else if (isPublicRoute) {
 		if (validSession) {
 			redirect(StatusCodes.SEE_OTHER, '/tasks');
 		} else if (validSemiprivate) {
-			redirect(StatusCodes.SEE_OTHER, '/varieties');
-		}
-	} else if (isPublicRoute) {
-		if (validSession) {
-			redirect(StatusCodes.SEE_OTHER, '/habits');
-		}
-		if (validSemiprivate) {
 			redirect(StatusCodes.SEE_OTHER, '/varieties');
 		}
 	} else if (isSemiprivateRoute) {
