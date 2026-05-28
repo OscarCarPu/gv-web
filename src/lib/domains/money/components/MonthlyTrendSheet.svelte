@@ -28,13 +28,11 @@
 		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 	}
 
-	const dateRange = $derived.by((): { from?: string; to: string } => {
+	const dateFrom = $derived.by((): string | undefined => {
 		const now = new Date();
 		const y = now.getFullYear();
 		const m = now.getMonth();
-		if (range === 'all') {
-			return { to: isoDate(now) };
-		}
+		if (range === 'all') return undefined;
 		const start =
 			range === '3m'
 				? new Date(y, m - 2, 1)
@@ -43,14 +41,16 @@
 					: range === '1y'
 						? new Date(y, m - 11, 1)
 						: new Date(y, 0, 1);
-		return { from: isoDate(start), to: isoDate(now) };
+		return isoDate(start);
 	});
 
 	async function fetchStats() {
+		const now = new Date();
+		const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 		try {
 			data = await moneyApi.getMonthlyStats({
-				from: dateRange.from,
-				to: dateRange.to,
+				from: dateFrom,
+				to: isoDate(endOfMonth),
 				account_id: accountId,
 			});
 		} catch {

@@ -96,7 +96,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.set('X-Frame-Options', 'DENY');
 	response.headers.set('X-XSS-Protection', '1; mode=block');
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-	const scriptSrc = dev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
+	// 'unsafe-eval' is required in production because Zod v4 probes for
+	// Function constructor support (JIT compilation check) at module load time.
+	const scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval'";
 	response.headers.set(
 		'Content-Security-Policy',
 		`default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' ${apiOrigin}`
