@@ -11,10 +11,12 @@
 	import StartedAtEditor from '$lib/domains/tasks/components/StartedAtEditor.svelte';
 	import TimeHistoryModal from '$lib/domains/tasks/components/TimeHistoryModal.svelte';
 	import AgendaRightSheet from '$lib/domains/tasks/components/AgendaRightSheet.svelte';
+	import TimeEntryBottomSheet from '$lib/domains/tasks/components/TimeEntryBottomSheet.svelte';
 	import PlanSection from '$lib/domains/tasks/components/PlanSection.svelte';
 	import type {
 		ActiveTreeNode,
 		TimeEntrySummaryResponse,
+		TimeEntryWithTask,
 	} from '$lib/domains/tasks/types/Task.types';
 	import {
 		toLocalDateString,
@@ -36,6 +38,7 @@
 	let commentExpanded = $state(false);
 	let showTimeHistory = $state(false);
 	let showAgenda = $state(false);
+	let selectedTimeEntry = $state<TimeEntryWithTask | null>(null);
 
 	const FOLD_LIMIT = 15;
 	const EXPAND_STEP = 10;
@@ -202,13 +205,17 @@
 		selectedTaskId = id;
 	}
 
-	function handleAgendaTaskClick(taskId: number, projectId: number | null) {
+	function handleAgendaEntryClick(entry: TimeEntryWithTask) {
 		showAgenda = false;
-		if (projectId) {
-			goto(`/tasks/projects/${projectId}?task=${taskId}`);
-		} else {
-			selectedTaskId = taskId;
-		}
+		selectedTimeEntry = entry;
+	}
+
+	async function handleTimeEntryUpdated() {
+		summaryOverride = await tasksApi.getTimeEntrySummary();
+	}
+
+	async function handleTimeEntryDeleted() {
+		summaryOverride = await tasksApi.getTimeEntrySummary();
 	}
 
 	function openDetail(id: number, type: 'project' | 'task') {
@@ -737,5 +744,11 @@
 <AgendaRightSheet
 	open={showAgenda}
 	onclose={() => (showAgenda = false)}
-	onopentask={handleAgendaTaskClick}
+	onopenentry={handleAgendaEntryClick}
+/>
+<TimeEntryBottomSheet
+	entry={selectedTimeEntry}
+	onclose={() => (selectedTimeEntry = null)}
+	onupdated={handleTimeEntryUpdated}
+	ondeleted={handleTimeEntryDeleted}
 />

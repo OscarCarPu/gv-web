@@ -9,11 +9,11 @@
 	let {
 		open,
 		onclose,
-		onopentask,
+		onopenentry,
 	}: {
 		open: boolean;
 		onclose: () => void;
-		onopentask: (taskId: number, projectId: number | null) => void;
+		onopenentry: (entry: TimeEntryWithTask) => void;
 	} = $props();
 
 	let entries = $state<TimeEntryWithTask[]>([]);
@@ -195,7 +195,7 @@
 						<span class="agenda-hour-label">{item.hourLabel ?? ''}</span>
 						<button
 							class="agenda-entry"
-							onclick={() => onopentask(item.entry.task_id, item.entry.project_id)}
+							onclick={() => onopenentry(item.entry)}
 						>
 							<div
 								class="agenda-entry-bar"

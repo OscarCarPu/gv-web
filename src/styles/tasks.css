@@ -807,3 +807,48 @@
 .plan-editor-actions {
 	@apply mt-2 flex justify-end gap-2;
 }
+
+/* --- Time Entry Bottom Sheet --- */
+
+.time-entry-sheet {
+	@apply flex flex-col gap-5 px-1 pt-1 pb-2;
+}
+
+.time-entry-sheet-title {
+	@apply text-text text-lg font-bold;
+}
+
+.time-entry-sheet-fields {
+	@apply flex flex-col gap-4;
+}
+
+.time-entry-sheet-field {
+	@apply flex flex-col gap-1.5;
+}
+
+.time-entry-sheet-label {
+	@apply text-text-muted text-xs font-medium tracking-wide uppercase;
+}
+
+.time-entry-sheet-select {
+	@apply bg-bg text-text border-border w-full appearance-none rounded-lg border px-3 py-2.5 text-sm;
+	color-scheme: dark;
+	font-family: inherit;
+
+	&:focus {
+		@apply ring-primary/40 ring-1 outline-none;
+	}
+}
+
+.time-entry-sheet-input {
+	@apply bg-bg text-text border-border w-full rounded-lg border px-3 py-2.5 font-mono text-sm;
+	color-scheme: dark;
+
+	&:focus {
+		@apply ring-primary/40 ring-1 outline-none;
+	}
+}
+
+.time-entry-sheet-actions {
+	@apply flex items-center justify-between pt-1;
+}
