@@ -243,7 +243,7 @@
 				title={notifyOnChange ? 'Notifications on' : 'Notifications off'}
 				aria-label={notifyOnChange ? 'Disable block notifications' : 'Enable block notifications'}
 			>
-				<Icon name="bell" />
+				<Icon name={notifyOnChange ? 'bell-sound' : 'bell'} />
 			</button>
 			<button
 				class="btn-icon"
