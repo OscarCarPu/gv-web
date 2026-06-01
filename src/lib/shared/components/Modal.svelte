@@ -6,9 +6,10 @@
 		onclose: () => void;
 		children: Snippet;
 		wide?: boolean;
+		narrow?: boolean;
 	}
 
-	let { open, onclose, children, wide = false }: Props = $props();
+	let { open, onclose, children, wide = false, narrow = false }: Props = $props();
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') onclose();
@@ -30,6 +31,7 @@
 		<div
 			class="modal-card"
 			class:modal-card-wide={wide}
+			class:modal-card-narrow={narrow}
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"

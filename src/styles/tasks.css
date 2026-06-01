@@ -770,32 +770,62 @@
 	color: var(--color-primary);
 }
 
-/* --- Plan notify toggle --- */
+/* --- Plan notify bell button --- */
 
-.plan-notify-toggle {
-	@apply text-text-muted flex cursor-pointer select-none items-center gap-1.5 text-xs;
+.plan-notify-btn {
+	.icon {
+		transform-origin: 50% 10%;
+		transition: color 0.2s;
+	}
 
-	input[type='checkbox'] {
-		@apply accent-primary cursor-pointer;
+	&.active {
+		color: var(--color-primary);
+
+		.icon {
+			animation: bell-ring 1.8s ease-in-out infinite;
+		}
+	}
+}
+
+@keyframes bell-ring {
+	0%,
+	55%,
+	100% {
+		transform: rotate(0deg);
+	}
+	5% {
+		transform: rotate(14deg);
+	}
+	15% {
+		transform: rotate(-12deg);
+	}
+	25% {
+		transform: rotate(9deg);
+	}
+	35% {
+		transform: rotate(-6deg);
+	}
+	45% {
+		transform: rotate(3deg);
 	}
 }
 
 /* --- Plan alarm modal --- */
 
 .plan-alarm {
-	@apply flex flex-col items-center gap-4 text-center;
+	@apply flex flex-col items-center gap-3 text-center;
 }
 
 .plan-alarm-label {
-	@apply text-text text-lg font-semibold;
+	@apply text-text text-base font-semibold;
 }
 
 .plan-alarm-time {
-	@apply text-text-muted font-mono text-sm tabular-nums;
+	@apply text-text-muted font-mono text-xs tabular-nums;
 }
 
-.plan-alarm-actions {
-	@apply mt-2 flex justify-center;
+.plan-alarm-dismiss {
+	@apply mt-1 w-full;
 }
 
 /* --- Plan Block Editor (modal) --- */

@@ -176,23 +176,29 @@
 	let audioCtx: AudioContext | null = null;
 	let alarmInterval: ReturnType<typeof setInterval> | null = null;
 
-	function playBeep() {
+	function startAlarmSound() {
 		if (typeof window === 'undefined') return;
 		if (!audioCtx) audioCtx = new AudioContext();
-		const osc = audioCtx.createOscillator();
-		const gain = audioCtx.createGain();
-		osc.connect(gain);
-		gain.connect(audioCtx.destination);
-		osc.frequency.value = 880;
-		gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-		gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-		osc.start(audioCtx.currentTime);
-		osc.stop(audioCtx.currentTime + 0.3);
-	}
+		let high = true;
 
-	function startAlarmSound() {
-		playBeep();
-		alarmInterval = setInterval(playBeep, 800);
+		function chirp() {
+			if (!audioCtx) return;
+			const osc = audioCtx.createOscillator();
+			const gain = audioCtx.createGain();
+			osc.type = 'square';
+			osc.frequency.value = high ? 960 : 800;
+			high = !high;
+			osc.connect(gain);
+			gain.connect(audioCtx.destination);
+			const t = audioCtx.currentTime;
+			gain.gain.setValueAtTime(0.55, t);
+			gain.gain.exponentialRampToValueAtTime(0.001, t + 0.17);
+			osc.start(t);
+			osc.stop(t + 0.17);
+		}
+
+		chirp();
+		alarmInterval = setInterval(chirp, 200);
 	}
 
 	function stopAlarmSound() {
@@ -230,10 +236,15 @@
 			</button>
 		</div>
 		<div class="section-actions">
-			<label class="plan-notify-toggle">
-				<input type="checkbox" bind:checked={notifyOnChange} />
-				<span>Notify</span>
-			</label>
+			<button
+				class="btn-icon plan-notify-btn"
+				class:active={notifyOnChange}
+				onclick={() => (notifyOnChange = !notifyOnChange)}
+				title={notifyOnChange ? 'Notifications on' : 'Notifications off'}
+				aria-label={notifyOnChange ? 'Disable block notifications' : 'Enable block notifications'}
+			>
+				<Icon name="bell" />
+			</button>
 			<button
 				class="btn-icon"
 				onclick={handleCleanFuture}
@@ -348,7 +359,7 @@
 	onsaved={refresh}
 />
 
-<Modal open={alarmOpen} onclose={stopAlarm}>
+<Modal open={alarmOpen} onclose={stopAlarm} narrow>
 	<div class="plan-alarm">
 		<div class="modal-title">Block started</div>
 		{#if alarmBlock}
@@ -357,8 +368,6 @@
 				{formatHour(alarmBlock.started_at)} – {formatHour(alarmBlock.ended_at)}
 			</p>
 		{/if}
-		<div class="plan-alarm-actions">
-			<button class="btn btn-primary" onclick={stopAlarm}>Dismiss</button>
-		</div>
+		<button class="btn btn-primary plan-alarm-dismiss" onclick={stopAlarm}>Dismiss</button>
 	</div>
 </Modal>
