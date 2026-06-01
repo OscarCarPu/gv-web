@@ -308,12 +308,35 @@
 	@apply bg-success hover:bg-success/80 text-white transition-colors;
 }
 
+.btn-split {
+	@apply flex items-stretch;
+
+	> button {
+		@apply flex-1 justify-center whitespace-nowrap;
+	}
+	> button:first-child {
+		@apply rounded-r-none;
+	}
+	> button:last-child {
+		@apply rounded-l-none;
+		border-left: 1px solid rgb(255 255 255 / 0.2);
+	}
+}
+
 .btn-sm {
 	@apply px-2 py-1 text-xs;
 }
 
 .btn-danger {
 	@apply btn bg-danger hover:bg-danger/80 text-white;
+
+	&:disabled {
+		@apply cursor-not-allowed opacity-50;
+	}
+}
+
+.btn-success {
+	@apply btn bg-success hover:bg-success/80 text-white;
 
 	&:disabled {
 		@apply cursor-not-allowed opacity-50;

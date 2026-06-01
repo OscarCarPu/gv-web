@@ -12,6 +12,12 @@
 			projectName?: string,
 			taskDescription?: string | null
 		) => void;
+		onstopandstart?: (
+			taskId: number,
+			taskName: string,
+			projectName?: string,
+			taskDescription?: string | null
+		) => void;
 		ontoggle?: (id: number, type: 'project' | 'task', action: 'start' | 'finish') => void;
 		ondetail?: (id: number, type: 'project' | 'task') => void;
 		oncreatetask?: (projectId: number) => void;
@@ -21,6 +27,7 @@
 	let {
 		nodes,
 		onstart,
+		onstopandstart,
 		ontoggle,
 		ondetail,
 		oncreatetask,
@@ -46,5 +53,5 @@
 </script>
 
 {#each nodes as node (`${node.type}-${node.id}`)}
-	<TreeNodeItem {node} {onstart} {ontoggle} {ondetail} {oncreatetask} {isTimerRunning} />
+	<TreeNodeItem {node} {onstart} {onstopandstart} {ontoggle} {ondetail} {oncreatetask} {isTimerRunning} />
 {/each}

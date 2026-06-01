@@ -11,12 +11,13 @@
 	interface Props {
 		initial: PlanTodayResponse | null;
 		ontimerstart: (taskId: number, taskName: string, projectName?: string | null) => Promise<void>;
+		ontimerstopandstart: (taskId: number, taskName: string, projectName?: string | null) => Promise<void>;
 		onafterchange: () => Promise<void> | void;
 		isTimerRunning: boolean;
 		activeStartedAt: string | null;
 	}
 
-	let { initial, ontimerstart, onafterchange, isTimerRunning, activeStartedAt }: Props = $props();
+	let { initial, ontimerstart, ontimerstopandstart, onafterchange, isTimerRunning, activeStartedAt }: Props = $props();
 
 	let data = $derived(initial);
 	let editorOpen = $state(false);
@@ -79,6 +80,12 @@
 	async function handleTimer(b: PlanBlockResponse) {
 		if (b.task_id === null || b.task_name === null) return;
 		await ontimerstart(b.task_id, b.task_name);
+		await refresh();
+	}
+
+	async function handleTimerStopAndStart(b: PlanBlockResponse) {
+		if (b.task_id === null || b.task_name === null) return;
+		await ontimerstopandstart(b.task_id, b.task_name);
 		await refresh();
 	}
 
@@ -208,9 +215,12 @@
 		}
 	}
 
-	function stopAlarm() {
+	function stopAlarm(scroll = false) {
 		alarmOpen = false;
 		stopAlarmSound();
+		if (scroll) {
+			document.getElementById('plan-section')?.scrollIntoView({ behavior: 'smooth' });
+		}
 	}
 
 	$effect(() => {
@@ -325,10 +335,20 @@
 									>
 										{toggleLabel(b)}
 									</button>
-									<button class="btn-primary btn-sm" onclick={() => handleTimer(b)}>
-										<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />
-										{isTimerRunning ? 'Assign' : 'Start'}
-									</button>
+									{#if isTimerRunning}
+										<div class="btn-split">
+											<button class="btn-primary btn-sm" onclick={() => handleTimer(b)}>
+												<Icon name="arrow-right" />Assign
+											</button>
+											<button class="btn-success btn-sm" onclick={() => handleTimerStopAndStart(b)}>
+												<Icon name="play" />{b.task_type === 'recurring' ? 'Renew Start' : 'Stop Start'}
+											</button>
+										</div>
+									{:else}
+										<button class="btn-primary btn-sm" onclick={() => handleTimer(b)}>
+											<Icon name="play" />Start
+										</button>
+									{/if}
 								{/if}
 							{/if}
 							<button class="btn-icon" onclick={() => openEdit(b)} aria-label="Edit block">
@@ -368,6 +388,6 @@
 				{formatHour(alarmBlock.started_at)} – {formatHour(alarmBlock.ended_at)}
 			</p>
 		{/if}
-		<button class="btn btn-primary plan-alarm-dismiss" onclick={stopAlarm}>Dismiss</button>
+		<button class="btn btn-primary plan-alarm-dismiss" onclick={() => stopAlarm(true)}>Dismiss</button>
 	</div>
 </Modal>

@@ -9,6 +9,7 @@
 	interface Props {
 		task: TaskByDueDateResponse;
 		onstart?: () => void;
+		onstopandstart?: () => void;
 		ontoggle?: (taskId: number, action: 'start' | 'finish') => void;
 		ondetail?: (taskId: number) => void;
 		isTimerRunning?: boolean;
@@ -19,6 +20,7 @@
 	let {
 		task,
 		onstart,
+		onstopandstart,
 		ontoggle,
 		ondetail,
 		isTimerRunning = false,
@@ -95,9 +97,19 @@
 				disabled={task.blocked}>Start</button
 			>
 		{/if}
-		<button class="btn-primary" onclick={onstart} disabled={task.blocked}>
-			<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />
-			{isTimerRunning ? 'Assign' : 'Start'}
-		</button>
+		{#if isTimerRunning}
+			<div class="btn-split">
+				<button class="btn-primary" onclick={onstart} disabled={task.blocked}>
+					<Icon name="arrow-right" />Assign
+				</button>
+				<button class="btn-success" onclick={onstopandstart} disabled={task.blocked}>
+					<Icon name="play" />{task.task_type === 'recurring' ? 'Renew Start' : 'Stop Start'}
+				</button>
+			</div>
+		{:else}
+			<button class="btn-primary" onclick={onstart} disabled={task.blocked}>
+				<Icon name="play" />Start
+			</button>
+		{/if}
 	</div>
 </div>

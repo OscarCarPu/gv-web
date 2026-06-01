@@ -652,6 +652,10 @@
 								task.project_name,
 								task.description
 							)}
+						onstopandstart={() => {
+							addNotification('Timer started', 'success');
+							timer.stopAndStart(task.id, task.name, task.project_name, task.description);
+						}}
 						ontoggle={handleTaskToggle}
 						ondetail={openTaskDetail}
 						isTimerRunning={timer.isRunning}
@@ -673,6 +677,10 @@
 		<PlanSection
 			initial={data.plan}
 			ontimerstart={handleTaskStartWithNotification}
+			ontimerstopandstart={async (id, name, proj) => {
+				addNotification('Timer started', 'success');
+				await timer.stopAndStart(id, name, proj);
+			}}
 			onafterchange={() => invalidateAll()}
 			isTimerRunning={timer.isRunning}
 			activeStartedAt={timer.isRunning ? (timer.startedAtDate?.toISOString() ?? null) : null}
@@ -716,6 +724,10 @@
 				<TreeNode
 					nodes={filteredActiveTree}
 					onstart={(id, name, proj) => handleTaskStartWithNotification(id, name, proj)}
+					onstopandstart={(id, name, proj, desc) => {
+						addNotification('Timer started', 'success');
+						timer.stopAndStart(id, name, proj, desc);
+					}}
 					ontoggle={handleTreeToggle}
 					ondetail={openDetail}
 					oncreatetask={(projectId) => {

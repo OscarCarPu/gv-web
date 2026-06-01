@@ -17,6 +17,12 @@
 			projectName?: string,
 			taskDescription?: string | null
 		) => void;
+		onstopandstart?: (
+			taskId: number,
+			taskName: string,
+			projectName?: string,
+			taskDescription?: string | null
+		) => void;
 		ontoggle?: (id: number, type: 'project' | 'task', action: 'start' | 'finish') => void;
 		ondetail?: (id: number, type: 'project' | 'task') => void;
 		oncreatetask?: (projectId: number) => void;
@@ -28,6 +34,7 @@
 		parentProjectName,
 		parentProjectDueAt,
 		onstart,
+		onstopandstart,
 		ontoggle,
 		ondetail,
 		oncreatetask,
@@ -145,14 +152,20 @@
 					disabled={node.blocked}>Start</button
 				>
 			{/if}
-			<button
-				class="btn-primary"
-				onclick={() => onstart?.(node.id, node.name, parentProjectName, node.description)}
-				disabled={node.blocked}
-			>
-				<Icon name={isTimerRunning ? 'arrow-right' : 'play'} />
-				{isTimerRunning ? 'Assign' : 'Start'}
-			</button>
+			{#if isTimerRunning}
+				<div class="btn-split">
+					<button class="btn-primary btn-sm" onclick={() => onstart?.(node.id, node.name, parentProjectName, node.description)} disabled={node.blocked}>
+						<Icon name="arrow-right" />Assign
+					</button>
+					<button class="btn-success btn-sm" onclick={() => onstopandstart?.(node.id, node.name, parentProjectName, node.description)} disabled={node.blocked}>
+						<Icon name="play" />{node.task_type === 'recurring' ? 'Renew Start' : 'Stop Start'}
+					</button>
+				</div>
+			{:else}
+				<button class="btn-primary btn-sm" onclick={() => onstart?.(node.id, node.name, parentProjectName, node.description)} disabled={node.blocked}>
+					<Icon name="play" />Start
+				</button>
+			{/if}
 		</div>
 	</div>
 {/if}

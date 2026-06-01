@@ -69,6 +69,16 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		}
 	}
 
+	async function stopAndStart(
+		taskId: number,
+		taskName: string,
+		projectName?: string | null,
+		taskDescription?: string | null
+	) {
+		await stopTimer();
+		await handleTaskStart(taskId, taskName, projectName, taskDescription);
+	}
+
 	async function handleTaskStart(
 		taskId: number,
 		taskName: string,
@@ -229,6 +239,7 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		startTimer,
 		stopTimer,
 		handleTaskStart,
+		stopAndStart,
 		restore,
 		updateStartedAt,
 		cancelTimer,
