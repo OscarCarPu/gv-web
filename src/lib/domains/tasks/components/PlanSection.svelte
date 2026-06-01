@@ -6,6 +6,7 @@
 	import { formatTime, toLocalDateString, toISOString } from '$lib/shared/utils/datetime';
 	import PlanBlockEditor from './PlanBlockEditor.svelte';
 	import type { PlanTodayResponse, PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
+	import Modal from '$lib/shared/components/Modal.svelte';
 
 	interface Props {
 		initial: PlanTodayResponse | null;
@@ -167,6 +168,53 @@
 		}
 		return -1;
 	});
+
+	let notifyOnChange = $state(false);
+	let alarmOpen = $state(false);
+	let alarmBlock = $state<PlanBlockResponse | null>(null);
+	let prevCurrentIndex = -1;
+	let audioCtx: AudioContext | null = null;
+	let alarmInterval: ReturnType<typeof setInterval> | null = null;
+
+	function playBeep() {
+		if (typeof window === 'undefined') return;
+		if (!audioCtx) audioCtx = new AudioContext();
+		const osc = audioCtx.createOscillator();
+		const gain = audioCtx.createGain();
+		osc.connect(gain);
+		gain.connect(audioCtx.destination);
+		osc.frequency.value = 880;
+		gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+		gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+		osc.start(audioCtx.currentTime);
+		osc.stop(audioCtx.currentTime + 0.3);
+	}
+
+	function startAlarmSound() {
+		playBeep();
+		alarmInterval = setInterval(playBeep, 800);
+	}
+
+	function stopAlarmSound() {
+		if (alarmInterval) {
+			clearInterval(alarmInterval);
+			alarmInterval = null;
+		}
+	}
+
+	function stopAlarm() {
+		alarmOpen = false;
+		stopAlarmSound();
+	}
+
+	$effect(() => {
+		if (notifyOnChange && currentIndex !== -1 && currentIndex !== prevCurrentIndex) {
+			alarmBlock = data?.blocks[currentIndex] ?? null;
+			alarmOpen = true;
+			startAlarmSound();
+		}
+		prevCurrentIndex = currentIndex;
+	});
 </script>
 
 <div id="plan-section" class="tasks-section">
@@ -182,6 +230,10 @@
 			</button>
 		</div>
 		<div class="section-actions">
+			<label class="plan-notify-toggle">
+				<input type="checkbox" bind:checked={notifyOnChange} />
+				<span>Notify</span>
+			</label>
 			<button
 				class="btn-icon"
 				onclick={handleCleanFuture}
@@ -295,3 +347,18 @@
 	onclose={() => (editorOpen = false)}
 	onsaved={refresh}
 />
+
+<Modal open={alarmOpen} onclose={stopAlarm}>
+	<div class="plan-alarm">
+		<div class="modal-title">Block started</div>
+		{#if alarmBlock}
+			<p class="plan-alarm-label">{alarmBlock.label}</p>
+			<p class="plan-alarm-time">
+				{formatHour(alarmBlock.started_at)} – {formatHour(alarmBlock.ended_at)}
+			</p>
+		{/if}
+		<div class="plan-alarm-actions">
+			<button class="btn btn-primary" onclick={stopAlarm}>Dismiss</button>
+		</div>
+	</div>
+</Modal>

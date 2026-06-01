@@ -770,6 +770,34 @@
 	color: var(--color-primary);
 }
 
+/* --- Plan notify toggle --- */
+
+.plan-notify-toggle {
+	@apply text-text-muted flex cursor-pointer select-none items-center gap-1.5 text-xs;
+
+	input[type='checkbox'] {
+		@apply accent-primary cursor-pointer;
+	}
+}
+
+/* --- Plan alarm modal --- */
+
+.plan-alarm {
+	@apply flex flex-col items-center gap-4 text-center;
+}
+
+.plan-alarm-label {
+	@apply text-text text-lg font-semibold;
+}
+
+.plan-alarm-time {
+	@apply text-text-muted font-mono text-sm tabular-nums;
+}
+
+.plan-alarm-actions {
+	@apply mt-2 flex justify-center;
+}
+
 /* --- Plan Block Editor (modal) --- */
 
 .plan-editor {
