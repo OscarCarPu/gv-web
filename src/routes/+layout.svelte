@@ -34,7 +34,7 @@
 					>Money</a
 				>
 				<a href="/rutas" class="nav-link" class:active={page.url.pathname.startsWith('/rutas')}
-					>Rutas</a
+					>Routes</a
 				>
 			{/if}
 			{#if data.token || data.semiprivateToken}

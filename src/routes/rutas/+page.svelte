@@ -172,13 +172,13 @@
 </script>
 
 <svelte:head>
-	<title>Rutas</title>
+	<title>Routes</title>
 </svelte:head>
 
 <div class="container rutas-page">
 	<div class="rutas-header">
 		<div class="rutas-title-row">
-			<h1>Rutas</h1>
+			<h1>Routes</h1>
 			<span class="rutas-counter">{visibleVisited}/{visibleTotal}</span>
 		</div>
 		<div class="rutas-filters">
@@ -207,7 +207,7 @@
 		{:else if !geojson}
 			<p class="rutas-map-loading">Loading map…</p>
 		{/if}
-		<svg bind:this={svgEl} class="rutas-map" width="100%" height="100%" aria-label="Mapa de concellos de Galicia">
+		<svg bind:this={svgEl} class="rutas-map" width="100%" height="100%" aria-label="Map of Galicia's municipalities">
 			{#each paths as { feature, d }}
 				{@const mark = marks.get(feature.properties.name)}
 				{@const isVisible = !activeProvince || feature.properties.province === activeProvince}
