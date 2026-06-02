@@ -33,6 +33,9 @@
 				<a href="/money" class="nav-link" class:active={page.url.pathname.startsWith('/money')}
 					>Money</a
 				>
+				<a href="/rutas" class="nav-link" class:active={page.url.pathname.startsWith('/rutas')}
+					>Rutas</a
+				>
 			{/if}
 			{#if data.token || data.semiprivateToken}
 				<a

@@ -52,6 +52,8 @@
 		"vitest-browser-svelte": "^2.0.1"
 	},
 	"dependencies": {
+		"@types/d3-geo": "^3.1.0",
+		"d3-geo": "^3.1.1",
 		"flowbite": "^4.0.1",
 		"flowbite-svelte": "^1.31.0",
 		"http-status-codes": "^2.3.0",

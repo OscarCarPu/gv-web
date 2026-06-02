@@ -1,0 +1,226 @@
+@reference "./app.css";
+
+.rutas-page {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+/* Header */
+
+.rutas-header {
+	@apply mt-6 flex flex-col items-center gap-4;
+}
+
+.rutas-title-row {
+	@apply flex items-center gap-4;
+
+	h1 {
+		@apply text-center text-3xl font-bold;
+		margin: 0;
+	}
+}
+
+.rutas-counter {
+	@apply bg-primary/15 text-primary rounded-full px-4 py-1 text-xl font-bold tabular-nums;
+	border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+/* Province filters */
+
+.rutas-filters {
+	@apply flex flex-wrap justify-center gap-2;
+}
+
+.province-btn {
+	@apply bg-surface text-text-muted cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-all;
+	border-color: var(--color-border);
+
+	&:hover {
+		@apply text-text;
+		border-color: rgba(255, 255, 255, 0.15);
+	}
+
+	&.active {
+		@apply bg-primary/15 text-primary;
+		border-color: rgba(59, 130, 246, 0.35);
+	}
+}
+
+/* Map */
+
+.rutas-map-container {
+	@apply bg-bg-light relative w-full overflow-hidden rounded-2xl;
+	border: 1px solid var(--color-border);
+	aspect-ratio: 4 / 3;
+
+	@media (min-width: 1000px) {
+		aspect-ratio: 16 / 9;
+	}
+}
+
+.rutas-map {
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+.rutas-map-loading,
+.rutas-map-error {
+	@apply text-text-muted absolute inset-0 flex items-center justify-center text-sm;
+	pointer-events: none;
+}
+
+.concello-path {
+	fill: var(--color-surface);
+	stroke: var(--color-bg);
+	stroke-width: 0.5;
+	cursor: pointer;
+	transition:
+		fill 0.15s,
+		opacity 0.2s;
+
+	&:hover {
+		fill: rgba(59, 130, 246, 0.4);
+		stroke: rgba(59, 130, 246, 0.7);
+		stroke-width: 1;
+	}
+
+	&:focus {
+		outline: none;
+		fill: rgba(59, 130, 246, 0.35);
+	}
+
+	&.marked {
+		fill: rgba(52, 211, 153, 0.55);
+		stroke: rgba(52, 211, 153, 0.9);
+		stroke-width: 0.8;
+
+		&:hover {
+			fill: rgba(52, 211, 153, 0.75);
+		}
+	}
+
+	&.dimmed {
+		opacity: 0.2;
+		pointer-events: none;
+	}
+}
+
+/* Visited list */
+
+.rutas-section-title {
+	@apply text-text-muted mb-3 text-sm font-semibold uppercase tracking-wider;
+}
+
+.rutas-visited-list {
+	@apply grid gap-2;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.rutas-visited-item {
+	@apply bg-bg-light rounded-xl transition-all;
+	border: 1px solid var(--color-border);
+
+	&:hover {
+		border-color: rgba(52, 211, 153, 0.3);
+		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+	}
+}
+
+.rutas-visited-btn {
+	@apply flex w-full cursor-pointer flex-col gap-0.5 rounded-xl px-4 py-3 text-left;
+	background: none;
+	border: none;
+}
+
+.rutas-visited-name {
+	@apply text-text text-sm font-semibold;
+}
+
+.rutas-visited-meta {
+	@apply flex flex-col gap-0.5;
+}
+
+.rutas-visited-date {
+	@apply text-success text-xs font-medium tabular-nums;
+}
+
+.rutas-visited-desc {
+	@apply text-text-muted line-clamp-2 text-xs;
+}
+
+/* Modal */
+
+.rutas-modal-wrapper {
+	@apply fixed inset-0 z-50 flex items-center justify-center;
+}
+
+.rutas-modal-backdrop {
+	@apply absolute inset-0 cursor-default;
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(4px);
+	border: none;
+}
+
+.rutas-modal {
+	@apply bg-surface relative z-10 w-full max-w-md rounded-2xl p-6 shadow-2xl;
+	border: 1px solid var(--color-border-light);
+}
+
+.rutas-modal-header {
+	@apply mb-5 flex items-start justify-between;
+}
+
+.rutas-modal-title {
+	@apply text-text text-xl font-bold;
+	margin: 0 0 0.25rem 0;
+}
+
+.rutas-modal-province {
+	@apply text-text-muted text-sm;
+	margin: 0;
+}
+
+.rutas-modal-body {
+	@apply flex flex-col gap-3;
+}
+
+.rutas-form-label {
+	@apply text-text-muted text-xs font-semibold uppercase tracking-wider;
+}
+
+.rutas-date-input,
+.rutas-desc-input {
+	@apply bg-bg text-text w-full rounded-xl px-4 py-2.5 text-sm transition-colors;
+	border: 1px solid var(--color-border-light);
+	outline: none;
+	font-family: inherit;
+
+	&:focus {
+		border-color: rgba(59, 130, 246, 0.5);
+		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+	}
+}
+
+.rutas-desc-input {
+	resize: vertical;
+	min-height: 4.5rem;
+}
+
+.rutas-modal-footer {
+	@apply mt-6 flex items-center justify-end gap-2;
+
+	.btn-danger {
+		@apply mr-auto;
+	}
+}
+
+/* Dark date input calendar icon fix */
+input[type='date']::-webkit-calendar-picker-indicator {
+	filter: invert(0.6);
+	cursor: pointer;
+}
