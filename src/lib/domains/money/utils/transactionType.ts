@@ -32,3 +32,15 @@ export function amountSign(type: TransactionType): 'pos' | 'neg' | 'neu' {
 			return 'neu';
 	}
 }
+
+/** Display prefix for a signed amount: `+` for income, `−` for expense, `''` for transfer. */
+export function amountPrefix(type: TransactionType): string {
+	const s = amountSign(type);
+	return s === 'pos' ? '+' : s === 'neg' ? '−' : '';
+}
+
+/** CSS class for a signed amount value. */
+export function amountClass(type: TransactionType): string {
+	const s = amountSign(type);
+	return s === 'pos' ? 'amount-positive' : s === 'neg' ? 'amount-negative' : 'amount-neutral';
+}

@@ -10,133 +10,63 @@ export interface TaskTimerApi {
 	deleteTimeEntry: (id: number) => Promise<void>;
 }
 
-export interface TaskTimerState {
-	selectedTaskId: number | null;
-	selectedTaskDisplay: string | null;
-	activeTimeEntryId: number | null;
-	isRunning: boolean;
-	elapsedSeconds: number;
+/** A task descriptor passed by the three task-page sections to the timer. */
+export interface TimerTask {
+	id: number;
+	name: string;
+	projectName?: string | null;
+	description?: string | null;
 }
 
-export function createTaskTimer(api: TaskTimerApi = tasksApi) {
-	let selectedTaskId: number | null = $state(null);
-	let selectedTaskDisplay: string | null = $state(null);
-	let selectedTaskDescription: string | null = $state(null);
-	let activeTimeEntryId: number | null = $state(null);
-	let isRunning = $state(false);
-	let elapsedSeconds = $state(0);
-	let comment = $state('');
-	let timerInterval: ReturnType<typeof setInterval> | null = null;
-	let startedAt: number | null = null;
-	let commentTimeout: ReturnType<typeof setTimeout> | null = null;
+/** Shape of the active time entry used to restore the timer after SSR rehydration. */
+export interface RestoreEntry {
+	id: number;
+	task_id: number;
+	started_at: string;
+	task_name: string;
+	project_name?: string | null;
+	comment?: string | null;
+	task_description?: string | null;
+}
 
-	function startTimer() {
-		if (startedAt === null) {
-			startedAt = Date.now();
-		}
-		timerInterval = setInterval(() => {
-			elapsedSeconds = Math.floor((Date.now() - startedAt!) / 1000);
-		}, 1000);
-		isRunning = true;
+/**
+ * Owns all time-entry logic for the tasks page. The three sections (Due Soon,
+ * Today's Plan, Active Projects) drive it through three clearly-named methods:
+ *   - `start(task)`            — begin a brand-new entry (only when not running)
+ *   - `replaceForTaskId(task)` — reassign the running entry to another task ("Assign")
+ *   - `stopAndStart(task)`     — `finish()` the current entry then `start(task)`
+ */
+export class TaskTimer {
+	// Public reactive state, read directly by templates.
+	selectedTaskId = $state<number | null>(null);
+	selectedTaskDisplay = $state<string | null>(null);
+	selectedTaskDescription = $state<string | null>(null);
+	activeTimeEntryId = $state<number | null>(null);
+	isRunning = $state(false);
+	elapsedSeconds = $state(0);
+	comment = $state('');
+
+	// Private, non-template state. Declared before the derived fields that read them.
+	#api: TaskTimerApi;
+	#startedAt = $state<number | null>(null);
+	#timerInterval: ReturnType<typeof setInterval> | null = null;
+	#commentTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Public derived state.
+	formattedTime = $derived(TaskTimer.#formatTime(this.elapsedSeconds));
+	startedAtDate = $derived(this.#startedAt === null ? null : new Date(this.#startedAt));
+
+	constructor(api: TaskTimerApi = tasksApi) {
+		this.#api = api;
 	}
 
-	async function stopTimer() {
-		if (timerInterval) clearInterval(timerInterval);
-		timerInterval = null;
-		if (commentTimeout) {
-			clearTimeout(commentTimeout);
-			commentTimeout = null;
-		}
+	// ── private helpers ────────────────────────────────────────────────
 
-		const entryId = activeTimeEntryId;
-		const finalComment = comment;
-		const finishedAt = new Date().toISOString();
-
-		isRunning = false;
-		elapsedSeconds = 0;
-		startedAt = null;
-		selectedTaskId = null;
-		selectedTaskDisplay = null;
-		selectedTaskDescription = null;
-		activeTimeEntryId = null;
-		comment = '';
-
-		if (entryId) {
-			await api.updateTimeEntry(entryId, {
-				finished_at: finishedAt,
-				comment: finalComment || null,
-			});
-		}
+	static #display(task: TimerTask): string {
+		return task.projectName ? `${task.name} - ${task.projectName}` : task.name;
 	}
 
-	async function stopAndStart(
-		taskId: number,
-		taskName: string,
-		projectName?: string | null,
-		taskDescription?: string | null
-	) {
-		await stopTimer();
-		await handleTaskStart(taskId, taskName, projectName, taskDescription);
-	}
-
-	async function handleTaskStart(
-		taskId: number,
-		taskName: string,
-		projectName?: string | null,
-		taskDescription?: string | null
-	) {
-		const display = projectName ? `${taskName} - ${projectName}` : taskName;
-
-		if (!isRunning) {
-			selectedTaskId = taskId;
-			selectedTaskDisplay = display;
-			selectedTaskDescription = taskDescription ?? null;
-			startedAt = Date.now();
-			startTimer();
-			const entry = await api.createTimeEntry({
-				task_id: taskId,
-				started_at: new Date(startedAt).toISOString(),
-				comment: comment || null,
-			});
-			activeTimeEntryId = entry.id;
-		} else if (!activeTimeEntryId) {
-			selectedTaskId = taskId;
-			selectedTaskDisplay = display;
-			selectedTaskDescription = taskDescription ?? null;
-			const entry = await api.createTimeEntry({
-				task_id: taskId,
-				started_at: new Date(startedAt!).toISOString(),
-				comment: comment || null,
-			});
-			activeTimeEntryId = entry.id;
-		} else {
-			selectedTaskId = taskId;
-			selectedTaskDisplay = display;
-			selectedTaskDescription = taskDescription ?? null;
-			await api.updateTimeEntry(activeTimeEntryId, { task_id: taskId });
-		}
-	}
-
-	function restore(
-		timeEntryId: number,
-		taskId: number,
-		entryStartedAt: string,
-		taskName: string,
-		projectName?: string | null,
-		entryComment?: string | null,
-		taskDescription?: string | null
-	) {
-		selectedTaskId = taskId;
-		selectedTaskDisplay = projectName ? `${taskName} - ${projectName}` : taskName;
-		selectedTaskDescription = taskDescription ?? null;
-		activeTimeEntryId = timeEntryId;
-		startedAt = new Date(entryStartedAt).getTime();
-		elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
-		comment = entryComment ?? '';
-		startTimer();
-	}
-
-	function formatTime(seconds: number): string {
+	static #formatTime(seconds: number): string {
 		const h = Math.floor(seconds / 3600)
 			.toString()
 			.padStart(2, '0');
@@ -147,104 +77,157 @@ export function createTaskTimer(api: TaskTimerApi = tasksApi) {
 		return `${h}:${m}:${s}`;
 	}
 
-	async function updateStartedAt(newStartedAt: Date) {
-		if (!activeTimeEntryId) return;
-		if (newStartedAt.getTime() > Date.now()) return;
-		const iso = newStartedAt.toISOString();
-		await api.updateTimeEntry(activeTimeEntryId, { started_at: iso });
-		startedAt = newStartedAt.getTime();
-		elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+	/** Select a task into the panel (id + display + description). */
+	#applyTask(task: TimerTask): void {
+		this.selectedTaskId = task.id;
+		this.selectedTaskDisplay = TaskTimer.#display(task);
+		this.selectedTaskDescription = task.description ?? null;
 	}
 
-	async function cancelTimer() {
-		if (timerInterval) clearInterval(timerInterval);
-		timerInterval = null;
-		if (commentTimeout) {
-			clearTimeout(commentTimeout);
-			commentTimeout = null;
+	#tick(): void {
+		this.#timerInterval = setInterval(() => {
+			this.elapsedSeconds = Math.floor((Date.now() - this.#startedAt!) / 1000);
+		}, 1000);
+	}
+
+	/** Start ticking from the current `#startedAt`. */
+	#begin(): void {
+		this.#tick();
+		this.isRunning = true;
+	}
+
+	#clearTimers(): void {
+		if (this.#timerInterval) clearInterval(this.#timerInterval);
+		this.#timerInterval = null;
+		if (this.#commentTimeout) clearTimeout(this.#commentTimeout);
+		this.#commentTimeout = null;
+	}
+
+	#clearState(): void {
+		this.isRunning = false;
+		this.elapsedSeconds = 0;
+		this.#startedAt = null;
+		this.selectedTaskId = null;
+		this.selectedTaskDisplay = null;
+		this.selectedTaskDescription = null;
+		this.activeTimeEntryId = null;
+		this.comment = '';
+	}
+
+	// ── public API ─────────────────────────────────────────────────────
+
+	/** Manual top-panel "Start": begin ticking with no time entry yet. */
+	startClock(): void {
+		if (this.#startedAt === null) this.#startedAt = Date.now();
+		this.#begin();
+	}
+
+	/** Per-row "Start": create a new entry at now and begin ticking. Only when not running. */
+	async start(task: TimerTask): Promise<void> {
+		if (this.isRunning) return;
+		this.#applyTask(task);
+		this.#startedAt = Date.now();
+		this.#begin();
+		const entry = await this.#api.createTimeEntry({
+			task_id: task.id,
+			started_at: new Date(this.#startedAt).toISOString(),
+			comment: this.comment || null,
+		});
+		this.activeTimeEntryId = entry.id;
+	}
+
+	/** "Assign": point the running timer at another task. */
+	async replaceForTaskId(task: TimerTask): Promise<void> {
+		if (!this.isRunning) return;
+		this.#applyTask(task);
+		if (this.activeTimeEntryId) {
+			// Reassign the existing entry — no time logged, just a different task.
+			await this.#api.updateTimeEntry(this.activeTimeEntryId, { task_id: task.id });
+		} else {
+			// Manual clock was started with no entry — create one backdated to keep elapsed time.
+			const entry = await this.#api.createTimeEntry({
+				task_id: task.id,
+				started_at: new Date(this.#startedAt!).toISOString(),
+				comment: this.comment || null,
+			});
+			this.activeTimeEntryId = entry.id;
 		}
+	}
 
-		const entryId = activeTimeEntryId;
+	/** Finish the current entry (finished_at = now) and clear all state. */
+	async finish(): Promise<void> {
+		this.#clearTimers();
 
-		isRunning = false;
-		elapsedSeconds = 0;
-		startedAt = null;
-		selectedTaskId = null;
-		selectedTaskDisplay = null;
-		selectedTaskDescription = null;
-		activeTimeEntryId = null;
-		comment = '';
+		const entryId = this.activeTimeEntryId;
+		const finalComment = this.comment;
+		const finishedAt = new Date().toISOString();
+
+		this.#clearState();
 
 		if (entryId) {
-			await api.deleteTimeEntry(entryId);
+			await this.#api.updateTimeEntry(entryId, {
+				finished_at: finishedAt,
+				comment: finalComment || null,
+			});
 		}
 	}
 
-	function reset() {
-		if (timerInterval) clearInterval(timerInterval);
-		timerInterval = null;
-		if (commentTimeout) {
-			clearTimeout(commentTimeout);
-			commentTimeout = null;
-		}
-		isRunning = false;
-		elapsedSeconds = 0;
-		startedAt = null;
-		selectedTaskId = null;
-		selectedTaskDisplay = null;
-		selectedTaskDescription = null;
-		activeTimeEntryId = null;
-		comment = '';
+	/** Stop the current entry at now and start a fresh one for `task` at now. */
+	async stopAndStart(task: TimerTask): Promise<void> {
+		await this.finish();
+		await this.start(task);
 	}
 
-	return {
-		get selectedTaskId() {
-			return selectedTaskId;
-		},
-		get selectedTaskDisplay() {
-			return selectedTaskDisplay;
-		},
-		get selectedTaskDescription() {
-			return selectedTaskDescription;
-		},
-		get activeTimeEntryId() {
-			return activeTimeEntryId;
-		},
-		get isRunning() {
-			return isRunning;
-		},
-		get elapsedSeconds() {
-			return elapsedSeconds;
-		},
-		get formattedTime() {
-			return formatTime(elapsedSeconds);
-		},
-		get startedAtDate() {
-			return startedAt ? new Date(startedAt) : null;
-		},
-		get comment() {
-			return comment;
-		},
-		setComment(value: string) {
-			comment = value;
-			if (activeTimeEntryId) {
-				if (commentTimeout) clearTimeout(commentTimeout);
-				commentTimeout = setTimeout(() => {
-					if (activeTimeEntryId) {
-						api.updateTimeEntry(activeTimeEntryId, { comment: comment || null });
-					}
-				}, 500);
-			}
-		},
-		startTimer,
-		stopTimer,
-		handleTaskStart,
-		stopAndStart,
-		restore,
-		updateStartedAt,
-		cancelTimer,
-		reset,
-	};
+	/** Resume a timer from the active entry returned by the server. */
+	restore(entry: RestoreEntry): void {
+		this.#applyTask({
+			id: entry.task_id,
+			name: entry.task_name,
+			projectName: entry.project_name,
+			description: entry.task_description,
+		});
+		this.activeTimeEntryId = entry.id;
+		this.#startedAt = new Date(entry.started_at).getTime();
+		this.elapsedSeconds = Math.floor((Date.now() - this.#startedAt) / 1000);
+		this.comment = entry.comment ?? '';
+		this.#begin();
+	}
+
+	async updateStartedAt(newStartedAt: Date): Promise<void> {
+		if (!this.activeTimeEntryId) return;
+		if (newStartedAt.getTime() > Date.now()) return;
+		await this.#api.updateTimeEntry(this.activeTimeEntryId, {
+			started_at: newStartedAt.toISOString(),
+		});
+		this.#startedAt = newStartedAt.getTime();
+		this.elapsedSeconds = Math.floor((Date.now() - this.#startedAt) / 1000);
+	}
+
+	/** Stop the timer and delete the active entry (undo). */
+	async cancelTimer(): Promise<void> {
+		this.#clearTimers();
+		const entryId = this.activeTimeEntryId;
+		this.#clearState();
+		if (entryId) {
+			await this.#api.deleteTimeEntry(entryId);
+		}
+	}
+
+	/** Clear all state locally, without touching the server. */
+	reset(): void {
+		this.#clearTimers();
+		this.#clearState();
+	}
+
+	setComment(value: string): void {
+		this.comment = value;
+		if (this.activeTimeEntryId) {
+			if (this.#commentTimeout) clearTimeout(this.#commentTimeout);
+			this.#commentTimeout = setTimeout(() => {
+				if (this.activeTimeEntryId) {
+					this.#api.updateTimeEntry(this.activeTimeEntryId, { comment: this.comment || null });
+				}
+			}, 500);
+		}
+	}
 }
-
-export type TaskTimer = ReturnType<typeof createTaskTimer>;

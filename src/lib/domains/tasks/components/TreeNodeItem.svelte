@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActiveTreeNode } from '$lib/domains/tasks/types/Task.types';
+	import type { TimerTask } from '$lib/domains/tasks/taskTimer.svelte';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import TreeNodeItem from './TreeNodeItem.svelte';
 	import DepBadges from './DepBadges.svelte';
@@ -11,18 +12,9 @@
 		node: ActiveTreeNode;
 		parentProjectName?: string;
 		parentProjectDueAt?: string | null;
-		onstart?: (
-			taskId: number,
-			taskName: string,
-			projectName?: string,
-			taskDescription?: string | null
-		) => void;
-		onstopandstart?: (
-			taskId: number,
-			taskName: string,
-			projectName?: string,
-			taskDescription?: string | null
-		) => void;
+		onstart?: (task: TimerTask) => void;
+		onassign?: (task: TimerTask) => void;
+		onstopandstart?: (task: TimerTask) => void;
 		ontoggle?: (id: number, type: 'project' | 'task', action: 'start' | 'finish') => void;
 		ondetail?: (id: number, type: 'project' | 'task') => void;
 		oncreatetask?: (projectId: number) => void;
@@ -34,12 +26,20 @@
 		parentProjectName,
 		parentProjectDueAt,
 		onstart,
+		onassign,
 		onstopandstart,
 		ontoggle,
 		ondetail,
 		oncreatetask,
 		isTimerRunning = false,
 	}: Props = $props();
+
+	const toTimerTask = (): TimerTask => ({
+		id: node.id,
+		name: node.name,
+		projectName: parentProjectName,
+		description: node.description,
+	});
 
 	const { isExpanded, toggle, formatDate } = getContext<{
 		isExpanded: (id: number) => boolean;
@@ -86,6 +86,8 @@
 					parentProjectName={node.name}
 					parentProjectDueAt={node.due_at}
 					{onstart}
+					{onassign}
+					{onstopandstart}
 					{ontoggle}
 					{ondetail}
 					{oncreatetask}
@@ -154,15 +156,27 @@
 			{/if}
 			{#if isTimerRunning}
 				<div class="btn-split">
-					<button class="btn-primary btn-sm" onclick={() => onstart?.(node.id, node.name, parentProjectName, node.description)} disabled={node.blocked}>
+					<button
+						class="btn-primary btn-sm"
+						onclick={() => onassign?.(toTimerTask())}
+						disabled={node.blocked}
+					>
 						<Icon name="arrow-right" />Assign
 					</button>
-					<button class="btn-success btn-sm" onclick={() => onstopandstart?.(node.id, node.name, parentProjectName, node.description)} disabled={node.blocked}>
+					<button
+						class="btn-success btn-sm"
+						onclick={() => onstopandstart?.(toTimerTask())}
+						disabled={node.blocked}
+					>
 						<Icon name="play" />{node.task_type === 'recurring' ? 'Renew Start' : 'Stop Start'}
 					</button>
 				</div>
 			{:else}
-				<button class="btn-primary btn-sm" onclick={() => onstart?.(node.id, node.name, parentProjectName, node.description)} disabled={node.blocked}>
+				<button
+					class="btn-primary btn-sm"
+					onclick={() => onstart?.(toTimerTask())}
+					disabled={node.blocked}
+				>
 					<Icon name="play" />Start
 				</button>
 			{/if}

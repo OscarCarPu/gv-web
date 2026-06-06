@@ -1,7 +1,12 @@
 <script lang="ts">
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import { formatMoney } from '$lib/shared/utils/money';
-	import { getTypeBadgeClass, getTypeLabel, amountSign } from '../utils/transactionType';
+	import {
+		getTypeBadgeClass,
+		getTypeLabel,
+		amountClass as amountClassFor,
+		amountPrefix,
+	} from '../utils/transactionType';
 	import type { OverviewTransaction } from '$lib/domains/money/types/Money.types';
 
 	interface Props {
@@ -12,11 +17,8 @@
 
 	let { tx, onedit, ondelete }: Props = $props();
 
-	let sign = $derived(amountSign(tx.type));
-	let amountClass = $derived(
-		sign === 'pos' ? 'amount-positive' : sign === 'neg' ? 'amount-negative' : 'amount-neutral'
-	);
-	let prefix = $derived(sign === 'pos' ? '+' : sign === 'neg' ? '−' : '');
+	let amountClass = $derived(amountClassFor(tx.type));
+	let prefix = $derived(amountPrefix(tx.type));
 	let name = $derived(tx.description?.trim() || tx.category_name || '—');
 </script>
 

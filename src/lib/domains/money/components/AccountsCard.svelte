@@ -4,6 +4,7 @@
 	import { moneyApi } from '$lib/domains/money/api/money.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
+	import { deleteWithConflict } from '$lib/domains/money/utils/deleteConflict';
 	import AccountRow from './AccountRow.svelte';
 	import AccountFormSheet from './AccountFormSheet.svelte';
 	import type { Account } from '$lib/domains/money/types/Money.types';
@@ -28,17 +29,17 @@
 	}
 
 	async function onDelete(account: Account) {
-		try {
-			await moneyApi.deleteAccount(account.id);
+		const { ok, conflict } = await deleteWithConflict({
+			run: () => moneyApi.deleteAccount(account.id),
+			needles: ['transactions'],
+		});
+		if (ok) {
 			addNotification('Account deleted', 'success');
 			await invalidateAll();
-		} catch (err) {
-			const msg = err instanceof Error ? err.message : '';
-			if (msg.includes('transactions')) {
-				addToast('Account has associated transactions', 'error');
-			} else {
-				addToast('Error deleting account', 'error');
-			}
+		} else if (conflict) {
+			addToast('Account has associated transactions', 'error');
+		} else {
+			addToast('Error deleting account', 'error');
 		}
 	}
 </script>

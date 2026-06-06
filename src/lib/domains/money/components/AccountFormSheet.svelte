@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
-	import { moneyApi } from '$lib/domains/money/api/money.api';
-	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import { addNotification } from '$lib/shared/stores/notification.svelte';
+	import { AccountForm } from '$lib/domains/money/forms/accountForm.svelte';
 	import type { Account } from '$lib/domains/money/types/Money.types';
 
 	interface Props {
@@ -14,39 +12,11 @@
 
 	let { open, onclose, account = null }: Props = $props();
 
-	let name = $state('');
-	let saving = $state(false);
-	let nameError = $state(false);
+	const form = new AccountForm({ onclose: () => onclose(), refresh: invalidateAll });
 
 	$effect(() => {
-		if (open) {
-			name = account?.name ?? '';
-			nameError = false;
-		}
+		if (open) form.reset(account);
 	});
-
-	async function save() {
-		if (!name.trim()) {
-			nameError = true;
-			return;
-		}
-		saving = true;
-		try {
-			if (account) {
-				await moneyApi.updateAccount(account.id, { name: name.trim() });
-				addNotification('Account updated', 'success');
-			} else {
-				await moneyApi.createAccount({ name: name.trim() });
-				addNotification('Account created', 'success');
-			}
-			onclose();
-			await invalidateAll();
-		} catch {
-			addToast('Error saving account', 'error');
-		} finally {
-			saving = false;
-		}
-	}
 </script>
 
 <BottomSheet {open} {onclose} constrained>
@@ -58,16 +28,16 @@
 			<input
 				id="account-name"
 				type="text"
-				bind:value={name}
+				bind:value={form.name}
 				maxlength={40}
-				class:field-error={nameError}
-				oninput={() => (nameError = false)}
-				onkeydown={(e) => e.key === 'Enter' && save()}
+				class:field-error={form.nameError}
+				oninput={() => (form.nameError = false)}
+				onkeydown={(e) => e.key === 'Enter' && form.save()}
 			/>
 		</div>
 
 		<div class="detail-actions">
-			<button class="btn-primary" onclick={save} disabled={saving}>
+			<button class="btn-primary" onclick={() => form.save()} disabled={form.saving}>
 				{account ? 'Save' : 'Create'}
 			</button>
 		</div>

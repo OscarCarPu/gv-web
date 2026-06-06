@@ -2,27 +2,17 @@
 	import VarietyBottomSheet from '$lib/domains/varieties/components/VarietyBottomSheet.svelte';
 	import VarietyCard from '$lib/domains/varieties/components/VarietyCard.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
-	import type { Variety } from '$lib/domains/varieties/types/Variety.types';
+	import { VarietiesBoard } from '$lib/domains/varieties/varietiesBoard.svelte';
 
 	let { data } = $props();
-	let showCreate = $state(false);
-	let highlightedId = $state<number | null>(null);
 
-	function isRated(v: Variety) {
-		return v.scent > 0 && v.flavor > 0 && v.power > 0 && v.quality > 0;
-	}
-
-	let rated = $derived(data.varieties.filter(isRated));
-	let unrated = $derived(data.varieties.filter((v) => !isRated(v)));
+	const board = new VarietiesBoard(() => data.varieties);
 
 	function focusVariety(id: number) {
 		const el = document.getElementById(`variety-card-${id}`);
 		if (!el) return;
 		el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-		highlightedId = id;
-		setTimeout(() => {
-			if (highlightedId === id) highlightedId = null;
-		}, 1500);
+		board.highlight(id);
 	}
 </script>
 
@@ -37,13 +27,13 @@
 		<aside class="ranking-list">
 			<div class="section-header">
 				<h2>Ranking</h2>
-				<span class="text-text-muted font-mono text-xs tabular-nums">{rated.length}</span>
+				<span class="text-text-muted font-mono text-xs tabular-nums">{board.rated.length}</span>
 			</div>
-			{#if rated.length === 0}
+			{#if board.rated.length === 0}
 				<p class="text-text-muted py-6 text-center text-sm">No rated varieties</p>
 			{:else}
 				<ol class="m-0 flex list-none flex-col gap-1 p-0">
-					{#each rated as v, i (v.id)}
+					{#each board.rated as v, i (v.id)}
 						<li>
 							<button
 								type="button"
@@ -63,13 +53,13 @@
 				</ol>
 			{/if}
 
-			{#if unrated.length > 0}
+			{#if board.unrated.length > 0}
 				<div class="section-header mt-5">
 					<h2>To rate</h2>
-					<span class="text-text-muted font-mono text-xs tabular-nums">{unrated.length}</span>
+					<span class="text-text-muted font-mono text-xs tabular-nums">{board.unrated.length}</span>
 				</div>
 				<ul class="m-0 flex list-none flex-col gap-1 p-0">
-					{#each unrated as v (v.id)}
+					{#each board.unrated as v (v.id)}
 						<li>
 							<button type="button" class="ranking-row" onclick={() => focusVariety(v.id)}>
 								<span class="ranking-rank">—</span>
@@ -85,7 +75,7 @@
 		<section>
 			<div class="section-header">
 				<h2>Varieties</h2>
-				<button class="btn-primary btn-sm" onclick={() => (showCreate = true)}>
+				<button class="btn-primary btn-sm" onclick={() => board.openCreate()}>
 					<Icon name="plus" /> Variety
 				</button>
 			</div>
@@ -97,7 +87,7 @@
 			{:else}
 				<div class="grid [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))] gap-4">
 					{#each data.varieties as variety (variety.id)}
-						<VarietyCard {variety} highlighted={highlightedId === variety.id} />
+						<VarietyCard {variety} highlighted={board.highlightedId === variety.id} />
 					{/each}
 				</div>
 			{/if}
@@ -105,4 +95,4 @@
 	</div>
 </div>
 
-<VarietyBottomSheet open={showCreate} onclose={() => (showCreate = false)} />
+<VarietyBottomSheet open={board.showCreate} onclose={() => board.closeCreate()} />

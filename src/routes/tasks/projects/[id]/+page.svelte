@@ -1,114 +1,35 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
-	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
-	import {
-		toLocalDatetime,
-		toISOString,
-		formatTime,
-		formatDateShort,
-		formatDateFull,
-	} from '$lib/shared/utils/datetime';
+	import { formatTime, formatDateShort, formatDateFull } from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
 	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
 	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
-	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import DepBadges from '$lib/domains/tasks/components/DepBadges.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
+	import { ProjectDetail } from '$lib/domains/tasks/projectDetail.svelte';
 
 	let { data } = $props();
 
 	let project = $derived(data.projectChildren?.project ?? null);
 	let children = $derived(data.projectChildren?.children ?? []);
 
-	let name = $state('');
-	let description = $state('');
-	let dueAt = $state('');
+	const detail = new ProjectDetail(invalidateAll);
 
 	const taskParam = page.url.searchParams.get('task');
 	let selectedTaskId = $state<number | null>(taskParam ? Number(taskParam) : null);
 	let showCreate = $state(false);
 	let createMode = $state<'task' | 'project'>('task');
-	let saving = $state(false);
 
 	$effect(() => {
-		if (project) {
-			name = project.name;
-			description = project.description ?? '';
-			dueAt = toLocalDatetime(project.due_at);
-		}
+		detail.load(project);
 	});
 
-	async function save() {
+	function remove() {
 		if (!project) return;
-		saving = true;
-		try {
-			await tasksApi.updateProject(project.id, {
-				name,
-				description: description || null,
-				due_at: toISOString(dueAt),
-			});
-			addNotification('Project updated', 'success');
-			await invalidateAll();
-		} catch {
-			addToast('Error saving project', 'error');
-		} finally {
-			saving = false;
-		}
-	}
-
-	async function setStarted() {
-		if (!project) return;
-		const id = project.id;
-		const now = new Date().toISOString();
-		addNotification('Project started', 'success');
-		try {
-			await tasksApi.updateProject(id, { started_at: now });
-			await invalidateAll();
-		} catch {
-			addToast('Error starting project', 'error');
-		}
-	}
-
-	async function clearStarted() {
-		if (!project) return;
-		const id = project.id;
-		addNotification('Start removed', 'success');
-		try {
-			await tasksApi.updateProject(id, { started_at: null });
-			await invalidateAll();
-		} catch {
-			addToast('Error removing start', 'error');
-		}
-	}
-
-	async function setFinished() {
-		if (!project) return;
-		const id = project.id;
-		const now = new Date().toISOString();
-		addNotification('Project finished', 'success');
-		try {
-			await tasksApi.updateProject(id, { finished_at: now });
-			await invalidateAll();
-		} catch {
-			addToast('Error finishing project', 'error');
-		}
-	}
-
-	async function remove() {
-		if (!project) return;
-		const id = project.id;
-		addNotification('Project deleted', 'success');
 		goto('/tasks');
-		try {
-			await tasksApi.deleteProject(id);
-			await invalidateAll();
-		} catch {
-			addToast('Error deleting project', 'error');
-			await invalidateAll();
-		}
+		detail.remove();
 	}
 
 	function openCreateTask() {
@@ -155,16 +76,16 @@
 				<div class="detail-inline-row">
 					<div class="detail-field flex-1">
 						<label for="project-name">Name</label>
-						<input id="project-name" type="text" bind:value={name} maxlength={40} />
+						<input id="project-name" type="text" bind:value={detail.name} maxlength={40} />
 					</div>
 					<div class="detail-field">
 						<label for="dtp-project-due">Due date</label>
-						<DatetimePicker bind:value={dueAt} id="project-due" />
+						<DatetimePicker bind:value={detail.dueAt} id="project-due" />
 					</div>
 				</div>
 				<div class="detail-field">
 					<label for="project-desc">Description</label>
-					<textarea id="project-desc" bind:value={description} rows="2"></textarea>
+					<textarea id="project-desc" bind:value={detail.description} rows="2"></textarea>
 				</div>
 				<div class="detail-info-row">
 					<div class="detail-info-item">
@@ -172,12 +93,18 @@
 						{#if project.started_at}
 							<div class="detail-info-value-row">
 								<span class="detail-info-value">{formatDateFull(project.started_at)}</span>
-								<button class="value-clear-btn" onclick={clearStarted} title="Remove start">
+								<button
+									class="value-clear-btn"
+									onclick={() => detail.clearStarted()}
+									title="Remove start"
+								>
 									<Icon name="xmark" />
 								</button>
 							</div>
 						{:else}
-							<button class="btn-action-sm btn-start" onclick={setStarted}>Start</button>
+							<button class="btn-action-sm btn-start" onclick={() => detail.setStarted()}
+								>Start</button
+							>
 						{/if}
 					</div>
 					<div class="detail-info-item">
@@ -185,7 +112,7 @@
 						{#if project.finished_at}
 							<span class="detail-info-value">{formatDateFull(project.finished_at)}</span>
 						{:else}
-							<button class="btn-action-sm" onclick={setFinished}>Finish</button>
+							<button class="btn-action-sm" onclick={() => detail.setFinished()}>Finish</button>
 						{/if}
 					</div>
 					{#if project.time_spent > 0}
@@ -197,8 +124,12 @@
 				</div>
 
 				<div class="detail-actions">
-					<button class="btn-danger mr-auto" onclick={remove} disabled={saving}>Delete</button>
-					<button class="btn-primary" onclick={save} disabled={saving}>Save</button>
+					<button class="btn-danger mr-auto" onclick={remove} disabled={detail.saving}
+						>Delete</button
+					>
+					<button class="btn-primary" onclick={() => detail.save()} disabled={detail.saving}
+						>Save</button
+					>
 				</div>
 			</div>
 		</div>
@@ -240,11 +171,7 @@
 									class:started={child.started_at != null}
 									class:finished={child.finished_at != null}
 								>
-									{child.finished_at
-										? 'Completed'
-										: child.started_at
-											? 'In progress'
-											: 'Pending'}
+									{child.finished_at ? 'Completed' : child.started_at ? 'In progress' : 'Pending'}
 								</span>
 								<Icon name="chevron-right" class="child-chevron" />
 							</a>

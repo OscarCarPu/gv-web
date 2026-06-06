@@ -1,160 +1,37 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import TimePicker from '$lib/shared/components/TimePicker.svelte';
 	import TaskItem from '$lib/domains/tasks/components/TaskItem.svelte';
 	import TreeNode from '$lib/domains/tasks/components/TreeNode.svelte';
 	import TaskBottomSheet from '$lib/domains/tasks/components/TaskBottomSheet.svelte';
 	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
-	import { createTaskTimer } from '$lib/domains/tasks/taskTimer.svelte';
+	import { TaskTimer, type TimerTask } from '$lib/domains/tasks/taskTimer.svelte';
+	import { TaskBoard } from '$lib/domains/tasks/taskBoard.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import StartedAtEditor from '$lib/domains/tasks/components/StartedAtEditor.svelte';
 	import TimeHistoryModal from '$lib/domains/tasks/components/TimeHistoryModal.svelte';
 	import AgendaRightSheet from '$lib/domains/tasks/components/AgendaRightSheet.svelte';
 	import TimeEntryBottomSheet from '$lib/domains/tasks/components/TimeEntryBottomSheet.svelte';
 	import PlanSection from '$lib/domains/tasks/components/PlanSection.svelte';
-	import type {
-		ActiveTreeNode,
-		TimeEntrySummaryResponse,
-		TimeEntryWithTask,
-	} from '$lib/domains/tasks/types/Task.types';
-	import {
-		toLocalDateString,
-		toISOString,
-		formatDueDay,
-		formatTime,
-	} from '$lib/shared/utils/datetime';
+	import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
+	import { toLocalDateString, formatDueDay, formatTime } from '$lib/shared/utils/datetime';
 	import { buildPaceTooltip } from '$lib/domains/tasks/utils/paceLabel';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
-	import { SvelteSet } from 'svelte/reactivity';
 	import { linkify } from '$lib/shared/utils/linkify';
 
 	let { data } = $props();
 
-	const timer = createTaskTimer();
+	const timer = new TaskTimer();
+	const board = new TaskBoard(() => data, invalidateAll);
 
-	let summaryOverride = $state<TimeEntrySummaryResponse | null>(null);
 	let commentExpanded = $state(false);
 	let showTimeHistory = $state(false);
 	let showAgenda = $state(false);
 	let selectedTimeEntry = $state<TimeEntryWithTask | null>(null);
 
-	const FOLD_LIMIT = 15;
-	const EXPAND_STEP = 10;
-	let dueDateVisibleCount = $state(FOLD_LIMIT);
-	let dueDatePriorityFilter = $state<number | null>(null);
-	let dueDateProjectFilter = $state<number | null>(null);
-	let activeTreePriorityFilter = $state<number | null>(null);
-	let pendingTaskIds = $state(new SvelteSet<number>());
-	let pendingProjectIds = $state(new SvelteSet<number>());
-
-	function flattenProjectsFromTree(
-		nodes: ActiveTreeNode[],
-		depth = 0
-	): { id: number; name: string; depth: number }[] {
-		const result: { id: number; name: string; depth: number }[] = [];
-		for (const node of nodes) {
-			if (node.type === 'project') {
-				result.push({ id: node.id, name: node.name, depth });
-				if (node.children) result.push(...flattenProjectsFromTree(node.children, depth + 1));
-			}
-		}
-		return result;
-	}
-
-	function collectProjectIds(nodes: ActiveTreeNode[], targetId: number): Set<number> {
-		const ids = new Set<number>();
-		function gather(node: ActiveTreeNode) {
-			if (node.type === 'project') {
-				ids.add(node.id);
-				node.children?.forEach(gather);
-			}
-		}
-		function find(ns: ActiveTreeNode[]): boolean {
-			for (const node of ns) {
-				if (node.type === 'project' && node.id === targetId) {
-					gather(node);
-					return true;
-				}
-				if (node.children && find(node.children)) return true;
-			}
-			return false;
-		}
-		find(nodes);
-		return ids;
-	}
-
-	let dueDateProjectOptions = $derived(flattenProjectsFromTree(data.activeTree));
-	let dueDateProjectIds = $derived(
-		dueDateProjectFilter === null ? null : collectProjectIds(data.activeTree, dueDateProjectFilter)
-	);
-
-	let filteredByDueDate = $derived(
-		(dueDatePriorityFilter === null
-			? data.tasksByDueDate
-			: data.tasksByDueDate.filter((t) => t.priority <= dueDatePriorityFilter!)
-		)
-			.filter((t) => !pendingTaskIds.has(t.id))
-			.filter((t) => {
-				if (dueDateProjectIds === null) return true;
-				return t.project_id !== null && dueDateProjectIds.has(t.project_id);
-			})
-	);
-	let visibleDueDateTasks = $derived(filteredByDueDate.slice(0, dueDateVisibleCount));
 	let todayKey = $derived(toLocalDateString());
-	let dueTodayCount = $derived.by(() => {
-		const today = todayKey;
-		let n = 0;
-		for (const t of filteredByDueDate) {
-			const d = t.due_at ?? t.project_due_at;
-			if (d && d.slice(0, 10) <= today) n++;
-		}
-		return n;
-	});
-	let hasMoreDueDateTasks = $derived(dueDateVisibleCount < filteredByDueDate.length);
-	let remainingDueDateTasks = $derived(filteredByDueDate.length - dueDateVisibleCount);
-
-	$effect(() => {
-		dueDatePriorityFilter;
-		dueDateProjectFilter;
-		dueDateVisibleCount = FOLD_LIMIT;
-	});
-
-	function filterTree(
-		nodes: ActiveTreeNode[],
-		min: number | null,
-		pendingTasks: SvelteSet<number>,
-		pendingProjects: SvelteSet<number>
-	): ActiveTreeNode[] {
-		const result: ActiveTreeNode[] = [];
-		for (const node of nodes) {
-			if (node.type === 'project') {
-				if (pendingProjects.has(node.id)) continue;
-				result.push({
-					...node,
-					children: node.children
-						? filterTree(node.children, min, pendingTasks, pendingProjects)
-						: undefined,
-				});
-			} else {
-				if (pendingTasks.has(node.id)) continue;
-				if (min !== null && (node.priority ?? 3) > min) continue;
-				result.push(node);
-			}
-		}
-		return result;
-	}
-
-	let filteredActiveTree = $derived(
-		filterTree(data.activeTree, activeTreePriorityFilter, pendingTaskIds, pendingProjectIds)
-	);
-
-	function showMoreDueDateTasks() {
-		dueDateVisibleCount = Math.min(dueDateVisibleCount + EXPAND_STEP, filteredByDueDate.length);
-	}
-
-	let summary = $derived(summaryOverride ?? data.timeEntrySummary);
+	let summary = $derived(board.summary);
 	let dailyTarget = $derived(summary.daily_target_seconds);
 	let dailyTargetLabel = $derived(formatTime(summary.daily_target_seconds));
 	let weekTargetTooltip = $derived(buildPaceTooltip(summary));
@@ -162,8 +39,8 @@
 	async function handleStop() {
 		commentExpanded = false;
 		addNotification('Time logged', 'success');
-		await timer.stopTimer();
-		summaryOverride = await tasksApi.getTimeEntrySummary();
+		await timer.finish();
+		await board.refreshSummary();
 	}
 
 	async function handleCancel() {
@@ -171,7 +48,7 @@
 		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
 		addNotification('Time cancelled', 'success');
 		await timer.cancelTimer();
-		summaryOverride = await tasksApi.getTimeEntrySummary();
+		await board.refreshSummary();
 	}
 
 	async function handleStartedAtChange(newDate: Date) {
@@ -186,14 +63,21 @@
 		window.scrollTo({ top: 0, behavior: 'smooth' });
 	}
 
-	async function handleTaskStartWithNotification(
-		taskId: number,
-		taskName: string,
-		projectName?: string | null,
-		taskDescription?: string | null
-	) {
+	// Shared timer-button handlers — wired identically into all three task sections.
+	function timerStart(task: TimerTask) {
 		addNotification('Timer started', 'success');
-		await timer.handleTaskStart(taskId, taskName, projectName, taskDescription);
+		return timer.start(task);
+	}
+
+	function timerAssign(task: TimerTask) {
+		addNotification('Timer started', 'success');
+		return timer.replaceForTaskId(task);
+	}
+
+	async function timerStopAndStart(task: TimerTask) {
+		addNotification('Timer started', 'success');
+		await timer.stopAndStart(task);
+		await board.refreshSummary();
 	}
 
 	let selectedTaskId = $state<number | null>(null);
@@ -211,11 +95,11 @@
 	}
 
 	async function handleTimeEntryUpdated() {
-		summaryOverride = await tasksApi.getTimeEntrySummary();
+		await board.refreshSummary();
 	}
 
 	async function handleTimeEntryDeleted() {
-		summaryOverride = await tasksApi.getTimeEntrySummary();
+		await board.refreshSummary();
 	}
 
 	function openDetail(id: number, type: 'project' | 'task') {
@@ -229,166 +113,9 @@
 		if (data.activeTimeEntry && !timer.isRunning) {
 			if (data.activeTimeEntry.id === lastHandledEntryId) return;
 			lastHandledEntryId = data.activeTimeEntry.id;
-			const entry = data.activeTimeEntry;
-			timer.restore(
-				entry.id,
-				entry.task_id,
-				entry.started_at,
-				entry.task_name,
-				entry.project_name,
-				entry.comment,
-				entry.task_description
-			);
+			timer.restore(data.activeTimeEntry);
 		}
 	});
-
-	function buildRecurringDueAt(recurrence: number): string {
-		const d = new Date();
-		d.setDate(d.getDate() + recurrence);
-		return toISOString(toLocalDateString(d) + 'T12:00')!;
-	}
-
-	function findTreeTask(nodes: ActiveTreeNode[], id: number): ActiveTreeNode | undefined {
-		for (const node of nodes) {
-			if (node.type === 'task' && node.id === id) return node;
-			if (node.children) {
-				const found = findTreeTask(node.children, id);
-				if (found) return found;
-			}
-		}
-	}
-
-	async function handleTaskToggle(taskId: number, action: 'start' | 'finish') {
-		const now = new Date().toISOString();
-		const task = data.tasksByDueDate.find((t) => t.id === taskId);
-		if (!task) return;
-
-		if (action === 'start') {
-			const prev = task.started_at;
-			task.started_at = now;
-			addNotification('Task started', 'success');
-			try {
-				await tasksApi.updateTask(taskId, { started_at: now });
-				await invalidateAll();
-			} catch {
-				task.started_at = prev;
-				addToast('Error starting task', 'error');
-			}
-			return;
-		}
-
-		if (task.task_type === 'recurring' && task.recurrence) {
-			const prev = task.due_at;
-			const newDueAt = buildRecurringDueAt(task.recurrence);
-			task.due_at = newDueAt;
-			addNotification('Task renewed', 'success');
-			try {
-				await tasksApi.updateTask(taskId, { due_at: newDueAt });
-				await invalidateAll();
-			} catch {
-				task.due_at = prev;
-				addToast('Error renewing task', 'error');
-			}
-			return;
-		}
-
-		pendingTaskIds.add(taskId);
-		addNotification('Task finished', 'success');
-		try {
-			await tasksApi.updateTask(taskId, { finished_at: now });
-			await invalidateAll();
-		} catch {
-			pendingTaskIds.delete(taskId);
-			addToast('Error finishing task', 'error');
-		}
-	}
-
-	function findTreeProject(nodes: ActiveTreeNode[], id: number): ActiveTreeNode | undefined {
-		for (const node of nodes) {
-			if (node.type === 'project') {
-				if (node.id === id) return node;
-				if (node.children) {
-					const found = findTreeProject(node.children, id);
-					if (found) return found;
-				}
-			}
-		}
-	}
-
-	async function handleTreeToggle(
-		id: number,
-		type: 'project' | 'task',
-		action: 'start' | 'finish'
-	) {
-		const now = new Date().toISOString();
-
-		if (type === 'project') {
-			const project = findTreeProject(data.activeTree, id);
-			if (action === 'start') {
-				const prev = project?.started_at;
-				if (project) project.started_at = now;
-				addNotification('Project started', 'success');
-				try {
-					await tasksApi.updateProject(id, { started_at: now });
-					await invalidateAll();
-				} catch {
-					if (project) project.started_at = prev ?? null;
-					addToast('Error starting project', 'error');
-				}
-				return;
-			}
-			pendingProjectIds.add(id);
-			addNotification('Project finished', 'success');
-			try {
-				await tasksApi.updateProject(id, { finished_at: now });
-				await invalidateAll();
-			} catch {
-				pendingProjectIds.delete(id);
-				addToast('Error finishing project', 'error');
-			}
-			return;
-		}
-
-		const task = findTreeTask(data.activeTree, id);
-		if (action === 'start') {
-			const prev = task?.started_at;
-			if (task) task.started_at = now;
-			addNotification('Task started', 'success');
-			try {
-				await tasksApi.updateTask(id, { started_at: now });
-				await invalidateAll();
-			} catch {
-				if (task) task.started_at = prev ?? null;
-				addToast('Error starting task', 'error');
-			}
-			return;
-		}
-
-		if (task?.task_type === 'recurring' && task.recurrence) {
-			const prev = task.due_at;
-			const newDueAt = buildRecurringDueAt(task.recurrence);
-			task.due_at = newDueAt;
-			addNotification('Task renewed', 'success');
-			try {
-				await tasksApi.updateTask(id, { due_at: newDueAt });
-				await invalidateAll();
-			} catch {
-				task.due_at = prev;
-				addToast('Error renewing task', 'error');
-			}
-			return;
-		}
-
-		pendingTaskIds.add(id);
-		addNotification('Task finished', 'success');
-		try {
-			await tasksApi.updateTask(id, { finished_at: now });
-			await invalidateAll();
-		} catch {
-			pendingTaskIds.delete(id);
-			addToast('Error finishing task', 'error');
-		}
-	}
 
 	// Placeholder time entries
 
@@ -428,7 +155,7 @@
 			finished_at: finishedAt.toISOString(),
 			comment: entryComment || null,
 		});
-		summaryOverride = await tasksApi.getTimeEntrySummary();
+		await board.refreshSummary();
 	}
 </script>
 
@@ -509,7 +236,7 @@
 							Stop
 						</button>
 					{:else}
-						<button class="btn-primary" onclick={timer.startTimer}>
+						<button class="btn-primary" onclick={() => timer.startClock()}>
 							<Icon name="play" />
 							Start
 						</button>
@@ -585,30 +312,34 @@
 	<div class="tasks-content">
 		<div class="tasks-section">
 			<div class="section-header">
-				<h2>Due Soon <span class="summary-pace">{dueTodayCount}</span></h2>
+				<h2>Due Soon <span class="summary-pace">{board.dueTodayCount}</span></h2>
 
 				<div class="priority-filter">
 					{#each [1, 2, 3, 4] as p (p)}
 						<button
-							class:active={dueDatePriorityFilter === p}
-							onclick={() => (dueDatePriorityFilter = p)}
+							class:active={board.duePriorityFilter === p}
+							onclick={() => board.setDuePriority(p)}
 							aria-label="Priority up to {p}">≤{p}</button
 						>
 					{/each}
 					<button
-						class:active={dueDatePriorityFilter === null}
-						onclick={() => (dueDatePriorityFilter = null)}>All</button
+						class:active={board.duePriorityFilter === null}
+						onclick={() => board.setDuePriority(null)}>All</button
 					>
-					{#if dueDateProjectOptions.length > 0}
+					{#if board.dueProjectOptions.length > 0}
 						<span class="filter-sep" aria-hidden="true">|</span>
 						<select
 							class="project-filter-select"
-							class:active={dueDateProjectFilter !== null}
-							bind:value={dueDateProjectFilter}
+							class:active={board.dueProjectFilter !== null}
+							value={board.dueProjectFilter}
+							onchange={(e) =>
+								board.setDueProject(
+									e.currentTarget.value === '' ? null : Number(e.currentTarget.value)
+								)}
 							aria-label="Filter by project"
 						>
 							<option value={null}>Project</option>
-							{#each dueDateProjectOptions as opt (opt.id)}
+							{#each board.dueProjectOptions as opt (opt.id)}
 								<option value={opt.id}>{' '.repeat(opt.depth * 2)}{opt.name}</option>
 							{/each}
 						</select>
@@ -626,10 +357,10 @@
 				</button>
 			</div>
 			<div class="task-list">
-				{#each visibleDueDateTasks as task, i (task.id)}
+				{#each board.visibleDueDateTasks as task, i (task.id)}
 					{@const taskDate = task.due_at ?? task.project_due_at}
 					{@const taskDateKey = taskDate ? taskDate.slice(0, 10) : 'no-date'}
-					{@const prevTask = visibleDueDateTasks[i - 1]}
+					{@const prevTask = board.visibleDueDateTasks[i - 1]}
 					{@const prevDate = prevTask ? (prevTask.due_at ?? prevTask.project_due_at) : null}
 					{@const prevDateKey = prevDate ? prevDate.slice(0, 10) : 'no-date'}
 					{@const isToday = taskDateKey === todayKey}
@@ -645,28 +376,20 @@
 						{task}
 						{isToday}
 						{isOverdue}
-						onstart={() =>
-							handleTaskStartWithNotification(
-								task.id,
-								task.name,
-								task.project_name,
-								task.description
-							)}
-						onstopandstart={() => {
-							addNotification('Timer started', 'success');
-							timer.stopAndStart(task.id, task.name, task.project_name, task.description);
-						}}
-						ontoggle={handleTaskToggle}
+						onstart={timerStart}
+						onassign={timerAssign}
+						onstopandstart={timerStopAndStart}
+						ontoggle={(id, action) => board.toggleTask(id, action)}
 						ondetail={openTaskDetail}
 						isTimerRunning={timer.isRunning}
 					/>
 				{/each}
-				{#if hasMoreDueDateTasks}
-					<button class="show-more-btn" onclick={showMoreDueDateTasks}>
+				{#if board.hasMoreDueDateTasks}
+					<button class="show-more-btn" onclick={() => board.showMore()}>
 						<span class="show-more-line"></span>
 						<span class="show-more-pill">
 							<Icon name="chevron-down" />
-							<span>{remainingDueDateTasks} more</span>
+							<span>{board.remainingDueDateTasks} more</span>
 						</span>
 						<span class="show-more-line"></span>
 					</button>
@@ -676,11 +399,9 @@
 
 		<PlanSection
 			initial={data.plan}
-			ontimerstart={handleTaskStartWithNotification}
-			ontimerstopandstart={async (id, name, proj) => {
-				addNotification('Timer started', 'success');
-				await timer.stopAndStart(id, name, proj);
-			}}
+			onstart={timerStart}
+			onassign={timerAssign}
+			onstopandstart={timerStopAndStart}
 			onafterchange={() => invalidateAll()}
 			isTimerRunning={timer.isRunning}
 			activeStartedAt={timer.isRunning ? (timer.startedAtDate?.toISOString() ?? null) : null}
@@ -698,13 +419,13 @@
 				</div>
 				<div class="priority-filter">
 					<button
-						class:active={activeTreePriorityFilter === null}
-						onclick={() => (activeTreePriorityFilter = null)}>All</button
+						class:active={board.treePriorityFilter === null}
+						onclick={() => board.setTreePriority(null)}>All</button
 					>
 					{#each [1, 2, 3, 4] as p (p)}
 						<button
-							class:active={activeTreePriorityFilter === p}
-							onclick={() => (activeTreePriorityFilter = p)}
+							class:active={board.treePriorityFilter === p}
+							onclick={() => board.setTreePriority(p)}
 							aria-label="Priority up to {p}">≤{p}</button
 						>
 					{/each}
@@ -722,13 +443,11 @@
 			</div>
 			<div class="task-list">
 				<TreeNode
-					nodes={filteredActiveTree}
-					onstart={(id, name, proj) => handleTaskStartWithNotification(id, name, proj)}
-					onstopandstart={(id, name, proj, desc) => {
-						addNotification('Timer started', 'success');
-						timer.stopAndStart(id, name, proj, desc);
-					}}
-					ontoggle={handleTreeToggle}
+					nodes={board.filteredActiveTree}
+					onstart={timerStart}
+					onassign={timerAssign}
+					onstopandstart={timerStopAndStart}
+					ontoggle={(id, type, action) => board.toggleTreeNode(id, type, action)}
 					ondetail={openDetail}
 					oncreatetask={(projectId) => {
 						createMode = 'task';

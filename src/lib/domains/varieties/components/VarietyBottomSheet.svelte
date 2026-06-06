@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
-	import { varietiesApi } from '$lib/domains/varieties/api/varieties.api';
-	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import { addNotification } from '$lib/shared/stores/notification.svelte';
+	import { VarietyForm } from '$lib/domains/varieties/varietyForm.svelte';
 
 	interface Props {
 		open: boolean;
@@ -12,62 +10,14 @@
 
 	let { open, onclose }: Props = $props();
 
-	let name = $state('');
-	let scent = $state<number | null>(null);
-	let flavor = $state<number | null>(null);
-	let power = $state<number | null>(null);
-	let quality = $state<number | null>(null);
-	let price = $state<number | null>(null);
-	let comments = $state('');
-	let judge = $state('Oscar');
-	let saving = $state(false);
-	let nameError = $state(false);
-
-	$effect(() => {
-		if (open) {
-			name = '';
-			scent = null;
-			flavor = null;
-			power = null;
-			quality = null;
-			price = null;
-			comments = '';
-			judge = 'Oscar';
-			nameError = false;
-		}
+	const form = new VarietyForm(undefined, {
+		onclose: () => onclose(),
+		refresh: () => invalidateAll(),
 	});
 
-	function clamp(v: number | null): number {
-		if (v === null || Number.isNaN(v)) return 0;
-		return Math.max(0, Math.min(10, v));
-	}
-
-	async function create() {
-		if (!name.trim()) {
-			nameError = true;
-			return;
-		}
-		saving = true;
-		try {
-			await varietiesApi.createVariety({
-				name: name.trim(),
-				scent: clamp(scent),
-				flavor: clamp(flavor),
-				power: clamp(power),
-				quality: clamp(quality),
-				price: price ?? 0,
-				comments: comments.trim() ? comments.trim() : null,
-				judge: judge.trim() || 'Oscar',
-			});
-			addNotification('Variety created', 'success');
-			onclose();
-			await invalidateAll();
-		} catch {
-			addToast('Error creating', 'error');
-		} finally {
-			saving = false;
-		}
-	}
+	$effect(() => {
+		if (open) form.reset();
+	});
 </script>
 
 <BottomSheet {open} {onclose} constrained>
@@ -79,26 +29,47 @@
 			<input
 				id="variety-name"
 				type="text"
-				bind:value={name}
+				bind:value={form.name}
 				maxlength={40}
-				class:field-error={nameError}
-				oninput={() => (nameError = false)}
-				onkeydown={(e) => e.key === 'Enter' && create()}
+				class:field-error={form.nameError}
+				oninput={() => form.clearNameError()}
+				onkeydown={(e) => e.key === 'Enter' && form.create()}
 			/>
 		</div>
 
 		<div class="grid [grid-template-columns:repeat(auto-fit,minmax(120px,1fr))] gap-3">
 			<div class="detail-field">
 				<label for="variety-scent">Scent</label>
-				<input id="variety-scent" type="number" min="0" max="10" step="0.1" bind:value={scent} />
+				<input
+					id="variety-scent"
+					type="number"
+					min="0"
+					max="10"
+					step="0.1"
+					bind:value={form.scent}
+				/>
 			</div>
 			<div class="detail-field">
 				<label for="variety-flavor">Flavor</label>
-				<input id="variety-flavor" type="number" min="0" max="10" step="0.1" bind:value={flavor} />
+				<input
+					id="variety-flavor"
+					type="number"
+					min="0"
+					max="10"
+					step="0.1"
+					bind:value={form.flavor}
+				/>
 			</div>
 			<div class="detail-field">
 				<label for="variety-power">Potency</label>
-				<input id="variety-power" type="number" min="0" max="10" step="0.1" bind:value={power} />
+				<input
+					id="variety-power"
+					type="number"
+					min="0"
+					max="10"
+					step="0.1"
+					bind:value={form.power}
+				/>
 			</div>
 			<div class="detail-field">
 				<label for="variety-quality">Effect</label>
@@ -108,27 +79,29 @@
 					min="0"
 					max="10"
 					step="0.1"
-					bind:value={quality}
+					bind:value={form.quality}
 				/>
 			</div>
 			<div class="detail-field">
 				<label for="variety-price">Price</label>
-				<input id="variety-price" type="number" min="0" step="0.01" bind:value={price} />
+				<input id="variety-price" type="number" min="0" step="0.01" bind:value={form.price} />
 			</div>
 		</div>
 
 		<div class="detail-field">
 			<label for="variety-judge">Rated by</label>
-			<input id="variety-judge" type="text" bind:value={judge} maxlength={40} />
+			<input id="variety-judge" type="text" bind:value={form.judge} maxlength={40} />
 		</div>
 
 		<div class="detail-field">
 			<label for="variety-comments">Comments</label>
-			<textarea id="variety-comments" bind:value={comments} rows="3"></textarea>
+			<textarea id="variety-comments" bind:value={form.comments} rows="3"></textarea>
 		</div>
 
 		<div class="detail-actions">
-			<button class="btn-primary" onclick={create} disabled={saving}>Create</button>
+			<button class="btn-primary" onclick={() => form.create()} disabled={form.saving}
+				>Create</button
+			>
 		</div>
 	</div>
 </BottomSheet>

@@ -5,13 +5,11 @@
 	import { moneyApi } from '$lib/domains/money/api/money.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
+	import { buildCategoryTree } from '$lib/domains/money/utils/categoryTree';
+	import { deleteWithConflict } from '$lib/domains/money/utils/deleteConflict';
 	import CategoryTreeNode from './CategoryTreeNode.svelte';
 	import CategoryFormSheet from './CategoryFormSheet.svelte';
-	import type {
-		Category,
-		CategoryTree,
-		TransactionType,
-	} from '$lib/domains/money/types/Money.types';
+	import type { Category, TransactionType } from '$lib/domains/money/types/Money.types';
 
 	interface Props {
 		categories: Category[];
@@ -45,26 +43,11 @@
 		{ type: 'transfer', label: 'Transfers' },
 	];
 
-	function buildTree(items: Category[]): CategoryTree[] {
-		const byId = new Map<number, CategoryTree>();
-		const roots: CategoryTree[] = [];
-		items.forEach((c) => byId.set(c.id, { ...c, children: [] }));
-		items.forEach((c) => {
-			const node = byId.get(c.id)!;
-			if (c.parent_id != null && byId.has(c.parent_id)) {
-				byId.get(c.parent_id)!.children.push(node);
-			} else {
-				roots.push(node);
-			}
-		});
-		return roots;
-	}
-
 	let groups = $derived(
 		TYPE_ORDER.map(({ type, label }) => ({
 			type,
 			label,
-			roots: buildTree(categories.filter((c) => c.type === type)),
+			roots: buildCategoryTree(categories.filter((c) => c.type === type)),
 			count: categories.filter((c) => c.type === type).length,
 		}))
 	);
@@ -80,17 +63,17 @@
 	}
 
 	async function onDelete(category: Category) {
-		try {
-			await moneyApi.deleteCategory(category.id);
+		const { ok, conflict } = await deleteWithConflict({
+			run: () => moneyApi.deleteCategory(category.id),
+			needles: ['referenced'],
+		});
+		if (ok) {
 			addNotification('Category deleted', 'success');
 			await invalidateAll();
-		} catch (err) {
-			const msg = err instanceof Error ? err.message : '';
-			if (msg.includes('referenced')) {
-				addToast('Category is in use', 'error');
-			} else {
-				addToast('Error deleting category', 'error');
-			}
+		} else if (conflict) {
+			addToast('Category is in use', 'error');
+		} else {
+			addToast('Error deleting category', 'error');
 		}
 	}
 </script>

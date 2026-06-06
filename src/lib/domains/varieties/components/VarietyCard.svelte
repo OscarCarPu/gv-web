@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
-	import { varietiesApi } from '$lib/domains/varieties/api/varieties.api';
 	import type { Variety } from '$lib/domains/varieties/types/Variety.types';
+	import { VarietyCard as VarietyCardController } from '$lib/domains/varieties/components/varietyCard.svelte';
 	import { linkify } from '$lib/shared/utils/linkify';
-	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
@@ -15,89 +13,30 @@
 
 	let { variety, highlighted = false }: Props = $props();
 
-	const init = untrack(() => variety);
-	let name = $state(init.name);
-	let scent = $state<number | null>(init.scent);
-	let flavor = $state<number | null>(init.flavor);
-	let power = $state<number | null>(init.power);
-	let quality = $state<number | null>(init.quality);
-	let price = $state<number | null>(init.price);
-	let comments = $state(init.comments ?? '');
-	let judge = $state(init.judge);
-	let editingComments = $state(false);
+	// Seed the controller from the initial `variety` snapshot (mirrors the
+	// original component's `untrack(() => variety)` field seeding).
+	const card = untrack(
+		() => new VarietyCardController(variety, { refresh: () => invalidateAll() })
+	);
 
-	let saveTimer: ReturnType<typeof setTimeout> | null = null;
-	let saving = $state(false);
 	let textareaEl: HTMLTextAreaElement | undefined = $state();
 
 	$effect(() => {
-		if (editingComments && textareaEl) textareaEl.focus();
+		if (card.editingComments && textareaEl) textareaEl.focus();
 	});
-
-	function clamp(v: number | null): number {
-		if (v === null || Number.isNaN(v)) return 0;
-		return Math.max(0, Math.min(10, v));
-	}
-
-	function scheduleSave() {
-		if (saveTimer) clearTimeout(saveTimer);
-		saveTimer = setTimeout(save, 400);
-	}
-
-	async function save() {
-		saveTimer = null;
-		saving = true;
-		try {
-			await varietiesApi.updateVariety(variety.id, {
-				name: name.trim() || variety.name,
-				scent: clamp(scent),
-				flavor: clamp(flavor),
-				power: clamp(power),
-				quality: clamp(quality),
-				price: price ?? 0,
-				comments: comments.trim() ? comments.trim() : null,
-				judge: judge.trim() || variety.judge,
-			});
-			addNotification('Variety updated', 'success');
-			await invalidateAll();
-		} catch {
-			addToast('Error saving', 'error');
-		} finally {
-			saving = false;
-		}
-	}
-
-	async function handleDelete() {
-		try {
-			await varietiesApi.deleteVariety(variety.id);
-			addNotification('Variety deleted', 'success');
-			await invalidateAll();
-		} catch {
-			addToast('Error deleting', 'error');
-		}
-	}
-
-	async function commitCommentsEdit() {
-		editingComments = false;
-		const next = comments.trim() ? comments.trim() : null;
-		if (next !== (variety.comments ?? null)) {
-			if (saveTimer) clearTimeout(saveTimer);
-			await save();
-		}
-	}
 </script>
 
 <article
 	id={`variety-card-${variety.id}`}
 	class="variety-card"
-	class:saving
+	class:saving={card.saving}
 	class:highlight={highlighted}
 >
 	<input
 		class="text-text focus:bg-bg rounded-md border-none bg-transparent px-1 py-1 text-base font-bold transition-colors outline-none"
 		type="text"
-		bind:value={name}
-		oninput={scheduleSave}
+		bind:value={card.name}
+		oninput={() => card.scheduleSave()}
 		maxlength={40}
 		aria-label="Variety name"
 	/>
@@ -111,8 +50,8 @@
 				min="0"
 				max="10"
 				step="0.1"
-				bind:value={scent}
-				oninput={scheduleSave}
+				bind:value={card.scent}
+				oninput={() => card.scheduleSave()}
 			/>
 		</div>
 		<div class="detail-field">
@@ -123,8 +62,8 @@
 				min="0"
 				max="10"
 				step="0.1"
-				bind:value={flavor}
-				oninput={scheduleSave}
+				bind:value={card.flavor}
+				oninput={() => card.scheduleSave()}
 			/>
 		</div>
 		<div class="detail-field">
@@ -135,8 +74,8 @@
 				min="0"
 				max="10"
 				step="0.1"
-				bind:value={power}
-				oninput={scheduleSave}
+				bind:value={card.power}
+				oninput={() => card.scheduleSave()}
 			/>
 		</div>
 		<div class="detail-field">
@@ -147,8 +86,8 @@
 				min="0"
 				max="10"
 				step="0.1"
-				bind:value={quality}
-				oninput={scheduleSave}
+				bind:value={card.quality}
+				oninput={() => card.scheduleSave()}
 			/>
 		</div>
 	</div>
@@ -160,8 +99,8 @@
 			type="number"
 			min="0"
 			step="0.01"
-			bind:value={price}
-			oninput={scheduleSave}
+			bind:value={card.price}
+			oninput={() => card.scheduleSave()}
 		/>
 	</div>
 
@@ -169,10 +108,10 @@
 		<div class="detail-field-header">
 			<!-- svelte-ignore a11y_label_has_associated_control -->
 			<label>Comments</label>
-			{#if !editingComments && variety.comments}
+			{#if !card.editingComments && variety.comments}
 				<button
 					class="desc-edit-btn"
-					onclick={() => (editingComments = true)}
+					onclick={() => card.startEditingComments()}
 					type="button"
 					aria-label="Edit comments"
 				>
@@ -180,13 +119,17 @@
 				</button>
 			{/if}
 		</div>
-		{#if editingComments}
-			<textarea bind:this={textareaEl} bind:value={comments} rows="3" onblur={commitCommentsEdit}
+		{#if card.editingComments}
+			<textarea
+				bind:this={textareaEl}
+				bind:value={card.comments}
+				rows="3"
+				onblur={() => card.commitCommentsEdit()}
 			></textarea>
 		{:else if variety.comments}
 			<div class="desc-view">{@html linkify(variety.comments)}</div>
 		{:else}
-			<button class="comments-empty" onclick={() => (editingComments = true)} type="button">
+			<button class="comments-empty" onclick={() => card.startEditingComments()} type="button">
 				Add comments...
 			</button>
 		{/if}
@@ -199,15 +142,15 @@
 			<input
 				class="text-text focus:bg-bg min-w-0 flex-1 rounded-md border-none bg-transparent px-1 py-0.5 font-medium transition-colors outline-none"
 				type="text"
-				bind:value={judge}
-				oninput={scheduleSave}
+				bind:value={card.judge}
+				oninput={() => card.scheduleSave()}
 				maxlength={40}
 				aria-label="Judge"
 			/>
 		</label>
 		<button
 			class="btn-icon hover:text-danger"
-			onclick={handleDelete}
+			onclick={() => card.remove()}
 			aria-label="Delete variety"
 			title="Eliminar"
 		>

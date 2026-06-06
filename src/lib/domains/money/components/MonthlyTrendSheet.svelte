@@ -5,6 +5,9 @@
 	import { formatMoney } from '$shared/utils/money';
 	import type { Account, MonthlyStat } from '../types/Money.types';
 	import IncomeExpenseBars from './charts/IncomeExpenseBars.svelte';
+	import { RangeSelector } from '../stats/rangeSelector.svelte';
+	import { StatsResource } from '../stats/statsResource.svelte';
+	import { isoDate } from '../utils/statsDate';
 
 	interface Props {
 		open: boolean;
@@ -14,62 +17,29 @@
 
 	let { open, onclose, accounts }: Props = $props();
 
-	type Range = '3m' | '6m' | '1y' | 'ytd' | 'all';
-	let range = $state<Range>('6m');
+	const selector = new RangeSelector('6m');
 	let accountId = $state<number | null>(null);
-	let data = $state<MonthlyStat[]>([]);
-	let initialLoading = $state(true);
-
-	function pad(n: number): string {
-		return String(n).padStart(2, '0');
-	}
-
-	function isoDate(d: Date): string {
-		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-	}
-
-	const dateFrom = $derived.by((): string | undefined => {
-		const now = new Date();
-		const y = now.getFullYear();
-		const m = now.getMonth();
-		if (range === 'all') return undefined;
-		const start =
-			range === '3m'
-				? new Date(y, m - 2, 1)
-				: range === '6m'
-					? new Date(y, m - 5, 1)
-					: range === '1y'
-						? new Date(y, m - 11, 1)
-						: new Date(y, 0, 1);
-		return isoDate(start);
+	const resource = new StatsResource({
+		fetcher: (p: { from?: string; to: string; account_id: number | null }) =>
+			moneyApi.getMonthlyStats(p),
+		empty: [] as MonthlyStat[],
 	});
-
-	async function fetchStats() {
-		const now = new Date();
-		const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-		try {
-			data = await moneyApi.getMonthlyStats({
-				from: dateFrom,
-				to: isoDate(endOfMonth),
-				account_id: accountId,
-			});
-		} catch {
-			data = [];
-		} finally {
-			initialLoading = false;
-		}
-	}
 
 	$effect(() => {
 		if (open) {
-			void range;
-			void accountId;
-			fetchStats();
+			const now = new Date();
+			const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+			resource.load({
+				from: selector.from,
+				to: isoDate(endOfMonth),
+				account_id: accountId,
+			});
 		} else {
-			initialLoading = true;
-			data = [];
+			resource.resetForClose();
 		}
 	});
+
+	const data = $derived(resource.data);
 
 	const totals = $derived.by(() => {
 		let income = 0;
@@ -82,14 +52,6 @@
 		const savingsRate = income > 0 ? (balance / income) * 100 : 0;
 		return { income, expense, balance, savingsRate };
 	});
-
-	const ranges: Array<{ value: Range; label: string }> = [
-		{ value: '3m', label: '3M' },
-		{ value: '6m', label: '6M' },
-		{ value: '1y', label: '1Y' },
-		{ value: 'ytd', label: 'YTD' },
-		{ value: 'all', label: 'All' },
-	];
 
 	const selectedAccountLabel = $derived(
 		accountId == null ? 'All' : (accounts.find((a) => a.id === accountId)?.name ?? 'All')
@@ -105,8 +67,12 @@
 
 	<div class="sheet-controls-row">
 		<div class="create-mode-toggle sheet-range-toggle">
-			{#each ranges as r (r.value)}
-				<button type="button" class:active={range === r.value} onclick={() => (range = r.value)}>
+			{#each selector.ranges as r (r.value)}
+				<button
+					type="button"
+					class:active={selector.range === r.value}
+					onclick={() => (selector.range = r.value)}
+				>
 					{r.label}
 				</button>
 			{/each}
@@ -162,7 +128,7 @@
 		</div>
 	</div>
 
-	{#if initialLoading}
+	{#if resource.initialLoading}
 		<div class="history-loading">
 			<div class="spinner"></div>
 			Loading...

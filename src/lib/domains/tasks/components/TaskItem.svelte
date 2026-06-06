@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
+	import type { TimerTask } from '$lib/domains/tasks/taskTimer.svelte';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import DepBadges from './DepBadges.svelte';
 	import { linkify } from '$shared/utils/linkify';
@@ -8,8 +9,9 @@
 
 	interface Props {
 		task: TaskByDueDateResponse;
-		onstart?: () => void;
-		onstopandstart?: () => void;
+		onstart?: (task: TimerTask) => void;
+		onassign?: (task: TimerTask) => void;
+		onstopandstart?: (task: TimerTask) => void;
 		ontoggle?: (taskId: number, action: 'start' | 'finish') => void;
 		ondetail?: (taskId: number) => void;
 		isTimerRunning?: boolean;
@@ -20,6 +22,7 @@
 	let {
 		task,
 		onstart,
+		onassign,
 		onstopandstart,
 		ontoggle,
 		ondetail,
@@ -27,6 +30,13 @@
 		isToday = false,
 		isOverdue = false,
 	}: Props = $props();
+
+	const toTimerTask = (): TimerTask => ({
+		id: task.id,
+		name: task.name,
+		projectName: task.project_name,
+		description: task.description,
+	});
 
 	const isStarted = $derived(task.started_at !== null);
 	const statusLabel = $derived(getStatusLabel(task.started_at, task.task_type, task.recurrence));
@@ -99,15 +109,23 @@
 		{/if}
 		{#if isTimerRunning}
 			<div class="btn-split">
-				<button class="btn-primary" onclick={onstart} disabled={task.blocked}>
+				<button
+					class="btn-primary"
+					onclick={() => onassign?.(toTimerTask())}
+					disabled={task.blocked}
+				>
 					<Icon name="arrow-right" />Assign
 				</button>
-				<button class="btn-success" onclick={onstopandstart} disabled={task.blocked}>
+				<button
+					class="btn-success"
+					onclick={() => onstopandstart?.(toTimerTask())}
+					disabled={task.blocked}
+				>
 					<Icon name="play" />{task.task_type === 'recurring' ? 'Renew Start' : 'Stop Start'}
 				</button>
 			</div>
 		{:else}
-			<button class="btn-primary" onclick={onstart} disabled={task.blocked}>
+			<button class="btn-primary" onclick={() => onstart?.(toTimerTask())} disabled={task.blocked}>
 				<Icon name="play" />Start
 			</button>
 		{/if}
