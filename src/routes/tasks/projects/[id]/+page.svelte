@@ -9,6 +9,7 @@
 	import DepBadges from '$lib/domains/tasks/components/DepBadges.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import { ProjectDetail } from '$lib/domains/tasks/projectDetail.svelte';
+	import { untrack } from 'svelte';
 
 	let { data } = $props();
 
@@ -22,8 +23,11 @@
 	let showCreate = $state(false);
 	let createMode = $state<'task' | 'project'>('task');
 
+	// Re-hydrate only when the loaded project changes, not on every reactive read inside
+	// `load()` — otherwise editing a field could be clobbered by a re-run mid-edit.
 	$effect(() => {
-		detail.load(project);
+		const p = project;
+		untrack(() => detail.load(p));
 	});
 
 	function remove() {

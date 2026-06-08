@@ -8,6 +8,7 @@
 	import { linkify } from '$shared/utils/linkify';
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import { TaskDetail } from '$lib/domains/tasks/taskDetail.svelte';
+	import { untrack } from 'svelte';
 
 	interface Props {
 		taskId: number | null;
@@ -21,8 +22,13 @@
 		refresh: invalidateAll,
 	});
 
+	// Reload only when the selected task changes. `load()` → `#loadTask()` reads and
+	// writes reactive state (`#taskId`, `projects`), so tracking those reads would make
+	// this effect re-run in a loop and re-hydrate the form (clobbering edits like `dueAt`
+	// while the user is changing them). Depend solely on `taskId`.
 	$effect(() => {
-		detail.load(taskId);
+		const id = taskId;
+		untrack(() => detail.load(id));
 	});
 
 	function goToProject() {

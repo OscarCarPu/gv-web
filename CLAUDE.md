@@ -16,6 +16,27 @@ bun run test             # All tests (unit --run)
 make up-dev              # Dev: clears .svelte-kit, syncs, starts dev server
 ```
 
+## Testing in a browser
+
+Always use **Librewolf** to manually test/verify this project in a browser (not Chromium/Chrome). UI behavior can differ in Librewolf (Firefox-based, `resistFingerprinting` on by default), and that is the target browser. The dev server runs at `localhost:5173`.
+
+To drive Librewolf programmatically use **`scripts/librewolf_drive.py`** — a stdlib-only Marionette (WebDriver) client that controls the real Librewolf binary (no geckodriver/Selenium/Playwright needed; Librewolf ships Marionette built in). It auto-authenticates by minting a full JWT (same flow as `make auth` in `../gv-api`: password + TOTP, needs `pyotp`) and injecting it as the `session` httpOnly cookie, skipping the login UI.
+
+```bash
+python scripts/librewolf_drive.py /tasks         # smoke test: open path + screenshot
+GV_HEADFUL=1 python scripts/librewolf_drive.py   # watch the browser (non-headless)
+```
+
+```python
+from librewolf_drive import Session            # run from scripts/ (or add it to sys.path)
+with Session() as m:                            # launches Librewolf, logs in via cookie
+    m.goto("/tasks")
+    m.wait("#dtp-task-due"); m.click(m.find("#dtp-task-due"))
+    m.screenshot("/tmp/shot.png")
+```
+
+Requires `librewolf` on PATH, the dev server on :5173, and `gv-api` reachable.
+
 ## Architecture
 
 SvelteKit 2 + Svelte 5 (runes API) personal productivity app with habit tracking and task/time management. SSR via adapter-node, deployed with Docker.

@@ -38,6 +38,7 @@
 		const m = parseInt(minutes) || 0;
 		selected.setHours(h, m, 0, 0);
 		emitValue(selected);
+		popoverOpen = false;
 	}
 
 	function onHoursInput(e: Event) {
