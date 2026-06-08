@@ -8,6 +8,7 @@
 	import NotificationContainer from '$lib/shared/components/NotificationContainer.svelte';
 	import { installLinkifyHandler } from '$lib/shared/utils/linkify';
 	import Icon from '$lib/shared/components/Icon.svelte';
+	import { getTheme, toggleTheme, initTheme } from '$lib/shared/stores/theme.svelte';
 
 	let { data, children } = $props();
 
@@ -17,6 +18,10 @@
 
 	$effect(() => {
 		installLinkifyHandler();
+	});
+
+	$effect(() => {
+		initTheme();
 	});
 </script>
 
@@ -46,6 +51,14 @@
 			{/if}
 		</nav>
 		<div class="header-actions">
+			<button
+				type="button"
+				class="home-btn"
+				title={getTheme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+				onclick={toggleTheme}
+			>
+				<Icon name={getTheme() === 'dark' ? 'sun' : 'moon'} />
+			</button>
 			{#if data.token || data.semiprivateToken}
 				<a href="/" class="home-btn" title="Home">
 					<Icon name="house" />

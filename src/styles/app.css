@@ -19,6 +19,15 @@
 	--color-recurring: #f59e0b;
 	--color-border: rgba(255, 255, 255, 0.06);
 	--color-border-light: rgba(255, 255, 255, 0.08);
+	--color-overlay: rgba(255, 255, 255, 0.05);
+	--color-border-strong: rgba(255, 255, 255, 0.15);
+	--map-bg: #080c14;
+	--map-land: #2a3550;
+	--map-stroke: #080c14;
+	--map-land-hover: #4a6fa8;
+	--map-stroke-hover: #7aa3d4;
+	--map-land-focus: #3d5e8f;
+	--date-icon-invert: 0.6;
 	--font-sans: 'Inter', system-ui, sans-serif;
 	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
 	--breakpoint-desktop: 1000px;
@@ -27,6 +36,33 @@
 	--breakpoint-lg: initial;
 	--breakpoint-xl: initial;
 	--breakpoint-2xl: initial;
+}
+
+/* LIGHT THEME — overrides the dark @theme defaults when <html data-theme="light"> */
+:root[data-theme='light'] {
+	color-scheme: light;
+	--color-primary: #2563eb;
+	--color-secondary: #7c3aed;
+	--color-bg: #f6f7f9;
+	--color-bg-light: #ffffff;
+	--color-surface: #ffffff;
+	--color-text: #1a2033;
+	--color-text-muted: #5b6b85;
+	--color-success: #059669;
+	--color-info: #2563eb;
+	--color-danger: #dc2626;
+	--color-warning: #d97706;
+	--color-border: rgba(17, 24, 39, 0.1);
+	--color-border-light: rgba(17, 24, 39, 0.08);
+	--color-overlay: rgba(17, 24, 39, 0.05);
+	--color-border-strong: rgba(17, 24, 39, 0.18);
+	--map-bg: #e8edf4;
+	--map-land: #c2cfe0;
+	--map-stroke: #ffffff;
+	--map-land-hover: #7aa3d4;
+	--map-stroke-hover: #4a6fa8;
+	--map-land-focus: #9bb8dd;
+	--date-icon-invert: 0;
 }
 
 /* Z-INDEX SCALE
@@ -38,6 +74,11 @@
 
 body {
 	scrollbar-gutter: stable;
+	color-scheme: dark;
+}
+
+:root[data-theme='light'] body {
+	color-scheme: light;
 }
 
 .container {
@@ -53,6 +94,12 @@ main {
 	background-image:
 		radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.04), transparent),
 		radial-gradient(ellipse 60% 40% at 80% 100%, rgba(167, 139, 250, 0.03), transparent);
+}
+
+:root[data-theme='light'] main {
+	background-image:
+		radial-gradient(ellipse 80% 50% at 50% -20%, rgba(37, 99, 235, 0.06), transparent),
+		radial-gradient(ellipse 60% 40% at 80% 100%, rgba(124, 58, 237, 0.05), transparent);
 }
 
 /* DATE NAVIGATION */

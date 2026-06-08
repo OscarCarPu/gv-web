@@ -38,7 +38,7 @@
 
 	&:hover {
 		@apply text-text;
-		border-color: rgba(255, 255, 255, 0.15);
+		border-color: var(--color-border-strong);
 	}
 
 	&.active {
@@ -51,8 +51,8 @@
 
 .rutas-map-container {
 	@apply relative w-full overflow-hidden rounded-2xl;
-	background: #080c14;
-	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: var(--map-bg);
+	border: 1px solid var(--color-border-strong);
 	aspect-ratio: 4 / 3;
 
 	@media (min-width: 1000px) {
@@ -73,8 +73,8 @@
 }
 
 .concello-path {
-	fill: #2a3550;
-	stroke: #080c14;
+	fill: var(--map-land);
+	stroke: var(--map-stroke);
 	stroke-width: 0.6;
 	cursor: pointer;
 	transition:
@@ -82,14 +82,14 @@
 		opacity 0.2s;
 
 	&:hover {
-		fill: #4a6fa8;
-		stroke: #7aa3d4;
+		fill: var(--map-land-hover);
+		stroke: var(--map-stroke-hover);
 		stroke-width: 0.8;
 	}
 
 	&:focus {
 		outline: none;
-		fill: #3d5e8f;
+		fill: var(--map-land-focus);
 	}
 
 	&.marked {
@@ -111,7 +111,7 @@
 /* Visited list */
 
 .rutas-section-title {
-	@apply text-text-muted mb-3 text-sm font-semibold uppercase tracking-wider;
+	@apply text-text-muted mb-3 text-sm font-semibold tracking-wider uppercase;
 }
 
 .rutas-visited-list {
@@ -191,7 +191,7 @@
 }
 
 .rutas-form-label {
-	@apply text-text-muted text-xs font-semibold uppercase tracking-wider;
+	@apply text-text-muted text-xs font-semibold tracking-wider uppercase;
 }
 
 .rutas-date-input,
@@ -220,8 +220,8 @@
 	}
 }
 
-/* Dark date input calendar icon fix */
+/* Theme-aware date input calendar icon */
 input[type='date']::-webkit-calendar-picker-indicator {
-	filter: invert(0.6);
+	filter: invert(var(--date-icon-invert));
 	cursor: pointer;
 }

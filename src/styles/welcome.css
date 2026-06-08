@@ -53,14 +53,14 @@ main:has(.welcome-page) {
 
 		&:hover {
 			color: var(--color-text);
-			background-color: rgba(255, 255, 255, 0.05);
+			background-color: var(--color-overlay);
 		}
 	}
 }
 
 .welcome-section {
 	h2 {
-		@apply mb-2 text-xs font-semibold uppercase tracking-widest;
+		@apply mb-2 text-xs font-semibold tracking-widest uppercase;
 		color: var(--color-text-muted);
 	}
 
@@ -91,7 +91,7 @@ main:has(.welcome-page) {
 
 .lang-chip {
 	@apply rounded-full px-2.5 py-0.5 text-xs;
-	background-color: rgba(255, 255, 255, 0.03);
+	background-color: var(--color-overlay);
 	border: 1px solid var(--color-border);
 	color: var(--color-text-muted);
 
@@ -162,7 +162,7 @@ main:has(.welcome-page) {
 
 		span {
 			@apply inline-block rounded-full px-2 py-0.5;
-			background-color: rgba(255, 255, 255, 0.05);
+			background-color: var(--color-overlay);
 		}
 	}
 }

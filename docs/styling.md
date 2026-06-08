@@ -35,10 +35,45 @@ Feature CSS files use `@reference "./app.css"` to access theme tokens without du
 --color-recurring: #f59e0b; /* Amber — recurring task type badge */
 --color-border: rgba(255, 255, 255, 0.06); /* Default borders */
 --color-border-light: rgba(255, 255, 255, 0.08); /* Slightly visible borders */
+--color-overlay: rgba(255, 255, 255, 0.05); /* Hover/wash overlay (theme-aware) */
+--color-border-strong: rgba(255, 255, 255, 0.15); /* Stronger borders/dividers (theme-aware) */
+--map-bg: #080c14; /* Rutas map container background */
+--map-land: #2a3550; /* Rutas concello fill */
+--map-stroke: #080c14; /* Rutas concello stroke */
+--map-land-hover: #4a6fa8; /* Rutas concello hover fill */
+--map-stroke-hover: #7aa3d4; /* Rutas concello hover stroke */
+--map-land-focus: #3d5e8f; /* Rutas concello focus fill */
+--date-icon-invert: 0.6; /* invert() amount for the date-picker calendar icon */
 --font-sans: 'Inter'; /* Body text */
 --font-mono: 'JetBrains Mono'; /* Timers, numbers */
 --breakpoint-desktop: 1000px; /* Single breakpoint */
 ```
+
+The values above are the **dark** defaults. Always reference colors through these tokens (`var(--color-*)` / Tailwind utilities like `bg-bg`, `text-text`) so they re-skin automatically under light mode — never hardcode `rgba()`/hex for borders, overlays, or surfaces. When a hardcoded color is unavoidable in a feature stylesheet, promote it to a token here (with a dark default and a light override) instead.
+
+## Light / Dark Theme
+
+The app supports a light and a dark theme, switched at runtime via a `data-theme` attribute on the `<html>` element (`document.documentElement`):
+
+- **Dark** is the default — it's the `@theme` block above, emitted on `:root`.
+- **Light** is an override block in `app.css` keyed on `:root[data-theme='light']`, which redefines the same `--color-*` / `--map-*` / `--date-icon-invert` tokens (and `color-scheme`, the `main` gradient). Its higher specificity beats `@theme`'s `:root`, so every Tailwind utility and `var()` reference flips with no per-component work.
+
+```css
+:root[data-theme='light'] {
+	color-scheme: light;
+	--color-bg: #f6f7f9;
+	--color-text: #1a2033;
+	/* …full palette + map tokens… */
+	--date-icon-invert: 0;
+}
+```
+
+**Selection & persistence** (no FOUC):
+
+- An inline script in `app.html` runs before first paint and sets `document.documentElement.dataset.theme` from `localStorage['theme']`, falling back to the OS `prefers-color-scheme`.
+- The runes store `src/lib/shared/stores/theme.svelte.ts` (`initTheme` / `getTheme` / `toggleTheme`) syncs with that attribute and persists the user's choice to `localStorage`. The header toggle button (sun/moon icon) in `+layout.svelte` calls `toggleTheme`.
+
+When writing theme-aware CSS, lean on `--color-overlay` (hover washes) and `--color-border-strong` (dividers) rather than `bg-white/5` or `rgb(255 255 255 / …)`, which only read on a dark background.
 
 ## Z-Index Scale
 

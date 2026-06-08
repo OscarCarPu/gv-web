@@ -42,7 +42,8 @@
 		@apply text-text-muted rounded-lg px-4 py-2 text-sm font-semibold tracking-wide uppercase transition-all;
 
 		&:hover {
-			@apply text-text bg-white/5;
+			@apply text-text;
+			background: var(--color-overlay);
 		}
 
 		&.active {
@@ -319,7 +320,7 @@
 	}
 	> button:last-child {
 		@apply rounded-l-none;
-		border-left: 1px solid rgb(255 255 255 / 0.2);
+		border-left: 1px solid var(--color-border-strong);
 	}
 }
 

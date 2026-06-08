@@ -3,6 +3,17 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script>
+			// Apply theme before first paint to avoid a flash of the wrong theme.
+			try {
+				var t =
+					localStorage.getItem('theme') ||
+					(matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+				document.documentElement.dataset.theme = t;
+			} catch (e) {
+				/* storage/matchMedia unavailable */
+			}
+		</script>
 		<link rel="icon" href="/favicon.ico" sizes="any" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<link rel="manifest" href="/manifest.json" />
