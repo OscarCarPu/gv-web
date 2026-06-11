@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { dev } from '$app/environment';
 import { env } from '$lib/config/env';
 
-const PUBLIC_ROUTES = ['/login', '/login/2fa'];
+const PUBLIC_ROUTES = ['/login', '/login/2fa', '/'];
 const SEMIPRIVATE_ROUTES = ['/varieties'];
 const AUTH_ONLY_ROUTES = ['/logout'];
 
