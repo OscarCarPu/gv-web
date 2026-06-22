@@ -3,6 +3,8 @@ import { addToast } from '$lib/shared/stores/toast.svelte';
 import { addNotification } from '$lib/shared/stores/notification.svelte';
 import { deriveOverviewKpis, type OverviewKpis } from '$lib/domains/money/utils/money';
 import type {
+	Account,
+	Category,
 	Overview,
 	OverviewTransaction,
 	Transaction,
@@ -14,13 +16,17 @@ const EXPAND_STEP = 10;
 export type StatsSheet = 'netWorth' | 'categoryBreakdown' | 'monthlyTrend' | 'estimation';
 
 export interface MoneyOverviewApi {
-	listTransactions: () => Promise<Transaction[]>;
+	listTransactions: (params?: { accountId?: number }) => Promise<Transaction[]>;
 	deleteTransaction: (id: number) => Promise<void>;
 }
 
 export interface MoneyOverviewCallbacks {
 	/** Revalidate page data after a mutation (the component passes `invalidateAll`). */
 	refresh: () => Promise<void>;
+	/** Live accounts list — used to resolve account names in the account-history view. */
+	getAccounts?: () => Account[];
+	/** Live categories list — used to resolve category names in the account-history view. */
+	getCategories?: () => Category[];
 }
 
 /**
@@ -36,9 +42,17 @@ export class MoneyOverview {
 	#getOverview: () => Overview;
 	#refresh: () => Promise<void>;
 	#api: MoneyOverviewApi;
+	#getAccounts: () => Account[];
+	#getCategories: () => Category[];
 
 	// Recent-transactions fold state.
 	visibleCount = $state(FOLD_LIMIT);
+
+	// Account-history filter: null = recent transactions (last 30 days, from SSR
+	// overview); a number = that account's full history (client-fetched, name-mapped).
+	selectedAccountId = $state<number | null>(null);
+	accountHistory = $state<OverviewTransaction[]>([]);
+	loadingHistory = $state(false);
 
 	// Transaction create/edit sheet state.
 	sheetOpen = $state(false);
@@ -53,12 +67,14 @@ export class MoneyOverview {
 
 	constructor(
 		getOverview: () => Overview,
-		{ refresh }: MoneyOverviewCallbacks,
+		{ refresh, getAccounts, getCategories }: MoneyOverviewCallbacks,
 		api: MoneyOverviewApi = moneyApi
 	) {
 		this.#getOverview = getOverview;
 		this.#refresh = refresh;
 		this.#api = api;
+		this.#getAccounts = getAccounts ?? (() => []);
+		this.#getCategories = getCategories ?? (() => []);
 	}
 
 	// ── derived view-state (getters: reactive when read in templates) ────────
@@ -67,25 +83,77 @@ export class MoneyOverview {
 		return deriveOverviewKpis(this.#getOverview());
 	}
 
+	/** Active transaction list: account history when filtering, else recent (SSR). */
+	get source(): OverviewTransaction[] {
+		return this.filtering ? this.accountHistory : this.#getOverview().recent_transactions;
+	}
+
+	get filtering(): boolean {
+		return this.selectedAccountId !== null;
+	}
+
 	get visible(): OverviewTransaction[] {
-		return this.#getOverview().recent_transactions.slice(0, this.visibleCount);
+		return this.source.slice(0, this.visibleCount);
 	}
 
 	get hasMore(): boolean {
-		return this.visibleCount < this.#getOverview().recent_transactions.length;
+		return this.visibleCount < this.source.length;
 	}
 
 	get remaining(): number {
-		return this.#getOverview().recent_transactions.length - this.visibleCount;
+		return this.source.length - this.visibleCount;
 	}
 
 	// ── folding ──────────────────────────────────────────────────────────────
 
 	showMore(): void {
-		this.visibleCount = Math.min(
-			this.visibleCount + EXPAND_STEP,
-			this.#getOverview().recent_transactions.length
-		);
+		this.visibleCount = Math.min(this.visibleCount + EXPAND_STEP, this.source.length);
+	}
+
+	// ── account-history filter ───────────────────────────────────────────────
+
+	/** Switch the list to an account's full history (or back to recent when null). */
+	async selectAccount(id: number | null): Promise<void> {
+		this.selectedAccountId = id;
+		this.visibleCount = FOLD_LIMIT;
+		await this.#loadHistory();
+	}
+
+	/** (Re)fetch the selected account's history, preserving the current fold. */
+	async #loadHistory(): Promise<void> {
+		const id = this.selectedAccountId;
+		if (id === null) {
+			this.accountHistory = [];
+			return;
+		}
+		this.loadingHistory = true;
+		try {
+			const list = await this.#api.listTransactions({ accountId: id });
+			this.accountHistory = list.map((t) => this.#toOverviewTx(t));
+		} catch {
+			addToast('Error loading account history', 'error');
+			this.accountHistory = [];
+		} finally {
+			this.loadingHistory = false;
+		}
+	}
+
+	/** Map an id-based Transaction to the name-based shape `TransactionRow` renders. */
+	#toOverviewTx(t: Transaction): OverviewTransaction {
+		const accountName = (id: number | null): string | null =>
+			id === null ? null : (this.#getAccounts().find((a) => a.id === id)?.name ?? null);
+		const categoryName = (id: number | null): string | null =>
+			id === null ? null : (this.#getCategories().find((c) => c.id === id)?.name ?? null);
+		return {
+			id: t.id,
+			type: t.type,
+			amount: t.amount,
+			account_name: accountName(t.account_id) ?? '—',
+			to_account_name: accountName(t.to_account_id),
+			category_name: categoryName(t.category_id),
+			description: t.description,
+			occurred_at: t.occurred_at,
+		};
 	}
 
 	// ── stats sheets ───────────────────────────────────────────────────────
@@ -113,6 +181,8 @@ export class MoneyOverview {
 
 	closeForm(): void {
 		this.sheetOpen = false;
+		// A create/edit may have changed the filtered account's transactions.
+		if (this.filtering) void this.#loadHistory();
 	}
 
 	/** Edit a transaction: fetch the full list, find it, open the sheet (guarded). */
@@ -140,6 +210,7 @@ export class MoneyOverview {
 			await this.#api.deleteTransaction(id);
 			addNotification('Transaction deleted', 'success');
 			await this.#refresh();
+			if (this.filtering) await this.#loadHistory();
 		} catch {
 			addToast('Error deleting transaction', 'error');
 		}

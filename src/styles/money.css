@@ -51,6 +51,25 @@
 	@apply text-text-muted mt-2 mb-2 text-xs font-semibold tracking-wide uppercase;
 }
 
+.money-group-header {
+	@apply mt-2 mb-2 flex items-center justify-between gap-3;
+
+	.money-group-label {
+		@apply mt-0 mb-0;
+	}
+}
+
+.money-history-filter {
+	@apply bg-bg text-text rounded-lg border px-2 py-1 text-sm;
+	border-color: var(--color-border);
+	outline: none;
+	max-width: 50%;
+
+	&:focus {
+		@apply ring-primary/40 ring-1;
+	}
+}
+
 .money-type-toggle button.active.income {
 	@apply bg-success text-white;
 }

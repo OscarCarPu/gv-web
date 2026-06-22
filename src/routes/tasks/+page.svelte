@@ -13,7 +13,8 @@
 	import AgendaRightSheet from '$lib/domains/tasks/components/AgendaRightSheet.svelte';
 	import TimeEntryBottomSheet from '$lib/domains/tasks/components/TimeEntryBottomSheet.svelte';
 	import PlanSection from '$lib/domains/tasks/components/PlanSection.svelte';
-	import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
+	import TimerTaskPicker from '$lib/domains/tasks/components/TimerTaskPicker.svelte';
+	import type { TimeEntryWithTask, TaskListItem } from '$lib/domains/tasks/types/Task.types';
 	import { toLocalDateString, formatDueDay, formatTime } from '$lib/shared/utils/datetime';
 	import { buildPaceTooltip } from '$lib/domains/tasks/utils/paceLabel';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
@@ -72,6 +73,13 @@
 	function timerAssign(task: TimerTask) {
 		addNotification('Timer started', 'success');
 		return timer.replaceForTaskId(task);
+	}
+
+	// Timer-panel "Select Task" picker: start a new entry when idle, reassign when running.
+	function pickTask(task: TaskListItem) {
+		const timerTask: TimerTask = { id: task.id, name: task.name, projectName: task.project_name };
+		if (timer.isRunning) timerAssign(timerTask);
+		else timerStart(timerTask);
 	}
 
 	async function timerStopAndStart(task: TimerTask) {
@@ -180,15 +188,20 @@
 					<Icon name="comment" />
 				</button>
 				<button
+					id="timer-task-selector"
 					class="task-selector"
 					class:active={timer.selectedTaskDisplay !== null}
-					onclick={() => {
-						if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId);
-					}}
-					disabled={!timer.selectedTaskId}
 				>
 					{timer.selectedTaskDisplay ?? 'Select Task'}
 				</button>
+				<TimerTaskPicker
+					triggerId="timer-task-selector"
+					onselect={pickTask}
+					currentTaskId={timer.selectedTaskId}
+					onopendetail={() => {
+						if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId);
+					}}
+				/>
 				<button
 					class="btn-cancel"
 					onclick={handleCancel}

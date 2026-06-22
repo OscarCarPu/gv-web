@@ -40,15 +40,11 @@
 	}
 
 	.task-selector {
-		@apply text-text-muted bg-bg border-text-muted/20 flex-1 cursor-default appearance-none rounded-lg border px-4 py-3 text-center text-lg font-medium;
+		@apply text-text-muted bg-bg border-text-muted/20 flex-1 cursor-pointer appearance-none rounded-lg border px-4 py-3 text-center text-lg font-medium;
 		font-family: inherit;
 
 		&.active {
-			@apply text-text cursor-pointer;
-		}
-
-		&:disabled {
-			@apply cursor-default;
+			@apply text-text;
 		}
 	}
 
@@ -877,4 +873,50 @@
 
 .time-entry-sheet-actions {
 	@apply flex items-center justify-between pt-1;
+}
+
+/* Timer-panel "Select Task" search picker (rendered inside a flowbite Popover) */
+.timer-task-picker {
+	@apply rounded-xl !border-0 !bg-transparent !p-0 !shadow-none;
+}
+
+.ttp-body {
+	@apply bg-bg-light flex w-80 max-w-[90vw] flex-col gap-2 rounded-xl p-3;
+	color: var(--color-text);
+	border: 1px solid var(--color-border);
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.ttp-detail {
+	@apply text-text-muted hover:text-text flex items-center gap-1.5 self-start rounded-md px-1 py-1 text-sm transition-colors;
+}
+
+.ttp-search {
+	@apply bg-bg text-text placeholder-text-muted/50 w-full rounded-lg border px-3 py-2 text-sm;
+	border-color: var(--color-border);
+	outline: none;
+
+	&:focus {
+		@apply ring-primary/40 ring-1;
+	}
+}
+
+.ttp-list {
+	@apply flex max-h-72 flex-col overflow-y-auto;
+}
+
+.ttp-group-label {
+	@apply text-text-muted px-2 pt-2 pb-1 text-xs font-semibold tracking-wide uppercase;
+}
+
+.ttp-item {
+	@apply text-text hover:bg-bg w-full cursor-pointer rounded-md px-2 py-2 text-left text-sm leading-snug break-words transition-colors;
+
+	&.current {
+		@apply text-primary font-medium;
+	}
+}
+
+.ttp-empty {
+	@apply text-text-muted px-2 py-4 text-center text-sm;
 }

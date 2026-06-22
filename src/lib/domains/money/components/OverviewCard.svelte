@@ -20,7 +20,11 @@
 
 	let { overview, accounts, categories }: Props = $props();
 
-	const controller = new MoneyOverview(() => overview, { refresh: invalidateAll });
+	const controller = new MoneyOverview(() => overview, {
+		refresh: invalidateAll,
+		getAccounts: () => accounts,
+		getCategories: () => categories,
+	});
 
 	const openEdit = (id: number) => controller.openEdit(id);
 	const onDelete = (id: number) => controller.deleteTransaction(id);
@@ -132,10 +136,34 @@
 		</div>
 	</div>
 
-	<h3 class="money-group-label">Recent transactions</h3>
+	<div class="money-group-header">
+		<h3 class="money-group-label">
+			{controller.filtering ? 'Account history' : 'Recent transactions'}
+		</h3>
+		<select
+			class="money-history-filter"
+			aria-label="Filter transactions by account"
+			value={controller.selectedAccountId === null ? '' : String(controller.selectedAccountId)}
+			onchange={(e) => {
+				const v = e.currentTarget.value;
+				controller.selectAccount(v === '' ? null : Number(v));
+			}}
+		>
+			<option value="">All accounts (recent)</option>
+			{#each accounts as account (account.id)}
+				<option value={String(account.id)}>{account.name}</option>
+			{/each}
+		</select>
+	</div>
 
-	{#if overview.recent_transactions.length === 0}
-		<div class="project-children-empty">No transactions in the last 30 days</div>
+	{#if controller.loadingHistory && controller.source.length === 0}
+		<div class="project-children-empty">Loading…</div>
+	{:else if controller.source.length === 0}
+		<div class="project-children-empty">
+			{controller.filtering
+				? 'No transactions for this account'
+				: 'No transactions in the last 30 days'}
+		</div>
 	{:else}
 		<div class="task-list">
 			{#each visible as tx, i (tx.id)}
