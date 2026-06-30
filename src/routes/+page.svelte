@@ -6,10 +6,10 @@
 
 	const projects = [
 		{
-			name: 'gv-api',
-			description: 'Go REST API powering this app — habits, tasks, time tracking, finance and more.',
-			language: 'Go',
-			url: 'https://git.lab-ocp.com/ocp/gv-api'
+			name: 'central-pipeline',
+			description: 'Central IoT data pipeline — Go MQTT consumer + dbt on Postgres, medallion architecture (bronze → silver → gold).',
+			language: 'Go · dbt',
+			url: 'https://git.lab-ocp.com/ocp/central-pipeline'
 		},
 		{
 			name: 'mutual-watchdog',
@@ -18,10 +18,10 @@
 			url: 'https://git.lab-ocp.com/ocp/mutual-watchdog'
 		},
 		{
-			name: 'cat-water-fountain',
-			description: 'Automated cat fountain in Rust with proximity sensor and ml-consumed tracking. (in development)',
-			language: 'Rust',
-			url: 'https://git.lab-ocp.com/ocp/cat-water-fountain'
+			name: 'gv-api',
+			description: 'Go REST API powering this app — habits, tasks, time tracking, finance and more.',
+			language: 'Go',
+			url: 'https://git.lab-ocp.com/ocp/gv-api'
 		}
 	];
 
