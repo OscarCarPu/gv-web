@@ -5,14 +5,14 @@
 	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
-		/** id of the button that opens this picker */
-		triggerId: string;
+		/** CSS selector for the element(s) that open this picker */
+		trigger: string;
 		onselect: (task: TaskListItem) => void;
 		currentTaskId?: number | null;
 		onopendetail?: () => void;
 	}
 
-	let { triggerId, onselect, currentTaskId = null, onopendetail }: Props = $props();
+	let { trigger, onselect, currentTaskId = null, onopendetail }: Props = $props();
 
 	let open = $state(false);
 	let loaded = $state(false);
@@ -65,7 +65,7 @@
 </script>
 
 <Popover
-	triggeredBy="#{triggerId}"
+	triggeredBy={trigger}
 	trigger="click"
 	bind:isOpen={open}
 	arrow={false}

@@ -97,6 +97,21 @@
 		selectedTaskId = id;
 	}
 
+	// Clicking the label opens the detail modal when a task is active. When none is
+	// selected the label doubles as a picker trigger (see pickerTrigger) so flowbite
+	// opens the quick-picker itself — nothing to do here in that case.
+	function handleSelectorClick() {
+		if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId);
+	}
+
+	// The pen icon always opens the quick-picker; when no task is selected the label
+	// is also a trigger so "Select Task" is clickable.
+	const pickerTrigger = $derived(
+		timer.selectedTaskId
+			? '#timer-task-picker-trigger'
+			: '#timer-task-picker-trigger, #timer-task-selector'
+	);
+
 	function handleAgendaEntryClick(entry: TimeEntryWithTask) {
 		showAgenda = false;
 		selectedTimeEntry = entry;
@@ -187,15 +202,19 @@
 				>
 					<Icon name="comment" />
 				</button>
+				<button id="timer-task-picker-trigger" class="comment-toggle" title="Select task">
+					<Icon name="pen" />
+				</button>
 				<button
 					id="timer-task-selector"
 					class="task-selector"
 					class:active={timer.selectedTaskDisplay !== null}
+					onclick={handleSelectorClick}
 				>
 					{timer.selectedTaskDisplay ?? 'Select Task'}
 				</button>
 				<TimerTaskPicker
-					triggerId="timer-task-selector"
+					trigger={pickerTrigger}
 					onselect={pickTask}
 					currentTaskId={timer.selectedTaskId}
 					onopendetail={() => {
