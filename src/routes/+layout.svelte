@@ -41,6 +41,11 @@
 				<a href="/rutas" class="nav-link" class:active={page.url.pathname.startsWith('/rutas')}
 					>Routes</a
 				>
+				<a
+					href="/printers"
+					class="nav-link"
+					class:active={page.url.pathname.startsWith('/printers')}>Printers</a
+				>
 			{/if}
 			{#if data.token || data.semiprivateToken}
 				<a
