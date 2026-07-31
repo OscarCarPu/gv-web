@@ -1,33 +1,29 @@
 <script lang="ts">
 	import RightSheet from '$shared/components/RightSheet.svelte';
-	import { Agenda } from '$lib/domains/tasks/agenda.svelte';
+	import type { TimeEntries } from '$lib/domains/tasks/timeEntries.svelte';
 	import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
-	import { formatTime } from '$lib/shared/utils/datetime';
+	import { formatTime, isoToHHmm } from '$lib/shared/utils/datetime';
 	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let {
 		open,
 		onclose,
 		onopenentry,
+		agenda,
 	}: {
 		open: boolean;
 		onclose: () => void;
 		onopenentry: (entry: TimeEntryWithTask) => void;
+		/** The page's single `TimeEntries` instance — this sheet owns no state of its own. */
+		agenda: TimeEntries;
 	} = $props();
-
-	const agenda = new Agenda();
 
 	$effect(() => {
 		if (open) {
 			void agenda.mode;
-			agenda.load();
+			agenda.loadWindow();
 		}
 	});
-
-	function formatHour(iso: string): string {
-		const d = new Date(iso);
-		return d.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
-	}
 </script>
 
 <RightSheet {open} {onclose}>
@@ -55,7 +51,7 @@
 		</div>
 	{:else}
 		<div class="agenda-timeline">
-			{#each agenda.items as item, i (item.type === 'entry' ? item.entry.id : item.type === 'day' ? `day-${i}` : `gap-${i}`)}
+			{#each agenda.agendaItems as item, i (item.type === 'entry' ? item.entry.id : item.type === 'day' ? `day-${i}` : `gap-${i}`)}
 				{#if item.type === 'day'}
 					<div class="agenda-day-divider">
 						<span class="agenda-day-line"></span>
@@ -69,7 +65,7 @@
 							<span class="agenda-gap-line"></span>
 							<span class="agenda-gap-label">
 								{#if item.duration >= 3600}
-									{formatHour(item.from)} – {formatHour(item.to)} · {formatTime(item.duration)}
+									{isoToHHmm(item.from)} – {isoToHHmm(item.to)} · {formatTime(item.duration)}
 								{:else}
 									{formatTime(item.duration)}
 								{/if}
@@ -93,8 +89,8 @@
 								{/if}
 								<div class="agenda-entry-row">
 									<span class="agenda-entry-time">
-										{formatHour(item.entry.started_at)} – {item.entry.finished_at
-											? formatHour(item.entry.finished_at)
+										{isoToHHmm(item.entry.started_at)} – {item.entry.finished_at
+											? isoToHHmm(item.entry.finished_at)
 											: 'now'}
 									</span>
 									<span

@@ -4,6 +4,9 @@ import {
 	toLocalDatetime,
 	toISOString,
 	formatTime,
+	isoToHHmm,
+	formatElapsed,
+	isoToLocalInput,
 } from '$shared/utils/datetime';
 
 describe('toLocalDateString', () => {
@@ -126,5 +129,64 @@ describe('formatTime', () => {
 
 	it('should format multiple hours', () => {
 		expect(formatTime(9000)).toBe('2h 30m');
+	});
+});
+
+describe('isoToHHmm', () => {
+	it('formats an ISO string as zero-padded local HH:MM', () => {
+		expect(isoToHHmm(new Date(2026, 6, 15, 9, 5).toISOString())).toBe('09:05');
+		expect(isoToHHmm(new Date(2026, 6, 15, 23, 59).toISOString())).toBe('23:59');
+		expect(isoToHHmm(new Date(2026, 6, 15, 0, 0).toISOString())).toBe('00:00');
+	});
+
+	it('accepts epoch milliseconds', () => {
+		expect(isoToHHmm(new Date(2026, 6, 15, 14, 30).getTime())).toBe('14:30');
+	});
+
+	it('accepts a Date', () => {
+		expect(isoToHHmm(new Date(2026, 6, 15, 7, 8))).toBe('07:08');
+	});
+
+	it('agrees across all three input forms for the same instant', () => {
+		const d = new Date(2026, 6, 15, 16, 42);
+		expect(isoToHHmm(d)).toBe(isoToHHmm(d.getTime()));
+		expect(isoToHHmm(d)).toBe(isoToHHmm(d.toISOString()));
+	});
+});
+
+describe('formatElapsed', () => {
+	it('formats as zero-padded HH:MM:SS', () => {
+		expect(formatElapsed(0)).toBe('00:00:00');
+		expect(formatElapsed(59)).toBe('00:00:59');
+		expect(formatElapsed(60)).toBe('00:01:00');
+		expect(formatElapsed(3661)).toBe('01:01:01');
+	});
+
+	it('does not wrap past 24 hours', () => {
+		expect(formatElapsed(90000)).toBe('25:00:00');
+	});
+
+	it('truncates fractional seconds instead of printing decimals', () => {
+		expect(formatElapsed(61.9)).toBe('00:01:01');
+	});
+});
+
+describe('isoToLocalInput', () => {
+	it('produces a datetime-local value in local time', () => {
+		expect(isoToLocalInput(new Date(2026, 6, 15, 9, 5).toISOString())).toBe('2026-07-15T09:05');
+	});
+
+	it('zero-pads month, day, hour and minute', () => {
+		expect(isoToLocalInput(new Date(2026, 0, 2, 3, 4).toISOString())).toBe('2026-01-02T03:04');
+	});
+
+	it('returns an empty string for null', () => {
+		expect(isoToLocalInput(null)).toBe('');
+	});
+
+	it('round-trips through the datetime-local input value', () => {
+		const original = new Date(2026, 6, 15, 13, 37);
+		const roundTripped = new Date(isoToLocalInput(original.toISOString()));
+		expect(roundTripped.getTime()).toBe(original.getTime());
 	});
 });

@@ -2,7 +2,14 @@ import { planApi } from '$lib/domains/tasks/api/plan.api';
 import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 import { addToast } from '$lib/shared/stores/toast.svelte';
 import { buildRecurringDueAt } from '$lib/domains/tasks/utils/recurrence';
+import {
+	buildPlanTimeline,
+	blockSeconds,
+	type PlanTimeline,
+	type PlanTimelineItem,
+} from '$lib/domains/tasks/utils/planOverlay';
 import type { PlanTodayResponse, PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
+import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
 
 export interface PlanBoardApi {
 	plan: {
@@ -20,17 +27,20 @@ export interface PlanBoardApi {
 const defaultApi: PlanBoardApi = { plan: planApi, tasks: tasksApi };
 
 /**
- * Owns Today's Plan budget/derivation logic plus the per-block actions. Mirrors
- * `TaskBoard`: injected `#getInitial` / `#refresh` / `#api`, derived view-state exposed
- * as `get` accessors (NOT `$derived` fields — those would read the injected fields before
- * the constructor assigns them). `nowMs` stays as reactive state here, but the interval
- * that ticks it lives in the component's `$effect` (effects need component lifecycle) and
- * calls `setNow(Date.now())`.
+ * Owns Today's Plan: the actual-over-intent timeline, the budget derivation, and the
+ * per-block actions. Mirrors `TaskBoard`: injected `#getInitial` / `#getEntries` /
+ * `#refresh` / `#api`, derived view-state exposed as `get` accessors (NOT `$derived` fields —
+ * those would read the injected fields before the constructor assigns them). `nowMs` stays as
+ * reactive state here, but the interval that ticks it lives in the component's `$effect`
+ * (effects need component lifecycle) and calls `setNow(Date.now())`.
+ *
+ * The past half of the render comes from real time entries, not from blocks — see
+ * `buildPlanTimeline`. Blocks only speak for the future.
  */
 export class PlanBoard {
 	// Injected (assigned in constructor; declared first so getters may reference them).
 	#getInitial: () => PlanTodayResponse | null;
-	#getActiveStartedAt: () => string | null;
+	#getEntries: () => TimeEntryWithTask[];
 	#refresh: () => Promise<void>;
 	#api: PlanBoardApi;
 
@@ -38,12 +48,12 @@ export class PlanBoard {
 
 	constructor(
 		getInitial: () => PlanTodayResponse | null,
-		getActiveStartedAt: () => string | null,
+		getEntries: () => TimeEntryWithTask[],
 		refresh: () => Promise<void>,
 		api: PlanBoardApi = defaultApi
 	) {
 		this.#getInitial = getInitial;
-		this.#getActiveStartedAt = getActiveStartedAt;
+		this.#getEntries = getEntries;
 		this.#refresh = refresh;
 		this.#api = api;
 	}
@@ -55,7 +65,7 @@ export class PlanBoard {
 	// ── pure helpers ────────────────────────────────────────────────────
 
 	static blockSeconds(b: PlanBlockResponse): number {
-		return Math.max(0, (new Date(b.ended_at).getTime() - new Date(b.started_at).getTime()) / 1000);
+		return blockSeconds(b);
 	}
 
 	static isStarted(b: PlanBlockResponse): boolean {
@@ -67,20 +77,40 @@ export class PlanBoard {
 		return b.task_type === 'recurring' ? 'Renew' : 'Done';
 	}
 
-	static formatHour(iso: string): string {
-		const d = new Date(iso);
-		return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-	}
-
-	static formatNow(ms: number): string {
-		const d = new Date(ms);
-		return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+	static isFinished(b: PlanBlockResponse): boolean {
+		return b.task_finished_at !== null && b.task_finished_at !== undefined;
 	}
 
 	// ── derived view-state (getters: evaluated on access, reactive in templates) ──
 
 	get data(): PlanTodayResponse | null {
 		return this.#getInitial();
+	}
+
+	/** Today's plan folded over today's real time entries. */
+	get timeline(): PlanTimeline {
+		const data = this.data;
+		return buildPlanTimeline({
+			blocks: data?.blocks ?? [],
+			entries: this.#getEntries(),
+			nowMs: this.nowMs,
+		});
+	}
+
+	get items(): PlanTimelineItem[] {
+		return this.timeline.items;
+	}
+
+	/** The block containing now, or null. Drives the alarm and the "current" highlight. */
+	get currentBlock(): PlanBlockResponse | null {
+		const data = this.data;
+		if (!data) return null;
+		for (const b of data.blocks) {
+			const start = new Date(b.started_at).getTime();
+			const end = new Date(b.ended_at).getTime();
+			if (start <= this.nowMs && this.nowMs < end) return b;
+		}
+		return null;
 	}
 
 	get freeTotal(): number {
@@ -91,73 +121,43 @@ export class PlanBoard {
 		return this.data?.budget.daily_target_seconds ?? 0;
 	}
 
-	/** Done so far today (real time entries, not the plan). */
+	/** Done so far today, measured from the entries themselves rather than the summary so the
+	 *  bar and the timeline rows can never disagree. */
 	get doneTodaySeconds(): number {
-		return this.data?.budget.today ?? 0;
+		return this.timeline.totals.doneSeconds;
 	}
 
-	/**
-	 * Future task work according to the plan: linked blocks whose end is in the future.
-	 * Full duration if the block hasn't started yet, only the remaining part if it's in
-	 * progress.
-	 */
+	/** Planned task time still ahead of now. */
 	get futureTaskSeconds(): number {
-		const data = this.data;
-		if (!data) return 0;
-		let s = 0;
-		for (const b of data.blocks) {
-			if (b.task_id === null) continue;
-			const start = new Date(b.started_at).getTime();
-			const end = new Date(b.ended_at).getTime();
-			if (end <= this.nowMs) continue;
-			s += (end - Math.max(start, this.nowMs)) / 1000;
-		}
-		return s;
+		return this.timeline.totals.remainingPlannedSeconds;
 	}
 
-	/** Elapsed time of the currently running time entry (not yet finished). */
-	get activeRunningSeconds(): number {
-		const activeStartedAt = this.#getActiveStartedAt();
-		if (!activeStartedAt) return 0;
-		return Math.max(0, (this.nowMs - new Date(activeStartedAt).getTime()) / 1000);
-	}
-
+	/** Where the day lands if every remaining planned block is honoured. */
 	get estimatedTotal(): number {
-		return this.doneTodaySeconds + this.activeRunningSeconds + this.futureTaskSeconds;
+		return this.doneTodaySeconds + this.futureTaskSeconds;
 	}
 
 	get estimatedPct(): number {
 		return this.dailyTarget > 0 ? Math.min((this.estimatedTotal / this.dailyTarget) * 100, 100) : 0;
 	}
 
+	/** Share of the bar already earned, so the fill can distinguish done from projected. */
+	get donePct(): number {
+		return this.dailyTarget > 0
+			? Math.min((this.doneTodaySeconds / this.dailyTarget) * 100, 100)
+			: 0;
+	}
+
 	get estimatedReached(): boolean {
 		return this.dailyTarget > 0 && this.estimatedTotal >= this.dailyTarget;
 	}
 
-	/** Index of the block currently in progress (started_at <= now < ended_at), or -1. */
-	get currentIndex(): number {
-		const data = this.data;
-		if (!data) return -1;
-		for (let i = 0; i < data.blocks.length; i++) {
-			const start = new Date(data.blocks[i].started_at).getTime();
-			const end = new Date(data.blocks[i].ended_at).getTime();
-			if (start <= this.nowMs && this.nowMs < end) return i;
-		}
-		return -1;
+	get unplannedSeconds(): number {
+		return this.timeline.totals.unplannedSeconds;
 	}
 
-	/**
-	 * Where to render the "now" line when there is no current block: before the first
-	 * block whose started_at is strictly after now. -1 means now has passed every block —
-	 * line goes at the end. -2 means don't render the line.
-	 */
-	get gapInsertIndex(): number {
-		const data = this.data;
-		if (!data || this.currentIndex !== -1) return -2;
-		for (let i = 0; i < data.blocks.length; i++) {
-			if (new Date(data.blocks[i].started_at).getTime() > this.nowMs) return i;
-		}
-		return -1;
+	get skippedSeconds(): number {
+		return this.timeline.totals.skippedSeconds;
 	}
 
 	// ── block actions ───────────────────────────────────────────────────

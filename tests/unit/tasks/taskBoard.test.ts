@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { TaskBoardApi, TaskBoardData } from '$lib/domains/tasks/taskBoard.svelte';
-import type {
-	ActiveTreeNode,
-	TaskByDueDateResponse,
-	TimeEntrySummaryResponse,
-} from '$lib/domains/tasks/types/Task.types';
+import type { ActiveTreeNode, TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
 
 function makeTask(over: Partial<TaskByDueDateResponse> = {}): TaskByDueDateResponse {
 	return {
@@ -27,27 +23,10 @@ function makeTask(over: Partial<TaskByDueDateResponse> = {}): TaskByDueDateRespo
 	};
 }
 
-const SUMMARY: TimeEntrySummaryResponse = {
-	today: 0,
-	week: 0,
-	daily_target_seconds: 28800,
-	weekly_target_seconds: 144000,
-	pace: {
-		uniform_per_day_seconds: 0,
-		uniform_today_share_seconds: 0,
-		weighted_weekday_seconds: 0,
-		weighted_weekend_seconds: 0,
-		weighted_today_share_seconds: 0,
-		remaining_full_days: 0,
-		goal_reached: false,
-	},
-} as TimeEntrySummaryResponse;
-
 function makeData(over: Partial<TaskBoardData> = {}): TaskBoardData {
 	return {
 		tasksByDueDate: [],
 		activeTree: [],
-		timeEntrySummary: SUMMARY,
 		...over,
 	};
 }
@@ -55,12 +34,10 @@ function makeData(over: Partial<TaskBoardData> = {}): TaskBoardData {
 function createMockApi(): TaskBoardApi & {
 	updateTask: ReturnType<typeof vi.fn>;
 	updateProject: ReturnType<typeof vi.fn>;
-	getTimeEntrySummary: ReturnType<typeof vi.fn>;
 } {
 	return {
 		updateTask: vi.fn().mockResolvedValue({}),
 		updateProject: vi.fn().mockResolvedValue({}),
-		getTimeEntrySummary: vi.fn().mockResolvedValue({ ...SUMMARY, today: 3600 }),
 	};
 }
 
@@ -208,17 +185,6 @@ describe('TaskBoard', () => {
 			expect(board.visibleDueDateTasks.length).toBe(25);
 			board.setDuePriority(null); // resets fold
 			expect(board.visibleDueDateTasks.length).toBe(15);
-		});
-	});
-
-	describe('refreshSummary', () => {
-		it('overrides the summary from the API', async () => {
-			const data = makeData();
-			const board = new TaskBoard(() => data, refresh as unknown as () => Promise<void>, api);
-
-			expect(board.summary.today).toBe(0);
-			await board.refreshSummary();
-			expect(board.summary.today).toBe(3600);
 		});
 	});
 });

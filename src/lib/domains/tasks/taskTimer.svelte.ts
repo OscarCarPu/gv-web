@@ -1,4 +1,5 @@
 import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
+import { formatElapsed } from '$lib/shared/utils/datetime';
 import type {
 	CreateTimeEntryRequest,
 	UpdateTimeEntryRequest,
@@ -53,7 +54,7 @@ export class TaskTimer {
 	#commentTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Public derived state.
-	formattedTime = $derived(TaskTimer.#formatTime(this.elapsedSeconds));
+	formattedTime = $derived(formatElapsed(this.elapsedSeconds));
 	startedAtDate = $derived(this.#startedAt === null ? null : new Date(this.#startedAt));
 
 	constructor(api: TaskTimerApi = tasksApi) {
@@ -64,17 +65,6 @@ export class TaskTimer {
 
 	static #display(task: TimerTask): string {
 		return task.projectName ? `${task.name} - ${task.projectName}` : task.name;
-	}
-
-	static #formatTime(seconds: number): string {
-		const h = Math.floor(seconds / 3600)
-			.toString()
-			.padStart(2, '0');
-		const m = Math.floor((seconds % 3600) / 60)
-			.toString()
-			.padStart(2, '0');
-		const s = (seconds % 60).toString().padStart(2, '0');
-		return `${h}:${m}:${s}`;
 	}
 
 	/** Select a task into the panel (id + display + description). */

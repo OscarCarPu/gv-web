@@ -4,7 +4,7 @@
 
 	import BottomSheet from '$shared/components/BottomSheet.svelte';
 	import HistoryControls from '$shared/components/HistoryControls.svelte';
-	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
+	import type { TimeEntries } from '$lib/domains/tasks/timeEntries.svelte';
 	import type { TimeEntryHistoryEntry } from '$lib/domains/tasks/types/Task.types';
 	import Line from '$shared/components/chart/Line.svelte';
 	import Area from '$shared/components/chart/Area.svelte';
@@ -16,9 +16,12 @@
 	let {
 		open,
 		onclose,
+		entries,
 	}: {
 		open: boolean;
 		onclose: () => void;
+		/** History is fetched through the page's single `TimeEntries` instance. */
+		entries: TimeEntries;
 	} = $props();
 
 	function formatHours(v: number): string {
@@ -63,7 +66,7 @@
 			const params: { frequency: string; start_at?: string; end_at?: string } = { frequency };
 			if (startAt) params.start_at = startAt;
 			if (endAt) params.end_at = endAt;
-			const response = await tasksApi.getTimeEntryHistory(params);
+			const response = await entries.history(params);
 			data = response.data;
 			startAt = response.start_at;
 			endAt = response.end_at;

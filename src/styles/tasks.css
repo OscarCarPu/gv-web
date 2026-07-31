@@ -695,6 +695,43 @@
 	background: var(--color-success);
 }
 
+/* Two-tone Est. bar: the projected total sits behind the solid already-logged fill. */
+.plan-progress {
+	@apply relative;
+}
+
+.plan-progress .progress-fill {
+	@apply absolute inset-y-0 left-0;
+}
+
+.plan-progress-est {
+	opacity: 0.35;
+}
+
+.plan-summary-chips {
+	@apply flex-wrap;
+}
+
+.plan-chip {
+	@apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold;
+}
+
+.plan-chip-unplanned {
+	@apply bg-warning/15 text-warning;
+}
+
+.plan-chip-skipped {
+	@apply bg-danger/15 text-danger;
+}
+
+.plan-heading {
+	@apply text-text-muted mt-2 text-[11px] font-semibold tracking-wide uppercase;
+
+	&:first-child {
+		@apply mt-0;
+	}
+}
+
 .plan-list {
 	@apply mt-4 flex flex-col gap-2;
 }
@@ -750,6 +787,102 @@
 
 .plan-block-actions {
 	@apply flex shrink-0 items-center gap-1.5;
+}
+
+/* --- Plan: actuals folded over the plan --- */
+
+/* Real logged work. A left rail marks it as fact rather than intent. */
+.plan-block-actual {
+	@apply w-full text-left;
+	border-left: 3px solid var(--color-success);
+	background: color-mix(in srgb, var(--color-success) 7%, var(--color-bg));
+
+	&:hover {
+		background: color-mix(in srgb, var(--color-success) 12%, var(--color-bg));
+	}
+}
+
+/* Work the plan never asked for. */
+.plan-block-unplanned {
+	border-left-color: var(--color-warning);
+	background: color-mix(in srgb, var(--color-warning) 8%, var(--color-bg));
+
+	&:hover {
+		background: color-mix(in srgb, var(--color-warning) 13%, var(--color-bg));
+	}
+}
+
+/* Planned work, done outside its slot — honoured intent, slipped timing. Muted rail: neither
+   a win (green) nor a problem (amber). */
+.plan-block-moved {
+	border-left-color: color-mix(in srgb, var(--color-text-muted) 70%, transparent);
+	background: color-mix(in srgb, var(--color-success) 4%, var(--color-bg));
+
+	&:hover {
+		background: color-mix(in srgb, var(--color-success) 8%, var(--color-bg));
+	}
+}
+
+.plan-block-running {
+	border-left-color: var(--color-primary);
+	background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
+}
+
+.plan-unplanned-icon {
+	@apply text-warning mr-1 inline-block;
+}
+
+.plan-block-actual-time {
+	@apply font-mono tabular-nums;
+}
+
+.plan-block-verdict {
+	@apply shrink-0;
+}
+
+.plan-block-short {
+	@apply text-warning;
+}
+
+.plan-block-project {
+	@apply truncate;
+}
+
+/* Planned, came and went, never happened. */
+.plan-block-skipped {
+	@apply opacity-55;
+	border-left: 3px solid var(--color-danger);
+
+	.plan-block-name {
+		@apply line-through decoration-1;
+	}
+
+	.plan-block-verdict {
+		@apply text-danger;
+	}
+}
+
+/* A break that actually got taken. */
+.plan-block-rest {
+	border-left: 3px solid var(--color-border);
+	@apply opacity-80;
+}
+
+.plan-block-tick {
+	@apply text-success;
+}
+
+/* Past time nothing accounts for. */
+.plan-gap {
+	@apply my-0.5 flex items-center gap-2 px-1;
+}
+
+.plan-gap-line {
+	@apply bg-border-light h-px flex-1;
+}
+
+.plan-gap-label {
+	@apply text-text-muted shrink-0 font-mono text-[11px] tabular-nums;
 }
 
 .plan-now-divider {

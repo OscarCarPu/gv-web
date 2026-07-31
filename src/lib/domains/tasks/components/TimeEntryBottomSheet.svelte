@@ -1,7 +1,9 @@
 <script lang="ts">
 	import BottomSheet from '$shared/components/BottomSheet.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
+	import type { TimeEntries } from '$lib/domains/tasks/timeEntries.svelte';
 	import type { TimeEntryWithTask, TaskListItem } from '$lib/domains/tasks/types/Task.types';
+	import { isoToLocalInput } from '$lib/shared/utils/datetime';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
 
@@ -10,9 +12,11 @@
 		onclose: () => void;
 		onupdated: () => void;
 		ondeleted: () => void;
+		/** All writes go through the page's single `TimeEntries` instance. */
+		entries: TimeEntries;
 	}
 
-	let { entry, onclose, onupdated, ondeleted }: Props = $props();
+	let { entry, onclose, onupdated, ondeleted, entries }: Props = $props();
 
 	let tasks = $state<TaskListItem[]>([]);
 	let taskId = $state<number>(0);
@@ -38,13 +42,6 @@
 	let finishedAt = $state('');
 	let saving = $state(false);
 
-	function isoToLocalInput(iso: string | null): string {
-		if (!iso) return '';
-		const d = new Date(iso);
-		const pad = (n: number) => String(n).padStart(2, '0');
-		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-	}
-
 	$effect(() => {
 		if (entry) {
 			taskId = entry.task_id;
@@ -67,7 +64,7 @@
 		if (!entry || !taskId || !startedAt) return;
 		saving = true;
 		try {
-			await tasksApi.updateTimeEntry(entry.id, {
+			await entries.update(entry.id, {
 				task_id: taskId,
 				started_at: new Date(startedAt).toISOString(),
 				finished_at: finishedAt ? new Date(finishedAt).toISOString() : null,
@@ -84,7 +81,7 @@
 	async function handleDelete() {
 		if (!entry) return;
 		try {
-			await tasksApi.deleteTimeEntry(entry.id);
+			await entries.remove(entry.id);
 			ondeleted();
 			onclose();
 		} catch {
@@ -139,11 +136,7 @@
 				<Icon name="trash" />
 				Delete
 			</button>
-			<button
-				class="btn-primary"
-				onclick={handleSave}
-				disabled={saving || !taskId || !startedAt}
-			>
+			<button class="btn-primary" onclick={handleSave} disabled={saving || !taskId || !startedAt}>
 				{saving ? 'Saving…' : 'Save'}
 			</button>
 		</div>

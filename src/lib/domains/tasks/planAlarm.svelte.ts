@@ -18,8 +18,10 @@ export class PlanAlarm {
 	#alarmOpen = $state(false);
 	#alarmBlock = $state<PlanBlockResponse | null>(null);
 
-	// Private, non-template state.
-	#prevCurrentIndex = -1;
+	// Private, non-template state. Keyed by block id, not list index: an index shifts whenever
+	// a block is created or deleted, which would fire the alarm for a transition that never
+	// happened.
+	#prevBlockId: number | null = null;
 	// Skip the very first watch() (initial mount) so we only fire on a real block
 	// transition while the page is open — not on every load of an already-active block.
 	#primed = false;
@@ -84,23 +86,24 @@ export class PlanAlarm {
 	// ── public API ──────────────────────────────────────────────────────
 
 	/**
-	 * Called from the component's `$effect`. Reproduces the original firing condition
-	 * exactly: fire only when notifications are enabled, a block is current, and the
-	 * index just changed. Tracks the previous index on every call.
+	 * Called from the component's `$effect`. Fires only when notifications are enabled, a
+	 * block is current, and it is a *different* block than the one seen last tick. Tracks the
+	 * previous block on every call.
 	 */
-	watch(currentIndex: number, block: PlanBlockResponse | null): void {
+	watch(block: PlanBlockResponse | null): void {
+		const id = block?.id ?? null;
 		// Prime on the first call (initial mount) without firing.
 		if (!this.#primed) {
 			this.#primed = true;
-			this.#prevCurrentIndex = currentIndex;
+			this.#prevBlockId = id;
 			return;
 		}
-		if (this.#enabled && currentIndex !== -1 && currentIndex !== this.#prevCurrentIndex) {
+		if (this.#enabled && id !== null && id !== this.#prevBlockId) {
 			this.#alarmBlock = block;
 			this.#alarmOpen = true;
 			this.#startAlarmSound();
 		}
-		this.#prevCurrentIndex = currentIndex;
+		this.#prevBlockId = id;
 	}
 
 	/** Stop the sound and close the modal. */

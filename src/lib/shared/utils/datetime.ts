@@ -33,9 +33,29 @@ export function hhmmToISO(hhmm: string, endOfDay = false): string {
 	return d.toISOString();
 }
 
-export function isoToHHmm(iso: string): string {
-	const d = new Date(iso);
+/**
+ * Local `HH:MM` for an ISO string, an epoch-ms number, or a Date. Single source of truth
+ * for wall-clock labels (plan blocks, the now line, agenda rows, time entries).
+ */
+export function isoToHHmm(value: string | number | Date): string {
+	const d = value instanceof Date ? value : new Date(value);
 	return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+/** `HH:MM:SS` elapsed label for a duration in seconds (timer display). */
+export function formatElapsed(seconds: number): string {
+	const h = Math.floor(seconds / 3600);
+	const m = Math.floor((seconds % 3600) / 60);
+	const s = Math.floor(seconds % 60);
+	return [h, m, s].map((n) => String(n).padStart(2, '0')).join(':');
+}
+
+/** Local `YYYY-MM-DDTHH:MM` for a `datetime-local` input, from an ISO string. */
+export function isoToLocalInput(iso: string | null): string {
+	if (!iso) return '';
+	const d = new Date(iso);
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 const shortFormatter = new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short' });

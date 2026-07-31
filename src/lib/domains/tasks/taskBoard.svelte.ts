@@ -11,11 +11,7 @@ import {
 	findTreeTask,
 	findTreeProject,
 } from '$lib/domains/tasks/utils/taskTree';
-import type {
-	ActiveTreeNode,
-	TaskByDueDateResponse,
-	TimeEntrySummaryResponse,
-} from '$lib/domains/tasks/types/Task.types';
+import type { ActiveTreeNode, TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
 
 const FOLD_LIMIT = 15;
 const EXPAND_STEP = 10;
@@ -24,7 +20,6 @@ const EXPAND_STEP = 10;
 export interface TaskBoardData {
 	tasksByDueDate: TaskByDueDateResponse[];
 	activeTree: ActiveTreeNode[];
-	timeEntrySummary: TimeEntrySummaryResponse;
 }
 
 export interface TaskBoardApi {
@@ -36,14 +31,14 @@ export interface TaskBoardApi {
 		id: number,
 		input: { started_at?: string; finished_at?: string }
 	) => Promise<unknown>;
-	getTimeEntrySummary: () => Promise<TimeEntrySummaryResponse>;
 }
 
 /**
  * Owns the tasks page's non-timer logic: the Due Soon / Active Projects filters and
- * folding, the optimistic start/finish/renew flows (with rollback) for tasks and
- * projects, and the time-summary override. Mirrors `TaskTimer`: injected `#api`,
- * named methods, reactive state read directly by the template.
+ * folding, plus the optimistic start/finish/renew flows (with rollback) for tasks and
+ * projects. Mirrors `TaskTimer`: injected `#api`, named methods, reactive state read
+ * directly by the template. Anything time-entry shaped — including the day/week summary —
+ * belongs to `TimeEntries`, not here.
  */
 export class TaskBoard {
 	// Injected (assigned in constructor; declared first so derived fields may reference them).
@@ -61,8 +56,6 @@ export class TaskBoard {
 	treePriorityFilter = $state<number | null>(null);
 	dueVisibleCount = $state(FOLD_LIMIT);
 
-	#summaryOverride = $state<TimeEntrySummaryResponse | null>(null);
-
 	constructor(
 		getData: () => TaskBoardData,
 		refresh: () => Promise<void>,
@@ -71,10 +64,6 @@ export class TaskBoard {
 		this.#getData = getData;
 		this.#refresh = refresh;
 		this.#api = api;
-	}
-
-	get summary(): TimeEntrySummaryResponse {
-		return this.#summaryOverride ?? this.#getData().timeEntrySummary;
 	}
 
 	// ── derived view-state (getters: evaluated on access, reactive in templates) ──
@@ -155,10 +144,6 @@ export class TaskBoard {
 			this.dueVisibleCount + EXPAND_STEP,
 			this.filteredByDueDate.length
 		);
-	}
-
-	async refreshSummary(): Promise<void> {
-		this.#summaryOverride = await this.#api.getTimeEntrySummary();
 	}
 
 	// ── optimistic task / project lifecycle ────────────────────────────

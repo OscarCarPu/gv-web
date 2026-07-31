@@ -7,6 +7,7 @@
 	import CreateBottomSheet from '$lib/domains/tasks/components/CreateBottomSheet.svelte';
 	import { TaskTimer, type TimerTask } from '$lib/domains/tasks/taskTimer.svelte';
 	import { TaskBoard } from '$lib/domains/tasks/taskBoard.svelte';
+	import { TimeEntries } from '$lib/domains/tasks/timeEntries.svelte';
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import StartedAtEditor from '$lib/domains/tasks/components/StartedAtEditor.svelte';
 	import TimeHistoryModal from '$lib/domains/tasks/components/TimeHistoryModal.svelte';
@@ -23,7 +24,14 @@
 
 	let { data } = $props();
 
-	const timer = new TaskTimer();
+	// The one owner of every time-entry read and write on this page. The timer delegates its
+	// persistence here, and the plan / agenda / history / edit surfaces all read from it. Reads
+	// fall back to the SSR payload until a client fetch supersedes it.
+	const entries = new TimeEntries(tasksApi, {
+		today: () => data.todayTimeEntries,
+		summary: () => data.timeEntrySummary,
+	});
+	const timer = new TaskTimer(entries);
 	const board = new TaskBoard(() => data, invalidateAll);
 
 	let commentExpanded = $state(false);
@@ -32,24 +40,29 @@
 	let selectedTimeEntry = $state<TimeEntryWithTask | null>(null);
 
 	let todayKey = $derived(toLocalDateString());
-	let summary = $derived(board.summary);
+	let summary = $derived(entries.summary ?? data.timeEntrySummary);
 	let dailyTarget = $derived(summary.daily_target_seconds);
 	let dailyTargetLabel = $derived(formatTime(summary.daily_target_seconds));
 	let weekTargetTooltip = $derived(buildPaceTooltip(summary));
+
+	/** Reset the manual-add row to its default range. */
+	function resetManualRange() {
+		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
+	}
 
 	async function handleStop() {
 		commentExpanded = false;
 		addNotification('Time logged', 'success');
 		await timer.finish();
-		await board.refreshSummary();
+		await entries.refresh();
 	}
 
 	async function handleCancel() {
 		commentExpanded = false;
-		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
+		resetManualRange();
 		addNotification('Time cancelled', 'success');
 		await timer.cancelTimer();
-		await board.refreshSummary();
+		await entries.refresh();
 	}
 
 	async function handleStartedAtChange(newDate: Date) {
@@ -85,7 +98,7 @@
 	async function timerStopAndStart(task: TimerTask) {
 		addNotification('Timer started', 'success');
 		await timer.stopAndStart(task);
-		await board.refreshSummary();
+		await entries.refresh();
 	}
 
 	let selectedTaskId = $state<number | null>(null);
@@ -117,12 +130,9 @@
 		selectedTimeEntry = entry;
 	}
 
-	async function handleTimeEntryUpdated() {
-		await board.refreshSummary();
-	}
-
-	async function handleTimeEntryDeleted() {
-		await board.refreshSummary();
+	// The store already re-synced itself as part of the mutation; nothing left to do here.
+	function handleTimeEntryChanged() {
+		selectedTimeEntry = null;
 	}
 
 	function openDetail(id: number, type: 'project' | 'task') {
@@ -140,45 +150,23 @@
 		}
 	});
 
-	// Placeholder time entries
-
+	// Manual-add row: retimes the *running* entry to an explicit HH:MM–HH:MM range (and thereby
+	// closes it). The clock is cleared locally first so the panel responds immediately; the
+	// store's `retimeToday` does the write and re-syncs the summary and today's entries.
 	let timeEntries = $state([{ id: 1, start: '10:00', end: '11:00' }]);
 
 	async function submitTimeEntry() {
-		if (!timer.activeTimeEntryId) return;
-		const entry = timeEntries[0];
-		if (!entry.start || !entry.end) return;
-		const today = new Date();
-		const [startH, startM] = entry.start.split(':').map(Number);
-		const [endH, endM] = entry.end.split(':').map(Number);
-		const startedAt = new Date(
-			today.getFullYear(),
-			today.getMonth(),
-			today.getDate(),
-			startH,
-			startM,
-			0
-		);
-		const finishedAt = new Date(
-			today.getFullYear(),
-			today.getMonth(),
-			today.getDate(),
-			endH,
-			endM,
-			0
-		);
 		const entryId = timer.activeTimeEntryId;
+		if (entryId === null) return;
+		const range = timeEntries[0];
+		if (!range.start || !range.end) return;
+
 		const entryComment = timer.comment;
 		timer.reset();
 		commentExpanded = false;
-		timeEntries = [{ id: 1, start: '10:00', end: '11:00' }];
+		resetManualRange();
 		addNotification('Time logged', 'success');
-		await tasksApi.updateTimeEntry(entryId, {
-			started_at: startedAt.toISOString(),
-			finished_at: finishedAt.toISOString(),
-			comment: entryComment || null,
-		});
-		await board.refreshSummary();
+		await entries.retimeToday(entryId, range, entryComment);
 	}
 </script>
 
@@ -431,12 +419,13 @@
 
 		<PlanSection
 			initial={data.plan}
+			entries={entries.today}
 			onstart={timerStart}
 			onassign={timerAssign}
 			onstopandstart={timerStopAndStart}
 			onafterchange={() => invalidateAll()}
+			onopenentry={(entry) => (selectedTimeEntry = entry)}
 			isTimerRunning={timer.isRunning}
-			activeStartedAt={timer.isRunning ? (timer.startedAtDate?.toISOString() ?? null) : null}
 		/>
 	</div>
 
@@ -503,15 +492,17 @@
 	mode={createMode}
 	prefillProjectId={createPrefillProjectId}
 />
-<TimeHistoryModal open={showTimeHistory} onclose={() => (showTimeHistory = false)} />
+<TimeHistoryModal open={showTimeHistory} onclose={() => (showTimeHistory = false)} {entries} />
 <AgendaRightSheet
 	open={showAgenda}
 	onclose={() => (showAgenda = false)}
 	onopenentry={handleAgendaEntryClick}
+	agenda={entries}
 />
 <TimeEntryBottomSheet
 	entry={selectedTimeEntry}
 	onclose={() => (selectedTimeEntry = null)}
-	onupdated={handleTimeEntryUpdated}
-	ondeleted={handleTimeEntryDeleted}
+	onupdated={handleTimeEntryChanged}
+	ondeleted={handleTimeEntryChanged}
+	{entries}
 />
