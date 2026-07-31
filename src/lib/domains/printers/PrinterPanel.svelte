@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { PrinterController } from './printerStatus.svelte';
+	import PrinterFiles from './PrinterFiles.svelte';
 
 	interface Props {
 		id: string;
@@ -20,15 +21,29 @@
 
 	let camTimer: ReturnType<typeof setInterval> | null = null;
 
+	// Only ever one frame request in flight, plus a backoff after a failure. Without this the
+	// 200ms timer keeps firing while requests are still open: when the camera is unreachable
+	// each one blocks ~5s server-side, so they pile up past the browser's per-host connection
+	// limit and starve the telemetry and print-file requests on this same page.
+	let camInFlight = false;
+	let camRetryAt = 0;
+	const CAM_ERROR_BACKOFF_MS = 3000;
+
 	function refreshCam() {
+		if (camInFlight || Date.now() < camRetryAt) return;
+		camInFlight = true;
+
 		const url = `/printers/${id}/camera?t=${Date.now()}`;
 		const img = new Image();
 		img.onload = () => {
+			camInFlight = false;
 			camSrc = url;
 			camReady = true;
 			camError = false;
 		};
 		img.onerror = () => {
+			camInFlight = false;
+			camRetryAt = Date.now() + CAM_ERROR_BACKOFF_MS;
 			camError = true;
 		};
 		img.src = url;
@@ -166,11 +181,13 @@
 		</div>
 	</div>
 
+	<PrinterFiles {id} online={t?.online ?? false} />
+
 	{#if t && !t.configured}
 		<p class="notice">
 			PrusaLink telemetry not configured. Set <code>PRUSALINK_HOST</code>,
-			<code>PRUSALINK_USER</code> and <code>PRUSALINK_PASSWORD</code> to show temperatures,
-			progress and state.
+			<code>PRUSALINK_USER</code> and <code>PRUSALINK_PASSWORD</code> to show temperatures, progress and
+			state.
 		</p>
 	{:else if t && t.configured && !t.online}
 		<p class="notice notice-error">

@@ -33,7 +33,8 @@ export type PrinterTelemetry = {
 
 const md5 = (s: string) => createHash('md5').update(s).digest('hex');
 
-function parseChallenge(header: string): Record<string, string> {
+/** Exported for unit tests. */
+export function parseChallenge(header: string): Record<string, string> {
 	const out: Record<string, string> = {};
 	const body = header.replace(/^Digest\s+/i, '');
 	const re = /(\w+)=(?:"([^"]*)"|([^,]*))/g;
@@ -42,7 +43,8 @@ function parseChallenge(header: string): Record<string, string> {
 	return out;
 }
 
-function digestHeader(
+/** Exported for unit tests. */
+export function digestHeader(
 	user: string,
 	pass: string,
 	method: string,
@@ -69,34 +71,88 @@ function digestHeader(
 	return h;
 }
 
-async function authGet(printer: Printer, path: string): Promise<Response> {
+/**
+ * Fetches a Digest challenge with a cheap unauthenticated GET. Doing this up front lets a
+ * write request send its (possibly multi-MB) body exactly once instead of losing the first
+ * attempt to a 401. Returns null when the printer does not answer with a Digest challenge.
+ */
+async function getChallenge(printer: Printer): Promise<Record<string, string> | null> {
+	const host = printer.prusaLinkHost!.replace(/\/$/, '');
+	const res = await fetch(`${host}/api/v1/status`, {
+		headers: { Accept: 'application/json' },
+		signal: AbortSignal.timeout(4000),
+	});
+	await res.arrayBuffer().catch(() => {}); // drain the socket
+	if (res.status !== 401) return null;
+
+	const wwwAuth = res.headers.get('www-authenticate');
+	if (!wwwAuth || !/digest/i.test(wwwAuth)) return null;
+	return parseChallenge(wwwAuth);
+}
+
+export type SendOptions = {
+	body?: Uint8Array;
+	headers?: Record<string, string>;
+	timeoutMs?: number;
+};
+
+/**
+ * Performs an authenticated request against PrusaLink. `path` is used verbatim both as the
+ * request path and as the Digest `uri`, so it must already be encoded.
+ *
+ * The Core One challenge carries no `qop`, so the digest response does not depend on a nonce
+ * count and a nonce may be reused across requests — which is what makes the send-once flow
+ * below safe. A 401 still triggers one retry with a fresh challenge (stale nonce); `body` is a
+ * Uint8Array precisely so it can be re-sent.
+ */
+export async function authSend(
+	printer: Printer,
+	method: string,
+	path: string,
+	opts: SendOptions = {}
+): Promise<Response> {
 	const host = printer.prusaLinkHost!.replace(/\/$/, '');
 	const url = `${host}${path}`;
-	const headers: Record<string, string> = { Accept: 'application/json' };
+	const timeout = opts.timeoutMs ?? 10_000;
+	const base: Record<string, string> = { ...opts.headers };
+
+	// `fetch` needs the body as a fresh view per attempt; a Uint8Array is safe to reuse.
+	const send = (headers: Record<string, string>) =>
+		fetch(url, {
+			method,
+			headers,
+			body: opts.body as BodyInit | undefined,
+			signal: AbortSignal.timeout(timeout),
+		});
 
 	if (printer.prusaLinkApiKey) {
-		headers['X-Api-Key'] = printer.prusaLinkApiKey;
-		return fetch(url, { headers, signal: AbortSignal.timeout(4000) });
+		return send({ ...base, 'X-Api-Key': printer.prusaLinkApiKey });
 	}
+	if (!printer.prusaLinkUser) return send(base);
 
-	// HTTP Digest: first request obtains the challenge, then we retry with the response.
-	const first = await fetch(url, { headers, signal: AbortSignal.timeout(4000) });
-	if (first.status !== 401 || !printer.prusaLinkUser) return first;
+	const user = printer.prusaLinkUser;
+	const pass = printer.prusaLinkPassword ?? '';
 
-	const wwwAuth = first.headers.get('www-authenticate');
-	if (!wwwAuth || !/digest/i.test(wwwAuth)) return first;
-	await first.arrayBuffer().catch(() => {}); // drain the socket
+	const challenge = await getChallenge(printer);
+	if (!challenge) return send(base);
 
-	const auth = digestHeader(
-		printer.prusaLinkUser,
-		printer.prusaLinkPassword ?? '',
-		'GET',
-		path,
-		parseChallenge(wwwAuth)
-	);
-	return fetch(url, {
-		headers: { ...headers, Authorization: auth },
-		signal: AbortSignal.timeout(4000),
+	const first = await send({
+		...base,
+		Authorization: digestHeader(user, pass, method, path, challenge),
+	});
+	if (first.status !== 401) return first;
+
+	// Stale nonce — re-challenge once and replay.
+	await first.arrayBuffer().catch(() => {});
+	const fresh = await getChallenge(printer);
+	if (!fresh) return first;
+	return send({ ...base, Authorization: digestHeader(user, pass, method, path, fresh) });
+}
+
+function authGet(printer: Printer, path: string): Promise<Response> {
+	return authSend(printer, 'GET', path, {
+		headers: { Accept: 'application/json' },
+		timeoutMs: 4000,
 	});
 }
 

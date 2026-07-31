@@ -12,6 +12,9 @@ export type Printer = {
 	prusaLinkUser?: string;
 	prusaLinkPassword?: string;
 	prusaLinkApiKey?: string;
+	// Target storage for uploads ('usb' on Buddy firmware, 'local' on a PrusaLink Pi).
+	// Left unset it is auto-detected from GET /api/v1/storage.
+	prusaLinkStorage?: string;
 };
 
 const PRINTERS: Printer[] = [
@@ -24,6 +27,7 @@ const PRINTERS: Printer[] = [
 		prusaLinkUser: process.env.PRUSALINK_USER || undefined,
 		prusaLinkPassword: process.env.PRUSALINK_PASSWORD || undefined,
 		prusaLinkApiKey: process.env.PRUSALINK_API_KEY || undefined,
+		prusaLinkStorage: process.env.PRUSALINK_STORAGE || undefined,
 	},
 ];
 

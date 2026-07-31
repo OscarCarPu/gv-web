@@ -271,3 +271,221 @@
 	color: var(--color-danger);
 	border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
 }
+
+/* ---- Print files ---- */
+.printer-files {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+	border-top: 1px solid var(--color-border);
+	padding-top: 0.9rem;
+}
+
+.files-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.files-head h3 {
+	font-size: 0.7rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--color-text-muted);
+}
+
+.files-space {
+	font-size: 0.72rem;
+	color: var(--color-text-muted);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---- Drop zone ---- */
+.dropzone {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.2rem;
+	padding: 1.1rem 0.85rem;
+	text-align: center;
+	cursor: pointer;
+	border: 1px dashed var(--color-border);
+	border-radius: 12px;
+	background: var(--color-bg-light);
+	transition:
+		border-color 0.15s ease,
+		background 0.15s ease;
+}
+
+.dropzone:hover:not(.is-disabled),
+.dropzone:focus-visible:not(.is-disabled) {
+	border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+	outline: none;
+}
+
+.dropzone.is-dragging {
+	border-color: var(--color-primary);
+	border-style: solid;
+	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.dropzone.is-disabled {
+	cursor: not-allowed;
+	opacity: 0.65;
+}
+
+.dropzone .dropzone-icon {
+	width: 1.1rem;
+	height: 1.1rem;
+	color: var(--color-text-muted);
+	margin-bottom: 0.15rem;
+}
+
+.dropzone-title {
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--color-text);
+}
+
+.dropzone-hint {
+	font-size: 0.74rem;
+	color: var(--color-text-muted);
+	line-height: 1.4;
+}
+
+.dropzone-input {
+	display: none;
+}
+
+/* ---- Upload rows ---- */
+.upload-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 0.5rem 0.75rem;
+	padding: 0.55rem 0.7rem;
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	background: var(--color-bg-light);
+}
+
+.upload-row.is-error {
+	border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
+.upload-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-width: 0;
+}
+
+.upload-status {
+	font-size: 0.72rem;
+	color: var(--color-text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.upload-row.is-error .upload-status {
+	color: var(--color-danger);
+}
+
+.upload-progress {
+	grid-column: 1 / -1;
+	height: 14px;
+}
+
+.upload-progress .progress-label {
+	font-size: 0.6rem;
+}
+
+/* ---- File list ---- */
+.file-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+}
+
+.file-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto auto;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.4rem 0.5rem;
+	border-radius: 8px;
+}
+
+.file-row:hover {
+	background: var(--color-bg-light);
+}
+
+.file-row.is-busy {
+	opacity: 0.55;
+}
+
+.file-name {
+	font-size: 0.85rem;
+	color: var(--color-text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.file-size {
+	font-size: 0.72rem;
+	color: var(--color-text-muted);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+}
+
+.file-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.15rem;
+}
+
+.file-actions button:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
+.files-empty {
+	font-size: 0.78rem;
+	color: var(--color-text-muted);
+	padding: 0.2rem 0.1rem;
+}
+
+.btn-inline {
+	font-size: 0.74rem;
+	font-weight: 600;
+	color: var(--color-primary);
+	background: transparent;
+	border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+	border-radius: 6px;
+	padding: 0.2rem 0.5rem;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.btn-inline:hover {
+	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.files-more-btn {
+	font-size: 0.74rem;
+	color: var(--color-text-muted);
+	background: transparent;
+	border: none;
+	border-top: 1px solid var(--color-border-light);
+	padding: 0.45rem 0;
+	cursor: pointer;
+	width: 100%;
+}
+
+.files-more-btn:hover {
+	color: var(--color-text);
+}
