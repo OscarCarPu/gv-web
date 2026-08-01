@@ -3,6 +3,7 @@
 
 import { addToast } from '$shared/stores/toast.svelte';
 import {
+	ActiveUploadsSchema,
 	PrinterFilesSchema,
 	UploadProgressSchema,
 	type PrinterFile,
@@ -54,6 +55,8 @@ export type UploadStatus = 'uploading' | 'sending' | 'done' | 'error' | 'conflic
 
 export type Upload = {
 	id: number;
+	/** Server-side id, used to poll progress and to recognise an upload after a reload. */
+	serverId: string;
 	name: string;
 	size: number;
 	/** Bytes the browser has sent to gv-web. */
@@ -62,8 +65,11 @@ export type Upload = {
 	forwarded: number;
 	status: UploadStatus;
 	error?: string;
-	/** Kept so a 409 can be replayed with ?overwrite=1. */
-	file: File;
+	/**
+	 * Kept so a 409 can be replayed with ?overwrite=1. Absent for a row adopted from the server
+	 * after a reload — the browser no longer holds the bytes, so Replace/Retry cannot work.
+	 */
+	file?: File;
 };
 
 let nextUploadId = 0;
@@ -82,6 +88,8 @@ export class PrinterFilesController {
 
 	// Deliberately outside $state: a native XHR must not be wrapped in a reactive proxy.
 	private xhrs = new Map<number, XMLHttpRequest>();
+	/** Progress pollers, keyed by server-side upload id. */
+	private watchers = new Map<string, ReturnType<typeof setInterval>>();
 
 	constructor(id: string) {
 		this.id = id;
@@ -139,34 +147,132 @@ export class PrinterFilesController {
 	}
 
 	/**
+	 * Adopts uploads the server is still forwarding that this page did not start — after a reload,
+	 * or after navigating away and back. Without it those transfers keep running invisibly and the
+	 * row simply vanishes.
+	 */
+	async adoptActiveUploads(): Promise<void> {
+		try {
+			const res = await fetch(`${this.base}/progress`, { headers: { Accept: 'application/json' } });
+			if (!res.ok) return;
+			const { uploads } = ActiveUploadsSchema.parse(await res.json());
+
+			for (const u of uploads) {
+				if (u.status !== 'forwarding') continue; // settled ones have nothing left to show
+				if (this.uploads.some((e) => e.serverId === u.uploadId)) continue;
+
+				this.uploads = [
+					...this.uploads,
+					{
+						id: nextUploadId++,
+						serverId: u.uploadId,
+						name: u.name,
+						size: u.total,
+						sent: u.total, // the browser leg is necessarily finished
+						forwarded: u.sent,
+						status: 'sending',
+					},
+				];
+				this.watch(this.uploads[this.uploads.length - 1]);
+			}
+		} catch {
+			// Not critical — the page just will not show pre-existing uploads.
+		}
+	}
+
+	/**
+	 * Polls the server for an upload's forwarding progress and its final outcome. The PUT only
+	 * returns 202, so this is where success, failure and a 409 name conflict actually surface.
+	 */
+	private watch(entry: Upload, onSettled?: () => void): void {
+		if (this.watchers.has(entry.serverId)) return;
+
+		let missing = 0;
+		const settle = () => {
+			const t = this.watchers.get(entry.serverId);
+			if (t) clearInterval(t);
+			this.watchers.delete(entry.serverId);
+			onSettled?.();
+		};
+		const fail = (message: string, status: UploadStatus = 'error') => {
+			entry.status = status;
+			entry.error = message;
+			settle();
+		};
+		const succeed = () => {
+			entry.forwarded = entry.size;
+			entry.status = 'done';
+			addToast(`${entry.name} uploaded`);
+			void this.refresh();
+			// Drop the finished row once the file itself has appeared in the list.
+			setTimeout(() => this.dismiss(entry.id), 1500);
+			settle();
+		};
+
+		const timer = setInterval(async () => {
+			try {
+				const res = await fetch(`${this.base}/progress?u=${encodeURIComponent(entry.serverId)}`, {
+					headers: { Accept: 'application/json' },
+				});
+				if (!res.ok) return;
+				const p = UploadProgressSchema.parse(await res.json());
+
+				if (p.sent > entry.forwarded) entry.forwarded = p.sent;
+
+				if (p.status === 'done') return succeed();
+				if (p.status === 'error') {
+					return fail(
+						p.error ?? 'The printer rejected the upload',
+						p.httpStatus === 409 ? 'conflict' : 'error'
+					);
+				}
+				if (p.status === 'unknown') {
+					// A server restart loses in-flight state; don't hang the row forever.
+					if (++missing >= 5) {
+						fail('Lost track of this upload. Check the file list to see if it arrived.');
+					}
+					return;
+				}
+				missing = 0;
+			} catch {
+				// Transient failure — the next tick will retry.
+			}
+		}, 500);
+
+		this.watchers.set(entry.serverId, timer);
+	}
+
+	/**
 	 * Uploads via XMLHttpRequest rather than fetch — upload.onprogress is the only way to get
-	 * progress in a browser. The progress covers browser → gv-web only; the gv-web → printer
-	 * leg is invisible, which is what the 'sending' status covers.
+	 * progress in a browser, and it covers only the browser → gv-web leg. The server then replies
+	 * 202 and forwards to the printer, so watch() reports the rest.
 	 */
 	upload(file: File, overwrite = false): Promise<void> {
 		const id = nextUploadId++;
+		const uploadId = crypto.randomUUID();
 		this.uploads = [
 			...this.uploads,
-			{ id, name: file.name, size: file.size, sent: 0, forwarded: 0, status: 'uploading', file },
+			{
+				id,
+				serverId: uploadId,
+				name: file.name,
+				size: file.size,
+				sent: 0,
+				forwarded: 0,
+				status: 'uploading',
+				file,
+			},
 		];
 
 		// Read the entry back out of the reactive array: mutating the object literal above would
 		// not notify, only its $state proxy does.
 		const entry = this.uploads[this.uploads.length - 1];
-		const uploadId = crypto.randomUUID();
 
 		return new Promise<void>((resolve) => {
 			const xhr = new XMLHttpRequest();
 			this.xhrs.set(id, xhr);
 
-			let poll: ReturnType<typeof setInterval> | null = null;
-			const stopPolling = () => {
-				if (poll) clearInterval(poll);
-				poll = null;
-			};
-
 			const finish = () => {
-				stopPolling();
 				this.xhrs.delete(id);
 				resolve();
 			};
@@ -175,51 +281,7 @@ export class PrinterFilesController {
 				entry.error = message;
 				finish();
 			};
-			const succeed = () => {
-				entry.forwarded = entry.size;
-				entry.status = 'done';
-				addToast(`${file.name} uploaded`);
-				void this.refresh();
-				// Drop the finished row once the file itself has appeared in the list.
-				setTimeout(() => this.dismiss(id), 1500);
-				finish();
-			};
-
-			// The server accepts the bytes and forwards to the printer in the background, so the
-			// real outcome arrives here rather than in the upload response.
-			let missing = 0;
-			const startPolling = () => {
-				if (poll) return;
-				poll = setInterval(async () => {
-					try {
-						const res = await fetch(`${this.base}/progress?u=${encodeURIComponent(uploadId)}`, {
-							headers: { Accept: 'application/json' },
-						});
-						if (!res.ok) return;
-						const p = UploadProgressSchema.parse(await res.json());
-
-						if (p.sent > entry.forwarded) entry.forwarded = p.sent;
-
-						if (p.status === 'done') return succeed();
-						if (p.status === 'error') {
-							return fail(
-								p.error ?? 'The printer rejected the upload',
-								p.httpStatus === 409 ? 'conflict' : 'error'
-							);
-						}
-						if (p.status === 'unknown') {
-							// A server restart loses in-flight state; don't hang the row forever.
-							if (++missing >= 5) {
-								fail('Lost track of this upload. Check the file list to see if it arrived.');
-							}
-							return;
-						}
-						missing = 0;
-					} catch {
-						// Transient failure — the next tick will retry.
-					}
-				}, 500);
-			};
+			const startPolling = () => this.watch(entry, finish);
 
 			const url = overwrite ? `${this.base}?overwrite=1` : this.base;
 			xhr.open('PUT', url);
@@ -269,15 +331,17 @@ export class PrinterFilesController {
 		});
 	}
 
-	/** Replays a conflicted upload with Overwrite: ?1. */
+	/** Replays a conflicted upload with Overwrite: ?1. Needs the original bytes. */
 	replace(entry: Upload): void {
 		const file = entry.file;
+		if (!file) return;
 		this.dismiss(entry.id);
 		void this.upload(file, true);
 	}
 
 	retry(entry: Upload): void {
 		const file = entry.file;
+		if (!file) return;
 		this.dismiss(entry.id);
 		void this.upload(file);
 	}
@@ -327,10 +391,17 @@ export class PrinterFilesController {
 
 	start(): void {
 		void this.refresh();
+		void this.adoptActiveUploads();
 	}
 
+	/**
+	 * Only tears down this page's timers. In-flight uploads are deliberately left running: the
+	 * server keeps forwarding to the printer regardless, and aborting the XHR here would cancel a
+	 * transfer just because the user navigated away. A returning page re-attaches via
+	 * adoptActiveUploads().
+	 */
 	stop(): void {
-		for (const xhr of this.xhrs.values()) xhr.abort();
-		this.xhrs.clear();
+		for (const t of this.watchers.values()) clearInterval(t);
+		this.watchers.clear();
 	}
 }

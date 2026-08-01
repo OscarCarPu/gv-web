@@ -167,9 +167,9 @@
 			{/if}
 
 			<div class="file-actions">
-				{#if u.status === 'conflict'}
+				{#if u.status === 'conflict' && u.file}
 					<button class="btn-inline" onclick={() => controller.replace(u)}>Replace</button>
-				{:else if u.status === 'error'}
+				{:else if u.status === 'error' && u.file}
 					<button
 						class="btn-icon"
 						title="Retry"

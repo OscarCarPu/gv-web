@@ -68,6 +68,21 @@ export const UploadProgressSchema = z.object({
 
 export type UploadProgress = z.infer<typeof UploadProgressSchema>;
 
+/** Uploads the server still knows about, so a reloaded page can re-attach to them. */
+export const ActiveUploadsSchema = z.object({
+	uploads: z
+		.array(
+			UploadProgressSchema.extend({
+				uploadId: z.string(),
+				name: z.string(),
+			})
+		)
+		.nullable()
+		.transform((v) => v ?? []),
+});
+
+export type ActiveUpload = z.infer<typeof ActiveUploadsSchema>['uploads'][number];
+
 export type PrinterFile = z.infer<typeof PrinterFileSchema>;
 export type PrinterStorage = z.infer<typeof PrinterStorageSchema>;
 export type PrinterFiles = z.infer<typeof PrinterFilesSchema>;

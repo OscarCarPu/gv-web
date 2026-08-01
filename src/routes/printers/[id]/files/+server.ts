@@ -95,7 +95,7 @@ export const PUT: RequestHandler = async ({ params, request, url }) => {
 	// background while the browser polls ./progress for the percentage and the outcome.
 	const uploadId = sanitizeUploadId(request.headers.get('x-upload-id')) ?? crypto.randomUUID();
 	const overwrite = url.searchParams.get('overwrite') === '1';
-	startUpload(uploadId, body.byteLength);
+	startUpload(uploadId, params.id, name, body.byteLength);
 
 	void uploadFile(printer, name, body, overwrite, (sent) => setUploadProgress(uploadId, sent))
 		.then(async (res) => {

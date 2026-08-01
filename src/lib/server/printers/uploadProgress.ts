@@ -21,7 +21,10 @@ export type UploadState = {
 	httpStatus?: number;
 };
 
-type Entry = UploadState & { updatedAt: number };
+/** An upload plus the identity a reloaded page needs to recognise and re-attach to it. */
+export type ActiveUpload = UploadState & { uploadId: string; name: string };
+
+type Entry = UploadState & { printerId: string; name: string; updatedAt: number };
 
 const entries = new Map<string, Entry>();
 
@@ -49,10 +52,31 @@ function sweep(now: number): void {
 	}
 }
 
-export function startUpload(id: string, total: number): void {
+export function startUpload(id: string, printerId: string, name: string, total: number): void {
 	const now = Date.now();
 	sweep(now);
-	entries.set(id, { sent: 0, total, status: 'forwarding', updatedAt: now });
+	entries.set(id, { sent: 0, total, status: 'forwarding', printerId, name, updatedAt: now });
+}
+
+/**
+ * Every upload this server still knows about for a printer, newest last. Lets a page that was
+ * reloaded or navigated away from re-attach to an upload it did not start, instead of silently
+ * losing track of a transfer that is still running.
+ */
+export function listUploads(printerId: string): ActiveUpload[] {
+	sweep(Date.now());
+	return [...entries.entries()]
+		.filter(([, e]) => e.printerId === printerId)
+		.sort((a, b) => a[1].updatedAt - b[1].updatedAt)
+		.map(([uploadId, e]) => ({
+			uploadId,
+			name: e.name,
+			sent: e.sent,
+			total: e.total,
+			status: e.status,
+			error: e.error,
+			httpStatus: e.httpStatus,
+		}));
 }
 
 export function setUploadProgress(id: string, sent: number): void {
