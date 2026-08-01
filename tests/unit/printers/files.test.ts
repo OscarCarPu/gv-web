@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { createHash } from 'node:crypto';
-import { sanitizeFileName, filePath, pickStorage } from '$lib/server/printers/files';
+import {
+	sanitizeFileName,
+	filePath,
+	pickStorage,
+	bodySizeLimitError,
+} from '$lib/server/printers/files';
 import { digestHeader, parseChallenge } from '$lib/server/printers/prusalink';
 import { hasAcceptedExtension } from '$lib/domains/printers/printerFiles.svelte';
 
@@ -158,5 +163,22 @@ describe('digest auth for writes', () => {
 		expect(header).toContain('qop=auth');
 		expect(header).toContain('nc=00000001');
 		expect(header).toMatch(/cnonce="[0-9a-f]{16}"/);
+	});
+});
+
+describe('bodySizeLimitError', () => {
+	// adapter-node's real message, from the production log that produced a bare 500.
+	const real = 'Content-length of 65779363 exceeds limit of 524288 bytes.';
+
+	it('turns the adapter message into something actionable', () => {
+		expect(bodySizeLimitError(real)).toBe(
+			'File is 62.7 MB but the server accepts at most 0.5 MB. Raise BODY_SIZE_LIMIT.'
+		);
+	});
+
+	it('ignores unrelated errors so they keep their own handling', () => {
+		expect(bodySizeLimitError('socket hang up')).toBeNull();
+		expect(bodySizeLimitError('')).toBeNull();
+		expect(bodySizeLimitError('PrusaLink /api/v1/status -> 401')).toBeNull();
 	});
 });

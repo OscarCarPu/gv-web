@@ -13,6 +13,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getPrinter } from '$lib/server/printers/config';
 import {
+	bodySizeLimitError,
 	deleteFile,
 	fetchFiles,
 	sanitizeFileName,
@@ -69,7 +70,17 @@ export const PUT: RequestHandler = async ({ params, request, url }) => {
 
 	// Buffered rather than streamed on purpose: PrusaLink wants a real Content-Length, and the
 	// stale-nonce retry in authSend has to be able to replay the body.
-	const body = new Uint8Array(await request.arrayBuffer());
+	let body: Uint8Array;
+	try {
+		body = new Uint8Array(await request.arrayBuffer());
+	} catch (e) {
+		// adapter-node errors the body stream when Content-Length exceeds BODY_SIZE_LIMIT
+		// (512K by default). Left unhandled this is a bare 500 that explains nothing.
+		const message = e instanceof Error ? e.message : '';
+		const tooLarge = bodySizeLimitError(message);
+		if (tooLarge) return json({ error: tooLarge }, { status: 413 });
+		return json({ error: 'Could not read the uploaded file' }, { status: 400 });
+	}
 	if (body.byteLength === 0) return json({ error: 'Empty file' }, { status: 400 });
 
 	try {

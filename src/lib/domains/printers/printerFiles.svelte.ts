@@ -155,15 +155,18 @@ export class PrinterFilesController {
 					return;
 				}
 
-				let message = `Upload failed (${xhr.status})`;
+				let message = '';
 				try {
 					const parsed = JSON.parse(xhr.responseText);
 					if (parsed?.error) message = parsed.error;
 				} catch {
-					// Non-JSON body (e.g. a 413 straight from the proxy) — keep the generic message.
+					// Non-JSON body — e.g. a 413 from a reverse proxy that never reached the app.
 				}
-				if (xhr.status === 413) {
-					message = 'File too large for the server (raise BODY_SIZE_LIMIT)';
+				if (!message) {
+					message =
+						xhr.status === 413
+							? 'File too large for the server (raise BODY_SIZE_LIMIT)'
+							: `Upload failed (${xhr.status})`;
 				}
 				fail(message, xhr.status === 409 ? 'conflict' : 'error');
 			};

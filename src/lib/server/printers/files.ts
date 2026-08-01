@@ -66,6 +66,20 @@ export function sanitizeFileName(raw: string): string | null {
 	return base;
 }
 
+/**
+ * Recognizes adapter-node's body-size-limit failure and turns it into something actionable.
+ * That check runs in `getRequest`, before this route's handler, and surfaces as a plain Error
+ * when the body is read — so without this it reaches the client as a bare 500 "Internal Error"
+ * that says nothing about the real cause. Returns null for unrelated errors.
+ */
+export function bodySizeLimitError(message: string): string | null {
+	const m = /Content-length of (\d+) exceeds limit of (\d+) bytes/i.exec(message);
+	if (!m) return null;
+
+	const mb = (n: number) => `${(n / (1024 * 1024)).toFixed(1)} MB`;
+	return `File is ${mb(Number(m[1]))} but the server accepts at most ${mb(Number(m[2]))}. Raise BODY_SIZE_LIMIT.`;
+}
+
 /** Upstream path for one file. Shared by the request line and the Digest `uri`. */
 export function filePath(storage: string, name: string): string {
 	return `/api/v1/files/${storage}/${encodeURIComponent(name)}`;
