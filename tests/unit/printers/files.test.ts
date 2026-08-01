@@ -5,6 +5,7 @@ import {
 	filePath,
 	pickStorage,
 	bodySizeLimitError,
+	uploadTimeoutMs,
 } from '$lib/server/printers/files';
 import { digestHeader, parseChallenge } from '$lib/server/printers/prusalink';
 import {
@@ -218,5 +219,30 @@ describe('uploadErrorMessage', () => {
 
 	it('falls back to the status code for anything unrecognised', () => {
 		expect(uploadErrorMessage(418)).toBe('Upload failed (418).');
+	});
+});
+
+describe('uploadTimeoutMs', () => {
+	const MB = 1024 * 1024;
+
+	it('scales at 10s per megabyte', () => {
+		expect(uploadTimeoutMs(10 * MB)).toBe(100_000);
+		expect(uploadTimeoutMs(50 * MB)).toBe(500_000);
+		// The 62.7 MB gcode that a flat 180s cap aborted mid-flight.
+		expect(uploadTimeoutMs(65_779_363)).toBe(630_000);
+	});
+
+	it('rounds partial megabytes up', () => {
+		expect(uploadTimeoutMs(10 * MB + 1)).toBe(110_000);
+	});
+
+	it('never drops below a minute, however small the file', () => {
+		expect(uploadTimeoutMs(1)).toBe(60_000);
+		expect(uploadTimeoutMs(0)).toBe(60_000);
+		expect(uploadTimeoutMs(5 * MB)).toBe(60_000);
+	});
+
+	it('gives a big file far more room than the old flat 180s cap', () => {
+		expect(uploadTimeoutMs(65_779_363)).toBeGreaterThan(180_000);
 	});
 });

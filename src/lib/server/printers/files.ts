@@ -20,8 +20,20 @@ const MAX_NAME_LENGTH = 255;
 // eslint-disable-next-line no-control-regex -- rejecting control characters is the point
 const CONTROL_CHARS = /[\u0000-\u001f\u007f]/;
 
-const UPLOAD_TIMEOUT_MS = 180_000;
 const COMMAND_TIMEOUT_MS = 10_000;
+
+// The upload deadline scales with the payload. A flat cap was the wrong shape: 180s aborted a
+// real multi-MB .gcode mid-flight with a bare "The operation timed out.", because writing to the
+// printer's USB legitimately takes minutes.
+const UPLOAD_MS_PER_MB = 10_000;
+/** Floor, so a tiny file still gets a workable window. */
+const UPLOAD_MIN_MS = 60_000;
+
+/** 10s per megabyte, never less than a minute. Exported for unit tests. */
+export function uploadTimeoutMs(bytes: number): number {
+	const mb = Math.ceil(bytes / (1024 * 1024));
+	return Math.max(UPLOAD_MIN_MS, mb * UPLOAD_MS_PER_MB);
+}
 
 export type PrinterFile = {
 	name: string;
@@ -242,7 +254,7 @@ export async function uploadFile(
 			'Print-After-Upload': '?0',
 			Overwrite: overwrite ? '?1' : '?0',
 		},
-		timeoutMs: UPLOAD_TIMEOUT_MS,
+		timeoutMs: uploadTimeoutMs(total),
 	});
 }
 
