@@ -197,18 +197,22 @@ describe('uploadErrorMessage', () => {
 		);
 	});
 
-	it('explains a Cloudflare tunnel timeout instead of showing a bare code', () => {
-		const msg = uploadErrorMessage(524);
-		expect(msg).toContain('Cloudflare');
-		expect(msg).toContain('100s');
-		expect(msg).not.toBe('Upload failed (524).');
+	it('explains a cut-off connection instead of showing a bare code', () => {
+		for (const status of [504, 524]) {
+			const msg = uploadErrorMessage(status);
+			expect(msg).toContain('100s');
+			// The file reaching the server is not the slow part any more, so the message must not
+			// blame the printer transfer.
+			expect(msg).not.toContain('printer');
+			expect(msg).not.toBe(`Upload failed (${status}).`);
+		}
 	});
 
 	it('explains the other infrastructure failures', () => {
 		expect(uploadErrorMessage(0)).toContain('Connection lost');
 		expect(uploadErrorMessage(413)).toContain('BODY_SIZE_LIMIT');
 		expect(uploadErrorMessage(502)).toContain('unreachable');
-		expect(uploadErrorMessage(504)).toContain('timed out');
+		expect(uploadErrorMessage(504)).toContain('cut off');
 		expect(uploadErrorMessage(401)).toContain('session expired');
 	});
 

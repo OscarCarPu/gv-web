@@ -57,6 +57,17 @@ export const PrinterFilesSchema = z.object({
 	error: z.string().optional(),
 });
 
+/** Progress + outcome of the gv-web → printer leg of an upload. */
+export const UploadProgressSchema = z.object({
+	status: z.enum(['forwarding', 'done', 'error', 'unknown']),
+	sent: z.number(),
+	total: z.number(),
+	error: z.string().optional(),
+	httpStatus: z.number().optional(),
+});
+
+export type UploadProgress = z.infer<typeof UploadProgressSchema>;
+
 export type PrinterFile = z.infer<typeof PrinterFileSchema>;
 export type PrinterStorage = z.infer<typeof PrinterStorageSchema>;
 export type PrinterFiles = z.infer<typeof PrinterFilesSchema>;

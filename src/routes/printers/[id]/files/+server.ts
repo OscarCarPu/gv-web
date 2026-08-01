@@ -21,7 +21,7 @@ import {
 	uploadFile,
 } from '$lib/server/printers/files';
 import {
-	endUpload,
+	finishUpload,
 	sanitizeUploadId,
 	setUploadProgress,
 	startUpload,
@@ -89,27 +89,37 @@ export const PUT: RequestHandler = async ({ params, request, url }) => {
 	}
 	if (body.byteLength === 0) return json({ error: 'Empty file' }, { status: 400 });
 
-	// Lets the browser poll the gv-web → printer leg, which XHR progress cannot see.
-	const uploadId = sanitizeUploadId(request.headers.get('x-upload-id'));
-	if (uploadId) startUpload(uploadId, body.byteLength);
+	// Forwarding to the printer takes as long as the printer takes, so it must NOT happen inside
+	// this request: holding the response open for it is what got a 62 MB upload killed by the
+	// Cloudflare tunnel at ~100s (524). Reply as soon as the bytes are in, then forward in the
+	// background while the browser polls ./progress for the percentage and the outcome.
+	const uploadId = sanitizeUploadId(request.headers.get('x-upload-id')) ?? crypto.randomUUID();
+	const overwrite = url.searchParams.get('overwrite') === '1';
+	startUpload(uploadId, body.byteLength);
 
-	try {
-		const res = await uploadFile(
-			printer,
-			name,
-			body,
-			url.searchParams.get('overwrite') === '1',
-			uploadId ? (sent) => setUploadProgress(uploadId, sent) : undefined
-		);
-		if (!res.ok) {
-			return json({ error: upstreamError(res.status, 'upload') }, { status: res.status });
-		}
-		return json({ name });
-	} catch (e) {
-		return json({ error: e instanceof Error ? e.message : 'Upload failed' }, { status: 502 });
-	} finally {
-		if (uploadId) endUpload(uploadId);
-	}
+	void uploadFile(printer, name, body, overwrite, (sent) => setUploadProgress(uploadId, sent))
+		.then(async (res) => {
+			if (res.ok) {
+				finishUpload(uploadId, { ok: true });
+				return;
+			}
+			await res.arrayBuffer().catch(() => {}); // release the connection
+			finishUpload(uploadId, {
+				ok: false,
+				error: upstreamError(res.status, 'upload'),
+				httpStatus: res.status,
+			});
+		})
+		.catch((e) => {
+			finishUpload(uploadId, {
+				ok: false,
+				error: e instanceof Error ? e.message : 'Upload to the printer failed',
+				httpStatus: 502,
+			});
+		});
+
+	// 202: accepted by gv-web, not yet on the printer.
+	return json({ name, uploadId }, { status: 202 });
 };
 
 export const POST: RequestHandler = async ({ params, url }) => {

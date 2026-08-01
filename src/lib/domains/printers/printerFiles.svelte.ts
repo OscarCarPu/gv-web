@@ -2,7 +2,12 @@
 // files and starts/deletes prints. Same shape as PrinterController in ./printerStatus.svelte.ts.
 
 import { addToast } from '$shared/stores/toast.svelte';
-import { PrinterFilesSchema, type PrinterFile, type PrinterStorage } from './api/printers.schemas';
+import {
+	PrinterFilesSchema,
+	UploadProgressSchema,
+	type PrinterFile,
+	type PrinterStorage,
+} from './api/printers.schemas';
 
 /** Mirrors ALLOWED_EXTENSIONS in $lib/server/printers/files.ts so a bad drop fails instantly. */
 export const ACCEPTED_EXTENSIONS = ['.bgcode', '.gcode', '.gco', '.g'];
@@ -35,11 +40,11 @@ export function uploadErrorMessage(status: number, serverError = ''): string {
 		case 503:
 			return 'The server was unreachable during the upload. It may be restarting.';
 		case 504:
-			return 'The upload timed out at the gateway before the printer finished receiving it.';
 		case 524:
-			// Cloudflare kills a request whose origin takes longer than ~100s to respond, and the
-			// whole transfer to the printer happens inside this one request.
-			return 'The upload took longer than the Cloudflare tunnel allows (~100s) and was cut off. Large files usually need to be uploaded from the local network instead of the public URL.';
+			// The server now answers as soon as it has the bytes and forwards to the printer in the
+			// background, so this should no longer happen for a slow printer — if it does, the
+			// browser → server transfer itself is what ran past the ~100s tunnel limit.
+			return 'The connection was cut off after ~100s while sending the file to the server. Try again, or upload from the local network to bypass the tunnel.';
 		default:
 			return `Upload failed (${status}).`;
 	}
@@ -160,26 +165,6 @@ export class PrinterFilesController {
 				poll = null;
 			};
 
-			// Once the browser's own upload is done the bar would otherwise freeze at 100% for the
-			// whole gv-web → printer transfer, so track that leg from the server instead.
-			const startPolling = () => {
-				if (poll) return;
-				poll = setInterval(async () => {
-					try {
-						const res = await fetch(`${this.base}/progress?u=${encodeURIComponent(uploadId)}`, {
-							headers: { Accept: 'application/json' },
-						});
-						if (!res.ok) return;
-						const p = await res.json();
-						if (typeof p?.sent === 'number' && p.sent > entry.forwarded) {
-							entry.forwarded = p.sent;
-						}
-					} catch {
-						// Transient failure — the next tick will retry.
-					}
-				}, 400);
-			};
-
 			const finish = () => {
 				stopPolling();
 				this.xhrs.delete(id);
@@ -189,6 +174,51 @@ export class PrinterFilesController {
 				entry.status = status;
 				entry.error = message;
 				finish();
+			};
+			const succeed = () => {
+				entry.forwarded = entry.size;
+				entry.status = 'done';
+				addToast(`${file.name} uploaded`);
+				void this.refresh();
+				// Drop the finished row once the file itself has appeared in the list.
+				setTimeout(() => this.dismiss(id), 1500);
+				finish();
+			};
+
+			// The server accepts the bytes and forwards to the printer in the background, so the
+			// real outcome arrives here rather than in the upload response.
+			let missing = 0;
+			const startPolling = () => {
+				if (poll) return;
+				poll = setInterval(async () => {
+					try {
+						const res = await fetch(`${this.base}/progress?u=${encodeURIComponent(uploadId)}`, {
+							headers: { Accept: 'application/json' },
+						});
+						if (!res.ok) return;
+						const p = UploadProgressSchema.parse(await res.json());
+
+						if (p.sent > entry.forwarded) entry.forwarded = p.sent;
+
+						if (p.status === 'done') return succeed();
+						if (p.status === 'error') {
+							return fail(
+								p.error ?? 'The printer rejected the upload',
+								p.httpStatus === 409 ? 'conflict' : 'error'
+							);
+						}
+						if (p.status === 'unknown') {
+							// A server restart loses in-flight state; don't hang the row forever.
+							if (++missing >= 5) {
+								fail('Lost track of this upload. Check the file list to see if it arrived.');
+							}
+							return;
+						}
+						missing = 0;
+					} catch {
+						// Transient failure — the next tick will retry.
+					}
+				}, 500);
 			};
 
 			const url = overwrite ? `${this.base}?overwrite=1` : this.base;
@@ -212,13 +242,11 @@ export class PrinterFilesController {
 
 			xhr.onload = () => {
 				if (xhr.status >= 200 && xhr.status < 300) {
+					// 202: gv-web has the bytes but the printer does not yet. Keep the row alive and
+					// let the poller report the real outcome.
 					entry.sent = entry.size;
-					entry.status = 'done';
-					addToast(`${file.name} uploaded`);
-					void this.refresh();
-					// Drop the finished row once the file itself has appeared in the list.
-					setTimeout(() => this.dismiss(id), 1500);
-					finish();
+					entry.status = 'sending';
+					startPolling();
 					return;
 				}
 

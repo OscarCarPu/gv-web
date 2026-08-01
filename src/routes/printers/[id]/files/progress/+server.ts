@@ -9,6 +9,9 @@ export const GET: RequestHandler = async ({ url }) => {
 	const id = sanitizeUploadId(url.searchParams.get('u'));
 	if (!id) return json({ error: 'Missing or invalid upload id' }, { status: 400 });
 
-	// Unknown id means the upload has not started forwarding yet, or has already finished.
-	return json(getUploadProgress(id) ?? { sent: 0, total: 0, unknown: true });
+	// Unknown id: either it was never registered, or it settled long enough ago to be swept.
+	const state = getUploadProgress(id);
+	if (!state) return json({ status: 'unknown', sent: 0, total: 0 });
+
+	return json(state);
 };
