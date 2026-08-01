@@ -153,20 +153,49 @@ class Handler(BaseHTTPRequestHandler):
 
     # ---- fixtures ----
 
+    @staticmethod
+    def _short_name(name: str) -> str:
+        """Mimic FAT32 8.3 mangling: NAME~1.EXT, extension truncated to 3 chars.
+
+        This matters: a real .bgcode is listed as LIGHTH~1.BGC, and an allowlist without .bgc
+        silently dropped every bgcode file from the UI.
+        """
+        stem, _, ext = name.rpartition(".")
+        stem = stem or name
+        return f"{stem[:6].upper()}~1.{ext[:3].upper()}" if ext else stem[:8].upper()
+
     def _files_payload(self) -> dict:
+        # Buddy firmware reports NO per-file size here and spells read-only as "ro".
         children = []
         for name in sorted(os.listdir(UPLOAD_DIR)):
-            full = os.path.join(UPLOAD_DIR, name)
             children.append(
                 {
-                    "name": name,
+                    "name": self._short_name(name),
                     "display_name": name,
                     "type": "PRINT_FILE",
-                    "size": os.path.getsize(full),
-                    "read_only": False,
+                    "ro": False,
+                    "m_timestamp": 1700000000,
                 }
             )
         return {"name": STORAGE, "type": "FOLDER", "children": children}
+
+    def _resolve(self, requested: str) -> str | None:
+        """Map either the real name or its 8.3 short name back to a stored file."""
+        for name in os.listdir(UPLOAD_DIR):
+            if requested == name or requested == self._short_name(name):
+                return name
+        return None
+
+    def _file_info(self, name: str) -> dict:
+        """The per-file endpoint DOES report size — that is where the UI has to get it."""
+        return {
+            "name": self._short_name(name),
+            "display_name": name,
+            "type": "PRINT_FILE",
+            "ro": False,
+            "size": os.path.getsize(os.path.join(UPLOAD_DIR, name)),
+            "m_timestamp": 1700000000,
+        }
 
     def _storage_payload(self) -> dict:
         available = STATE["mode"] != "507"
@@ -180,10 +209,6 @@ class Handler(BaseHTTPRequestHandler):
                     "name": "USB drive",
                     "type": "USB",
                     "path": f"/{STORAGE}",
-                    "print_files": used,
-                    "system_files": 0,
-                    "free_space": total - used,
-                    "total_space": total,
                     "available": available,
                     "read_only": False,
                 }
@@ -276,6 +301,13 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(200, self._storage_payload())
             elif path.rstrip("/") == f"/api/v1/files/{STORAGE}":
                 self._json(200, self._files_payload())
+            elif path.startswith(f"/api/v1/files/{STORAGE}/"):
+                requested = os.path.basename(unquote(path))
+                stored = self._resolve(requested)
+                if stored is None:
+                    self._json(404, {"message": "not found"})
+                else:
+                    self._json(200, self._file_info(stored))
             else:
                 self._json(404, {"message": "not found"})
             return
@@ -286,7 +318,8 @@ class Handler(BaseHTTPRequestHandler):
             self._read_body()
             self._json(404, {"message": "not found"})
             return
-        name = os.path.basename(unquote(m.group(1)))
+        requested = os.path.basename(unquote(m.group(1)))
+        name = self._resolve(requested) or requested
         target = os.path.join(UPLOAD_DIR, name)
 
         if self.command == "PUT":

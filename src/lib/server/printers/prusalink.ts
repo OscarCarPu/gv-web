@@ -72,12 +72,30 @@ export function digestHeader(
 }
 
 /**
+ * Cached Digest challenge per host. Valid because the Core One's challenge carries no `qop`, so
+ * the response does not depend on a nonce count and a nonce may be reused. This halves the
+ * request count: without it every single call paid for its own challenge probe, which matters now
+ * that listing files fans out to one request per file.
+ */
+const challengeCache = new Map<string, Record<string, string>>();
+
+/**
  * Fetches a Digest challenge with a cheap unauthenticated GET. Doing this up front lets a
  * write request send its (possibly multi-MB) body exactly once instead of losing the first
  * attempt to a 401. Returns null when the printer does not answer with a Digest challenge.
+ *
+ * Pass `force` to bypass the cache after a 401 (stale nonce).
  */
-async function getChallenge(printer: Printer): Promise<Record<string, string> | null> {
+async function getChallenge(
+	printer: Printer,
+	force = false
+): Promise<Record<string, string> | null> {
 	const host = printer.prusaLinkHost!.replace(/\/$/, '');
+	if (!force) {
+		const cached = challengeCache.get(host);
+		if (cached) return cached;
+	}
+
 	const res = await fetch(`${host}/api/v1/status`, {
 		headers: { Accept: 'application/json' },
 		signal: AbortSignal.timeout(4000),
@@ -87,7 +105,10 @@ async function getChallenge(printer: Printer): Promise<Record<string, string> | 
 
 	const wwwAuth = res.headers.get('www-authenticate');
 	if (!wwwAuth || !/digest/i.test(wwwAuth)) return null;
-	return parseChallenge(wwwAuth);
+
+	const challenge = parseChallenge(wwwAuth);
+	challengeCache.set(host, challenge);
+	return challenge;
 }
 
 export type SendOptions = {
@@ -152,9 +173,9 @@ export async function authSend(
 	});
 	if (first.status !== 401) return first;
 
-	// Stale nonce — re-challenge once and replay.
+	// Stale nonce — re-challenge (bypassing the cache) once and replay.
 	await first.arrayBuffer().catch(() => {});
-	const fresh = await getChallenge(printer);
+	const fresh = await getChallenge(printer, true);
 	if (!fresh) return first;
 	return send({ ...base, Authorization: digestHeader(user, pass, method, path, fresh) });
 }

@@ -16,6 +16,14 @@ import {
 const md5 = (s: string) => createHash('md5').update(s).digest('hex');
 
 describe('sanitizeFileName', () => {
+	// FAT32 short names are what the printer actually reports and what print/delete address.
+	it('accepts the 8.3 short names the firmware reports', () => {
+		expect(sanitizeFileName('LIGHTH~1.BGC')).toBe('LIGHTH~1.BGC');
+		expect(sanitizeFileName('ROBO_A~1.BGC')).toBe('ROBO_A~1.BGC');
+		expect(sanitizeFileName('ESCARI~1.GCO')).toBe('ESCARI~1.GCO');
+		expect(sanitizeFileName('PUNTEI~1.GCO')).toBe('PUNTEI~1.GCO');
+	});
+
 	it('accepts the printable extensions', () => {
 		expect(sanitizeFileName('Benchy.bgcode')).toBe('Benchy.bgcode');
 		expect(sanitizeFileName('part_v2.gcode')).toBe('part_v2.gcode');
@@ -65,7 +73,7 @@ describe('sanitizeFileName', () => {
 	});
 
 	it('agrees with the client-side pre-check', () => {
-		for (const name of ['a.bgcode', 'a.gcode', 'a.gco', 'a.g', 'a.GCODE']) {
+		for (const name of ['a.bgcode', 'a.gcode', 'a.bgc', 'a.gco', 'a.g', 'a.GCODE']) {
 			expect(hasAcceptedExtension(name)).toBe(true);
 			expect(sanitizeFileName(name)).not.toBeNull();
 		}

@@ -12,8 +12,15 @@
 import type { Printer } from './config';
 import { authSend } from './prusalink';
 
-/** Extensions the printer can actually print. `.bgcode` is the Core One's native format. */
-const ALLOWED_EXTENSIONS = ['.bgcode', '.gcode', '.gco', '.g'];
+/**
+ * Extensions the printer can actually print. `.bgcode` is the Core One's native format.
+ *
+ * `.bgc` and `.gco` are not typos: the drive is FAT32, so the firmware reports each file under
+ * its 8.3 short name (`LIGHTH~1.BGC`) with the real name in `display_name`. Those short names are
+ * what print and delete address, so they must pass this filter — without `.bgc`, every .bgcode
+ * file on the drive was silently dropped from the listing and could not be printed or deleted.
+ */
+const ALLOWED_EXTENSIONS = ['.bgcode', '.gcode', '.bgc', '.gco', '.g'];
 // FAT32 long-filename ceiling — the same validator also gates print/delete of files already
 // on the drive, so it must not be stricter than what the printer itself accepts.
 const MAX_NAME_LENGTH = 255;
@@ -127,6 +134,8 @@ type RawChild = {
 	display_name?: string;
 	type?: string;
 	size?: number;
+	/** Buddy firmware uses `ro`; `read_only` is the spec's name. Accept either. */
+	ro?: boolean;
 	read_only?: boolean;
 };
 
@@ -172,6 +181,34 @@ async function resolveStorage(
 	};
 }
 
+/** How many per-file size lookups run at once, so listing does not hammer the printer. */
+const SIZE_LOOKUP_CONCURRENCY = 4;
+
+/** Runs `fn` over `items` with at most `limit` in flight. */
+async function mapLimited<T>(items: T[], limit: number, fn: (item: T) => Promise<void>) {
+	let next = 0;
+	const worker = async () => {
+		for (let i = next++; i < items.length; i = next++) await fn(items[i]);
+	};
+	await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+}
+
+/**
+ * Fills in each file's size. The Core One's folder listing omits `size` entirely — only the
+ * per-file endpoint reports it — so without this every row showed "—". Failures are left
+ * undefined rather than propagated: a missing size is cosmetic, an unusable list is not.
+ */
+async function fillInSizes(printer: Printer, storage: string, files: PrinterFile[]): Promise<void> {
+	const missing = files.filter((f) => f.size == null);
+	if (missing.length === 0) return;
+
+	await mapLimited(missing, SIZE_LOOKUP_CONCURRENCY, async (file) => {
+		const info = await getJson<RawChild>(printer, filePath(storage, file.name)).catch(() => null);
+		if (info?.size != null) file.size = info.size;
+		if (file.readOnly == null) file.readOnly = info?.ro ?? info?.read_only;
+	});
+}
+
 /**
  * Lists the print files on the target storage. Mirrors fetchPrusaStatus: never throws, it
  * reports `online: false` with a message so the panel can explain itself.
@@ -194,8 +231,10 @@ export async function fetchFiles(printer: Printer): Promise<PrinterFiles> {
 				name: c.name as string,
 				displayName: c.display_name ?? (c.name as string),
 				size: c.size,
-				readOnly: c.read_only,
+				readOnly: c.ro ?? c.read_only,
 			}));
+
+		await fillInSizes(printer, storage, files);
 
 		return { online: true, storage: info, files };
 	} catch (e) {

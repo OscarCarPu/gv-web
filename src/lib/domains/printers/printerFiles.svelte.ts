@@ -10,8 +10,12 @@ import {
 	type PrinterStorage,
 } from './api/printers.schemas';
 
-/** Mirrors ALLOWED_EXTENSIONS in $lib/server/printers/files.ts so a bad drop fails instantly. */
-export const ACCEPTED_EXTENSIONS = ['.bgcode', '.gcode', '.gco', '.g'];
+/**
+ * Mirrors ALLOWED_EXTENSIONS in $lib/server/printers/files.ts so a bad drop fails instantly.
+ * `.bgc` / `.gco` are the FAT32 8.3 short forms the printer itself uses; kept in step with the
+ * server list so the two cannot drift.
+ */
+export const ACCEPTED_EXTENSIONS = ['.bgcode', '.gcode', '.bgc', '.gco', '.g'];
 
 export const ACCEPT_ATTR = ACCEPTED_EXTENSIONS.join(',');
 
