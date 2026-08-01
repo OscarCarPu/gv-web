@@ -91,7 +91,13 @@ async function getChallenge(printer: Printer): Promise<Record<string, string> | 
 }
 
 export type SendOptions = {
-	body?: Uint8Array;
+	/**
+	 * Either a buffer, or a factory returning a fresh body per attempt. The factory form exists
+	 * for streamed uploads: a ReadableStream cannot be replayed, so the stale-nonce retry needs
+	 * a new one. Bun keeps an explicit Content-Length with a stream body (verified), which
+	 * PrusaLink requires.
+	 */
+	body?: Uint8Array | (() => BodyInit);
 	headers?: Record<string, string>;
 	timeoutMs?: number;
 };
@@ -116,14 +122,18 @@ export async function authSend(
 	const timeout = opts.timeoutMs ?? 10_000;
 	const base: Record<string, string> = { ...opts.headers };
 
-	// `fetch` needs the body as a fresh view per attempt; a Uint8Array is safe to reuse.
-	const send = (headers: Record<string, string>) =>
-		fetch(url, {
+	const streamed = typeof opts.body === 'function';
+	const send = (headers: Record<string, string>) => {
+		const body = streamed ? (opts.body as () => BodyInit)() : (opts.body as Uint8Array | undefined);
+		const init: RequestInit & { duplex?: 'half' } = {
 			method,
 			headers,
-			body: opts.body as BodyInit | undefined,
+			body: body as BodyInit | undefined,
 			signal: AbortSignal.timeout(timeout),
-		});
+		};
+		if (streamed) init.duplex = 'half'; // required when the body is a stream
+		return fetch(url, init);
+	};
 
 	if (printer.prusaLinkApiKey) {
 		return send({ ...base, 'X-Api-Key': printer.prusaLinkApiKey });

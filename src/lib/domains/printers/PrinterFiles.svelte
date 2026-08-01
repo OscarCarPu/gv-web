@@ -90,18 +90,23 @@
 		return `${(mb / 1024).toFixed(2)} GB`;
 	}
 
+	// Two sequential legs: browser → gv-web (XHR progress), then gv-web → printer (polled).
+	// The bar shows whichever leg is currently running.
 	function uploadPct(u: Upload): number {
 		if (u.status === 'done') return 100;
 		if (!u.size) return 0;
-		return Math.min(100, Math.round((u.sent / u.size) * 100));
+		const bytes = u.status === 'sending' ? u.forwarded : u.sent;
+		return Math.min(100, Math.round((bytes / u.size) * 100));
 	}
 
 	function uploadLabel(u: Upload): string {
-		if (u.status === 'sending') return 'Sending to printer…';
+		if (u.status === 'sending') {
+			return `Sending to printer… ${uploadPct(u)}% · ${size(u.forwarded)} of ${size(u.size)}`;
+		}
 		if (u.status === 'done') return 'Uploaded';
 		if (u.status === 'conflict') return u.error ?? 'Already on the printer';
 		if (u.status === 'error') return u.error ?? 'Upload failed';
-		return `${uploadPct(u)}% · ${size(u.sent)} of ${size(u.size)}`;
+		return `Uploading… ${uploadPct(u)}% · ${size(u.sent)} of ${size(u.size)}`;
 	}
 </script>
 

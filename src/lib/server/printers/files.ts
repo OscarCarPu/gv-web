@@ -195,20 +195,50 @@ export async function fetchFiles(printer: Printer): Promise<PrinterFiles> {
 	}
 }
 
-/** Uploads a file. `Print-After-Upload: ?0` — starting the print is a separate, explicit step. */
+/** How much of the body is handed to the HTTP client at a time — sets progress granularity. */
+const UPLOAD_CHUNK_BYTES = 256 * 1024;
+
+/**
+ * Uploads a file. `Print-After-Upload: ?0` — starting the print is a separate, explicit step.
+ *
+ * The body is streamed from the buffer in chunks so `onProgress` can report how far the
+ * transfer to the printer has got. The count is bytes handed to the HTTP client rather than
+ * bytes acknowledged by the printer, so it can run slightly ahead of the socket — close enough
+ * for a progress bar. A stale-nonce retry restarts the stream, and reports 0 again.
+ */
 export async function uploadFile(
 	printer: Printer,
 	name: string,
 	body: Uint8Array,
-	overwrite: boolean
+	overwrite: boolean,
+	onProgress?: (sent: number) => void
 ): Promise<Response> {
 	const { storage } = await resolveStorage(printer);
+	const total = body.byteLength;
+
+	const makeStream = (): BodyInit => {
+		let offset = 0;
+		onProgress?.(0);
+		return new ReadableStream({
+			pull(controller) {
+				if (offset >= total) {
+					controller.close();
+					return;
+				}
+				const end = Math.min(offset + UPLOAD_CHUNK_BYTES, total);
+				controller.enqueue(body.subarray(offset, end));
+				offset = end;
+				onProgress?.(offset);
+			},
+		});
+	};
+
 	return authSend(printer, 'PUT', filePath(storage, name), {
-		body,
+		body: makeStream,
 		headers: {
 			Accept: 'application/json',
 			'Content-Type': 'application/octet-stream',
-			'Content-Length': String(body.byteLength),
+			'Content-Length': String(total),
 			'Print-After-Upload': '?0',
 			Overwrite: overwrite ? '?1' : '?0',
 		},

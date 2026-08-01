@@ -14,13 +14,47 @@ export function hasAcceptedExtension(name: string): boolean {
 	return ACCEPTED_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }
 
+/**
+ * Explains an upload failure. The app's own errors arrive as JSON and are used verbatim, but a
+ * big upload can also be killed by infrastructure *between* the browser and the app — those
+ * reply with an HTML error page, so the status code is all we have to go on. Left unexplained
+ * they surface as a bare "Upload failed (524)", which tells nobody anything.
+ */
+export function uploadErrorMessage(status: number, serverError = ''): string {
+	if (serverError) return serverError;
+
+	switch (status) {
+		case 0:
+			return 'Connection lost during the upload. Check the network and try again.';
+		case 401:
+		case 403:
+			return 'Your session expired. Reload the page and sign in again.';
+		case 413:
+			return 'File too large for the server. Raise BODY_SIZE_LIMIT.';
+		case 502:
+		case 503:
+			return 'The server was unreachable during the upload. It may be restarting.';
+		case 504:
+			return 'The upload timed out at the gateway before the printer finished receiving it.';
+		case 524:
+			// Cloudflare kills a request whose origin takes longer than ~100s to respond, and the
+			// whole transfer to the printer happens inside this one request.
+			return 'The upload took longer than the Cloudflare tunnel allows (~100s) and was cut off. Large files usually need to be uploaded from the local network instead of the public URL.';
+		default:
+			return `Upload failed (${status}).`;
+	}
+}
+
 export type UploadStatus = 'uploading' | 'sending' | 'done' | 'error' | 'conflict';
 
 export type Upload = {
 	id: number;
 	name: string;
 	size: number;
+	/** Bytes the browser has sent to gv-web. */
 	sent: number;
+	/** Bytes gv-web has forwarded to the printer — polled, since XHR cannot see this leg. */
+	forwarded: number;
 	status: UploadStatus;
 	error?: string;
 	/** Kept so a 409 can be replayed with ?overwrite=1. */
@@ -108,18 +142,46 @@ export class PrinterFilesController {
 		const id = nextUploadId++;
 		this.uploads = [
 			...this.uploads,
-			{ id, name: file.name, size: file.size, sent: 0, status: 'uploading', file },
+			{ id, name: file.name, size: file.size, sent: 0, forwarded: 0, status: 'uploading', file },
 		];
 
 		// Read the entry back out of the reactive array: mutating the object literal above would
 		// not notify, only its $state proxy does.
 		const entry = this.uploads[this.uploads.length - 1];
+		const uploadId = crypto.randomUUID();
 
 		return new Promise<void>((resolve) => {
 			const xhr = new XMLHttpRequest();
 			this.xhrs.set(id, xhr);
 
+			let poll: ReturnType<typeof setInterval> | null = null;
+			const stopPolling = () => {
+				if (poll) clearInterval(poll);
+				poll = null;
+			};
+
+			// Once the browser's own upload is done the bar would otherwise freeze at 100% for the
+			// whole gv-web → printer transfer, so track that leg from the server instead.
+			const startPolling = () => {
+				if (poll) return;
+				poll = setInterval(async () => {
+					try {
+						const res = await fetch(`${this.base}/progress?u=${encodeURIComponent(uploadId)}`, {
+							headers: { Accept: 'application/json' },
+						});
+						if (!res.ok) return;
+						const p = await res.json();
+						if (typeof p?.sent === 'number' && p.sent > entry.forwarded) {
+							entry.forwarded = p.sent;
+						}
+					} catch {
+						// Transient failure — the next tick will retry.
+					}
+				}, 400);
+			};
+
 			const finish = () => {
+				stopPolling();
 				this.xhrs.delete(id);
 				resolve();
 			};
@@ -136,11 +198,16 @@ export class PrinterFilesController {
 			// A custom header forces a CORS preflight, which is what keeps this endpoint safe from
 			// cross-origin posts (SvelteKit's CSRF check ignores octet-stream bodies).
 			xhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
+			// Lets /files/progress report how far the server has got forwarding to the printer.
+			xhr.setRequestHeader('X-Upload-Id', uploadId);
 
 			xhr.upload.onprogress = (e) => {
 				if (!e.lengthComputable) return;
 				entry.sent = e.loaded;
-				if (e.loaded >= e.total) entry.status = 'sending';
+				if (e.loaded >= e.total) {
+					entry.status = 'sending';
+					startPolling();
+				}
 			};
 
 			xhr.onload = () => {
@@ -155,19 +222,14 @@ export class PrinterFilesController {
 					return;
 				}
 
-				let message = '';
+				let serverError = '';
 				try {
 					const parsed = JSON.parse(xhr.responseText);
-					if (parsed?.error) message = parsed.error;
+					if (parsed?.error) serverError = parsed.error;
 				} catch {
-					// Non-JSON body — e.g. a 413 from a reverse proxy that never reached the app.
+					// Not our JSON — a gateway error page, so uploadErrorMessage explains it instead.
 				}
-				if (!message) {
-					message =
-						xhr.status === 413
-							? 'File too large for the server (raise BODY_SIZE_LIMIT)'
-							: `Upload failed (${xhr.status})`;
-				}
+				const message = uploadErrorMessage(xhr.status, serverError);
 				fail(message, xhr.status === 409 ? 'conflict' : 'error');
 			};
 

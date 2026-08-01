@@ -20,6 +20,12 @@ import {
 	startPrint,
 	uploadFile,
 } from '$lib/server/printers/files';
+import {
+	endUpload,
+	sanitizeUploadId,
+	setUploadProgress,
+	startUpload,
+} from '$lib/server/printers/uploadProgress';
 
 /** Turns an upstream PrusaLink status into something worth showing a human. */
 function upstreamError(status: number, op: 'upload' | 'print' | 'delete'): string {
@@ -83,14 +89,26 @@ export const PUT: RequestHandler = async ({ params, request, url }) => {
 	}
 	if (body.byteLength === 0) return json({ error: 'Empty file' }, { status: 400 });
 
+	// Lets the browser poll the gv-web → printer leg, which XHR progress cannot see.
+	const uploadId = sanitizeUploadId(request.headers.get('x-upload-id'));
+	if (uploadId) startUpload(uploadId, body.byteLength);
+
 	try {
-		const res = await uploadFile(printer, name, body, url.searchParams.get('overwrite') === '1');
+		const res = await uploadFile(
+			printer,
+			name,
+			body,
+			url.searchParams.get('overwrite') === '1',
+			uploadId ? (sent) => setUploadProgress(uploadId, sent) : undefined
+		);
 		if (!res.ok) {
 			return json({ error: upstreamError(res.status, 'upload') }, { status: res.status });
 		}
 		return json({ name });
 	} catch (e) {
 		return json({ error: e instanceof Error ? e.message : 'Upload failed' }, { status: 502 });
+	} finally {
+		if (uploadId) endUpload(uploadId);
 	}
 };
 

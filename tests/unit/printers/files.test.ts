@@ -7,7 +7,10 @@ import {
 	bodySizeLimitError,
 } from '$lib/server/printers/files';
 import { digestHeader, parseChallenge } from '$lib/server/printers/prusalink';
-import { hasAcceptedExtension } from '$lib/domains/printers/printerFiles.svelte';
+import {
+	hasAcceptedExtension,
+	uploadErrorMessage,
+} from '$lib/domains/printers/printerFiles.svelte';
 
 const md5 = (s: string) => createHash('md5').update(s).digest('hex');
 
@@ -180,5 +183,36 @@ describe('bodySizeLimitError', () => {
 		expect(bodySizeLimitError('socket hang up')).toBeNull();
 		expect(bodySizeLimitError('')).toBeNull();
 		expect(bodySizeLimitError('PrusaLink /api/v1/status -> 401')).toBeNull();
+	});
+});
+
+describe('uploadErrorMessage', () => {
+	it("prefers the app's own JSON error verbatim", () => {
+		expect(uploadErrorMessage(409, 'A file with that name is already on the printer')).toBe(
+			'A file with that name is already on the printer'
+		);
+		// Even for a gateway status, a real server message wins.
+		expect(uploadErrorMessage(413, 'File is 62.7 MB but the server accepts at most 0.5 MB.')).toBe(
+			'File is 62.7 MB but the server accepts at most 0.5 MB.'
+		);
+	});
+
+	it('explains a Cloudflare tunnel timeout instead of showing a bare code', () => {
+		const msg = uploadErrorMessage(524);
+		expect(msg).toContain('Cloudflare');
+		expect(msg).toContain('100s');
+		expect(msg).not.toBe('Upload failed (524).');
+	});
+
+	it('explains the other infrastructure failures', () => {
+		expect(uploadErrorMessage(0)).toContain('Connection lost');
+		expect(uploadErrorMessage(413)).toContain('BODY_SIZE_LIMIT');
+		expect(uploadErrorMessage(502)).toContain('unreachable');
+		expect(uploadErrorMessage(504)).toContain('timed out');
+		expect(uploadErrorMessage(401)).toContain('session expired');
+	});
+
+	it('falls back to the status code for anything unrecognised', () => {
+		expect(uploadErrorMessage(418)).toBe('Upload failed (418).');
 	});
 });
