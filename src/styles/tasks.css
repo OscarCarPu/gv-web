@@ -716,20 +716,8 @@
 	@apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold;
 }
 
-.plan-chip-unplanned {
-	@apply bg-warning/15 text-warning;
-}
-
 .plan-chip-skipped {
 	@apply bg-danger/15 text-danger;
-}
-
-.plan-heading {
-	@apply text-text-muted mt-2 text-[11px] font-semibold tracking-wide uppercase;
-
-	&:first-child {
-		@apply mt-0;
-	}
 }
 
 .plan-list {
@@ -802,16 +790,6 @@
 	}
 }
 
-/* Work the plan never asked for. */
-.plan-block-unplanned {
-	border-left-color: var(--color-warning);
-	background: color-mix(in srgb, var(--color-warning) 8%, var(--color-bg));
-
-	&:hover {
-		background: color-mix(in srgb, var(--color-warning) 13%, var(--color-bg));
-	}
-}
-
 /* Planned work, done outside its slot — honoured intent, slipped timing. Muted rail: neither
    a win (green) nor a problem (amber). */
 .plan-block-moved {
@@ -826,10 +804,6 @@
 .plan-block-running {
 	border-left-color: var(--color-primary);
 	background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
-}
-
-.plan-unplanned-icon {
-	@apply text-warning mr-1 inline-block;
 }
 
 .plan-block-actual-time {

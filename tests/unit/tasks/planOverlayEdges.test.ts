@@ -75,9 +75,8 @@ describe('buildPlanTimeline — boundaries', () => {
 
 		const a = actuals(timeline.items)[0];
 		expect(a.block).toBeNull();
-		// Same task is planned today, so it reads off-schedule rather than unplanned.
+		// Same task is planned today, so it reads off-schedule instead.
 		expect(a.offScheduleBlock).not.toBeNull();
-		expect(a.unplanned).toBe(false);
 	});
 
 	it('attributes an entry overlapping a block by a single second', () => {
@@ -194,8 +193,8 @@ describe('buildPlanTimeline — degenerate blocks and tasks', () => {
 			entries: [],
 			nowMs: at(12).getTime(),
 		});
-		// Future is future — it lands in "what's left", never in the past half.
-		expect(kinds(timeline.items)).toEqual(['now', 'heading', 'planned']);
+		// Future is future — it lands after the now marker, never before it.
+		expect(kinds(timeline.items)).toEqual(['now', 'planned']);
 	});
 });
 
@@ -339,7 +338,7 @@ describe('buildPlanTimeline — midnight and the running entry', () => {
 		});
 		const a = actuals(timeline.items)[0];
 		expect(a.block?.id).toBe(b.id);
-		expect(a.unplanned).toBe(false);
+		expect(a.offScheduleBlock).toBeNull();
 	});
 
 	it('produces no leading gap from midnight to the first entry', () => {
@@ -487,9 +486,10 @@ describe('buildPlanTimeline — invariants', () => {
 		expect(JSON.stringify(scenario.entries)).toBe(entriesBefore);
 	});
 
-	it('keeps doneSeconds equal to on-plan plus unplanned', () => {
-		const { totals } = buildPlanTimeline(scenario);
-		expect(totals.onPlanSeconds + totals.unplannedSeconds).toBe(totals.doneSeconds);
+	it('keeps doneSeconds equal to the sum of the actual rows it renders', () => {
+		const { items, totals } = buildPlanTimeline(scenario);
+		const summed = actuals(items).reduce((s, a) => s + a.seconds, 0);
+		expect(summed).toBe(totals.doneSeconds);
 	});
 
 	it('keeps every total non-negative and finite', () => {
@@ -543,15 +543,16 @@ describe('buildPlanTimeline — invariants', () => {
 		expect(stamps).toEqual(sorted);
 	});
 
-	it('survives an empty plan with only unplanned work', () => {
+	it('survives an empty plan with work the plan never asked for', () => {
 		const timeline = buildPlanTimeline({
 			blocks: [],
 			entries: [entry({ task_id: 7, started_at: iso(9), finished_at: iso(10) })],
 			nowMs: at(12).getTime(),
 		});
-		expect(actuals(timeline.items)[0].unplanned).toBe(true);
-		expect(timeline.totals.unplannedSeconds).toBe(3600);
-		expect(timeline.totals.onPlanSeconds).toBe(0);
+		const a = actuals(timeline.items)[0];
+		expect(a.block).toBeNull();
+		expect(a.offScheduleBlock).toBeNull();
+		expect(timeline.totals.doneSeconds).toBe(3600);
 	});
 
 	it('survives a full plan with no work logged at all', () => {

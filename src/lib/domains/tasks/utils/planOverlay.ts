@@ -23,11 +23,9 @@ export interface PlanActualItem {
 	/**
 	 * The task is planned today but this work fell outside its slot. `block` is null while
 	 * `offScheduleBlock` names the slot it belongs to — the day's intent was honoured, the
-	 * timing slipped. Distinct from `unplanned`, which means the plan never mentions the task.
+	 * timing slipped. Both null means the plan never mentioned the task at all.
 	 */
 	offScheduleBlock: PlanBlockResponse | null;
-	/** No block anywhere in today's plan asked for this task. */
-	unplanned: boolean;
 }
 
 /** A past free-time block nothing was logged against: the break actually happened. */
@@ -70,29 +68,19 @@ export interface PlanPlannedItem {
 	current: boolean;
 }
 
-export interface PlanHeadingItem {
-	kind: 'heading';
-	section: 'past' | 'future';
-}
-
 export type PlanTimelineItem =
 	| PlanActualItem
 	| PlanRestItem
 	| PlanSkippedItem
 	| PlanGapItem
 	| PlanNowItem
-	| PlanPlannedItem
-	| PlanHeadingItem;
+	| PlanPlannedItem;
 
 export interface PlanTimelineTotals {
 	/** Everything logged today, planned or not. */
 	doneSeconds: number;
-	/** Logged against a task the plan asked for, in or out of its slot. */
-	onPlanSeconds: number;
-	/** Planned work done outside its slot — counted inside `onPlanSeconds` too. */
+	/** Planned work done outside its slot — a subset of `doneSeconds`. */
 	offScheduleSeconds: number;
-	/** Logged with no block anywhere in today's plan asking for it. */
-	unplannedSeconds: number;
 	/** Planned time still ahead of now (current block counted from now). */
 	remainingPlannedSeconds: number;
 	/** Planned task time that came and went with nothing logged. */
@@ -133,9 +121,9 @@ export function blockSeconds(b: PlanBlockResponse): number {
 /**
  * Fold today's real time entries over today's plan.
  *
- * Everything before `nowMs` is rebuilt from what actually happened: each entry becomes an
- * `actual` row at its real clock position, attributed to the block that planned it when one
- * matches (same task, overlapping window) and flagged `unplanned` when none does. Blocks that
+ * One continuous agenda around a single `now` marker. Everything before it is rebuilt from what
+ * actually happened: each entry becomes an `actual` row at its real clock position, attributed
+ * to the block that planned it when one matches (same task, overlapping window). Blocks that
  * came and went unworked collapse to `skipped`; planned breaks nothing ran through become
  * `rest`; the leftovers become `gap`. Everything after `nowMs` stays untouched intent
  * (`planned`), with the in-progress block contributing only its remainder.
@@ -206,7 +194,6 @@ export function buildPlanTimeline(input: {
 			block,
 			plannedSeconds: block ? blockSeconds(block) : 0,
 			offScheduleBlock: block === null ? offScheduleBlock : null,
-			unplanned: block === null && offScheduleBlock === null,
 		});
 	}
 	actuals.sort((a, b) => ms(a.startedAt) - ms(b.startedAt));
@@ -334,30 +321,19 @@ export function buildPlanTimeline(input: {
 
 	future.sort((a, b) => ms(a.block.started_at) - ms(b.block.started_at));
 
-	const items: PlanTimelineItem[] = [];
-	if (past.length > 0) {
-		items.push({ kind: 'heading', section: 'past' });
-		items.push(...past);
-	}
-	items.push({ kind: 'now', ms: nowMs });
-	if (future.length > 0) {
-		items.push({ kind: 'heading', section: 'future' });
-		items.push(...future);
-	}
+	// A single agenda: the past as it happened, the now marker, then what is still ahead.
+	const items: PlanTimelineItem[] = [...past, { kind: 'now', ms: nowMs }, ...future];
 
 	// ── 5. Totals ──
 	const doneSeconds = actuals.reduce((s, a) => s + a.seconds, 0);
-	const unplannedSeconds = actuals.filter((a) => a.unplanned).reduce((s, a) => s + a.seconds, 0);
 
 	return {
 		items,
 		totals: {
 			doneSeconds,
-			onPlanSeconds: doneSeconds - unplannedSeconds,
 			offScheduleSeconds: actuals
 				.filter((a) => a.offScheduleBlock !== null)
 				.reduce((s, a) => s + a.seconds, 0),
-			unplannedSeconds,
 			remainingPlannedSeconds: future
 				.filter((f) => f.block.task_id !== null)
 				.reduce((s, f) => s + f.remainingSeconds, 0),

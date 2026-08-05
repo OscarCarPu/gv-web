@@ -75,7 +75,7 @@ describe('buildPlanTimeline', () => {
 		expect(timeline.totals.doneSeconds).toBe(0);
 	});
 
-	it('splits past and future around now with section headings', () => {
+	it('runs one agenda around now: what happened, then what is left', () => {
 		const timeline = buildPlanTimeline({
 			blocks: [
 				block({ started_at: iso(9), ended_at: iso(10), task_id: 100 }),
@@ -85,18 +85,7 @@ describe('buildPlanTimeline', () => {
 			nowMs: at(11).getTime(),
 		});
 
-		expect(kinds(timeline.items)).toEqual([
-			'heading',
-			'actual',
-			'gap',
-			'now',
-			'heading',
-			'planned',
-		]);
-		const past = timeline.items[0] as { section: string };
-		const futureHeading = timeline.items[4] as { section: string };
-		expect(past.section).toBe('past');
-		expect(futureHeading.section).toBe('future');
+		expect(kinds(timeline.items)).toEqual(['actual', 'gap', 'now', 'planned']);
 	});
 
 	it('attributes an entry to the same-task block it overlaps most', () => {
@@ -111,12 +100,11 @@ describe('buildPlanTimeline', () => {
 
 		const actual = timeline.items.find((i) => i.kind === 'actual') as PlanActualItem;
 		expect(actual.block?.id).toBe(late.id);
-		expect(actual.unplanned).toBe(false);
 		expect(actual.plannedSeconds).toBe(3600);
 		expect(actual.seconds).toBe(50 * 60);
 	});
 
-	it('flags work on a task the plan never mentions as unplanned', () => {
+	it('still shows work on a task the plan never mentions, attributed to nothing', () => {
 		const timeline = buildPlanTimeline({
 			blocks: [block({ started_at: iso(9), ended_at: iso(10), task_id: 100 })],
 			// Same clock window, different task — the plan never asked for this.
@@ -127,15 +115,14 @@ describe('buildPlanTimeline', () => {
 		});
 
 		const actual = timeline.items.find((i) => i.kind === 'actual') as PlanActualItem;
-		expect(actual.unplanned).toBe(true);
 		expect(actual.block).toBeNull();
 		expect(actual.offScheduleBlock).toBeNull();
 		expect(actual.taskName).toBe('Fix CI');
-		expect(timeline.totals.unplannedSeconds).toBe(33 * 60);
-		expect(timeline.totals.onPlanSeconds).toBe(0);
+		// It still happened, so it still counts toward the day.
+		expect(timeline.totals.doneSeconds).toBe(33 * 60);
 	});
 
-	it('calls planned work done outside its slot off-schedule, not unplanned', () => {
+	it('names the slot when planned work happened outside it', () => {
 		const slot = block({ started_at: iso(14), ended_at: iso(16), task_id: 100 });
 		const timeline = buildPlanTimeline({
 			// Planned for 14:00, actually worked 07:00–09:00.
@@ -145,12 +132,8 @@ describe('buildPlanTimeline', () => {
 		});
 
 		const actual = timeline.items.find((i) => i.kind === 'actual') as PlanActualItem;
-		expect(actual.unplanned).toBe(false);
 		expect(actual.block).toBeNull();
 		expect(actual.offScheduleBlock?.id).toBe(slot.id);
-		// It was still the day's intent, so it counts on-plan, tracked separately.
-		expect(timeline.totals.unplannedSeconds).toBe(0);
-		expect(timeline.totals.onPlanSeconds).toBe(2 * 3600);
 		expect(timeline.totals.offScheduleSeconds).toBe(2 * 3600);
 	});
 
@@ -306,7 +289,7 @@ describe('buildPlanTimeline', () => {
 		expect(timeline.items.some((i) => i.kind === 'actual')).toBe(false);
 	});
 
-	it('orders the whole past section chronologically across item kinds', () => {
+	it('orders everything before now chronologically across item kinds', () => {
 		const timeline = buildPlanTimeline({
 			blocks: [
 				block({ started_at: iso(9), ended_at: iso(10), task_id: 100 }), // worked
@@ -318,7 +301,6 @@ describe('buildPlanTimeline', () => {
 		});
 
 		expect(kinds(timeline.items)).toEqual([
-			'heading',
 			'actual', // 09:00
 			'skipped', // 10:00
 			'rest', // 11:00
@@ -335,7 +317,7 @@ describe('buildPlanTimeline', () => {
 			nowMs: at(11).getTime(),
 		});
 
-		expect(kinds(timeline.items)).toEqual(['heading', 'actual', 'skipped', 'now']);
+		expect(kinds(timeline.items)).toEqual(['actual', 'skipped', 'now']);
 		expect(timeline.totals.gapSeconds).toBe(0);
 		expect(timeline.totals.skippedSeconds).toBe(3600);
 	});
@@ -351,7 +333,7 @@ describe('buildPlanTimeline', () => {
 		const actual = timeline.items.find((i) => i.kind === 'actual') as PlanActualItem;
 		expect(actual.seconds).toBe(27 * 60);
 		expect(actual.plannedSeconds).toBe(3600);
-		expect(timeline.totals.onPlanSeconds).toBe(27 * 60);
+		expect(timeline.totals.doneSeconds).toBe(27 * 60);
 	});
 
 	it('counts only task blocks toward remaining planned time', () => {

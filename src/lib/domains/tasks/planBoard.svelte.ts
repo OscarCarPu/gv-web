@@ -34,8 +34,8 @@ const defaultApi: PlanBoardApi = { plan: planApi, tasks: tasksApi };
  * reactive state here, but the interval that ticks it lives in the component's `$effect`
  * (effects need component lifecycle) and calls `setNow(Date.now())`.
  *
- * The past half of the render comes from real time entries, not from blocks — see
- * `buildPlanTimeline`. Blocks only speak for the future.
+ * The timeline is one agenda: everything before now comes from real time entries, not from
+ * blocks — see `buildPlanTimeline`. Blocks only speak for the future.
  */
 export class PlanBoard {
 	// Injected (assigned in constructor; declared first so getters may reference them).
@@ -150,10 +150,6 @@ export class PlanBoard {
 
 	get estimatedReached(): boolean {
 		return this.dailyTarget > 0 && this.estimatedTotal >= this.dailyTarget;
-	}
-
-	get unplannedSeconds(): number {
-		return this.timeline.totals.unplannedSeconds;
 	}
 
 	get skippedSeconds(): number {

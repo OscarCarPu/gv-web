@@ -181,11 +181,6 @@
 			<div class="plan-summary-row plan-summary-chips">
 				<span class="plan-summary-label">Free</span>
 				<span class="plan-summary-value">{formatTime(board.freeTotal)}</span>
-				{#if board.unplannedSeconds > 0}
-					<span class="plan-chip plan-chip-unplanned">
-						<Icon name="fire" />{formatTime(board.unplannedSeconds)} unplanned
-					</span>
-				{/if}
 				{#if board.skippedSeconds > 0}
 					<span class="plan-chip plan-chip-skipped">
 						{formatTime(board.skippedSeconds)} skipped
@@ -202,11 +197,7 @@
 		{:else}
 			<div class="plan-list">
 				{#each board.items as item, i (itemKey(item, i))}
-					{#if item.kind === 'heading'}
-						<div class="plan-heading">
-							{item.section === 'past' ? 'What I did' : "What's left"}
-						</div>
-					{:else if item.kind === 'now'}
+					{#if item.kind === 'now'}
 						<div class="plan-now-divider">
 							<span class="plan-now-line"></span>
 							<span class="plan-now-label">{isoToHHmm(item.ms)}</span>
@@ -275,7 +266,6 @@
 						{@const shortfall = item.plannedSeconds - item.seconds}
 						<button
 							class="plan-block plan-block-actual"
-							class:plan-block-unplanned={item.unplanned}
 							class:plan-block-moved={item.offScheduleBlock !== null}
 							class:plan-block-running={item.running}
 							onclick={() => openEntry(item.entryId)}
@@ -284,19 +274,14 @@
 								{isoToHHmm(item.startedAt)}<br />{item.running ? 'now' : isoToHHmm(item.endedAt)}
 							</div>
 							<div class="plan-block-body">
-								<div class="plan-block-name">
-									{#if item.unplanned}<Icon name="fire" class="plan-unplanned-icon" />{/if}
-									{item.taskName}
-								</div>
+								<div class="plan-block-name">{item.taskName}</div>
 								<div class="plan-block-meta">
 									<span class="plan-block-actual-time">
 										{item.block
 											? `${formatTime(item.seconds)} / ${formatTime(item.plannedSeconds)}`
 											: formatTime(item.seconds)}
 									</span>
-									{#if item.unplanned}
-										<span class="plan-block-verdict">· unplanned</span>
-									{:else if item.offScheduleBlock}
+									{#if item.offScheduleBlock}
 										<span class="plan-block-verdict">
 											· planned for {isoToHHmm(item.offScheduleBlock.started_at)}
 										</span>
