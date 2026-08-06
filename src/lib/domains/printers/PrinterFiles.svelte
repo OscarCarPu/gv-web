@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import Icon from '$shared/components/Icon.svelte';
-	import { formatBytes as size } from './format';
+	import { formatBytes as size, formatEta } from './format';
 	import { ACCEPT_ATTR, PrinterFilesController, type Upload } from './printerFiles.svelte';
 
 	interface Props {
@@ -93,7 +93,8 @@
 
 	function uploadLabel(u: Upload): string {
 		if (u.status === 'sending') {
-			return `Sending to printer… ${uploadPct(u)}% · ${size(u.forwarded)} of ${size(u.size)}`;
+			const left = u.etaSeconds != null ? ` · ${formatEta(u.etaSeconds)} left` : '';
+			return `Sending to printer… ${uploadPct(u)}% · ${size(u.forwarded)} of ${size(u.size)}${left}`;
 		}
 		if (u.status === 'done') return 'Uploaded';
 		if (u.status === 'conflict') return u.error ?? 'Already on the printer';

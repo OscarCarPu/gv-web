@@ -68,6 +68,8 @@ export type Upload = {
 	/** Bytes gv-web has forwarded to the printer — polled, since XHR cannot see this leg. */
 	forwarded: number;
 	status: UploadStatus;
+	/** Seconds left on the printer leg, from a smoothed forwarding rate. Absent until measurable. */
+	etaSeconds?: number;
 	error?: string;
 	/**
 	 * Kept so a 409 can be replayed with ?overwrite=1. Absent for a row adopted from the server
@@ -192,6 +194,13 @@ export class PrinterFilesController {
 		if (this.watchers.has(entry.serverId)) return;
 
 		let missing = 0;
+
+		// Time left comes from an exponentially smoothed rate: the printer writes in bursts, so a
+		// single tick's rate swings by an order of magnitude and would make the countdown jitter.
+		let lastAt = Date.now();
+		let lastBytes = entry.forwarded;
+		let rate = 0; // bytes per second
+
 		const settle = () => {
 			const t = this.watchers.get(entry.serverId);
 			if (t) clearInterval(t);
@@ -222,6 +231,18 @@ export class PrinterFilesController {
 				const p = UploadProgressSchema.parse(await res.json());
 
 				if (p.sent > entry.forwarded) entry.forwarded = p.sent;
+
+				if (p.sent > lastBytes) {
+					const now = Date.now();
+					const elapsed = (now - lastAt) / 1000;
+					if (elapsed > 0) {
+						const sample = (p.sent - lastBytes) / elapsed;
+						rate = rate ? rate * 0.7 + sample * 0.3 : sample;
+						entry.etaSeconds = Math.max(0, entry.size - p.sent) / rate;
+					}
+					lastAt = now;
+					lastBytes = p.sent;
+				}
 
 				if (p.status === 'done') return succeed();
 				if (p.status === 'error') {
