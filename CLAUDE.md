@@ -153,6 +153,17 @@ src/lib/domains/money/components/
 
 Backend endpoints: `GET /finance/stats/networth`, `/by-category`, `/monthly`. Date ranges follow the rule "missing `from` → earliest transaction date" so omitting `from` is the canonical way to request "All time" data — don't send a sentinel like `2000-01-01`
 
+## Printers domain — quick rules
+
+Route: `/printers` (semiprivate). Everything printer-facing is server-only — RTSP URLs and PrusaLink credentials live in `src/lib/server/printers/` and never reach the browser. `BODY_SIZE_LIMIT` is a required prod setting; the 512K default rejects every real gcode upload.
+
+- **Three ffmpeg lifecycles, deliberately separate**: `camera.ts` keeps one warm process per printer for the live MJPEG preview and kills it after 30s idle; `recordings.ts` spawns its own for a recording and keeps it alive until stopped. Never merge them — the preview must idle out while a recording must not
+- **Recording is a backend job**: `POST /printers/[id]/recordings?action=start|stop` starts/stops ffmpeg in the server process. It keeps running with the page closed, and a returning page just sees it still going. The client controller holds no recording state of its own, only what the server reports
+- **Recordings are their own metadata**: file name = UTC start time (`2026-08-06T14-32-05.mp4`), mtime = end time, size = size. There is no sidecar and no database, so a restart mid-recording loses the ffmpeg handle but never the recording. `parseRecordingName()` is therefore also the sanitizer — nothing but a timestamp this app generated matches, which is what keeps a client-supplied name from escaping the printer's folder
+- **Fragmented MP4** (`+frag_keyframe+empty_moov+default_base_moof`) with `-c:v copy`: no re-encode, and the file stays playable even when the process is SIGKILLed or the container restarts. Stop writes `q` to ffmpeg's stdin (graceful) before escalating to signals
+- **Recordings need a volume**: `PRINTER_RECORDINGS_DIR` (default `data/recordings`) is mounted as a named volume in `docker-compose.yml`. Without it every recording dies with the container. Retention is `PRINTER_RECORDINGS_MAX_GB` per printer, pruned oldest-first before each new recording
+- **Playback honours `Range`**: `/printers/[id]/recordings/[name]` answers 206 with `Content-Range`, which is what `<video>` needs to seek. Same route serves the `.jpg` poster ffmpeg extracts when a recording ends
+
 ## Welcome page (`/`)
 
 Public portfolio/landing page at `src/routes/+page.svelte` — no auth required, fully open. Content is hardcoded (no API calls): CV summary, skills chips, language chips, certifications & awards grid, 3 featured Gitea projects in a 3-column grid. Styles in `src/styles/welcome.css` (uses `main:has(.welcome-page)` to zero out `main`'s `py-8` so the header sits flush). CV PDF is served statically from `static/CV.pdf`.

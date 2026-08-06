@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import Icon from '$shared/components/Icon.svelte';
+	import { formatBytes as size } from './format';
 	import { ACCEPT_ATTR, PrinterFilesController, type Upload } from './printerFiles.svelte';
 
 	interface Props {
@@ -79,15 +80,6 @@
 		const target = e.currentTarget as HTMLInputElement;
 		if (target.files?.length) controller.addFiles(target.files);
 		target.value = ''; // let the same file be picked again
-	}
-
-	function size(bytes?: number): string {
-		if (bytes == null) return '—';
-		if (bytes < 1024) return `${bytes} B`;
-		const mb = bytes / (1024 * 1024);
-		if (mb < 1) return `${(bytes / 1024).toFixed(0)} KB`;
-		if (mb < 1024) return `${mb.toFixed(1)} MB`;
-		return `${(mb / 1024).toFixed(2)} GB`;
 	}
 
 	// Two sequential legs: browser → gv-web (XHR progress), then gv-web → printer (polled).

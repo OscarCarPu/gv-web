@@ -299,6 +299,10 @@
 	@apply max-w-xs p-4;
 }
 
+.modal-card-wide {
+	@apply max-w-3xl;
+}
+
 .modal-title {
 	@apply text-center text-2xl font-bold;
 }

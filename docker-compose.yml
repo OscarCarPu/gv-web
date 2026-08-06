@@ -8,9 +8,16 @@ services:
       - '3000:3000'
     env_file:
       - .env
+    volumes:
+      # Printer camera recordings — written by the server, so they must outlive the container.
+      # Matches PRINTER_RECORDINGS_DIR (default 'data/recordings', relative to WORKDIR /app).
+      - printer-recordings:/app/data/recordings
     networks:
       - gv
     restart: unless-stopped
+
+volumes:
+  printer-recordings:
 
 networks:
   gv:

@@ -2,6 +2,9 @@ test-results
 node_modules
 coverage
 
+# Printer camera recordings written by the dev server
+/data
+
 # Output
 .output
 .vercel

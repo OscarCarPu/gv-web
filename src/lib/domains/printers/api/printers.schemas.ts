@@ -83,6 +83,30 @@ export const ActiveUploadsSchema = z.object({
 
 export type ActiveUpload = z.infer<typeof ActiveUploadsSchema>['uploads'][number];
 
+/** One camera recording on the server's disk. */
+export const RecordingSchema = z.object({
+	name: z.string(),
+	startedAt: z.string(),
+	/** Absent while it is still being written. */
+	endedAt: z.string().optional(),
+	durationMs: z.number(),
+	sizeBytes: z.number(),
+	recording: z.boolean(),
+	poster: z.string().optional(),
+});
+
+export const RecordingsSchema = z.object({
+	recordings: z
+		.array(RecordingSchema)
+		.nullable()
+		.transform((v) => v ?? []),
+	usedBytes: z.number(),
+	maxBytes: z.number(),
+});
+
+export type Recording = z.infer<typeof RecordingSchema>;
+export type Recordings = z.infer<typeof RecordingsSchema>;
+
 export type PrinterFile = z.infer<typeof PrinterFileSchema>;
 export type PrinterStorage = z.infer<typeof PrinterStorageSchema>;
 export type PrinterFiles = z.infer<typeof PrinterFilesSchema>;

@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { PrinterController } from './printerStatus.svelte';
+	import { PrinterRecordingsController } from './printerRecordings.svelte';
 	import PrinterFiles from './PrinterFiles.svelte';
+	import PrinterRecordings from './PrinterRecordings.svelte';
 
 	interface Props {
 		id: string;
@@ -14,6 +16,9 @@
 	let { id, name, model, camIntervalMs = 200 }: Props = $props();
 
 	const controller = new PrinterController(id);
+	// Owned here rather than inside PrinterRecordings so the camera tile can show REC from the
+	// same state the panel below it is driven by.
+	const recordings = new PrinterRecordingsController(id);
 
 	let camSrc = $state<string | null>(null);
 	let camReady = $state(false);
@@ -51,16 +56,19 @@
 
 	$effect(() => {
 		controller.start(2000);
+		recordings.start();
 		refreshCam();
 		camTimer = setInterval(refreshCam, camIntervalMs);
 		return () => {
 			controller.stop();
+			recordings.stop();
 			if (camTimer) clearInterval(camTimer);
 		};
 	});
 
 	onDestroy(() => {
 		controller.stop();
+		recordings.stop();
 		if (camTimer) clearInterval(camTimer);
 	});
 
@@ -118,6 +126,9 @@
 			</div>
 		{/if}
 		<span class="cam-live">● LIVE</span>
+		{#if recordings.isRecording}
+			<span class="cam-rec">● REC</span>
+		{/if}
 	</div>
 
 	<div class="printer-head">
@@ -182,6 +193,8 @@
 	</div>
 
 	<PrinterFiles {id} online={t?.online ?? false} />
+
+	<PrinterRecordings {id} controller={recordings} />
 
 	{#if t && !t.configured}
 		<p class="notice">
