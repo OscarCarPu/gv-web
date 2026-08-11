@@ -13,8 +13,9 @@ import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
  * calls on unmount.
  */
 export class PlanAlarm {
-	// Public reactive state, read directly by the template. Notifications default ON.
-	#enabled = $state(true);
+	// Public reactive state, read directly by the template. Notifications default OFF —
+	// the bell button in the Plan header opts in per session.
+	#enabled = $state(false);
 	#alarmOpen = $state(false);
 	#alarmBlock = $state<PlanBlockResponse | null>(null);
 
