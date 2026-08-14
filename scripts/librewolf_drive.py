@@ -218,10 +218,22 @@ class Session:
         self.m.connect()
         self.m.new_session()
         if self.authenticate:
-            token = mint_session_token()
-            self.m.navigate(BASE_URL + "/")
-            self.m.add_cookie({"name": "session", "value": token, "path": "/",
-                               "httpOnly": True, "secure": False})
+            cookie = {"name": "session", "value": mint_session_token(), "path": "/",
+                      "httpOnly": True, "secure": False}
+            # A fresh profile throws a confirmEx over the first page load often enough
+            # that one attempt is a coin flip. Marionette dismisses the dialog but fails
+            # the command, and can leave the window on about:blank — where a cookie has
+            # no origin to attach to ("Document is cookie-averse"). So retry the whole
+            # navigate + set pair, not just the set.
+            for attempt in range(3):
+                try:
+                    self.m.navigate(BASE_URL + "/")
+                    self.m.add_cookie(cookie)
+                    break
+                except RuntimeError:
+                    if attempt == 2:
+                        raise
+                    time.sleep(1)
         # convenience: relative goto
         self.m.goto = lambda path: self.m.navigate(BASE_URL + path)  # type: ignore[attr-defined]
         return self.m

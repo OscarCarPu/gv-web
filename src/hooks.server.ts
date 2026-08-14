@@ -4,7 +4,7 @@ import { dev } from '$app/environment';
 import { env } from '$lib/config/env';
 
 const PUBLIC_ROUTES = ['/login', '/login/2fa', '/'];
-const SEMIPRIVATE_ROUTES = ['/varieties', '/printers'];
+const SEMIPRIVATE_ROUTES = ['/varieties', '/domotics', '/printers'];
 const AUTH_ONLY_ROUTES = ['/logout'];
 
 function isValidJWT(token: string): boolean {

@@ -153,16 +153,29 @@ src/lib/domains/money/components/
 
 Backend endpoints: `GET /finance/stats/networth`, `/by-category`, `/monthly`. Date ranges follow the rule "missing `from` → earliest transaction date" so omitting `from` is the canonical way to request "All time" data — don't send a sentinel like `2000-01-01`
 
-## Printers domain — quick rules
+## Domotics domain — quick rules
 
-Route: `/printers` (semiprivate). Everything printer-facing is server-only — RTSP URLs and PrusaLink credentials live in `src/lib/server/printers/` and never reach the browser. `BODY_SIZE_LIMIT` is a required prod setting; the 512K default rejects every real gcode upload.
+Route: `/domotics` (semiprivate), a shell with two tabs — `/domotics/printers` and `/domotics/lights`. `/domotics` itself redirects to the printers tab, and the old `/printers` 308s to `/domotics/printers` so existing bookmarks survive. Client code lives in `src/lib/domains/domotics/{printers,lights}/`, server code in `src/lib/server/domotics/{printers,lights}/`. The shell and everything lights-related is styled in `domotics.css`; printer furniture stays in `printers.css`. Both are imported by `/domotics/+layout.svelte` — the root layout imports neither.
+
+### Printers tab
+
+Everything printer-facing is server-only — RTSP URLs and PrusaLink credentials live in `src/lib/server/domotics/printers/` and never reach the browser. `BODY_SIZE_LIMIT` is a required prod setting; the 512K default rejects every real gcode upload.
 
 - **Three ffmpeg lifecycles, deliberately separate**: `camera.ts` keeps one warm process per printer for the live MJPEG preview and kills it after 30s idle; `recordings.ts` spawns its own for a recording and keeps it alive until stopped. Never merge them — the preview must idle out while a recording must not
-- **Recording is a backend job**: `POST /printers/[id]/recordings?action=start|stop` starts/stops ffmpeg in the server process. It keeps running with the page closed, and a returning page just sees it still going. The client controller holds no recording state of its own, only what the server reports
+- **Recording is a backend job**: `POST /domotics/printers/[id]/recordings?action=start|stop` starts/stops ffmpeg in the server process. It keeps running with the page closed, and a returning page just sees it still going. The client controller holds no recording state of its own, only what the server reports
 - **Recordings are their own metadata**: file name = UTC start time (`2026-08-06T14-32-05.mp4`), mtime = end time, size = size. There is no sidecar and no database, so a restart mid-recording loses the ffmpeg handle but never the recording. `parseRecordingName()` is therefore also the sanitizer — nothing but a timestamp this app generated matches, which is what keeps a client-supplied name from escaping the printer's folder
 - **Fragmented MP4** (`+frag_keyframe+empty_moov+default_base_moof`) with `-c:v copy`: no re-encode, and the file stays playable even when the process is SIGKILLed or the container restarts. Stop writes `q` to ffmpeg's stdin (graceful) before escalating to signals
 - **Recordings need a volume**: `PRINTER_RECORDINGS_DIR` (default `data/recordings`) is mounted as a named volume in `docker-compose.yml`. Without it every recording dies with the container. Retention is `PRINTER_RECORDINGS_MAX_GB` per printer, pruned oldest-first before each new recording
-- **Playback honours `Range`**: `/printers/[id]/recordings/[name]` answers 206 with `Content-Range`, which is what `<video>` needs to seek. Same route serves the `.jpg` poster ffmpeg extracts when a recording ends
+- **Playback honours `Range`**: `/domotics/printers/[id]/recordings/[name]` answers 206 with `Content-Range`, which is what `<video>` needs to seek. Same route serves the `.jpg` poster ffmpeg extracts when a recording ends
+
+### Lights tab (BLE bulbs)
+
+- **The app server has no Bluetooth radio.** No adapter, no bluez, no `/sys/class/bluetooth` — so BLE cannot be spoken from this process, and giving the container the host's DBus + network namespace to fix that is not worth it. The radio lives in `scripts/ble-bridge/`, a stdlib+PyGObject daemon on any LAN machine that does have Bluetooth. `LIGHTS_DRIVER` picks `mock` (in-memory, the dev default) or `bridge` (HTTP to the daemon). Adding a transport means adding a driver in `src/lib/server/domotics/lights/drivers/` — nothing above it changes
+- **Bulbs come from `LIGHTS`**, a JSON array in the env. BLE addresses stay server-side; `listLights()` sends the browser ids, names and capabilities only. `supportsColor: false` hides the colour picker and the mode toggle, which is what a tunable-white bulb needs
+- **Drivers never throw.** An unreachable bulb returns `online: false` with an `error` string, so one dead bulb cannot blank the tab or 500 the SSR load
+- **SSR must not wait on the radio**: `readAllStatesOrKnown()` races the read against 1.5s and falls back to last-known state. A cold BLE connect measured ~11s (BlueZ drops an unbonded bulb's object after disconnect and has to rediscover it), which would otherwise hold the page blank for all of it. The client's first poll fills in what missed the cut. For the same reason `LIGHTS_BRIDGE_TIMEOUT_MS` defaults to 20s, not 8
+- **Writes are optimistic and throttled**: `LightsController` applies a change locally, then reconciles with the server's answer. Sliders keep one write in flight per (bulb, control) with a trailing send — without it a colour drag queues sixty writes and the bulb stops answering. Polling holds back for `POLL_GRACE_MS` after a local change so it can never walk the user's action back, though it always takes the server's word on reachability
+- **Protocol knowledge belongs in the bridge**, not here — see `scripts/ble-bridge/README.md`. Currently supported: LEXMAN/Adeo ZBEK-13 (`lexman`), tunable white, no RGB. Its quirks are documented there and they are real: one central at a time, first connect often aborts and needs a retry, and it sends no notification at all when written a value it already holds
 
 ## Welcome page (`/`)
 

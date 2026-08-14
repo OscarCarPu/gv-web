@@ -1,0 +1,445 @@
+/* Shell shared by every /domotics tab, plus everything the Lights tab needs.
+   Printer-specific furniture stays in printers.css. */
+
+.domotics-page {
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 1.5rem 1rem 4rem;
+}
+
+.domotics-head {
+	margin-bottom: 1.25rem;
+}
+
+.domotics-head h1 {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: var(--color-text);
+}
+
+/* ---- Subtabs ---- */
+
+.domotics-tabs {
+	display: flex;
+	gap: 0.25rem;
+	margin-top: 0.875rem;
+	padding: 0.25rem;
+	background: var(--color-bg-light);
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	width: fit-content;
+}
+
+.domotics-tab {
+	padding: 0.4rem 1.1rem;
+	border-radius: 9px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--color-text-muted);
+	text-decoration: none;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
+}
+
+.domotics-tab:hover {
+	color: var(--color-text);
+}
+
+.domotics-tab.active {
+	background: var(--color-primary);
+	color: #fff;
+}
+
+/* ---- Lights tab ---- */
+
+.lights-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1rem;
+	flex-wrap: wrap;
+}
+
+.lights-summary {
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+}
+
+.lights-actions {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.lights-btn {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--color-text-muted);
+	background: transparent;
+	border: 1px solid var(--color-border-strong);
+	border-radius: 8px;
+	padding: 0.4rem 0.9rem;
+	cursor: pointer;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.lights-btn:hover {
+	color: var(--color-text);
+	background: var(--color-overlay);
+}
+
+.lights-btn.primary {
+	color: var(--color-primary);
+	border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+
+.lights-btn.primary:hover {
+	color: var(--color-primary);
+	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.lights-grid {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: 1fr;
+}
+
+@media (min-width: 1000px) {
+	.lights-grid {
+		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+	}
+}
+
+.light-card {
+	position: relative;
+	overflow: hidden;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 16px;
+	padding: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+	transition: border-color 0.2s ease;
+}
+
+/* The bulb's own colour, washed across the card so a glance reads the room.
+   --light-glow is set inline from the reported state. */
+.light-card::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(
+		120% 90% at 50% -20%,
+		var(--light-glow, transparent) 0%,
+		transparent 70%
+	);
+	opacity: 0;
+	transition: opacity 0.35s ease;
+	pointer-events: none;
+}
+
+.light-card.is-on::before {
+	opacity: 0.22;
+}
+
+.light-card.is-on {
+	border-color: var(--color-border-strong);
+}
+
+.light-card.is-offline {
+	opacity: 0.6;
+}
+
+.light-card > * {
+	position: relative;
+}
+
+.light-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+.light-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.light-title h2 {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.light-model {
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+	margin-top: 0.15rem;
+}
+
+/* Connection dot */
+.light-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+	background: var(--color-text-muted);
+}
+
+.light-dot.is-online {
+	background: var(--color-success);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+
+.light-dot.is-offline {
+	background: var(--color-danger);
+}
+
+/* Power switch */
+.light-switch {
+	position: relative;
+	flex-shrink: 0;
+	width: 46px;
+	height: 26px;
+	border: 1px solid var(--color-border-strong);
+	border-radius: 999px;
+	background: var(--color-bg);
+	cursor: pointer;
+	padding: 0;
+	transition:
+		background 0.2s ease,
+		border-color 0.2s ease;
+}
+
+.light-switch::after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: var(--color-text-muted);
+	transition:
+		transform 0.2s ease,
+		background 0.2s ease;
+}
+
+.light-switch.is-on {
+	background: var(--color-primary);
+	border-color: var(--color-primary);
+}
+
+.light-switch.is-on::after {
+	transform: translateX(20px);
+	background: #fff;
+}
+
+.light-switch:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+/* Controls */
+.light-controls {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+}
+
+.light-controls.is-off {
+	opacity: 0.45;
+	pointer-events: none;
+}
+
+.light-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.light-field-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	font-size: 0.75rem;
+}
+
+.light-field-label {
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.light-field-value {
+	color: var(--color-text);
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Sliders. Both share the thumb; only the track gradient differs. */
+.light-slider {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	height: 12px;
+	border-radius: 999px;
+	border: 1px solid var(--color-border);
+	cursor: pointer;
+	background: var(--color-bg);
+}
+
+.light-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: #fff;
+	border: 2px solid var(--color-border-strong);
+	box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+	cursor: pointer;
+}
+
+.light-slider::-moz-range-thumb {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #fff;
+	border: 2px solid var(--color-border-strong);
+	box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+	cursor: pointer;
+}
+
+/* Dim → full, in the bulb's own colour. The dark end has to be a theme token, not a
+   fixed navy, or it reads as a smudge on the light theme. */
+.light-slider.is-brightness {
+	background: linear-gradient(to right, var(--color-bg), var(--light-glow, #fef3c7));
+}
+
+/* Kelvin sweep matching the slider's 2200K..6500K range. */
+.light-slider.is-temp {
+	background: linear-gradient(to right, #ff9329, #ffd7a8, #ffffff, #cfe3ff, #a8c8ff);
+}
+
+/* Color / white mode toggle */
+.light-mode-toggle {
+	display: flex;
+	gap: 0.25rem;
+	padding: 0.25rem;
+	background: var(--color-bg);
+	border-radius: 10px;
+}
+
+.light-mode-toggle button {
+	flex: 1;
+	padding: 0.4rem 0;
+	border: none;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--color-text-muted);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
+}
+
+.light-mode-toggle button.active {
+	background: var(--color-primary);
+	color: #fff;
+}
+
+/* Colour presets */
+.light-swatches {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	flex-wrap: wrap;
+}
+
+.light-swatch {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 2px solid transparent;
+	box-shadow: inset 0 0 0 1px var(--color-border-strong);
+	cursor: pointer;
+	padding: 0;
+	transition: transform 0.12s ease;
+}
+
+.light-swatch:hover {
+	transform: scale(1.12);
+}
+
+.light-swatch.active {
+	border-color: var(--color-text);
+}
+
+.light-color-input {
+	width: 34px;
+	height: 28px;
+	padding: 0;
+	border: 1px solid var(--color-border-strong);
+	border-radius: 8px;
+	background: transparent;
+	cursor: pointer;
+	margin-left: auto;
+}
+
+.light-color-input::-webkit-color-swatch-wrapper {
+	padding: 2px;
+}
+
+.light-color-input::-webkit-color-swatch {
+	border: none;
+	border-radius: 6px;
+}
+
+.light-color-input::-moz-color-swatch {
+	border: none;
+	border-radius: 6px;
+}
+
+/* Per-card error line */
+.light-error {
+	font-size: 0.75rem;
+	color: var(--color-danger);
+	word-break: break-word;
+}
+
+.lights-empty {
+	background: var(--color-surface);
+	border: 1px dashed var(--color-border-strong);
+	border-radius: 16px;
+	padding: 2.5rem 1.5rem;
+	text-align: center;
+	color: var(--color-text-muted);
+}
+
+.lights-empty h2 {
+	color: var(--color-text);
+	font-size: 1rem;
+	font-weight: 600;
+	margin-bottom: 0.5rem;
+}
+
+.lights-empty code {
+	background: var(--color-bg);
+	border-radius: 4px;
+	padding: 0.1rem 0.35rem;
+	font-size: 0.8125rem;
+}

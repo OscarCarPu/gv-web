@@ -44,9 +44,9 @@
 			{/if}
 			{#if data.token || data.semiprivateToken}
 				<a
-					href="/printers"
+					href="/domotics"
 					class="nav-link"
-					class:active={page.url.pathname.startsWith('/printers')}>Printers</a
+					class:active={page.url.pathname.startsWith('/domotics')}>Domotics</a
 				>
 				<a
 					href="/varieties"

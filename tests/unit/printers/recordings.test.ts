@@ -5,8 +5,8 @@ import {
 	parseRecordingName,
 	recordingName,
 	recordingPath,
-} from '$lib/server/printers/recordings';
-import { formatBytes, formatClock } from '$lib/domains/printers/format';
+} from '$lib/server/domotics/printers/recordings';
+import { formatBytes, formatClock } from '$lib/domains/domotics/printers/format';
 
 describe('recordingName / parseRecordingName', () => {
 	it('round-trips a UTC instant through the file name', () => {

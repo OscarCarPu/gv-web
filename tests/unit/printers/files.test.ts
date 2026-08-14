@@ -6,12 +6,12 @@ import {
 	pickStorage,
 	bodySizeLimitError,
 	uploadTimeoutMs,
-} from '$lib/server/printers/files';
-import { digestHeader, parseChallenge } from '$lib/server/printers/prusalink';
+} from '$lib/server/domotics/printers/files';
+import { digestHeader, parseChallenge } from '$lib/server/domotics/printers/prusalink';
 import {
 	hasAcceptedExtension,
 	uploadErrorMessage,
-} from '$lib/domains/printers/printerFiles.svelte';
+} from '$lib/domains/domotics/printers/printerFiles.svelte';
 
 const md5 = (s: string) => createHash('md5').update(s).digest('hex');
 
