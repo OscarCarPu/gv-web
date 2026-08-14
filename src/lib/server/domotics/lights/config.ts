@@ -70,7 +70,9 @@ function parseLights(): LightConfig[] {
 	if (!raw) {
 		// Only fall back to fakes when there is no real driver behind them, so a
 		// misconfigured production deploy shows an empty tab instead of phantom bulbs.
-		return (process.env.LIGHTS_DRIVER ?? 'mock') === 'mock' ? MOCK_LIGHTS : [];
+		// Opting in must be explicit: an *unset* LIGHTS_DRIVER is what a deploy that was
+		// never configured looks like, and it should get nothing rather than two fakes.
+		return process.env.LIGHTS_DRIVER === 'mock' ? MOCK_LIGHTS : [];
 	}
 
 	let parsed: unknown;
