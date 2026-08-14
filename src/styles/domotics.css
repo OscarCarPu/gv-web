@@ -283,9 +283,88 @@
 }
 
 .light-field-value {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.1rem;
 	color: var(--color-text);
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
+}
+
+/* Exact-value entry. The readout *is* the input — a separate field would duplicate a
+   number already on screen. Spinners are hidden because the ± buttons below are the
+   coarse control and native spinners are too small to hit. */
+.light-value-input {
+	width: 2.6rem;
+	padding: 0.1rem 0.2rem;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+	-moz-appearance: textfield;
+	appearance: textfield;
+}
+
+.light-value-input.is-wide {
+	width: 3.6rem;
+}
+
+.light-value-input::-webkit-outer-spin-button,
+.light-value-input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.light-value-input:hover {
+	border-color: var(--color-border-strong);
+}
+
+.light-value-input:focus {
+	outline: none;
+	border-color: var(--color-primary);
+	background: var(--color-bg);
+}
+
+.light-value-unit {
+	color: var(--color-text-muted);
+}
+
+.light-slider-row {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.light-slider-row .light-slider {
+	flex: 1;
+	min-width: 0;
+}
+
+.light-step-btn {
+	flex-shrink: 0;
+	width: 26px;
+	height: 26px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--color-border-strong);
+	border-radius: 8px;
+	background: transparent;
+	color: var(--color-text-muted);
+	font-size: 1rem;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
+}
+
+.light-step-btn:hover {
+	color: var(--color-text);
+	background: var(--color-overlay);
 }
 
 /* Sliders. Both share the thumb; only the track gradient differs. */

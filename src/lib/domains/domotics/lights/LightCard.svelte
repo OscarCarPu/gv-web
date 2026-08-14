@@ -27,6 +27,46 @@
 			Math.abs(preset.b - state.color.b) < 6
 		);
 	}
+
+	// Nudge amounts for the ± buttons. Bigger than the slider's own step: the point of a
+	// button is to move a useful distance per press, while the slider stays fine-grained.
+	const BRIGHTNESS_STEP = 5;
+	const TEMP_STEP = 100;
+
+	function clamp(value: number, min: number, max: number): number {
+		return Math.min(max, Math.max(min, value));
+	}
+
+	function nudgeBrightness(delta: number) {
+		controller.setBrightness(state.id, clamp(Math.round(state.brightness) + delta, 0, 100));
+	}
+
+	function nudgeTemp(delta: number) {
+		const next = Math.round(state.colorTemp) + delta;
+		controller.setColorTemp(state.id, clamp(next, info.minColorTemp, info.maxColorTemp));
+	}
+
+	/**
+	 * Typed values commit on change (blur or Enter), never on keystroke — each commit is a
+	 * BLE write, and firing one per digit would queue writes the bulb cannot keep up with.
+	 * A value outside the range is clamped rather than rejected, and the input is reset from
+	 * state so the field never shows something the bulb is not doing.
+	 */
+	function commitBrightness(e: Event & { currentTarget: HTMLInputElement }) {
+		const parsed = Number(e.currentTarget.value);
+		const value = Number.isFinite(parsed) ? clamp(Math.round(parsed), 0, 100) : state.brightness;
+		e.currentTarget.value = String(Math.round(value));
+		if (value !== Math.round(state.brightness)) controller.setBrightness(state.id, value);
+	}
+
+	function commitTemp(e: Event & { currentTarget: HTMLInputElement }) {
+		const parsed = Number(e.currentTarget.value);
+		const value = Number.isFinite(parsed)
+			? clamp(Math.round(parsed), info.minColorTemp, info.maxColorTemp)
+			: state.colorTemp;
+		e.currentTarget.value = String(Math.round(value));
+		if (value !== Math.round(state.colorTemp)) controller.setColorTemp(state.id, value);
+	}
 </script>
 
 <section
@@ -64,18 +104,43 @@
 		<div class="light-field">
 			<div class="light-field-head">
 				<span class="light-field-label">Brightness</span>
-				<span class="light-field-value">{Math.round(state.brightness)}%</span>
+				<span class="light-field-value">
+					<input
+						type="number"
+						class="light-value-input"
+						min="0"
+						max="100"
+						step="1"
+						value={Math.round(state.brightness)}
+						aria-label="{state.name} brightness value"
+						onchange={commitBrightness}
+					/><span class="light-value-unit">%</span>
+				</span>
 			</div>
-			<input
-				type="range"
-				class="light-slider is-brightness"
-				min="0"
-				max="100"
-				step="1"
-				value={state.brightness}
-				aria-label="{state.name} brightness"
-				oninput={(e) => controller.setBrightness(state.id, Number(e.currentTarget.value))}
-			/>
+			<div class="light-slider-row">
+				<button
+					type="button"
+					class="light-step-btn"
+					aria-label="Dim {state.name}"
+					onclick={() => nudgeBrightness(-BRIGHTNESS_STEP)}>−</button
+				>
+				<input
+					type="range"
+					class="light-slider is-brightness"
+					min="0"
+					max="100"
+					step="1"
+					value={state.brightness}
+					aria-label="{state.name} brightness"
+					oninput={(e) => controller.setBrightness(state.id, Number(e.currentTarget.value))}
+				/>
+				<button
+					type="button"
+					class="light-step-btn"
+					aria-label="Brighten {state.name}"
+					onclick={() => nudgeBrightness(BRIGHTNESS_STEP)}>+</button
+				>
+			</div>
 		</div>
 
 		{#if hasBothModes}
@@ -126,18 +191,43 @@
 			<div class="light-field">
 				<div class="light-field-head">
 					<span class="light-field-label">Temperature</span>
-					<span class="light-field-value">{Math.round(state.colorTemp)}K</span>
+					<span class="light-field-value">
+						<input
+							type="number"
+							class="light-value-input is-wide"
+							min={info.minColorTemp}
+							max={info.maxColorTemp}
+							step="50"
+							value={Math.round(state.colorTemp)}
+							aria-label="{state.name} color temperature value"
+							onchange={commitTemp}
+						/><span class="light-value-unit">K</span>
+					</span>
 				</div>
-				<input
-					type="range"
-					class="light-slider is-temp"
-					min={info.minColorTemp}
-					max={info.maxColorTemp}
-					step="50"
-					value={state.colorTemp}
-					aria-label="{state.name} color temperature"
-					oninput={(e) => controller.setColorTemp(state.id, Number(e.currentTarget.value))}
-				/>
+				<div class="light-slider-row">
+					<button
+						type="button"
+						class="light-step-btn"
+						aria-label="Warmer {state.name}"
+						onclick={() => nudgeTemp(-TEMP_STEP)}>−</button
+					>
+					<input
+						type="range"
+						class="light-slider is-temp"
+						min={info.minColorTemp}
+						max={info.maxColorTemp}
+						step="50"
+						value={state.colorTemp}
+						aria-label="{state.name} color temperature"
+						oninput={(e) => controller.setColorTemp(state.id, Number(e.currentTarget.value))}
+					/>
+					<button
+						type="button"
+						class="light-step-btn"
+						aria-label="Cooler {state.name}"
+						onclick={() => nudgeTemp(TEMP_STEP)}>+</button
+					>
+				</div>
 			</div>
 		{/if}
 	</div>
