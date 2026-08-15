@@ -28,26 +28,53 @@ broken on this machine (`dbus.SystemBus` missing), and Gio works.
 
 ## Running
 
+### Docker (how it actually runs)
+
 ```bash
-# real hardware
-python3 scripts/ble-bridge/bridge.py --token "$LIGHTS_BRIDGE_TOKEN"
-
-# no radio needed — accepts and remembers everything
-python3 scripts/ble-bridge/bridge.py --mock
-
-# -v to see connect/disconnect churn and tracebacks
+cd scripts/ble-bridge
+echo "LIGHTS_BRIDGE_TOKEN=$(python3 -c 'import secrets;print(secrets.token_urlsafe(24))')" > .env
+docker compose up -d --build
 ```
 
-Then in gv-web's `.env`:
+Started by hand it dies with the terminal and does not come back after a reboot — which is
+exactly how the first night of this ended. The bridge host runs runit with **no systemd
+user session**, but `docker`, `dbus` and `bluetoothd` are all already boot services, so
+`restart: unless-stopped` is what makes it durable.
+
+The container needs no privileges, no `/dev` access and no bluez packages: `bluetoothd`
+runs on the host and everything reaches it over the mounted D-Bus socket. It does run as
+**root**, because BlueZ's D-Bus policy grants `GattCharacteristic1` / `Properties` /
+`ObjectManager` to root only — the default context may merely address `org.bluez`, so an
+unprivileged user gets `rejected send message` on the first write.
+
+Note that `docker kill`/`docker stop` flag a container as _user-stopped_, and
+`unless-stopped` deliberately will not bring one of those back at boot. After either, run
+`docker compose up -d` to clear the flag.
+
+### Directly (development, one-offs)
+
+```bash
+python3 scripts/ble-bridge/bridge.py --token "$LIGHTS_BRIDGE_TOKEN"
+python3 scripts/ble-bridge/bridge.py --mock   # no radio needed
+python3 scripts/ble-bridge/bridge.py -v       # connect/disconnect churn + tracebacks
+```
+
+### Wiring gv-web to it
+
+In gv-web's `.env` (both the local one and the lab's `~/docker/gv/gv-web/.env`):
 
 ```
 LIGHTS_DRIVER=bridge
 LIGHTS_BRIDGE_URL=http://<bridge-host>:8477
-LIGHTS_BRIDGE_TOKEN=<same token>
+LIGHTS_BRIDGE_TOKEN=<same token as scripts/ble-bridge/.env>
 ```
 
-Without `--token` the bridge accepts any caller on the LAN. It is fine for a quick test
-and wrong to leave running.
+Without a token the bridge accepts any caller on the LAN. Fine for a quick test, wrong to
+leave running.
+
+**The Lights tab only works while the bridge host is up.** The app server has no radio, so
+if that machine sleeps or leaves the network every bulb reports `online: false` with
+`Unable to connect` — a symptom of the bridge being unreachable, not of a bulb fault.
 
 ## Adding a bulb
 
