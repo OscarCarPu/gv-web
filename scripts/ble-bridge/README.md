@@ -1,6 +1,6 @@
 # BLE bridge
 
-Bluetooth for gv-web's **Domotics → Lights** tab.
+Bluetooth for the **Domotics → Lights** section. gv-api drives it; this daemon owns the radio.
 
 ## Why it exists
 
@@ -11,7 +11,7 @@ lives in a small daemon on any LAN machine that _does_ have Bluetooth, and gv-we
 it over HTTP:
 
 ```
-gv-web  ──HTTP──▶  bridge.py  ──D-Bus/BlueZ──▶  bulb
+gv-api  ──HTTP──▶  bridge.py  ──D-Bus/BlueZ──▶  bulb
 ```
 
 It has to be a long-running daemon rather than a one-shot command. BlueZ cancels a
@@ -59,9 +59,11 @@ python3 scripts/ble-bridge/bridge.py --mock   # no radio needed
 python3 scripts/ble-bridge/bridge.py -v       # connect/disconnect churn + tracebacks
 ```
 
-### Wiring gv-web to it
+### Wiring the API to it
 
-In gv-web's `.env` (both the local one and the lab's `~/docker/gv/gv-web/.env`):
+**gv-api owns the lights**, not this app — the bridge lives in this repo only because it is a
+deployment artefact of it. Configure it in gv-api's `.env` (both the local one and the lab's
+`~/docker/gv/gv-api/.env`); see `gv-api/docs/api/lights.md`.
 
 ```
 LIGHTS_DRIVER=bridge
@@ -72,9 +74,9 @@ LIGHTS_BRIDGE_TOKEN=<same token as scripts/ble-bridge/.env>
 Without a token the bridge accepts any caller on the LAN. Fine for a quick test, wrong to
 leave running.
 
-**The Lights tab only works while the bridge host is up.** The app server has no radio, so
-if that machine sleeps or leaves the network every bulb reports `online: false` with
-`Unable to connect` — a symptom of the bridge being unreachable, not of a bulb fault.
+**The Lights tab only works while the bridge host is up.** The API server has no radio, so if
+that machine sleeps or leaves the network every bulb reports `online: false` with a connection
+error — a symptom of the bridge being unreachable, not of a bulb fault.
 
 ## Adding a bulb
 
@@ -124,9 +126,9 @@ Quirks worth knowing, all observed on the real bulb:
 
 `device` is `{"id", "address", "protocol", "options"}` and `command` is one of
 `{"type":"power","on":bool}`, `{"type":"brightness","value":0-100}`,
-`{"type":"color","color":{"r","g","b"}}`, `{"type":"colorTemp","kelvin":int}` — the same
-shapes `src/lib/server/domotics/lights/types.ts` declares, so the driver on the gv-web
-side is a straight pass-through.
+`{"type":"color","color":{"r","g","b"}}`, `{"type":"colorTemp","kelvin":int}` — the same shapes
+`gv-api/internal/lights/dto.go` declares, so the driver on the API side is a straight
+pass-through.
 
 Errors never surface as HTTP failures: an unreachable bulb comes back `200` with
 `"online": false` and an `error` string, so one dead bulb cannot blank the whole tab.

@@ -1,10 +1,6 @@
 import { addToast } from '$lib/shared/stores/toast.svelte';
-import {
-	LightStateSchema,
-	LightStatesSchema,
-	type LightCommand,
-	type LightState,
-} from './api/lights.schemas';
+import { lightsApi } from './api/lights.api';
+import type { LightCommand, LightState } from './api/lights.schemas';
 
 /**
  * Controller for the Lights tab.
@@ -81,9 +77,7 @@ export class LightsController {
 		if (this.polling) return;
 		this.polling = true;
 		try {
-			const res = await fetch('/domotics/lights/state');
-			if (!res.ok) throw new Error(`status ${res.status}`);
-			const { states } = LightStatesSchema.parse(await res.json());
+			const states = await lightsApi.states();
 			if (this.stopped) return;
 			this.merge(states);
 		} catch {
@@ -126,16 +120,7 @@ export class LightsController {
 	private async send(id: string, command: LightCommand): Promise<void> {
 		this.busy = { ...this.busy, [id]: true };
 		try {
-			const res = await fetch(`/domotics/lights/${id}`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(command),
-			});
-			if (!res.ok) {
-				const body = await res.json().catch(() => ({}));
-				throw new Error(body.error || `status ${res.status}`);
-			}
-			const state = LightStateSchema.parse(await res.json());
+			const state = await lightsApi.send(id, command);
 			// The bulb is the authority on what it ended up doing.
 			this.replace(state);
 			this.touchedAt.set(id, Date.now());
@@ -184,9 +169,7 @@ export class LightsController {
 
 	async refresh(id: string) {
 		try {
-			const res = await fetch(`/domotics/lights/${id}?force=1`);
-			if (!res.ok) return;
-			this.replace(LightStateSchema.parse(await res.json()));
+			this.replace(await lightsApi.state(id, undefined, true));
 		} catch {
 			// Best-effort resync; the poll loop retries anyway.
 		}
@@ -201,20 +184,21 @@ export class LightsController {
 	}
 
 	setBrightness(id: string, value: number) {
-		// Real bulbs come on when dimmed up from zero — reflect that immediately.
-		const changes: Partial<LightState> = { brightness: value };
-		if (value > 0) changes.power = true;
-		this.patch(id, changes);
+		// Deliberately does not assume this turns the bulb on. Brightness and power are separate
+		// frames on these bulbs, so dimming one that is off only changes how it will look when
+		// switched on. Assuming otherwise made the card read "on" over a dark room, and made
+		// "All on" a no-op because every bulb already looked on.
+		this.patch(id, { brightness: value });
 		this.throttled(id, 'brightness', { type: 'brightness', value });
 	}
 
 	setColor(id: string, color: { r: number; g: number; b: number }) {
-		this.patch(id, { color, mode: 'color', power: true });
+		this.patch(id, { color, mode: 'color' });
 		this.throttled(id, 'color', { type: 'color', color });
 	}
 
 	setColorTemp(id: string, kelvin: number) {
-		this.patch(id, { colorTemp: kelvin, mode: 'white', power: true });
+		this.patch(id, { colorTemp: kelvin, mode: 'white' });
 		this.throttled(id, 'colorTemp', { type: 'colorTemp', kelvin });
 	}
 
@@ -226,10 +210,15 @@ export class LightsController {
 		else this.setColorTemp(id, state.colorTemp);
 	}
 
-	/** Bulk switch. Fired in parallel — each bulb is an independent BLE connection. */
+	/**
+	 * Bulk switch. Fired in parallel — each bulb is an independent BLE connection.
+	 *
+	 * Sends to every bulb, including ones already believed to be in the target state. Skipping
+	 * those saves a write but makes the button do nothing precisely when the believed state is
+	 * wrong, which is when someone reaches for "All off".
+	 */
 	setAll(on: boolean) {
 		for (const state of this.states) {
-			if (state.power === on) continue;
 			this.patch(state.id, { power: on });
 			this.send(state.id, { type: 'power', on });
 		}

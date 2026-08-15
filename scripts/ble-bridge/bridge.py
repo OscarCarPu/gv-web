@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""BLE bridge for gv-web's Domotics → Lights tab.
+"""BLE bridge for the Domotics → Lights section.
 
 Why this exists
 ---------------
-The app runs in Docker on a server with **no Bluetooth radio at all** — no adapter, no
-bluez, no ``/sys/class/bluetooth``. Even with a dongle plugged in, speaking BLE from the
-web container would mean handing it the host's DBus and network namespace. So the radio
-work lives here instead: a small daemon on any LAN machine that does have Bluetooth
-(a laptop, a Pi), and gv-web talks to it over HTTP.
+gv-api runs in Docker on a server with **no Bluetooth radio at all** — no adapter, no
+bluez, no ``/sys/class/bluetooth``. Even with a dongle plugged in, speaking BLE from that
+container would mean handing it the host's DBus and network namespace. So the radio work
+lives here instead: a small daemon on any LAN machine that does have Bluetooth (a laptop,
+a Pi), and gv-api talks to it over HTTP.
 
-    gv-web  ──HTTP──▶  bridge.py  ──D-Bus/BlueZ──▶  bulb
+    gv-api  ──HTTP──▶  bridge.py  ──D-Bus/BlueZ──▶  bulb
+
+(This file lives in the gv-web repo only because it is a deployment artefact of it; the
+lights themselves are a gv-api domain — see ``gv-api/docs/api/lights.md``.)
 
 It also has to be a *daemon* rather than a one-shot command: BlueZ cancels a
 ``StartNotify`` subscription as soon as the client that requested it leaves the bus, so
@@ -21,7 +24,7 @@ Running it
     python scripts/ble-bridge/bridge.py --token "$LIGHTS_BRIDGE_TOKEN"
     python scripts/ble-bridge/bridge.py --mock      # no radio; accept and remember everything
 
-Then in gv-web's .env:
+Then in gv-api's .env:
 
     LIGHTS_DRIVER=bridge
     LIGHTS_BRIDGE_URL=http://<this-machine>:8477
@@ -45,7 +48,7 @@ HTTP API
 ``device`` is ``{"id", "address", "protocol", "options"}`` and ``command`` is one of
 ``{"type":"power","on":bool}``, ``{"type":"brightness","value":0-100}``,
 ``{"type":"color","color":{"r","g","b"}}``, ``{"type":"colorTemp","kelvin":int}`` —
-the same shapes ``src/lib/server/domotics/lights/types.ts`` declares.
+the same shapes ``gv-api/internal/lights/dto.go`` declares.
 
 Dependencies: the standard library plus PyGObject, which ships with the distro. No pip.
 """
@@ -117,7 +120,7 @@ def update_state(device_id: str, changes: dict) -> dict:
 # Per-bulb serialisation
 # ---------------------------------------------------------------------------
 # BLE stacks serialise badly: two overlapping GATT writes to one peripheral tend to fail
-# both. gv-web already throttles to one write in flight per control, and this makes it
+# both. The clients already throttle to one write in flight per control, and this makes it
 # structural.
 
 _device_locks: dict[str, threading.Lock] = {}
@@ -161,16 +164,18 @@ def reap_idle_connections() -> None:
 
 
 def _apply_to_cache(command: dict) -> dict:
-    """What a command means for our record of the bulb, mirroring gv-web's mock driver."""
+    """What a command means for our record of the bulb.
+
+    Records *only* what the command actually changed. It deliberately does not infer that
+    setting brightness or colour turns the bulb on: on the LEXMAN those are separate frames,
+    and a dimmed-but-off bulb stays off. Inferring it made the UI report "on" while the room
+    stayed dark — and, worse, made "All on" a no-op, because the bulb already looked on.
+    """
     kind = command.get("type")
     if kind == "power":
         return {"power": bool(command.get("on"))}
     if kind == "brightness":
-        value = max(0, min(100, int(command.get("value", 0))))
-        changes: dict = {"brightness": value}
-        if value > 0:
-            changes["power"] = True
-        return changes
+        return {"brightness": max(0, min(100, int(command.get("value", 0))))}
     if kind == "color":
         color = command.get("color") or {}
         return {
@@ -180,10 +185,9 @@ def _apply_to_cache(command: dict) -> dict:
                 "b": max(0, min(255, int(color.get("b", 0)))),
             },
             "mode": "color",
-            "power": True,
         }
     if kind == "colorTemp":
-        return {"mode": "white", "colorTemp": int(command.get("kelvin", 2700)), "power": True}
+        return {"mode": "white", "colorTemp": int(command.get("kelvin", 2700))}
     return {}
 
 
@@ -416,13 +420,13 @@ def _load_mock() -> None:
 def main() -> int:
     global ARGS
 
-    parser = argparse.ArgumentParser(description="BLE bridge for gv-web Domotics lights")
+    parser = argparse.ArgumentParser(description="BLE bridge for the Domotics lights (driven by gv-api)")
     parser.add_argument("--host", default="0.0.0.0", help="bind address (default: all)")
     parser.add_argument("--port", type=int, default=int(os.environ.get("BRIDGE_PORT", DEFAULT_PORT)))
     parser.add_argument(
         "--token",
         default=os.environ.get("LIGHTS_BRIDGE_TOKEN", ""),
-        help="shared secret gv-web sends as 'Authorization: Bearer'. Empty = no auth.",
+        help="shared secret gv-api sends as 'Authorization: Bearer'. Empty = no auth.",
     )
     parser.add_argument("--mock", action="store_true", help="no radio; accept and remember everything")
     parser.add_argument(

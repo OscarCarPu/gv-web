@@ -170,12 +170,25 @@ Everything printer-facing is server-only — RTSP URLs and PrusaLink credentials
 
 ### Lights tab (BLE bulbs)
 
-- **The app server has no Bluetooth radio.** No adapter, no bluez, no `/sys/class/bluetooth` — so BLE cannot be spoken from this process, and giving the container the host's DBus + network namespace to fix that is not worth it. The radio lives in `scripts/ble-bridge/`, a stdlib+PyGObject daemon on any LAN machine that does have Bluetooth. `LIGHTS_DRIVER` picks `mock` (in-memory, the dev default) or `bridge` (HTTP to the daemon). Adding a transport means adding a driver in `src/lib/server/domotics/lights/drivers/` — nothing above it changes
-- **Bulbs come from `LIGHTS`**, a JSON array in the env. BLE addresses stay server-side; `listLights()` sends the browser ids, names and capabilities only. `supportsColor: false` hides the colour picker and the mode toggle, which is what a tunable-white bulb needs
-- **Drivers never throw.** An unreachable bulb returns `online: false` with an `error` string, so one dead bulb cannot blank the tab or 500 the SSR load
-- **SSR must not wait on the radio**: `readAllStatesOrKnown()` races the read against 1.5s and falls back to last-known state. A cold BLE connect measured ~11s (BlueZ drops an unbonded bulb's object after disconnect and has to rediscover it), which would otherwise hold the page blank for all of it. The client's first poll fills in what missed the cut. For the same reason `LIGHTS_BRIDGE_TIMEOUT_MS` defaults to 20s, not 8
-- **Writes are optimistic and throttled**: `LightsController` applies a change locally, then reconciles with the server's answer. Sliders keep one write in flight per (bulb, control) with a trailing send — without it a colour drag queues sixty writes and the bulb stops answering. Polling holds back for `POLL_GRACE_MS` after a local change so it can never walk the user's action back, though it always takes the server's word on reachability
-- **Protocol knowledge belongs in the bridge**, not here — see `scripts/ble-bridge/README.md`. Currently supported: LEXMAN/Adeo ZBEK-13 (`lexman`), tunable white, no RGB. Its quirks are documented there and they are real: one central at a time, first connect often aborts and needs a retry, and it sends no notification at all when written a value it already holds
+**The lights backend is in gv-api, not here.** This tab is an interface over
+`GET /domotics/lights`, `GET /domotics/lights/state` and `POST /domotics/lights/{id}`, reached
+through the normal `fetchAPI` client like tasks or money — there is no `+server.ts` in front of
+it. It briefly lived in `src/lib/server/`, which made this app a backend and forced gv-android
+to call it; see `gv-api/docs/api/lights.md` for the real thing.
+
+- **SSR must not wait on the radio**: the loader races the state read against 1.5s and falls
+  back to an empty list, because a cold BLE connect measured ~11s and would otherwise hold the
+  page blank for all of it. The client's first poll fills in what missed the cut
+- **Writes are optimistic and throttled**: `LightsController` applies a change locally, then
+  reconciles with the server's answer. Sliders keep one write in flight per (bulb, control)
+  with a trailing send — without it a colour drag queues sixty writes and the bulb stops
+  answering. Polling holds back for `POLL_GRACE_MS` after a local change so it can never walk
+  the user's action back, though it always takes the server's word on reachability
+- **Never infer power from brightness or colour.** Those are separate frames on the hardware;
+  a dimmed bulb that is off stays off. Assuming otherwise made the card read "on" over a dark
+  room and made "All on" a no-op, since every bulb already looked on
+- **The BLE bridge daemon still lives here**, under `scripts/ble-bridge/` — it is a deployment
+  artefact of this repo, not app code. gv-api talks to it over HTTP. See its README
 
 ## Welcome page (`/`)
 

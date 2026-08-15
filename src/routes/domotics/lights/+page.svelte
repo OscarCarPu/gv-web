@@ -37,7 +37,8 @@
 		<h2>No bulbs configured</h2>
 		<p>
 			Set <code>LIGHTS</code> to a JSON array of bulbs and point
-			<code>LIGHTS_DRIVER</code> at a driver. See <code>.env.example</code>.
+			<code>LIGHTS_DRIVER</code> at a driver — both in <strong>gv-api</strong>, which owns the
+			lights.
 		</p>
 	</div>
 {:else}
@@ -61,11 +62,4 @@
 			{/if}
 		{/each}
 	</div>
-
-	{#if data.driver === 'mock'}
-		<p class="notice">
-			Running on the <code>mock</code> driver — nothing is being sent over Bluetooth. Set
-			<code>LIGHTS_DRIVER=bridge</code> and <code>LIGHTS_BRIDGE_URL</code> to drive real bulbs.
-		</p>
-	{/if}
 {/if}
