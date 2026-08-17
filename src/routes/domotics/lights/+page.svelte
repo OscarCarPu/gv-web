@@ -1,12 +1,18 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
+	import Icon from '$lib/shared/components/Icon.svelte';
 	import LightCard from '$lib/domains/domotics/lights/LightCard.svelte';
+	import AddLightSheet from '$lib/domains/domotics/lights/AddLightSheet.svelte';
+	import EditLightSheet from '$lib/domains/domotics/lights/EditLightSheet.svelte';
 	import { LightsController } from '$lib/domains/domotics/lights/lights.svelte';
 	import type { LightInfo } from '$lib/domains/domotics/lights/api/lights.schemas';
 
 	let { data } = $props();
 
-	const controller = new LightsController(data.states);
+	const controller = new LightsController(data.lights, data.states);
+
+	let adding = $state(false);
+	let editing = $state<LightInfo | null>(null);
 
 	$effect(() => {
 		controller.start();
@@ -14,10 +20,6 @@
 	});
 
 	onDestroy(() => controller.stop());
-
-	function infoFor(id: string): LightInfo | undefined {
-		return data.lights.find((l) => l.id === id);
-	}
 
 	const summary = $derived.by(() => {
 		const total = controller.states.length;
@@ -32,34 +34,49 @@
 	<title>Lights · Domotics</title>
 </svelte:head>
 
-{#if controller.states.length === 0}
-	<div class="lights-empty">
-		<h2>No bulbs configured</h2>
-		<p>
-			Set <code>LIGHTS</code> to a JSON array of bulbs and point
-			<code>LIGHTS_DRIVER</code> at a driver — both in <strong>gv-api</strong>, which owns the
-			lights.
-		</p>
-	</div>
-{:else}
-	<div class="lights-bar">
-		<span class="lights-summary">{summary}</span>
-		<div class="lights-actions">
+<div class="lights-bar">
+	<span class="lights-summary">{summary}</span>
+	<div class="lights-actions">
+		{#if controller.states.length > 0}
 			<button type="button" class="lights-btn" onclick={() => controller.setAll(false)}>
 				All off
 			</button>
 			<button type="button" class="lights-btn primary" onclick={() => controller.setAll(true)}>
 				All on
 			</button>
-		</div>
+		{/if}
+		<button type="button" class="lights-btn" onclick={() => (adding = true)}>
+			<Icon name="plus" /> Add bulb
+		</button>
 	</div>
+</div>
 
+{#if controller.states.length === 0}
+	<div class="lights-empty">
+		<h2>No bulbs yet</h2>
+		<p>
+			Scan for what is in range and give it a name. The bulb has to be powered and not connected to
+			any other app.
+		</p>
+		<button type="button" class="lights-btn primary" onclick={() => (adding = true)}>
+			<Icon name="plus" /> Add bulb
+		</button>
+	</div>
+{:else}
 	<div class="lights-grid">
 		{#each controller.states as state (state.id)}
-			{@const info = infoFor(state.id)}
+			{@const info = controller.infoFor(state.id)}
 			{#if info}
-				<LightCard {state} {info} {controller} />
+				<LightCard {state} {info} {controller} onedit={() => (editing = info)} />
 			{/if}
 		{/each}
 	</div>
 {/if}
+
+<AddLightSheet open={adding} onclose={() => (adding = false)} {controller} />
+<EditLightSheet
+	open={editing !== null}
+	onclose={() => (editing = null)}
+	{controller}
+	light={editing}
+/>

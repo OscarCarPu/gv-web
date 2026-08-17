@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '$lib/shared/components/Icon.svelte';
 	import type { LightInfo, LightState } from './api/lights.schemas';
 	import type { LightsController } from './lights.svelte';
 	import { PRESETS, fromHex, glowColor, toCss, toHex } from './color';
@@ -7,9 +8,10 @@
 		state: LightState;
 		info: LightInfo;
 		controller: LightsController;
+		onedit: () => void;
 	}
 
-	let { state, info, controller }: Props = $props();
+	let { state, info, controller, onedit }: Props = $props();
 
 	const busy = $derived(controller.busy[state.id] ?? false);
 	const glow = $derived(toCss(glowColor(state)));
@@ -89,15 +91,27 @@
 			<p class="light-model">{state.model}</p>
 		</div>
 
-		<button
-			type="button"
-			class="light-switch"
-			class:is-on={state.power}
-			disabled={busy}
-			aria-pressed={state.power}
-			aria-label="{state.power ? 'Turn off' : 'Turn on'} {state.name}"
-			onclick={() => controller.togglePower(state.id)}
-		></button>
+		<div class="light-head-actions">
+			<button
+				type="button"
+				class="light-edit-btn"
+				aria-label="Edit {state.name}"
+				title="Rename or remove"
+				onclick={onedit}
+			>
+				<Icon name="pen" />
+			</button>
+
+			<button
+				type="button"
+				class="light-switch"
+				class:is-on={state.power}
+				disabled={busy}
+				aria-pressed={state.power}
+				aria-label="{state.power ? 'Turn off' : 'Turn on'} {state.name}"
+				onclick={() => controller.togglePower(state.id)}
+			></button>
+		</div>
 	</div>
 
 	<div class="light-controls" class:is-off={!state.power}>

@@ -1,11 +1,19 @@
+import * as z from 'zod';
 import { fetchAPI } from '$lib/shared/api/client';
 import {
+	DiscoveredListSchema,
+	LightInfoSchema,
 	LightListSchema,
 	LightStateSchema,
 	LightStatesSchema,
+	ProtocolListSchema,
+	type CreateLightRequest,
+	type Discovered,
 	type LightCommand,
 	type LightInfo,
 	type LightState,
+	type ProtocolInfo,
+	type UpdateLightRequest,
 } from './lights.schemas';
 
 /**
@@ -41,5 +49,44 @@ export const lightsApi = {
 			method: 'POST',
 			body: JSON.stringify(command),
 		});
+	},
+
+	/**
+	 * Scan for bulbs in range. Slow by nature — the answer does not exist until the radio has
+	 * been listening for `seconds` — so callers must show it as work in progress.
+	 */
+	async discover(seconds = 8, token?: string): Promise<Discovered[]> {
+		const { devices } = await fetchAPI(
+			`/domotics/lights/discover?seconds=${seconds}`,
+			DiscoveredListSchema,
+			{ token }
+		);
+		return devices;
+	},
+
+	/** The bulb families the API can drive, with what each model can do. */
+	async protocols(token?: string): Promise<ProtocolInfo[]> {
+		return fetchAPI('/domotics/lights/protocols', ProtocolListSchema, { token });
+	},
+
+	async create(req: CreateLightRequest, token?: string): Promise<LightInfo> {
+		return fetchAPI('/domotics/lights', LightInfoSchema, {
+			token,
+			method: 'POST',
+			body: JSON.stringify(req),
+		});
+	},
+
+	async update(id: string, req: UpdateLightRequest, token?: string): Promise<LightInfo> {
+		return fetchAPI(`/domotics/lights/${id}`, LightInfoSchema, {
+			token,
+			method: 'PATCH',
+			body: JSON.stringify(req),
+		});
+	},
+
+	async remove(id: string, token?: string): Promise<void> {
+		// The API answers 204, which fetchAPI short-circuits before it looks at the schema.
+		await fetchAPI(`/domotics/lights/${id}`, z.void(), { token, method: 'DELETE' });
 	},
 };

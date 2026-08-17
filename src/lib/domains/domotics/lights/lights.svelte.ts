@@ -1,6 +1,14 @@
 import { addToast } from '$lib/shared/stores/toast.svelte';
 import { lightsApi } from './api/lights.api';
-import type { LightCommand, LightState } from './api/lights.schemas';
+import type {
+	CreateLightRequest,
+	Discovered,
+	LightCommand,
+	LightInfo,
+	LightState,
+	ProtocolInfo,
+	UpdateLightRequest,
+} from './api/lights.schemas';
 
 /**
  * Controller for the Lights tab.
@@ -16,6 +24,9 @@ import type { LightCommand, LightState } from './api/lights.schemas';
  *
  * Polling exists to catch changes made outside the app (a physical switch, another
  * client), but it must never undo a change the user just made — hence the grace window.
+ *
+ * It also owns which bulbs exist, because that is now editable from this screen: a scan
+ * finds what is in range, and naming one adds it.
  */
 
 const POLL_INTERVAL_MS = 5000;
@@ -23,14 +34,23 @@ const POLL_INTERVAL_MS = 5000;
 const POLL_GRACE_MS = 4000;
 /** Minimum spacing between writes of the same continuous control. */
 const THROTTLE_MS = 250;
+/** How long a scan listens. Long enough to cross a flat, short enough to feel answered. */
+const SCAN_SECONDS = 8;
 
 type Pending = { timer: ReturnType<typeof setTimeout> | null; command: LightCommand | null };
 
 export class LightsController {
+	lights = $state<LightInfo[]>([]);
 	states = $state<LightState[]>([]);
 	/** Bulbs with a write in flight — used to disable the switch, not to block input. */
 	busy = $state<Record<string, boolean>>({});
 	polling = $state(false);
+
+	/** Adding a bulb: what the last scan heard, and the models we know how to drive. */
+	devices = $state<Discovered[]>([]);
+	protocols = $state<ProtocolInfo[]>([]);
+	scanning = $state(false);
+	saving = $state(false);
 
 	private timer: ReturnType<typeof setInterval> | null = null;
 	/** id → epoch ms of the last local change, so polls do not walk it back. */
@@ -40,8 +60,13 @@ export class LightsController {
 	private inFlight = new Set<string>();
 	private stopped = false;
 
-	constructor(initial: LightState[]) {
-		this.states = initial;
+	constructor(lights: LightInfo[], states: LightState[]) {
+		this.lights = lights;
+		this.states = states;
+	}
+
+	infoFor(id: string): LightInfo | undefined {
+		return this.lights.find((l) => l.id === id);
 	}
 
 	get anyOn(): boolean {
@@ -74,7 +99,9 @@ export class LightsController {
 	}
 
 	async poll() {
-		if (this.polling) return;
+		// A scan owns the radio for its whole window; polling through one just queues reads
+		// that will time out and slows the scan down.
+		if (this.polling || this.scanning) return;
 		this.polling = true;
 		try {
 			const states = await lightsApi.states();
@@ -88,15 +115,24 @@ export class LightsController {
 		}
 	}
 
-	/** Take polled state except where the user just acted or a write is still open. */
+	/**
+	 * Take polled state except where the user just acted or a write is still open.
+	 *
+	 * Built from the incoming list rather than the local one, so the set of bulbs is the
+	 * server's: one added elsewhere appears, one deleted elsewhere goes. Doing it the other
+	 * way round left the page permanently empty whenever the SSR read timed out, since
+	 * nothing could ever be added to an empty list.
+	 */
 	private merge(incoming: LightState[]) {
 		const now = Date.now();
-		this.states = this.states.map((current) => {
-			const next = incoming.find((s) => s.id === current.id);
-			if (!next) return current;
+		const local = new Map(this.states.map((s) => [s.id, s]));
 
-			const touched = this.touchedAt.get(current.id) ?? 0;
-			if (this.busy[current.id] || now - touched < POLL_GRACE_MS) {
+		this.states = incoming.map((next) => {
+			const current = local.get(next.id);
+			if (!current) return next;
+
+			const touched = this.touchedAt.get(next.id) ?? 0;
+			if (this.busy[next.id] || now - touched < POLL_GRACE_MS) {
 				// Reachability is server truth regardless — only the settings are held back.
 				return { ...current, online: next.online, error: next.error };
 			}
@@ -151,6 +187,15 @@ export class LightsController {
 			pending.command = command;
 			this.queued.set(slot, pending);
 			return;
+		}
+
+		// Cancel a trailing send still waiting out its throttle window. This value is newer,
+		// and letting the old timer fire behind it would land the bulb on the value the
+		// finger passed through rather than the one it stopped on.
+		const waiting = this.queued.get(slot);
+		if (waiting?.timer) {
+			clearTimeout(waiting.timer);
+			this.queued.delete(slot);
 		}
 
 		this.inFlight.add(slot);
@@ -222,5 +267,106 @@ export class LightsController {
 			this.patch(state.id, { power: on });
 			this.send(state.id, { type: 'power', on });
 		}
+	}
+
+	// ---- which bulbs exist ----
+
+	/**
+	 * Listen for bulbs in range.
+	 *
+	 * Takes as long as the scan does — there is no partial answer to show, because the radio
+	 * has to spend the whole window listening before it knows what is out there.
+	 */
+	async scan() {
+		if (this.scanning) return;
+		this.scanning = true;
+		try {
+			// An empty result is not an error and gets no toast — the sheet says so in place,
+			// where the person is already looking.
+			this.devices = await lightsApi.discover(SCAN_SECONDS);
+		} catch (e) {
+			this.devices = [];
+			addToast(e instanceof Error ? e.message : 'Scan failed', 'error');
+		} finally {
+			this.scanning = false;
+		}
+	}
+
+	/** The models the API knows how to drive; loaded once, when the add sheet first opens. */
+	async loadProtocols() {
+		if (this.protocols.length > 0) return;
+		try {
+			this.protocols = await lightsApi.protocols();
+		} catch {
+			// The add form falls back to whatever the scan offered; no toast for a list that
+			// only exists to prefill a select.
+		}
+	}
+
+	async add(req: CreateLightRequest): Promise<boolean> {
+		this.saving = true;
+		try {
+			await lightsApi.create(req);
+			// Mark it added in the scan list, so the sheet can stay open to add its neighbour.
+			this.devices = this.devices.map((d) =>
+				d.address.toUpperCase() === req.address.toUpperCase() ? { ...d, known: true } : d
+			);
+			await this.reload();
+			addToast(`${req.name} added`, 'success');
+			return true;
+		} catch (e) {
+			addToast(e instanceof Error ? e.message : 'Could not add the bulb', 'error');
+			return false;
+		} finally {
+			this.saving = false;
+		}
+	}
+
+	async edit(id: string, req: UpdateLightRequest): Promise<boolean> {
+		this.saving = true;
+		try {
+			await lightsApi.update(id, req);
+			await this.reload();
+			return true;
+		} catch (e) {
+			addToast(e instanceof Error ? e.message : 'Could not save the bulb', 'error');
+			return false;
+		} finally {
+			this.saving = false;
+		}
+	}
+
+	/** Removes a bulb. Immediate, like every other destructive action in this app. */
+	async remove(id: string): Promise<boolean> {
+		const name = this.infoFor(id)?.name ?? id;
+		this.saving = true;
+		try {
+			await lightsApi.remove(id);
+			this.lights = this.lights.filter((l) => l.id !== id);
+			this.states = this.states.filter((s) => s.id !== id);
+			addToast(`${name} removed`, 'success');
+			return true;
+		} catch (e) {
+			addToast(e instanceof Error ? e.message : 'Could not remove the bulb', 'error');
+			return false;
+		} finally {
+			this.saving = false;
+		}
+	}
+
+	/**
+	 * Re-read the registry and the bulbs after it changes.
+	 *
+	 * The state read is forced past the API's cache: a bulb added a second ago has no cached
+	 * state, and a renamed one still has its old name in there.
+	 */
+	private async reload() {
+		const [lights, states] = await Promise.all([
+			lightsApi.list(),
+			lightsApi.states(undefined, true),
+		]);
+		if (this.stopped) return;
+		this.lights = lights;
+		this.merge(states);
 	}
 }

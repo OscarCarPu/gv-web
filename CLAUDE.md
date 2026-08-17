@@ -170,11 +170,11 @@ Everything printer-facing is server-only — RTSP URLs and PrusaLink credentials
 
 ### Lights tab (BLE bulbs)
 
-**The lights backend is in gv-api, not here.** This tab is an interface over
-`GET /domotics/lights`, `GET /domotics/lights/state` and `POST /domotics/lights/{id}`, reached
-through the normal `fetchAPI` client like tasks or money — there is no `+server.ts` in front of
-it. It briefly lived in `src/lib/server/`, which made this app a backend and forced gv-android
-to call it; see `gv-api/docs/api/lights.md` for the real thing.
+**The lights backend is in gv-api, not here** — including the Bluetooth itself, which now runs
+on the API host over BlueZ. This tab is an interface over `/domotics/lights*`, reached through
+the normal `fetchAPI` client like tasks or money; there is no `+server.ts` in front of it. It
+briefly lived in `src/lib/server/`, which made this app a backend and forced gv-android to call
+it; see `gv-api/docs/api/lights.md` for the real thing.
 
 - **SSR must not wait on the radio**: the loader races the state read against 1.5s and falls
   back to an empty list, because a cold BLE connect measured ~11s and would otherwise hold the
@@ -187,8 +187,19 @@ to call it; see `gv-api/docs/api/lights.md` for the real thing.
 - **Never infer power from brightness or colour.** Those are separate frames on the hardware;
   a dimmed bulb that is off stays off. Assuming otherwise made the card read "on" over a dark
   room and made "All on" a no-op, since every bulb already looked on
-- **The BLE bridge daemon still lives here**, under `scripts/ble-bridge/` — it is a deployment
-  artefact of this repo, not app code. gv-api talks to it over HTTP. See its README
+- **Which bulbs exist is editable from this tab**: `AddLightSheet` scans (`GET
+/domotics/lights/discover`, which holds the request open for the length of the scan), you pick
+  one off the list and name it. `EditLightSheet` renames or removes. Both go through
+  `LightsController`, which reloads the registry and forces a state read afterwards — a bulb
+  added a second ago has nothing in the API's cache, and a renamed one still has its old name
+  there
+- **`merge()` builds from the server's list, not the local one**, so a bulb added or removed
+  anywhere shows up. Doing it the other way round left the page permanently empty whenever the
+  SSR read timed out, because nothing could be added to an empty list
+- **Polling pauses while a scan runs** — a scan owns the radio for its whole window, and reads
+  fired into it just time out and slow the scan down
+- **A BLE bridge daemon used to live here** under `scripts/ble-bridge/`, back when the server
+  had no radio. It is gone: gv-api talks to BlueZ directly
 
 ## Welcome page (`/`)
 
