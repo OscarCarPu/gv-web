@@ -12,7 +12,6 @@ All styles live in global CSS files under `src/styles/`. No scoped `<style>` blo
 | `components.css` | Shared UI: buttons, modals, toggles, progress bars, toasts | Root layout (always) |
 | `habits.css`     | Habit cards, grid layout, streaks                          | `/habits` layout     |
 | `tasks.css`      | Timer, task items, tree, forms, project pages              | `/tasks` layout      |
-| `varieties.css`  | Ranking list, variety cards, score grid                    | `/varieties` layout  |
 | `login.css`      | Login/2FA form                                             | `/login` pages       |
 
 Feature CSS files use `@reference "./app.css"` to access theme tokens without duplicating Tailwind output.
@@ -91,14 +90,14 @@ z-50  Modals, bottom sheets, right sheets, overlays
 - **`desktop`** — `@media (min-width: 1000px)` (or the Tailwind `desktop:` variant). Override defaults here when the layout has room to expand.
 
 ```css
-.varieties-layout {
+.lights-grid {
 	display: grid;
 	grid-template-columns: 1fr; /* default */
 }
 
 @media (min-width: 1000px) {
-	.varieties-layout {
-		grid-template-columns: 320px 1fr; /* desktop */
+	.lights-grid {
+		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* desktop */
 	}
 }
 ```
@@ -420,20 +419,6 @@ State classes on the parent element:
 | --------------------- | -------------------------------- |
 | `.create-mode-toggle` | Tarea/Proyecto segmented control |
 | `.start-now-toggle`   | "Empezar ya" button with toggle  |
-
-## Varieties (`varieties.css`)
-
-Reuses `.section-header` / `.detail-field` / `.detail-field-header` / `.desc-edit-btn` / `.desc-view` / `.linkify-link` / `.btn-icon` from `components.css`. Only layout and distinctive visual classes live here.
-
-| Class               | Description                                                                                                                               |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `.varieties-layout` | Outer grid: 1 column default, `320px 1fr` at desktop                                                                                      |
-| `.ranking-list`     | Left column surface card holding the ranking                                                                                              |
-| `.ranking-row`      | Clickable rank row (`<button>`) — rank + name + score + price; `.podium` for #1; clicking scrolls/highlights the matching `.variety-card` |
-| `.variety-card`     | Single variety card; `.saving` border during a pending PUT, `.highlight` flash when targeted from the ranking                             |
-| `.score-badge`      | Computed puntuación pill (primary blue)                                                                                                   |
-| `.score-grid`       | 2×2 grid; nested rules tighten the four `.detail-field` score inputs (centered, mono, smaller padding)                                    |
-| `.comments-empty`   | Dashed placeholder button shown when comments are empty                                                                                   |
 
 ## Login (`login.css`)
 

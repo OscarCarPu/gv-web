@@ -48,11 +48,6 @@
 					class="nav-link"
 					class:active={page.url.pathname.startsWith('/domotics')}>Domotics</a
 				>
-				<a
-					href="/varieties"
-					class="nav-link"
-					class:active={page.url.pathname.startsWith('/varieties')}>Varieties</a
-				>
 			{/if}
 		</nav>
 		<div class="header-actions">

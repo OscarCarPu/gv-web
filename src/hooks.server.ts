@@ -4,7 +4,7 @@ import { dev } from '$app/environment';
 import { env } from '$lib/config/env';
 
 const PUBLIC_ROUTES = ['/login', '/login/2fa', '/'];
-const SEMIPRIVATE_ROUTES = ['/varieties', '/domotics', '/printers'];
+const SEMIPRIVATE_ROUTES = ['/domotics', '/printers'];
 const AUTH_ONLY_ROUTES = ['/logout'];
 
 function isValidJWT(token: string): boolean {
@@ -64,7 +64,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		if (validSession) {
 			redirect(StatusCodes.SEE_OTHER, '/tasks');
 		} else if (validSemiprivate) {
-			redirect(StatusCodes.SEE_OTHER, '/varieties');
+			redirect(StatusCodes.SEE_OTHER, '/domotics');
 		}
 	} else if (isSemiprivateRoute) {
 		if (!validSession && !validSemiprivate) {

@@ -62,14 +62,14 @@ All API calls go through `fetchAPI<T>()` which validates responses against Zod s
 
 ### Auth Flow
 
-Login (password) returns `{ token, kind: 'tmp' | 'semi' }` (`LoginResponseSchema`). `kind: 'tmp'` → continue to 2FA (TOTP) → full JWT stored as httpOnly cookie (`session`), exposed as `event.locals.token`. `kind: 'semi'` → token stored as httpOnly cookie (`semiprivate`), exposed as `event.locals.semiprivateToken`, redirect to `/varieties`.
+Login (password) returns `{ token, kind: 'tmp' | 'semi' }` (`LoginResponseSchema`). `kind: 'tmp'` → continue to 2FA (TOTP) → full JWT stored as httpOnly cookie (`session`), exposed as `event.locals.token`. `kind: 'semi'` → token stored as httpOnly cookie (`semiprivate`), exposed as `event.locals.semiprivateToken`, redirect to `/domotics`.
 
 `hooks.server.ts` validates both JWTs on every request and guards routes by tier:
 
-- **Public** (`PUBLIC_ROUTES`): `/login`, `/login/2fa` — accessible without auth; redirect to `/habits` if `session` valid, to `/varieties` if `semiprivate` valid.
-- **Semiprivate** (`SEMIPRIVATE_ROUTES`): `/varieties`, `/printers` — accessible with either `session` or `semiprivate`.
+- **Public** (`PUBLIC_ROUTES`): `/login`, `/login/2fa` — accessible without auth; redirect to `/habits` if `session` valid, to `/domotics` if `semiprivate` valid.
+- **Semiprivate** (`SEMIPRIVATE_ROUTES`): `/domotics`, `/printers` — accessible with either `session` or `semiprivate`.
 - **Auth-only** (`AUTH_ONLY_ROUTES`): `/logout` — passes through regardless of auth state; the action clears both cookies and redirects to `/`.
-- **Open** (`OPEN_ROUTES`): `/` — if `session` valid, redirects to `/tasks`; if `semiprivate` valid, redirects to `/varieties`; otherwise passes through (unauthenticated landing page).
+- **Open** (`OPEN_ROUTES`): `/` — if `session` valid, redirects to `/tasks`; if `semiprivate` valid, redirects to `/domotics`; otherwise passes through (unauthenticated landing page).
 - **Private** (everything else): requires valid `session`.
 
 ### Styling System
@@ -110,7 +110,7 @@ Full detail in [docs/tasks.md](docs/tasks.md). Non-obvious rules to remember whi
 
 ## Money domain — quick rules
 
-Route: `/money` (private). API base: `/finance/*`. Visible label: "Money", URL, folder (`src/lib/domains/money/`), styles (`src/styles/money.css`), and `moneyApi` follow the English-URL convention used by `/tasks`, `/habits`, `/varieties`.
+Route: `/money` (private). API base: `/finance/*`. Visible label: "Money", URL, folder (`src/lib/domains/money/`), styles (`src/styles/money.css`), and `moneyApi` follow the English-URL convention used by `/tasks`, `/habits`.
 
 - **Money values are strings**: every monetary field (`total`, `amount`, `accounts_total`, `month.income/expense/balance`) is `NUMERIC(15,2)` serialized as a JSON string. Keep them as strings end-to-end and only `parseFloat` at format time. Use `formatMoney()` from `$shared/utils/money.ts` (`Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', useGrouping: 'always' })` → `1.234,56 €`). There is no per-account currency — the API removed it; everything is EUR
 - **Transaction types**: `income` / `expense` / `transfer`. The transaction's category `type` MUST match the transaction's `type` (server enforces). The form filters category options client-side by selected type and resets `category_id` when the type changes
