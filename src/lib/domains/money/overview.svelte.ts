@@ -13,14 +13,14 @@ import type {
 const FOLD_LIMIT = 15;
 const EXPAND_STEP = 10;
 
-export type StatsSheet = 'netWorth' | 'categoryBreakdown' | 'monthlyTrend' | 'estimation';
+type StatsSheet = 'netWorth' | 'categoryBreakdown' | 'monthlyTrend' | 'estimation';
 
-export interface MoneyOverviewApi {
+interface MoneyOverviewApi {
 	listTransactions: (params?: { accountId?: number }) => Promise<Transaction[]>;
 	deleteTransaction: (id: number) => Promise<void>;
 }
 
-export interface MoneyOverviewCallbacks {
+interface MoneyOverviewCallbacks {
 	/** Revalidate page data after a mutation (the component passes `invalidateAll`). */
 	refresh: () => Promise<void>;
 	/** Live accounts list — used to resolve account names in the account-history view. */

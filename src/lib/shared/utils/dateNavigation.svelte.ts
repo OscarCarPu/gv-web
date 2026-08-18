@@ -1,7 +1,5 @@
 import { SvelteDate } from 'svelte/reactivity';
 
-export type DateNavigation = ReturnType<typeof createDateNavigation>;
-
 export function createDateNavigation(initialDate?: Date) {
 	const date = new SvelteDate(initialDate ?? Date.now());
 

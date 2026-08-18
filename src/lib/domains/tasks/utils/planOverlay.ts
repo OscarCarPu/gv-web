@@ -2,7 +2,7 @@ import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
 import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
 
 /** Holes shorter than this are rounding noise, not gaps. Matches the agenda timeline. */
-export const GAP_THRESHOLD_SECONDS = 120;
+const GAP_THRESHOLD_SECONDS = 120;
 
 /** Work that actually happened, clamped to the past. Replaces the block that planned it. */
 export interface PlanActualItem {

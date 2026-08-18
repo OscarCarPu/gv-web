@@ -97,7 +97,7 @@
 			<div class="time-entry-sheet-field">
 				<label class="time-entry-sheet-label" for="te-task">Task</label>
 				<select id="te-task" class="time-entry-sheet-select" bind:value={taskId}>
-					{#each taskGroups as group}
+					{#each taskGroups as group (group.projectName)}
 						{#if group.projectName !== null}
 							<optgroup label={group.projectName}>
 								{#each group.tasks as task (task.id)}

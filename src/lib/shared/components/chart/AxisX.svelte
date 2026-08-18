@@ -13,14 +13,14 @@
 		if (f === 'weekly' || f === 'monthly') {
 			// Use actual data points as ticks — they are already period-aligned (Mondays / 1st)
 			const pts = dataPoints.map((d: any) => d.date as Date);
-			return thin(pts, dom);
+			return thin(pts);
 		}
 		const inner = $xScale.ticks ? $xScale.ticks(5) : dom;
 		return mergeBoundary(inner, dom);
 	}
 
 	/** Keep at most ~6 evenly-spaced ticks from a potentially long list */
-	function thin(pts: Date[], dom: Date[]): Date[] {
+	function thin(pts: Date[]): Date[] {
 		if (pts.length <= 7) return pts;
 		const step = Math.ceil(pts.length / 6);
 		const result: Date[] = [];
@@ -80,7 +80,7 @@
 </script>
 
 <g class="axis x-axis">
-	{#each ticks as tick}
+	{#each ticks as tick (tick.getTime())}
 		{@const x = $xScale(tick)}
 		<g transform="translate({x}, {$height})">
 			<line y1="0" y2="5" stroke="var(--color-text-muted)" opacity="0.3" />

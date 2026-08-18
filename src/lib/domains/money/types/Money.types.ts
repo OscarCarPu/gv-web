@@ -130,19 +130,3 @@ export interface EstimationResult {
 	rate: string;
 	saving: string;
 }
-
-export interface StatsRangeSummary {
-	income: string;
-	expense: string;
-	balance: string;
-	savings_rate: number;
-}
-
-export interface StatsFilters {
-	from?: string;
-	to?: string;
-	granularity?: StatsGranularity;
-	type?: 'income' | 'expense';
-	account_id?: number | null;
-	category_id?: number | null;
-}

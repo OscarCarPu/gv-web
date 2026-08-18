@@ -1,15 +1,15 @@
 import { isoDate, inclusiveMonthStart, yearStart } from '../utils/statsDate';
 import type { StatsGranularity } from '../types/Money.types';
 
-export type StatsRange = '3m' | '6m' | '1y' | 'ytd' | 'all';
+type StatsRange = '3m' | '6m' | '1y' | 'ytd' | 'all';
 
-export interface RangeOption {
+interface RangeOption {
 	value: StatsRange;
 	label: string;
 }
 
 /** The fixed `3M / 6M / 1Y / YTD / All` toggle options, shared by all sheets. */
-export const STATS_RANGES: RangeOption[] = [
+const STATS_RANGES: RangeOption[] = [
 	{ value: '3m', label: '3M' },
 	{ value: '6m', label: '6M' },
 	{ value: '1y', label: '1Y' },

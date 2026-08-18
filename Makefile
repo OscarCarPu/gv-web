@@ -1,4 +1,4 @@
-.PHONY: up up-dev test-coverage test
+.PHONY: up up-dev down lint check test test-coverage
 
 up:
 	docker compose up -d --build
@@ -11,8 +11,14 @@ test-coverage:
 	bun run vitest run --coverage
 	uv run scripts/coverage.py
 
+lint:
+	bun run lint
+
+check:
+	bun run check
+
 test:
-	bun run test:unit -- --run && bun run test:e2e
+	bun run test:unit -- --run
 
 down:
 	docker compose down -v

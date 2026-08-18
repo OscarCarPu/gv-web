@@ -9,9 +9,9 @@
 // Deliberately in-memory: a single container serves this app and uploads are short-lived. A
 // restart mid-forward loses the entry, which the client reports as losing track of the upload.
 
-export type UploadStatus = 'forwarding' | 'done' | 'error';
+type UploadStatus = 'forwarding' | 'done' | 'error';
 
-export type UploadState = {
+type UploadState = {
 	sent: number;
 	total: number;
 	status: UploadStatus;
@@ -22,7 +22,7 @@ export type UploadState = {
 };
 
 /** An upload plus the identity a reloaded page needs to recognise and re-attach to it. */
-export type ActiveUpload = UploadState & { uploadId: string; name: string };
+type ActiveUpload = UploadState & { uploadId: string; name: string };
 
 type Entry = UploadState & { printerId: string; name: string; updatedAt: number };
 

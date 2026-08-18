@@ -9,6 +9,8 @@ export default defineConfig({
 		conditions: ['browser'],
 	},
 
+	// TZ is pinned in the test:unit script, not here: the DST tests need a zone
+	// that actually shifts, and setting it at runtime does not take under bun.
 	test: {
 		include: ['tests/**/*.{test,spec}.{js,ts}'],
 		environment: 'jsdom',

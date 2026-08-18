@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 
-	const { height, yScale, width } = getContext('LayerCake') as Record<string, any>;
+	const { yScale, width } = getContext('LayerCake') as Record<string, any>;
 
 	$: ticks = $yScale.ticks ? $yScale.ticks(5) : $yScale.domain();
 </script>
 
 <g class="axis y-axis">
-	{#each ticks as tick}
+	{#each ticks as tick (tick)}
 		<g transform="translate(0, {$yScale(tick)})">
 			<line x1="0" x2={$width} stroke="var(--color-text-muted)" opacity="0.1" />
 			<text

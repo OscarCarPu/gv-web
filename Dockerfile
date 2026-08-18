@@ -7,7 +7,11 @@ COPY . .
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-RUN bun run build 
+# The deploy is a docker build, and this stage already has bun, so the checks
+# run here: a broken lint, a type error or a failing test stops the image.
+RUN bun run lint && bun run check && bun run test
+
+RUN bun run build
 
 FROM oven/bun:1.3.13
 WORKDIR /app

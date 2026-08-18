@@ -42,14 +42,14 @@ export function uploadTimeoutMs(bytes: number): number {
 	return Math.max(UPLOAD_MIN_MS, mb * UPLOAD_MS_PER_MB);
 }
 
-export type PrinterFile = {
+type PrinterFile = {
 	name: string;
 	displayName: string;
 	size?: number;
 	readOnly?: boolean;
 };
 
-export type PrinterStorage = {
+type PrinterStorage = {
 	name: string;
 	available: boolean;
 	readOnly: boolean;
@@ -57,7 +57,7 @@ export type PrinterStorage = {
 	totalSpace?: number;
 };
 
-export type PrinterFiles = {
+type PrinterFiles = {
 	online: boolean;
 	storage?: PrinterStorage;
 	files: PrinterFile[];

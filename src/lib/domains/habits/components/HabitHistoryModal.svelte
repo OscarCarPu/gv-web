@@ -11,7 +11,6 @@
 	import AxisX from '$shared/components/chart/AxisX.svelte';
 	import AxisY from '$shared/components/chart/AxisY.svelte';
 	import Points from '$shared/components/chart/Points.svelte';
-	import { toLocalDateString } from '$shared/utils/datetime';
 	import Icon from '$lib/shared/components/Icon.svelte';
 
 	let {

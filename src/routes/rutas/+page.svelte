@@ -10,6 +10,8 @@
 
 	let { data }: { data: { marks: RutasMark[] } } = $props();
 
+	// SSR values are a seed; the store owns them from here on.
+	// svelte-ignore state_referenced_locally
 	const marks = new RutasMarks(data.marks ?? []);
 
 	// GeoJSON state
@@ -123,7 +125,7 @@
 			>
 				All
 			</button>
-			{#each PROVINCES as prov}
+			{#each PROVINCES as prov (prov)}
 				<button
 					class="province-btn"
 					class:active={marks.activeProvince === prov}
@@ -148,7 +150,7 @@
 			height="100%"
 			aria-label="Map of Galicia's municipalities"
 		>
-			{#each paths as { feature, d }}
+			{#each paths as { feature, d } (feature.properties.name)}
 				{@const mark = marks.get(feature.properties.name)}
 				{@const isVisible =
 					!marks.activeProvince || feature.properties.province === marks.activeProvince}
@@ -175,7 +177,7 @@
 		<div class="rutas-visited">
 			<p class="rutas-section-title">Visited ({marks.marks.size})</p>
 			<ul class="rutas-visited-list">
-				{#each [...marks.marks.values()].sort((a, b) => a.date.localeCompare(b.date)) as mark}
+				{#each [...marks.marks.values()].sort( (a, b) => a.date.localeCompare(b.date) ) as mark (mark.apiId)}
 					{@const feature = geojson?.features.find((f) => f.properties.name === mark.name)}
 					{#if feature}
 						<li class="rutas-visited-item">

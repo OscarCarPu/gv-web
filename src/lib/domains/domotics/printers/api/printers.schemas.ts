@@ -66,8 +66,6 @@ export const UploadProgressSchema = z.object({
 	httpStatus: z.number().optional(),
 });
 
-export type UploadProgress = z.infer<typeof UploadProgressSchema>;
-
 /** Uploads the server still knows about, so a reloaded page can re-attach to them. */
 export const ActiveUploadsSchema = z.object({
 	uploads: z
@@ -80,8 +78,6 @@ export const ActiveUploadsSchema = z.object({
 		.nullable()
 		.transform((v) => v ?? []),
 });
-
-export type ActiveUpload = z.infer<typeof ActiveUploadsSchema>['uploads'][number];
 
 /** One camera recording on the server's disk. */
 export const RecordingSchema = z.object({
@@ -105,8 +101,6 @@ export const RecordingsSchema = z.object({
 });
 
 export type Recording = z.infer<typeof RecordingSchema>;
-export type Recordings = z.infer<typeof RecordingsSchema>;
 
 export type PrinterFile = z.infer<typeof PrinterFileSchema>;
 export type PrinterStorage = z.infer<typeof PrinterStorageSchema>;
-export type PrinterFiles = z.infer<typeof PrinterFilesSchema>;

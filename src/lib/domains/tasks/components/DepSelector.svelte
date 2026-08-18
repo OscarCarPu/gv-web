@@ -94,7 +94,7 @@
 	{/if}
 	<select onchange={add}>
 		<option value="">Add task...</option>
-		{#each grouped as group}
+		{#each grouped as group (group.label)}
 			<optgroup label={group.label}>
 				{#each group.tasks as task (task.id)}
 					<option value={task.id}>{task.name}</option>

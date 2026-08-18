@@ -3,7 +3,6 @@
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import { formatTime, formatDateFull } from '$lib/shared/utils/datetime';
 	import DatetimePicker from '$lib/shared/components/DatetimePicker.svelte';
-	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import DepSelector from './DepSelector.svelte';
 	import { linkify } from '$shared/utils/linkify';
 	import Icon from '$lib/shared/components/Icon.svelte';

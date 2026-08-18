@@ -15,7 +15,7 @@ export const PlanBlockResponseSchema = z.object({
 	task_finished_at: z.string().nullable().optional(),
 });
 
-export const PlanTotalsSchema = z.object({
+const PlanTotalsSchema = z.object({
 	task_seconds: z.number(),
 	free_seconds: z.number(),
 });

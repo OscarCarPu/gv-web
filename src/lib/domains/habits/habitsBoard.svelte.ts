@@ -2,11 +2,11 @@ import { habitsApi } from '$habits/api/habits.api';
 import { toLocalDateString } from '$shared/utils/datetime';
 import type { HabitWithLog } from '$habits/types/Habit.types';
 
-export interface HabitsBoardApi {
+interface HabitsBoardApi {
 	getHabits: (date?: string, token?: string) => Promise<HabitWithLog[]>;
 }
 
-export interface HabitsBoardOptions {
+interface HabitsBoardOptions {
 	api?: HabitsBoardApi;
 }
 

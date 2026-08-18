@@ -1,6 +1,5 @@
 import { redirect, type Handle, json } from '@sveltejs/kit';
 import { StatusCodes } from 'http-status-codes';
-import { dev } from '$app/environment';
 import { env } from '$lib/config/env';
 
 const PUBLIC_ROUTES = ['/login', '/login/2fa', '/'];
@@ -60,6 +59,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.request.headers.get('accept')?.includes('application/json');
 
 	if (isAuthOnlyRoute) {
+		// /logout guards nothing: its action clears both cookies either way.
 	} else if (isPublicRoute) {
 		if (validSession) {
 			redirect(StatusCodes.SEE_OTHER, '/tasks');
@@ -87,7 +87,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	let apiOrigin = env.API_URL;
 	try {
 		apiOrigin = new URL(env.API_URL).origin;
-	} catch (e) {
+	} catch {
 		console.warn('Invalid API URL for CSP');
 	}
 

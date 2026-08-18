@@ -1,4 +1,3 @@
-import { untrack } from 'svelte';
 import { moneyApi } from '$lib/domains/money/api/money.api';
 import { StatsResource } from './statsResource.svelte';
 import {
@@ -18,7 +17,7 @@ import type {
 	TransactionType,
 } from '../types/Money.types';
 
-export interface CategoryBreakdownApi {
+interface CategoryBreakdownApi {
 	getCategoryStats: (params: {
 		type?: TransactionType;
 		from?: string;

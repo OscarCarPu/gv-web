@@ -2,7 +2,7 @@ import * as z from 'zod';
 
 // --- Dependency ref schema ---
 
-export const TaskDepRefSchema = z.object({
+const TaskDepRefSchema = z.object({
 	id: z.number(),
 	name: z.string(),
 	due_at: z.string().nullable(),
@@ -84,7 +84,7 @@ export const ProjectDetailResponseSchema = z.object({
 	time_spent: z.number(),
 });
 
-export const TaskDetailResponseSchema = z.object({
+const TaskDetailResponseSchema = z.object({
 	id: z.number(),
 	project_id: z.number().nullable(),
 	name: z.string(),
@@ -124,7 +124,7 @@ export const TaskFullResponseSchema = z.object({
 
 // --- Composite schemas ---
 
-export const ProjectChildNodeSchema = z.object({
+const ProjectChildNodeSchema = z.object({
 	id: z.number(),
 	type: z.string(),
 	name: z.string(),
@@ -168,7 +168,7 @@ export const TaskTimeEntriesResponseSchema = z.object({
 
 import type { ActiveTreeNode } from '../types/Task.types';
 
-export const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
+const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
 	z.object({
 		id: z.number(),
 		type: z.string(),
@@ -196,7 +196,7 @@ export const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
 
 // --- Summary schemas ---
 
-export const PaceBreakdownSchema = z.object({
+const PaceBreakdownSchema = z.object({
 	uniform_per_day_seconds: z.number(),
 	uniform_today_share_seconds: z.number(),
 	weighted_weekday_seconds: z.number(),
@@ -216,7 +216,7 @@ export const TimeEntrySummaryResponseSchema = z.object({
 
 // --- Query schemas ---
 
-export const TaskByDueDateResponseSchema = z.object({
+const TaskByDueDateResponseSchema = z.object({
 	id: z.number(),
 	name: z.string(),
 	description: z.string().nullable(),
@@ -252,7 +252,7 @@ export const TimeEntryHistoryResponseSchema = z.object({
 
 // --- Agenda schemas ---
 
-export const TimeEntryWithTaskSchema = z.object({
+const TimeEntryWithTaskSchema = z.object({
 	id: z.number(),
 	task_id: z.number(),
 	task_name: z.string(),
@@ -272,14 +272,14 @@ export const TimeEntryWithTaskListSchema = z.array(TimeEntryWithTaskSchema);
 
 // --- List schemas ---
 
-export const ProjectListItemSchema = z.object({
+const ProjectListItemSchema = z.object({
 	id: z.number(),
 	name: z.string(),
 });
 
 export const ProjectListItemListSchema = z.array(ProjectListItemSchema);
 
-export const TaskListItemSchema = z.object({
+const TaskListItemSchema = z.object({
 	id: z.number(),
 	name: z.string(),
 	project_id: z.number().nullable(),

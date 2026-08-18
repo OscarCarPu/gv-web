@@ -13,12 +13,12 @@ import type {
 	UpdateCategoryRequest,
 } from '$lib/domains/money/types/Money.types';
 
-export interface CategoryFormApi {
+interface CategoryFormApi {
 	createCategory: (input: CreateCategoryRequest) => Promise<Category>;
 	updateCategory: (id: number, input: UpdateCategoryRequest) => Promise<Category>;
 }
 
-export interface CategoryFormCallbacks {
+interface CategoryFormCallbacks {
 	/** Close the sheet (matches the component's `onclose` prop). */
 	onclose: () => void;
 	/** Revalidate page data after a mutation (the component passes `invalidateAll`). */

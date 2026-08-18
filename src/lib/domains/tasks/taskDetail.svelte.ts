@@ -34,7 +34,7 @@ export interface TaskDetailApi {
 	deleteTodo: (id: number) => Promise<void>;
 }
 
-export interface TaskDetailCallbacks {
+interface TaskDetailCallbacks {
 	/** Close the sheet (matches the component's `onclose` prop). */
 	onclose: () => void;
 	/** Revalidate page data after a mutation (the component passes `invalidateAll`). */

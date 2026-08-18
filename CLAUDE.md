@@ -146,9 +146,10 @@ src/lib/domains/money/components/
   charts/
     NetWorthChart.svelte       — LayerCake Area+Line with hover overlay
     NetWorthHoverLayer.svelte  — getContext('LayerCake'), emits hover info up
+    EstimationChart.svelte     — LayerCake Area+Line for the projection
+    EstimationPaths.svelte     — solid actual segment + dashed projected segment
     AxisYMoney.svelte          — money-aware Y axis (1k/10k/etc shorthand)
     IncomeExpenseBars.svelte   — pure SVG, bind:clientWidth, polylines + tooltip
-    CategoryBars.svelte        — horizontal bars (CSS widths, no SVG)
 ```
 
 Backend endpoints: `GET /finance/stats/networth`, `/by-category`, `/monthly`. Date ranges follow the rule "missing `from` → earliest transaction date" so omitting `from` is the canonical way to request "All time" data — don't send a sentinel like `2000-01-01`
@@ -198,8 +199,6 @@ it; see `gv-api/docs/api/lights.md` for the real thing.
   SSR read timed out, because nothing could be added to an empty list
 - **Polling pauses while a scan runs** — a scan owns the radio for its whole window, and reads
   fired into it just time out and slow the scan down
-- **A BLE bridge daemon used to live here** under `scripts/ble-bridge/`, back when the server
-  had no radio. It is gone: gv-api talks to BlueZ directly
 
 ## Welcome page (`/`)
 

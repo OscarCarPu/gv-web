@@ -12,6 +12,8 @@
 
 	let { id, online }: Props = $props();
 
+	// Id is fixed for the panel this belongs to.
+	// svelte-ignore state_referenced_locally
 	const controller = new PrinterFilesController(id);
 
 	let dragging = $state(false);

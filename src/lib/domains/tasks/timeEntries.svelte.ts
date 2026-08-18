@@ -27,14 +27,14 @@ export interface TimeEntriesApi {
 	}) => Promise<TimeEntryHistoryResponse>;
 }
 
-export type AgendaMode = 'day' | 'week';
+type AgendaMode = 'day' | 'week';
 
 /**
  * Getters onto the page's SSR payload. Reads fall back to these until a client fetch or a
  * mutation produces something newer, which is what makes the store correct during SSR (where
  * `$effect` never runs) without the page having to seed it imperatively.
  */
-export interface TimeEntriesSSR {
+interface TimeEntriesSSR {
 	today?: () => TimeEntryWithTask[];
 	summary?: () => TimeEntrySummaryResponse;
 }

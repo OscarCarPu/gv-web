@@ -17,7 +17,7 @@ export interface TransactionFormApi {
 	updateTransaction: (id: number, input: UpdateTransactionRequest) => Promise<Transaction>;
 }
 
-export interface TransactionFormCallbacks {
+interface TransactionFormCallbacks {
 	/** Close the sheet (matches the component's `onclose` prop). */
 	onclose: () => void;
 	/** Revalidate page data after a mutation (the component passes `invalidateAll`). */

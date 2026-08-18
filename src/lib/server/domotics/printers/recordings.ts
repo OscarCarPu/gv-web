@@ -55,7 +55,7 @@ export class RecordingError extends Error {
 	}
 }
 
-export type Recording = {
+type Recording = {
 	/** File name, which is also its start timestamp. */
 	name: string;
 	startedAt: string;
@@ -69,7 +69,7 @@ export type Recording = {
 	poster?: string;
 };
 
-export type RecordingsView = {
+type RecordingsView = {
 	recordings: Recording[];
 	usedBytes: number;
 	maxBytes: number;
@@ -122,12 +122,6 @@ type Active = {
 
 const active = new Map<string, Active>();
 
-/** The recording ffmpeg is writing for this printer, if any. */
-export function activeRecording(printerId: string): { name: string } | null {
-	const live = active.get(printerId);
-	return live ? { name: live.name } : null;
-}
-
 // ---- listing ----
 
 /**
@@ -137,7 +131,7 @@ export function activeRecording(printerId: string): { name: string } | null {
  * continuously, so mtime is when the stream stopped, and this avoids an ffprobe per row on every
  * poll. It therefore includes the second or two ffmpeg spends connecting to the camera.
  */
-export async function listRecordings(printerId: string): Promise<Recording[]> {
+async function listRecordings(printerId: string): Promise<Recording[]> {
 	const dir = dirFor(printerId);
 	const names = await readdir(dir).catch(() => [] as string[]);
 	const posters = new Set(names.filter((n) => n.endsWith('.jpg')));
@@ -186,7 +180,7 @@ export async function recordingsView(printerId: string): Promise<RecordingsView>
  * recording in progress, and always keeps the most recent finished one — a single oversized
  * recording is still the one thing the user most likely wants to watch.
  */
-export async function pruneOldest(printerId: string): Promise<void> {
+async function pruneOldest(printerId: string): Promise<void> {
 	const list = await listRecordings(printerId);
 	let total = list.reduce((sum, r) => sum + r.sizeBytes, 0);
 	if (total <= MAX_BYTES) return;
@@ -388,7 +382,7 @@ async function makePoster(path: string): Promise<void> {
 
 // ---- playback ----
 
-export type ByteRange = { start: number; end: number };
+type ByteRange = { start: number; end: number };
 
 /**
  * Parses a single-range `Range` header against a known size. Returns null when there is nothing

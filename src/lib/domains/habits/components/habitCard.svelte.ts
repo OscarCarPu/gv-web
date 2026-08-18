@@ -11,7 +11,7 @@ export interface HabitCardApi {
 	}) => Promise<{ status: string }>;
 }
 
-export interface HabitCardCallbacks {
+interface HabitCardCallbacks {
 	/** Revalidate page data after a successful log (the component passes `refreshCurrentDate`). */
 	onRefresh?: () => void;
 	api?: HabitCardApi;

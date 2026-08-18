@@ -15,7 +15,7 @@ import {
  * `.bgc` / `.gco` are the FAT32 8.3 short forms the printer itself uses; kept in step with the
  * server list so the two cannot drift.
  */
-export const ACCEPTED_EXTENSIONS = ['.bgcode', '.gcode', '.bgc', '.gco', '.g'];
+const ACCEPTED_EXTENSIONS = ['.bgcode', '.gcode', '.bgc', '.gco', '.g'];
 
 export const ACCEPT_ATTR = ACCEPTED_EXTENSIONS.join(',');
 

@@ -2,7 +2,7 @@ import { moneyApi } from '$lib/domains/money/api/money.api';
 import { monthKey } from '../utils/statsDate';
 import type { EstimationMode, EstimationPoint, EstimationResult } from '../types/Money.types';
 
-export interface EstimationApi {
+interface EstimationApi {
 	getEstimation: (params: {
 		start_month: string;
 		end_month: string;

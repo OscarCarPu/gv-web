@@ -126,7 +126,3 @@ Pure SVG with `bind:clientWidth` on the wrapper for crisp text. **Do not use `vi
 Bar layout per month: two grouped bars (`var(--color-success)` for income, `var(--color-danger)` for expense) of width `Math.max(2, Math.min(18, (slotW - 4) / 2))`. Trend polylines (`<polyline>`) connect the top center of each income bar and each expense bar across months, with circle markers at each point. Month labels stride dynamically (`Math.ceil(38 / slotW)`) to avoid overlap when many months are visible.
 
 The hover tooltip is positioned near the cursor: `tooltipLeft = clamp(centerX − TOOLTIP_W/2, 4, containerWidth − TOOLTIP_W − 4)`, `tooltipTop = above the highest bar or below if there's no room`.
-
-### `CategoryBars.svelte` (no SVG)
-
-Horizontal bars implemented with CSS widths only — no chart library needed. Each row is a `<li>` with a `.cat-bar-track` background and `.cat-bar-fill` whose `width: {pct}%` is set inline. Color switches via parent class: `.cat-bars-income .cat-bar-fill { background: var(--color-success) }` and `.cat-tree-transfer .cat-tree-fill { background: var(--color-primary) }` (used in the related `CategoryBreakdownSheet` tree view).

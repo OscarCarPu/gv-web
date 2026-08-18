@@ -3,7 +3,7 @@ import { addToast } from '$lib/shared/stores/toast.svelte';
 import { addNotification } from '$lib/shared/stores/notification.svelte';
 import type { HabitWithLog } from '$habits/types/Habit.types';
 
-export interface HabitFormApi {
+interface HabitFormApi {
 	createHabit: (input: {
 		name: string;
 		description?: string | null;
@@ -25,7 +25,7 @@ export interface HabitFormApi {
 	) => Promise<{ id: number; name: string; description: string | null }>;
 }
 
-export interface HabitFormCallbacks {
+interface HabitFormCallbacks {
 	/** Close the sheet (matches the component's `onclose` prop). */
 	onclose: () => void;
 	/** Revalidate page data after a save (the component passes `invalidateAll`). */

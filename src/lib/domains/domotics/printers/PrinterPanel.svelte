@@ -15,9 +15,12 @@
 
 	let { id, name, model, camIntervalMs = 200 }: Props = $props();
 
+	// One panel per printer, keyed by id: it never changes under us.
+	// svelte-ignore state_referenced_locally
 	const controller = new PrinterController(id);
 	// Owned here rather than inside PrinterRecordings so the camera tile can show REC from the
 	// same state the panel below it is driven by.
+	// svelte-ignore state_referenced_locally
 	const recordings = new PrinterRecordingsController(id);
 
 	let camSrc = $state<string | null>(null);

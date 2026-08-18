@@ -27,7 +27,7 @@
 
 <div class="history-controls">
 	<div class="frequency-toggle">
-		{#each frequencies as f}
+		{#each frequencies as f (f)}
 			<button
 				class:active={frequency === f.value}
 				onclick={() => onfrequencychange(f.value)}

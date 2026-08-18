@@ -7,12 +7,12 @@ import type {
 	UpdateAccountRequest,
 } from '$lib/domains/money/types/Money.types';
 
-export interface AccountFormApi {
+interface AccountFormApi {
 	createAccount: (input: CreateAccountRequest) => Promise<Account>;
 	updateAccount: (id: number, input: UpdateAccountRequest) => Promise<Account>;
 }
 
-export interface AccountFormCallbacks {
+interface AccountFormCallbacks {
 	/** Close the sheet (matches the component's `onclose` prop). */
 	onclose: () => void;
 	/** Revalidate page data after a mutation (the component passes `invalidateAll`). */

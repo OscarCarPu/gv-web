@@ -7,7 +7,7 @@
  * so subsequent refetches keep the previous chart rendered until the new data
  * arrives. On error the data is reset to the seeded `empty` value.
  */
-export interface StatsResourceOptions<TParams, TData> {
+interface StatsResourceOptions<TParams, TData> {
 	fetcher: (params: TParams) => Promise<TData>;
 	empty: TData;
 }

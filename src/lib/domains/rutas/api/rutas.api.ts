@@ -9,17 +9,17 @@ export const rutasApi = {
 	create: (payload: CreateMarkPayload) =>
 		fetchAPI('/rutas/marks', RutasMarkSchema, {
 			method: 'POST',
-			body: JSON.stringify(payload)
+			body: JSON.stringify(payload),
 		}),
 
 	update: (id: number, payload: UpdateMarkPayload) =>
 		fetchAPI(`/rutas/marks/${id}`, RutasMarkSchema, {
 			method: 'PUT',
-			body: JSON.stringify(payload)
+			body: JSON.stringify(payload),
 		}),
 
 	delete: (id: number) =>
 		fetchAPI(`/rutas/marks/${id}`, z.void(), {
-			method: 'DELETE'
-		})
+			method: 'DELETE',
+		}),
 };

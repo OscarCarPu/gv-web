@@ -11,7 +11,7 @@ import {
 import type { PlanTodayResponse, PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
 import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
 
-export interface PlanBoardApi {
+interface PlanBoardApi {
 	plan: {
 		deleteBlock: (id: number) => Promise<void>;
 		deleteFutureBlocks: () => Promise<void>;

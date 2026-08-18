@@ -22,7 +22,7 @@ export function getTypeBadgeClass(type: TransactionType): string {
 	}
 }
 
-export function amountSign(type: TransactionType): 'pos' | 'neg' | 'neu' {
+function amountSign(type: TransactionType): 'pos' | 'neg' | 'neu' {
 	switch (type) {
 		case 'income':
 			return 'pos';

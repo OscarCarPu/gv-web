@@ -1,7 +1,7 @@
 import type { TaskDepRef, TaskFullResponse } from '$lib/domains/tasks/types/Task.types';
 
 /** A single reverse-edge update to apply via `tasksApi.updateTask`. */
-export interface ReverseDependUpdate {
+interface ReverseDependUpdate {
 	id: number;
 	depends_on: number[];
 }

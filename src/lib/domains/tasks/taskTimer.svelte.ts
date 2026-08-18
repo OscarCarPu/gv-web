@@ -20,7 +20,7 @@ export interface TimerTask {
 }
 
 /** Shape of the active time entry used to restore the timer after SSR rehydration. */
-export interface RestoreEntry {
+interface RestoreEntry {
 	id: number;
 	task_id: number;
 	started_at: string;

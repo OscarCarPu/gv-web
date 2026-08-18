@@ -38,7 +38,13 @@
 	</button>
 	<p id="date-trigger">{navDate.formatted}</p>
 	<Popover triggeredBy="#date-trigger" trigger="click">
-		<Datepicker value={navDate.current} onselect={handleDatepickerSelect} inline locale="en-US" firstDayOfWeek={0} />
+		<Datepicker
+			value={navDate.current}
+			onselect={handleDatepickerSelect}
+			inline
+			locale="en-US"
+			firstDayOfWeek={0}
+		/>
 	</Popover>
 	<button title="One day forward" onclick={handleAddOneDay}>
 		<Icon name="arrow-right" />

@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-export const HabitWithLogSchema = z.object({
+const HabitWithLogSchema = z.object({
 	id: z.number(),
 	name: z.string(),
 	description: z.string().nullable(),

@@ -35,7 +35,7 @@
 </script>
 
 <g class="points">
-	{#each $data as point, i}
+	{#each $data as point, i (i)}
 		{@const cx = $xGet(point)}
 		{@const cy = $yGet(point)}
 		{@const isHovered = hoveredIndex === i}

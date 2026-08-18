@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-export const TransactionTypeSchema = z.enum(['income', 'expense', 'transfer']);
+const TransactionTypeSchema = z.enum(['income', 'expense', 'transfer']);
 
 export const AccountSchema = z.object({
 	id: z.number(),
@@ -44,7 +44,7 @@ export const TransactionListSchema = z
 	.nullable()
 	.transform((v) => v ?? []);
 
-export const OverviewTransactionSchema = z.object({
+const OverviewTransactionSchema = z.object({
 	id: z.number(),
 	type: TransactionTypeSchema,
 	amount: z.string(),
@@ -71,7 +71,7 @@ export const OverviewSchema = z.object({
 		.transform((v) => v ?? []),
 });
 
-export const NetWorthPointSchema = z.object({
+const NetWorthPointSchema = z.object({
 	date: z.string(),
 	total: z.string(),
 });
@@ -81,7 +81,7 @@ export const NetWorthSeriesSchema = z
 	.nullable()
 	.transform((v) => v ?? []);
 
-export const CategoryStatSchema = z.object({
+const CategoryStatSchema = z.object({
 	category_id: z.number().nullable(),
 	name: z.string(),
 	amount: z.string(),
@@ -94,7 +94,7 @@ export const CategoryStatsSchema = z
 	.nullable()
 	.transform((v) => v ?? []);
 
-export const MonthlyStatSchema = z.object({
+const MonthlyStatSchema = z.object({
 	month: z.string(),
 	income: z.string(),
 	expense: z.string(),
@@ -106,7 +106,7 @@ export const MonthlyStatsSchema = z
 	.nullable()
 	.transform((v) => v ?? []);
 
-export const EstimationPointSchema = z.object({
+const EstimationPointSchema = z.object({
 	date: z.string(),
 	total: z.string(),
 	estimated: z.boolean(),

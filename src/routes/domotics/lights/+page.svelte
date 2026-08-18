@@ -9,6 +9,8 @@
 
 	let { data } = $props();
 
+	// SSR values are a seed; the controller polls from here on.
+	// svelte-ignore state_referenced_locally
 	const controller = new LightsController(data.lights, data.states);
 
 	let adding = $state(false);

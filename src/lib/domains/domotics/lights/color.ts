@@ -22,7 +22,7 @@ export function fromHex(hex: string): RGB {
  * Tanner Helland's piecewise fit; accurate enough for a glow, and it avoids asking the
  * bulb what its whites actually look like.
  */
-export function kelvinToRgb(kelvin: number): RGB {
+function kelvinToRgb(kelvin: number): RGB {
 	const t = Math.min(40000, Math.max(1000, kelvin)) / 100;
 
 	let r: number;

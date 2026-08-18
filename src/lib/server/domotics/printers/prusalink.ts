@@ -6,7 +6,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { Printer } from './config';
 
-export type PrinterTelemetry = {
+type PrinterTelemetry = {
 	configured: boolean;
 	online: boolean;
 	state?: string;
@@ -111,7 +111,7 @@ async function getChallenge(
 	return challenge;
 }
 
-export type SendOptions = {
+type SendOptions = {
 	/**
 	 * Either a buffer, or a factory returning a fresh body per attempt. The factory form exists
 	 * for streamed uploads: a ReadableStream cannot be replayed, so the stale-nonce retry needs
