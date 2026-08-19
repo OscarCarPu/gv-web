@@ -18,6 +18,7 @@
 	let loaded = $state(false);
 	let tasks = $state<TaskListItem[]>([]);
 	let query = $state('');
+	let failed = $state(false);
 	let searchInput = $state<HTMLInputElement | null>(null);
 
 	// `list-fast` already scopes to unfinished tasks in active projects
@@ -26,7 +27,16 @@
 		if (!open) return;
 		if (!loaded) {
 			loaded = true;
-			tasksApi.listTasksFast().then((t) => (tasks = t));
+			failed = false;
+			tasksApi
+				.listTasksFast()
+				.then((t) => (tasks = t))
+				.catch(() => {
+					// Without this the picker renders a failed load as "No tasks", which
+					// reads like an empty account rather than a broken request.
+					failed = true;
+					loaded = false;
+				});
 		}
 		searchInput?.focus();
 	});
@@ -85,7 +95,9 @@
 			bind:value={query}
 		/>
 		<div class="ttp-list">
-			{#if grouped.length === 0}
+			{#if failed}
+				<p class="ttp-empty">Could not load tasks</p>
+			{:else if grouped.length === 0}
 				<p class="ttp-empty">No tasks</p>
 			{:else}
 				{#each grouped as g (g.label)}
