@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '$styles/printers.css';
 	import '$styles/domotics.css';
+	import '$styles/uptime.css';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 
@@ -8,6 +9,7 @@
 
 	const printers = resolve('/domotics/printers');
 	const lights = resolve('/domotics/lights');
+	const uptime = resolve('/domotics/uptime');
 </script>
 
 <svelte:head>
@@ -22,6 +24,7 @@
 				Printers
 			</a>
 			<a href={lights} class="domotics-tab" class:active={page.url.pathname === lights}>Lights</a>
+			<a href={uptime} class="domotics-tab" class:active={page.url.pathname === uptime}>Uptime</a>
 		</nav>
 	</header>
 

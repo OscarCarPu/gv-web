@@ -1,0 +1,361 @@
+/* Uptime tab. Shell furniture stays in domotics.css. */
+
+.uptime-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1rem;
+	flex-wrap: wrap;
+}
+
+.uptime-freshness {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+}
+
+.uptime-freshness .is-stale {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	color: var(--color-warning);
+	font-weight: 600;
+}
+
+.uptime-stale-note {
+	font-size: 0.75rem;
+}
+
+.uptime-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.uptime-presets {
+	display: flex;
+	gap: 0.25rem;
+	padding: 0.2rem;
+	background: var(--color-bg-light);
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+}
+
+.uptime-preset {
+	padding: 0.3rem 0.7rem;
+	border: 0;
+	border-radius: 7px;
+	background: transparent;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--color-text-muted);
+	cursor: pointer;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
+}
+
+.uptime-preset:hover:not(:disabled) {
+	color: var(--color-text);
+}
+
+.uptime-preset.active {
+	background: var(--color-primary);
+	color: #fff;
+}
+
+.uptime-preset:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+
+.uptime-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--color-text-muted);
+	background: transparent;
+	border: 1px solid var(--color-border-strong);
+	border-radius: 9px;
+	padding: 0.4rem 0.8rem;
+	cursor: pointer;
+	transition:
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.uptime-btn:hover:not(:disabled) {
+	color: var(--color-text);
+	border-color: var(--color-primary);
+}
+
+.uptime-btn:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+
+/* ---- Cards ---- */
+
+.uptime-grid {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+}
+
+.uptime-card {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 1.1rem 1.2rem 1.2rem;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 14px;
+}
+
+.uptime-card.is-down {
+	border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+}
+
+.uptime-card-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.uptime-card-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.uptime-card-title h2 {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-text);
+	margin: 0;
+}
+
+.uptime-dot {
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background: var(--color-text-muted);
+	flex-shrink: 0;
+}
+
+.uptime-dot.is-up {
+	background: var(--color-success);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+
+.uptime-dot.is-down {
+	background: var(--color-danger);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
+
+.uptime-state {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.1rem;
+	text-align: right;
+}
+
+.uptime-state-word {
+	font-size: 0.9375rem;
+	font-weight: 700;
+	color: var(--color-text);
+}
+
+.uptime-state-detail {
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+}
+
+/* ---- Precomputed lookbacks ---- */
+
+.uptime-tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+	gap: 0.5rem;
+}
+
+.uptime-tile {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	padding: 0.6rem 0.65rem;
+	background: var(--color-bg-light);
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+}
+
+.uptime-tile-value {
+	font-size: 1.0625rem;
+	font-weight: 700;
+	color: var(--color-text);
+	font-variant-numeric: tabular-nums;
+}
+
+.uptime-tile-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-text-muted);
+	text-transform: capitalize;
+}
+
+.uptime-tile-since {
+	font-size: 0.6875rem;
+	color: var(--color-text-muted);
+	opacity: 0.75;
+}
+
+/* ---- Timeline ---- */
+
+.uptime-timeline {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.uptime-track {
+	position: relative;
+	height: 26px;
+	border-radius: 6px;
+	overflow: hidden;
+	background: var(--color-bg-light);
+	border: 1px solid var(--color-border);
+}
+
+.uptime-seg {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	min-width: 1px;
+}
+
+.uptime-seg.is-up {
+	background: color-mix(in srgb, var(--color-success) 70%, transparent);
+}
+
+.uptime-seg.is-down {
+	background: var(--color-danger);
+	/* Outages are usually minutes inside a month; without a floor they are invisible. */
+	min-width: 2px;
+}
+
+.uptime-seg.is-unknown {
+	background: repeating-linear-gradient(
+		45deg,
+		var(--color-overlay),
+		var(--color-overlay) 6px,
+		transparent 6px,
+		transparent 12px
+	);
+}
+
+.uptime-axis {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.6875rem;
+	color: var(--color-text-muted);
+}
+
+/* ---- Footer and outage list ---- */
+
+.uptime-card-foot {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.uptime-foot-main {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-text);
+	font-variant-numeric: tabular-nums;
+}
+
+.uptime-foot-detail {
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+}
+
+.uptime-outages {
+	list-style: none;
+	margin: 0;
+	padding: 0.75rem 0 0;
+	border-top: 1px solid var(--color-border);
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+}
+
+.uptime-outages li {
+	display: grid;
+	grid-template-columns: 1fr auto auto;
+	gap: 0.75rem;
+	align-items: baseline;
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+}
+
+.uptime-outage-when {
+	color: var(--color-text);
+}
+
+.uptime-outage-length {
+	color: var(--color-danger);
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.uptime-outage-ago {
+	opacity: 0.7;
+}
+
+/* ---- Nothing to show ---- */
+
+.uptime-error {
+	padding: 2.5rem 1.5rem;
+	text-align: center;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 14px;
+}
+
+.uptime-error h2 {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-text);
+	margin-bottom: 0.4rem;
+}
+
+.uptime-error p {
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+	max-width: 46ch;
+	margin: 0 auto;
+}
+
+.uptime-error-hint {
+	margin-top: 0.6rem;
+	font-size: 0.8125rem;
+}
+
+.uptime-error code {
+	font-family: ui-monospace, monospace;
+	font-size: 0.75rem;
+	padding: 0.1rem 0.3rem;
+	border-radius: 5px;
+	background: var(--color-bg-light);
+}
