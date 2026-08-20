@@ -1,0 +1,501 @@
+@reference "./app.css";
+
+/* CALENDAR
+   The month grid and the time grid share the event chip (`cal-chip`) and the per-calendar
+   colour, which arrives as the `--chip` custom property on the element: Google's colour is
+   per calendar, so it cannot live in a class. */
+
+.cal-page {
+	@apply flex flex-col gap-3 px-3 py-3;
+	height: calc(100vh - 3.25rem);
+}
+
+/* Toolbar */
+
+.cal-toolbar {
+	@apply flex flex-wrap items-center justify-between gap-3;
+}
+
+.cal-toolbar-left,
+.cal-toolbar-right {
+	@apply flex flex-wrap items-center gap-2;
+}
+
+.cal-nav {
+	@apply flex items-center gap-1;
+}
+
+.cal-title {
+	@apply text-text text-lg font-semibold;
+}
+
+.cal-today {
+	@apply px-3 py-1.5 text-sm;
+
+	&.current {
+		@apply text-primary;
+	}
+}
+
+.cal-loading {
+	@apply text-text-muted animate-spin text-sm;
+}
+
+.cal-mode-toggle {
+	@apply mt-0 w-auto;
+
+	& button {
+		@apply px-3;
+	}
+}
+
+/* A secondary action: reads as a button without competing with the primary one. The `btn`
+   utility lives in components.css, which this file does not reference, so the shape is spelled
+   out here rather than borrowed. */
+.cal-btn {
+	@apply text-text-muted hover:text-text bg-overlay flex cursor-pointer items-center gap-2 rounded-lg border-none px-3 py-1.5 text-sm font-medium transition-colors;
+	border: 1px solid var(--color-border);
+
+	&:disabled {
+		@apply cursor-not-allowed opacity-50;
+	}
+}
+
+.cal-sidebar-btn {
+	@apply desktop:hidden;
+}
+
+/* Layout */
+
+.cal-body {
+	@apply flex min-h-0 flex-1 gap-3;
+}
+
+.cal-sidebar-wrap {
+	@apply hidden;
+
+	&.open {
+		@apply bg-bg-light absolute top-16 left-3 z-20 block max-h-[70vh] overflow-y-auto rounded-xl p-3;
+		border: 1px solid var(--color-border);
+	}
+
+	@variant desktop {
+		@apply block w-56 shrink-0 overflow-y-auto;
+
+		&.open {
+			@apply static block max-h-none overflow-y-auto rounded-none border-none bg-transparent p-0;
+		}
+	}
+}
+
+.cal-main {
+	@apply bg-bg-light flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto rounded-xl;
+	border: 1px solid var(--color-border);
+}
+
+/* Sidebar */
+
+.cal-sidebar {
+	@apply flex flex-col gap-4;
+}
+
+.cal-account-group {
+	@apply flex flex-col gap-1;
+}
+
+.cal-account-head {
+	@apply flex items-center justify-between gap-2;
+}
+
+.cal-account-email {
+	@apply text-text-muted truncate text-xs font-semibold tracking-wide uppercase;
+}
+
+.cal-badge-ok {
+	@apply text-success;
+}
+
+.cal-badge-warn {
+	@apply text-warning;
+}
+
+.cal-cal-row {
+	@apply flex items-center gap-1;
+
+	&.disabled {
+		@apply opacity-60;
+	}
+}
+
+.cal-cal-toggle {
+	@apply hover:bg-overlay flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm;
+
+	& input {
+		@apply accent-primary h-3.5 w-3.5 shrink-0 cursor-pointer;
+	}
+}
+
+.cal-cal-enable {
+	@apply text-text-muted hover:text-text hover:bg-overlay flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-none bg-transparent px-1 py-1 text-left text-sm;
+}
+
+.cal-cal-name {
+	@apply truncate;
+}
+
+.cal-dot {
+	@apply h-2.5 w-2.5 shrink-0 rounded-full;
+	background: var(--chip);
+}
+
+.cal-readonly {
+	@apply text-text-muted shrink-0 text-xs;
+}
+
+.cal-empty-note {
+	@apply text-text-muted text-sm;
+}
+
+.cal-sidebar-actions {
+	@apply mt-2 flex flex-col gap-2;
+}
+
+/* Month grid */
+
+.cal-month {
+	@apply flex min-h-0 flex-1 flex-col;
+}
+
+.cal-month-head {
+	@apply grid grid-cols-7;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.cal-weekday {
+	@apply text-text-muted px-2 py-1.5 text-center text-xs font-semibold tracking-wide uppercase;
+}
+
+/* Rows never shrink below what three chips need: a squeezed cell overlaps its own text, and a
+   month that scrolls is easier to read than one that lies. */
+.cal-month-grid {
+	@apply grid min-h-0 flex-1 grid-cols-7;
+	grid-template-rows: repeat(var(--weeks), minmax(6rem, 1fr));
+}
+
+.cal-day {
+	@apply flex min-h-0 flex-col gap-1 overflow-hidden p-1;
+	border-right: 1px solid var(--color-border);
+	border-bottom: 1px solid var(--color-border);
+
+	&:nth-child(7n) {
+		border-right: none;
+	}
+
+	&.outside {
+		@apply bg-bg/40;
+
+		& .cal-day-number {
+			@apply text-text-muted/50;
+		}
+	}
+
+	&.today .cal-day-number {
+		@apply bg-primary text-white;
+	}
+}
+
+.cal-day-head {
+	@apply flex items-center justify-between;
+}
+
+.cal-day-number {
+	@apply text-text-muted hover:text-text flex h-6 min-w-6 cursor-pointer items-center justify-center rounded-full border-none bg-transparent px-1 text-xs font-semibold transition-colors;
+}
+
+.cal-day-add {
+	@apply text-text-muted hover:text-text hover:bg-overlay h-5 w-5 cursor-pointer rounded border-none bg-transparent text-sm leading-none opacity-0 transition-opacity;
+}
+
+.cal-day:hover .cal-day-add {
+	@apply opacity-100;
+}
+
+.cal-day-events {
+	@apply flex min-h-0 flex-col gap-0.5 overflow-hidden;
+}
+
+/* Event chip, shared by both grids */
+
+.cal-chip {
+	@apply flex w-full shrink-0 cursor-pointer items-center gap-1 overflow-hidden rounded border-none px-1 py-0.5 text-left text-xs leading-tight transition-opacity hover:opacity-80;
+	background: color-mix(in srgb, var(--chip) 18%, transparent);
+	color: var(--color-text);
+	border-left: 3px solid var(--chip);
+
+	&.all-day {
+		background: var(--chip);
+		color: #fff;
+		border-left: none;
+	}
+
+	&.declined {
+		@apply opacity-60;
+		text-decoration: line-through;
+	}
+}
+
+.cal-chip-time {
+	@apply text-text-muted shrink-0 text-[0.65rem] tabular-nums;
+}
+
+.cal-chip.all-day .cal-chip-time {
+	@apply text-white/80;
+}
+
+.cal-chip-title {
+	@apply truncate;
+}
+
+.cal-more {
+	@apply text-text-muted hover:text-text cursor-pointer border-none bg-transparent px-1 text-left text-[0.65rem] font-medium;
+}
+
+/* Time grid (week and day) */
+
+.cal-time {
+	@apply flex min-h-0 flex-1 flex-col;
+	--gutter: 3.25rem;
+	--hour: 3.5rem;
+}
+
+.cal-time-head {
+	@apply grid shrink-0;
+	grid-template-columns: var(--gutter) repeat(auto-fit, minmax(0, 1fr));
+	border-bottom: 1px solid var(--color-border);
+}
+
+.cal-time-col-head {
+	@apply flex min-w-0 flex-col gap-1 p-1;
+	border-left: 1px solid var(--color-border);
+
+	&.today .cal-col-label {
+		@apply text-primary;
+	}
+}
+
+.cal-col-label {
+	@apply text-text-muted hover:text-text cursor-pointer border-none bg-transparent text-xs font-semibold tracking-wide uppercase;
+}
+
+.cal-allday-row {
+	@apply flex flex-col gap-0.5;
+}
+
+.cal-time-body {
+	@apply grid min-h-0 flex-1 overflow-y-auto;
+	grid-template-columns: var(--gutter) repeat(auto-fit, minmax(0, 1fr));
+}
+
+.cal-gutter {
+	@apply relative;
+}
+
+.cal-hour-label {
+	@apply text-text-muted pr-1 text-right text-[0.65rem] tabular-nums;
+	height: var(--hour);
+	transform: translateY(-0.4rem);
+}
+
+.cal-time-col {
+	@apply relative min-w-0;
+	border-left: 1px solid var(--color-border);
+
+	&.today {
+		background: color-mix(in srgb, var(--color-primary) 4%, transparent);
+	}
+}
+
+.cal-hour-slot {
+	@apply hover:bg-overlay w-full cursor-pointer border-none bg-transparent p-0;
+	height: var(--hour);
+	border-bottom: 1px solid var(--color-border);
+}
+
+/* Positioned by the minute: `--top` and `--height` are minutes from midnight. */
+/* Row layout, wrapping: a half-hour box shows "09:00 Standup" on one line, and a longer one
+   lets the location wrap onto the next. */
+.cal-event {
+	@apply absolute flex cursor-pointer flex-row flex-wrap items-baseline gap-x-1 overflow-hidden rounded border-none px-1 py-0.5 text-left text-xs leading-tight;
+	top: calc(var(--top) * var(--hour) / 60);
+	height: calc(var(--height) * var(--hour) / 60);
+	left: calc(var(--lane) * (100% - 0.25rem) / var(--lanes));
+	width: calc((100% - 0.25rem) / var(--lanes) - 2px);
+	background: color-mix(in srgb, var(--chip) 85%, black 15%);
+	color: #fff;
+	border-left: 3px solid var(--chip);
+
+	&:hover {
+		@apply z-10 opacity-90;
+	}
+
+	&.tentative {
+		background: color-mix(in srgb, var(--chip) 35%, transparent);
+		color: var(--color-text);
+	}
+}
+
+.cal-event-time {
+	@apply shrink-0 text-[0.65rem] tabular-nums opacity-90;
+}
+
+.cal-event-title {
+	@apply truncate font-medium;
+}
+
+.cal-event-where {
+	@apply w-full;
+}
+
+.cal-event-where {
+	@apply truncate text-[0.65rem] opacity-80;
+}
+
+/* The current time, drawn across today's column only. */
+.cal-now {
+	@apply pointer-events-none absolute right-0 left-0 z-10;
+	top: calc(var(--top) * var(--hour) / 60);
+	border-top: 2px solid var(--color-danger);
+
+	&::before {
+		@apply absolute h-1.5 w-1.5 rounded-full;
+		content: '';
+		background: var(--color-danger);
+		left: -3px;
+		top: -4px;
+	}
+}
+
+/* Empty state */
+
+.cal-empty {
+	@apply text-text-muted m-auto flex max-w-sm flex-col items-center gap-3 p-8 text-center;
+
+	& h2 {
+		@apply text-text text-lg font-semibold;
+	}
+}
+
+/* Sheets and notes */
+
+.cal-note {
+	@apply text-warning bg-warning/10 mt-3 flex items-start gap-2 rounded-lg px-3 py-2 text-sm;
+}
+
+.cal-error {
+	@apply text-danger text-sm;
+}
+
+.cal-error-bar {
+	@apply bg-danger/10 rounded-lg px-3 py-2;
+}
+
+.cal-hint {
+	@apply text-text-muted text-xs;
+}
+
+.cal-label {
+	@apply text-text-muted text-sm font-medium;
+}
+
+.cal-meta {
+	@apply text-text-muted mt-1 flex flex-wrap gap-1 text-xs;
+
+	& a {
+		@apply text-primary hover:underline;
+	}
+}
+
+.cal-scope-toggle button {
+	@apply text-xs;
+}
+
+.cal-switch {
+	@apply text-text flex cursor-pointer items-center gap-2 text-sm;
+
+	& input {
+		@apply accent-primary h-4 w-4 cursor-pointer;
+	}
+}
+
+.cal-guests {
+	@apply flex flex-col gap-1 text-sm;
+
+	& li {
+		@apply flex items-center justify-between gap-2;
+	}
+}
+
+.cal-guest-status {
+	@apply text-text-muted text-xs;
+}
+
+.cal-move {
+	@apply mt-4 flex flex-wrap items-end gap-2;
+
+	& label {
+		@apply text-text-muted w-full text-sm font-medium;
+	}
+
+	& select {
+		@apply bg-bg border-text-muted/20 text-text flex-1 rounded-lg border px-3 py-2 text-sm;
+	}
+}
+
+.cal-subtitle {
+	@apply text-text mt-6 mb-2 text-sm font-semibold tracking-wide uppercase;
+}
+
+.cal-account-card {
+	@apply bg-bg mt-3 rounded-xl p-3;
+	border: 1px solid var(--color-border);
+
+	&.needs-reauth {
+		border-color: color-mix(in srgb, var(--color-warning) 40%, transparent);
+	}
+}
+
+.cal-account-card-head {
+	@apply flex items-center justify-between gap-2;
+}
+
+.cal-account-card-actions {
+	@apply mt-3 flex gap-2;
+}
+
+.cal-connect {
+	@apply mt-4 w-full justify-center;
+}
+
+.cal-runs {
+	@apply flex flex-col gap-1 text-xs;
+
+	& li {
+		@apply text-text-muted flex flex-wrap items-center gap-2;
+
+		&.failed {
+			@apply text-danger;
+		}
+	}
+}
+
+.cal-run-when {
+	@apply tabular-nums;
+}
+
+.cal-run-what {
+	@apply uppercase;
+}
+
+.cal-run-counts {
+	@apply tabular-nums;
+}

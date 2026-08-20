@@ -29,14 +29,19 @@
 	<header class="app-header">
 		<nav class="app-nav">
 			{#if data.token}
-				<a href="/habits" class="nav-link" class:active={page.url.pathname.startsWith('/habits')}
-					>Habits</a
-				>
 				<a href="/tasks" class="nav-link" class:active={page.url.pathname.startsWith('/tasks')}
 					>Tasks</a
 				>
+				<a
+					href="/calendar"
+					class="nav-link"
+					class:active={page.url.pathname.startsWith('/calendar')}>Calendar</a
+				>
 				<a href="/money" class="nav-link" class:active={page.url.pathname.startsWith('/money')}
 					>Money</a
+				>
+				<a href="/habits" class="nav-link" class:active={page.url.pathname.startsWith('/habits')}
+					>Habits</a
 				>
 				<a href="/rutas" class="nav-link" class:active={page.url.pathname.startsWith('/rutas')}
 					>Routes</a

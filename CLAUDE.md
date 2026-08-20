@@ -108,6 +108,26 @@ Full detail in [docs/tasks.md](docs/tasks.md). Non-obvious rules to remember whi
 - **Priority**: 1 (highest) to 5 (lowest), default `3`. Create omits when default (consistent with `task_type`); update always sends. Client-side priority filter on `/tasks` sections — projects in the tree are always kept regardless of children's priorities
 - **Overdue**: `TaskItem` applies `.overdue` class (red) when `due_at < today` on "Due Soon"
 
+## Calendar domain — quick rules
+
+Full detail in [docs/calendar.md](docs/calendar.md). The traps worth knowing before touching it:
+
+- **Never use `toISOString` from `$shared/utils/datetime` for event times.** That helper keeps the
+  wall clock and swaps the zone, which is right for a task's `due_at` and wrong for an
+  appointment. Use `localInputToISO` from `$lib/domains/calendar/utils/datetime`
+- **All-day ends are exclusive** in the API; the form shows the last day covered and converts both
+  ways. A single-day event is `D` → `D+1`
+- **Occurrences are addressed by `instance_id`** (`12@2026-08-20T07:00:00Z`, the original start).
+  Pass it back verbatim to PATCH/DELETE; recurring edits also take `scope=instance|following|all`,
+  and the rule itself only changes with `scope=all`
+- **The API expands recurrences**, so `GET /calendar/events` returns occurrences — never expand an
+  RRULE on this side
+- **Calendar visibility is a server preference**, not a local filter; events are fetched with
+  `visible_only=true`
+- **SSE goes through `/api/calendar/stream`**, a proxy that attaches the session token, because
+  `EventSource` cannot set headers. The stream only says something changed; the controller
+  refetches the range
+
 ## Money domain — quick rules
 
 Route: `/money` (private). API base: `/finance/*`. Visible label: "Money", URL, folder (`src/lib/domains/money/`), styles (`src/styles/money.css`), and `moneyApi` follow the English-URL convention used by `/tasks`, `/habits`.

@@ -21,6 +21,8 @@ src/
 │   ├── habits/                # /habits
 │   ├── tasks/                 # /tasks
 │   │   └── projects/[id]/     # /tasks/projects/:id (project detail)
+│   ├── calendar/              # /calendar
+│   ├── api/calendar/stream/   # SSE proxy: adds the session token to the API's stream
 │   ├── logout/                # /logout
 │   ├── +layout.server.ts      # Root layout server load
 │   └── +layout.svelte         # Root layout (nav, global styles)
@@ -28,6 +30,7 @@ src/
 │   ├── domains/               # Domain-driven feature modules
 │   │   ├── auth/              # api/, types/
 │   │   ├── habits/            # api/, types/, components/
+│   │   ├── calendar/          # api/, types/, components/, forms/, utils/
 │   │   └── tasks/             # api/, types/, components/
 │   ├── shared/                # Reusable cross-domain code
 │   │   ├── api/               # fetchAPI() client
@@ -39,6 +42,7 @@ src/
 │   ├── app.css                # Tailwind imports, @theme tokens, base styles
 │   ├── components.css         # Shared component styles
 │   ├── habits.css             # Habits feature styles
+│   ├── calendar.css           # Calendar feature styles
 │   ├── tasks.css              # Tasks feature styles
 │   └── login.css              # Login page styles
 └── hooks.server.ts            # Auth guard, security headers
