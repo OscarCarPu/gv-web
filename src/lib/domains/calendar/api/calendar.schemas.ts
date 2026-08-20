@@ -18,7 +18,10 @@ export const CalendarSchema = z.object({
 	summary: z.string(),
 	description: z.string(),
 	time_zone: z.string(),
+	/** What to paint with: the user's override, else the colour gv assigned. */
 	color: z.string(),
+	/** Google's own colour, which is the same pale cyan for every primary calendar. */
+	background_color: z.string(),
 	foreground_color: z.string(),
 	access_role: z.string(),
 	writable: z.boolean(),

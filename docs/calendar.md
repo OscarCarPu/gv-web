@@ -51,6 +51,15 @@ src/styles/calendar.css
 - **Turning a calendar's sync on imports it in full** — the API cannot bound the initial import
   by date. That is why holiday and birthday calendars arrive switched off, and why the sidebar
   labels the toggle rather than hiding it.
+- **Colours come from the API, not from Google.** `color` is what to paint with (gv's assigned
+  palette entry, or the user's override); `background_color` is Google's own and identifies
+  nothing — every primary calendar shares the same pale cyan. Which ink goes on top is decided
+  here, per colour, by `chipInk` — hardcoding white text breaks the moment someone pins a pale
+  colour. Chips pass both as `--chip` / `--chip-ink`.
+- **The visibility toggle is the coloured dot**, not a native checkbox: a native one renders in
+  the platform's colour scheme (a white box on the dark theme) and says nothing about which
+  calendar it belongs to. Filled means shown, hollow means hidden; the real input is `sr-only`
+  and keeps keyboard focus.
 - **`editable: false`** covers read-only calendars, parked accounts and the event kinds Google
   generates (`birthday`, `fromGmail`, `workingLocation`). The sheet opens read-only rather than
   letting a write fail.

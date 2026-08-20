@@ -91,6 +91,10 @@
 .cal-main {
 	@apply bg-bg-light flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto rounded-xl;
 	border: 1px solid var(--color-border);
+	/* Without this the scrollbar is painted in the platform's scheme: a white strip down the
+	   side of a dark page. */
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-text-muted) transparent;
 }
 
 /* Sidebar */
@@ -129,9 +133,14 @@
 
 .cal-cal-toggle {
 	@apply hover:bg-overlay flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm;
+}
 
-	& input {
-		@apply accent-primary h-3.5 w-3.5 shrink-0 cursor-pointer;
+.cal-cal-check {
+	@apply sr-only;
+
+	&:focus-visible + .cal-dot {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
 	}
 }
 
@@ -144,8 +153,13 @@
 }
 
 .cal-dot {
-	@apply h-2.5 w-2.5 shrink-0 rounded-full;
+	@apply h-3 w-3 shrink-0 rounded-full transition-colors;
 	background: var(--chip);
+	border: 2px solid var(--chip);
+
+	&.off {
+		background: transparent;
+	}
 }
 
 .cal-readonly {
@@ -228,13 +242,13 @@
 
 .cal-chip {
 	@apply flex w-full shrink-0 cursor-pointer items-center gap-1 overflow-hidden rounded border-none px-1 py-0.5 text-left text-xs leading-tight transition-opacity hover:opacity-80;
-	background: color-mix(in srgb, var(--chip) 18%, transparent);
+	background: color-mix(in srgb, var(--chip) 22%, transparent);
 	color: var(--color-text);
 	border-left: 3px solid var(--chip);
 
 	&.all-day {
 		background: var(--chip);
-		color: #fff;
+		color: var(--chip-ink, #fff);
 		border-left: none;
 	}
 
@@ -249,7 +263,8 @@
 }
 
 .cal-chip.all-day .cal-chip-time {
-	@apply text-white/80;
+	color: var(--chip-ink, #fff);
+	opacity: 0.8;
 }
 
 .cal-chip-title {
@@ -294,6 +309,8 @@
 .cal-time-body {
 	@apply grid min-h-0 flex-1 overflow-y-auto;
 	grid-template-columns: var(--gutter) repeat(auto-fit, minmax(0, 1fr));
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-text-muted) transparent;
 }
 
 .cal-gutter {
@@ -330,9 +347,9 @@
 	height: calc(var(--height) * var(--hour) / 60);
 	left: calc(var(--lane) * (100% - 0.25rem) / var(--lanes));
 	width: calc((100% - 0.25rem) / var(--lanes) - 2px);
-	background: color-mix(in srgb, var(--chip) 85%, black 15%);
-	color: #fff;
-	border-left: 3px solid var(--chip);
+	background: var(--chip);
+	color: var(--chip-ink, #fff);
+	border-left: 3px solid color-mix(in srgb, var(--chip) 70%, black 30%);
 
 	&:hover {
 		@apply z-10 opacity-90;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
 	import { CalendarView, sameDay } from '$lib/domains/calendar/calendarView.svelte';
-	import { eventTime } from '$lib/domains/calendar/utils/datetime';
+	import { chipInk, eventTime } from '$lib/domains/calendar/utils/datetime';
 
 	interface Props {
 		view: CalendarView;
@@ -87,7 +87,7 @@
 						<button
 							type="button"
 							class="cal-chip all-day"
-							style="--chip: {event.color || 'var(--color-primary)'}"
+							style="--chip: {event.color}; --chip-ink: {chipInk(event.color)}"
 							title={`${event.summary} — ${event.calendar_name}`}
 							onclick={() => onselect(event)}
 						>
@@ -133,8 +133,9 @@
 						type="button"
 						class="cal-event"
 						class:tentative={event.status === 'tentative'}
-						style="--top: {box.top}; --height: {box.height}; --lane: {lane}; --lanes: {layout.lanes}; --chip: {event.color ||
-							'var(--color-primary)'}"
+						style="--top: {box.top}; --height: {box.height}; --lane: {lane}; --lanes: {layout.lanes}; --chip: {event.color}; --chip-ink: {chipInk(
+							event.color
+						)}"
 						title={`${event.summary} — ${event.calendar_name} (${event.account_email})`}
 						onclick={() => onselect(event)}
 					>

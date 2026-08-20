@@ -26,14 +26,20 @@
 				<div class="cal-cal-row" class:disabled={!calendar.sync_enabled}>
 					{#if calendar.sync_enabled}
 						<label class="cal-cal-toggle">
+							<!-- The dot in the calendar's own colour *is* the checkbox: filled when shown,
+							     hollow when hidden. A native checkbox renders in the platform's colour
+							     scheme, which came out as a white box on the dark theme, and it says
+							     nothing about which calendar it belongs to. -->
 							<input
 								type="checkbox"
+								class="cal-cal-check"
 								checked={calendar.visible}
 								onchange={() => view.toggleCalendarVisible(calendar)}
 							/>
 							<span
 								class="cal-dot"
-								style="--chip: {calendar.color || 'var(--color-primary)'}"
+								class:off={!calendar.visible}
+								style="--chip: {calendar.color}"
 								aria-hidden="true"
 							></span>
 							<span class="cal-cal-name" title={calendar.summary}>{calendar.summary}</span>

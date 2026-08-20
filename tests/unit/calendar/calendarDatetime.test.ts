@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	addDaysToDateInput,
+	chipInk,
 	eventTime,
 	eventWhen,
 	isoToDateInput,
@@ -52,5 +53,23 @@ describe('calendar datetime helpers', () => {
 		expect(eventWhen('2026-08-19T22:00:00Z', '2026-08-22T22:00:00Z', true)).toBe(
 			'All day, Aug 20 – Aug 22'
 		);
+	});
+	describe('chip ink', () => {
+		it('writes light text on a dark colour and dark text on a light one', () => {
+			expect(chipInk('#3b82f6')).toBe('#ffffff'); // blue
+			expect(chipInk('#10b981')).toBe('#ffffff'); // emerald
+			expect(chipInk('#a855f7')).toBe('#ffffff'); // purple
+			// Google's pale cyan, the colour that started all this, and the two brightest
+			// palette entries.
+			expect(chipInk('#9fe1e7')).toBe('#111827');
+			expect(chipInk('#eab308')).toBe('#111827');
+			expect(chipInk('#84cc16')).toBe('#111827');
+		});
+
+		it('falls back to light text for anything it cannot read', () => {
+			expect(chipInk('')).toBe('#ffffff');
+			expect(chipInk('blue')).toBe('#ffffff');
+			expect(chipInk('#fff')).toBe('#ffffff');
+		});
 	});
 });

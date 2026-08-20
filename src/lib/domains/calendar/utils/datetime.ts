@@ -54,3 +54,22 @@ export function eventWhen(startsAt: string, endsAt: string, allDay: boolean): st
 	if (fmt.format(start) === fmt.format(lastDay)) return 'All day';
 	return `All day, ${fmt.format(start)} – ${fmt.format(lastDay)}`;
 }
+
+/**
+ * The ink to write on a chip of this colour.
+ *
+ * Calendar colours arrive from the API and can be anything — gv's palette, or a colour the user
+ * pinned by hand. Hardcoding white text works until someone picks a pale one and the title
+ * vanishes, so the choice is made per colour, by relative luminance (the WCAG formula).
+ */
+export function chipInk(color: string): string {
+	const hex = color.trim().replace('#', '');
+	if (hex.length !== 6) return '#ffffff';
+	const channel = (offset: number) => {
+		const value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
+		return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+	};
+	const luminance = 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
+	// The threshold is where white and near-black are equally readable; above it, dark ink wins.
+	return luminance > 0.45 ? '#111827' : '#ffffff';
+}

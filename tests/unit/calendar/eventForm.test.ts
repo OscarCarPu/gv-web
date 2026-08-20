@@ -31,6 +31,7 @@ function calendar(over: Partial<Calendar> = {}): Calendar {
 		description: '',
 		time_zone: 'Europe/Madrid',
 		color: '#3b82f6',
+		background_color: '#9fe1e7',
 		foreground_color: '',
 		access_role: 'owner',
 		writable: true,

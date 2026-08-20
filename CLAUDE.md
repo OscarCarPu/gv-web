@@ -124,6 +124,9 @@ Full detail in [docs/calendar.md](docs/calendar.md). The traps worth knowing bef
   RRULE on this side
 - **Calendar visibility is a server preference**, not a local filter; events are fetched with
   `visible_only=true`
+- **Colours are the API's `color` field** (gv assigns them; Google's own are identical across
+  accounts and unreadable on dark). Never hardcode the text colour on a chip — use `chipInk`,
+  and pass `--chip` / `--chip-ink`
 - **SSE goes through `/api/calendar/stream`**, a proxy that attaches the session token, because
   `EventSource` cannot set headers. The stream only says something changed; the controller
   refetches the range
