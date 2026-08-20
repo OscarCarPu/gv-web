@@ -58,9 +58,14 @@ describe('formatAgo', () => {
 });
 
 describe('formatMoment', () => {
-	it('formats in the local zone', () => {
-		// Tests run in Europe/Madrid, so 16:54Z reads as 18:54.
-		expect(formatMoment('2026-08-13T16:54:25Z')).toContain('18:54');
+	it('formats in the local zone, not UTC', () => {
+		// Tests run in Europe/Madrid, so 16:54Z is 18:54 local. Whether that renders as
+		// "18:54" or "06:54 PM" depends on the runtime's locale, not on this code — the CI
+		// image defaults to en-US where the dev machines are es-ES — so assert the instant
+		// rather than one locale's spelling of it.
+		const rendered = formatMoment('2026-08-13T16:54:25Z');
+		expect(rendered).toMatch(/(18:54|6:54)/);
+		expect(rendered).not.toMatch(/16:54|4:54/);
 	});
 
 	it('passes an unparseable value through untouched', () => {
