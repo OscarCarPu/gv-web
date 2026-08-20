@@ -115,8 +115,11 @@ Full detail in [docs/calendar.md](docs/calendar.md). The traps worth knowing bef
 - **Never use `toISOString` from `$shared/utils/datetime` for event times.** That helper keeps the
   wall clock and swaps the zone, which is right for a task's `due_at` and wrong for an
   appointment. Use `localInputToISO` from `$lib/domains/calendar/utils/datetime`
-- **All-day ends are exclusive** in the API; the form shows the last day covered and converts both
-  ways. A single-day event is `D` → `D+1`
+- **All-day events are placed by `start_date`/`end_date`, not by `starts_at`/`ends_at`.** The
+  instants are midnight in the calendar's zone, which is `UTC` for some calendars and
+  `Europe/Madrid` for others; converting them into the viewer's zone smears a one-day event over
+  two days. Ends are exclusive: a single-day event is `D` → `D+1`, and the form shows the last day
+  covered
 - **Occurrences are addressed by `instance_id`** (`12@2026-08-20T07:00:00Z`, the original start).
   Pass it back verbatim to PATCH/DELETE; recurring edits also take `scope=instance|following|all`,
   and the rule itself only changes with `scope=all`

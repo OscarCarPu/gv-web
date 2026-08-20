@@ -47,12 +47,17 @@ describe('calendar datetime helpers', () => {
 	it('labels a time range and an all-day span the way the API means them', () => {
 		expect(eventTime('2026-08-20T15:00:00Z')).toBe('17:00');
 		expect(eventWhen('2026-08-20T15:00:00Z', '2026-08-20T16:00:00Z', false)).toBe('17:00 – 18:00');
-		// A single all-day event: the API's end is the next midnight, exclusive.
+		// A single all-day event: the API's end is the next day, exclusive.
+		expect(eventWhen('', '', true, '2026-08-20', '2026-08-21')).toBe('All day');
+		// A calendar that reports UTC stores the same day at a different instant; the label must
+		// not change with it.
+		expect(
+			eventWhen('2026-08-02T00:00:00Z', '2026-08-03T00:00:00Z', true, '2026-08-02', '2026-08-03')
+		).toBe('All day');
+		// Without dates it falls back to the instants.
 		expect(eventWhen('2026-08-19T22:00:00Z', '2026-08-20T22:00:00Z', true)).toBe('All day');
 		// Three days covered: the label stops at the last one, not at the exclusive end.
-		expect(eventWhen('2026-08-19T22:00:00Z', '2026-08-22T22:00:00Z', true)).toBe(
-			'All day, Aug 20 – Aug 22'
-		);
+		expect(eventWhen('', '', true, '2026-08-20', '2026-08-23')).toBe('All day, Aug 20 – Aug 22');
 	});
 	describe('chip ink', () => {
 		it('writes light text on a dark colour and dark text on a light one', () => {

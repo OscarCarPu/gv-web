@@ -1,6 +1,7 @@
 import { calendarApi } from './api/calendar.api';
 import type { Calendar, CalendarEvent, CalendarViewMode } from './types/Calendar.types';
 import { addToast } from '$lib/shared/stores/toast.svelte';
+import { toLocalDateString } from '$lib/shared/utils/datetime';
 
 /** Monday-first, which is what a Spanish calendar looks like. */
 const WEEK_START = 1;
@@ -33,10 +34,19 @@ export function sameDay(a: Date, b: Date): boolean {
 
 /**
  * An event occupies a day when it overlaps that day at all, so a multi-day trip shows on every
- * day it covers. The end is exclusive, matching the API: an all-day event ending at midnight
- * does not bleed into the next day.
+ * day it covers. The end is exclusive, matching the API.
+ *
+ * An all-day event is compared as dates, never as instants. Its instants are midnight in the
+ * *calendar's* zone, and calendars disagree about that — some report UTC, some Europe/Madrid — so
+ * converting them into the viewer's zone spreads a one-day event over two local days, which reads
+ * as a duplicate. The dates from the API are the ones Google holds, and they are what a person
+ * sees in Google.
  */
 export function occupiesDay(event: CalendarEvent, day: Date): boolean {
+	if (event.all_day && event.start_date && event.end_date) {
+		const date = toLocalDateString(day);
+		return date >= event.start_date && date < event.end_date;
+	}
 	const dayStart = startOfDay(day).getTime();
 	const dayEnd = addDays(startOfDay(day), 1).getTime();
 	const start = new Date(event.starts_at).getTime();

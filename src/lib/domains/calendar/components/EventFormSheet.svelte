@@ -186,7 +186,8 @@
 
 		{#if event}
 			<p class="cal-meta">
-				{eventWhen(event.starts_at, event.ends_at, event.all_day)} · {event.calendar_name} · {event.account_email}
+				{eventWhen(event.starts_at, event.ends_at, event.all_day, event.start_date, event.end_date)} ·
+				{event.calendar_name} · {event.account_email}
 				{#if event.html_link}
 					· <a href={event.html_link} target="_blank" rel="noreferrer">Open in Google</a>
 				{/if}

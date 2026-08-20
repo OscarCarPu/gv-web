@@ -166,7 +166,47 @@ describe('CalendarView', () => {
 	});
 
 	describe('which events land on a day', () => {
-		it('counts an event on every day it overlaps', () => {
+		it('places an all-day event by its dates, whatever zone its instants are in', () => {
+			// The same one-day event as Google holds it, carried by instants from two calendars
+			// that disagree about the zone. Both must land on 2 August only.
+			const madridMidnight = makeEvent({
+				all_day: true,
+				starts_at: '2026-08-01T22:00:00Z',
+				ends_at: '2026-08-02T22:00:00Z',
+				start_date: '2026-08-02',
+				end_date: '2026-08-03',
+			});
+			const utcMidnight = makeEvent({
+				all_day: true,
+				starts_at: '2026-08-02T00:00:00Z',
+				ends_at: '2026-08-03T00:00:00Z',
+				start_date: '2026-08-02',
+				end_date: '2026-08-03',
+			});
+			for (const event of [madridMidnight, utcMidnight]) {
+				expect(occupiesDay(event, new Date(2026, 7, 1))).toBe(false);
+				expect(occupiesDay(event, new Date(2026, 7, 2))).toBe(true);
+				// This is the bug the dates fix: an instant comparison showed it here too.
+				expect(occupiesDay(event, new Date(2026, 7, 3))).toBe(false);
+			}
+		});
+
+		it('spans exactly the days an all-day range covers', () => {
+			const trip = makeEvent({
+				all_day: true,
+				starts_at: '2026-08-19T22:00:00Z',
+				ends_at: '2026-08-22T22:00:00Z',
+				start_date: '2026-08-20',
+				end_date: '2026-08-23',
+			});
+			expect(occupiesDay(trip, new Date(2026, 7, 19))).toBe(false);
+			expect(occupiesDay(trip, new Date(2026, 7, 20))).toBe(true);
+			expect(occupiesDay(trip, new Date(2026, 7, 21))).toBe(true);
+			expect(occupiesDay(trip, new Date(2026, 7, 22))).toBe(true);
+			expect(occupiesDay(trip, new Date(2026, 7, 23))).toBe(false);
+		});
+
+		it('counts a timed event on every day it overlaps', () => {
 			// 20 Aug 00:00 to 23 Aug 00:00 Madrid, the way the API stores an all-day trip.
 			const trip = makeEvent({
 				all_day: true,

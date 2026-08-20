@@ -135,12 +135,14 @@ export class EventForm {
 			this.description = event.description;
 			this.location = event.location;
 			this.allDay = event.all_day;
+			// All-day edges come from the API's dates, not from converting its instants: those are
+			// midnight in the calendar's zone, so converting them here would shift the day.
 			this.startsAt = event.all_day
-				? isoToDateInput(event.starts_at)
+				? (event.start_date ?? isoToDateInput(event.starts_at))
 				: isoToLocalInput(event.starts_at);
 			// An all-day end is exclusive in the API; the form shows the last day covered.
 			this.endsAt = event.all_day
-				? addDaysToDateInput(isoToDateInput(event.ends_at), -1)
+				? addDaysToDateInput(event.end_date ?? isoToDateInput(event.ends_at), -1)
 				: isoToLocalInput(event.ends_at);
 			this.#originalRecurrence = event.recurrence ?? [];
 			this.recurrence = ruleToPreset(event.recurrence);

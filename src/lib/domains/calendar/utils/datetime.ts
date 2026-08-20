@@ -42,17 +42,28 @@ export function eventTime(iso: string): string {
 }
 
 /**
- * The label for an event's when: a time range, or the day span for an all-day event. The end of
- * an all-day event is exclusive in the API, so the last day shown is one before it — the same
- * convention Google's UI uses.
+ * The label for an event's when: a time range, or the day span for an all-day event.
+ *
+ * The all-day case reads the dates rather than the instants, for the same reason placement does:
+ * the instants belong to the calendar's zone, not the viewer's. The API's end is exclusive, so
+ * the last day named is the one before it — the convention Google's own UI shows.
  */
-export function eventWhen(startsAt: string, endsAt: string, allDay: boolean): string {
+export function eventWhen(
+	startsAt: string,
+	endsAt: string,
+	allDay: boolean,
+	startDate?: string,
+	endDate?: string
+): string {
 	if (!allDay) return `${eventTime(startsAt)} – ${eventTime(endsAt)}`;
-	const start = new Date(startsAt);
-	const lastDay = new Date(new Date(endsAt).getTime() - 86_400_000);
 	const fmt = new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short' });
-	if (fmt.format(start) === fmt.format(lastDay)) return 'All day';
-	return `All day, ${fmt.format(start)} – ${fmt.format(lastDay)}`;
+	const first = startDate ? new Date(`${startDate}T00:00:00`) : new Date(startsAt);
+	const lastMs = endDate
+		? new Date(`${endDate}T00:00:00`).getTime() - 86_400_000
+		: new Date(endsAt).getTime() - 86_400_000;
+	const last = new Date(lastMs);
+	if (fmt.format(first) === fmt.format(last)) return 'All day';
+	return `All day, ${fmt.format(first)} – ${fmt.format(last)}`;
 }
 
 /**

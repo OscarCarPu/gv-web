@@ -73,6 +73,13 @@ export const CalendarEventSchema = z.object({
 	starts_at: z.string(),
 	ends_at: z.string(),
 	time_zone: z.string(),
+	/**
+	 * All-day events only, and what they must be placed by: an all-day event is a date, not an
+	 * instant, and the instants above are midnight in the event's own zone — which is UTC for
+	 * some calendars and Europe/Madrid for others. `end_date` is exclusive, as in Google.
+	 */
+	start_date: z.string().optional(),
+	end_date: z.string().optional(),
 	recurring: z.boolean(),
 	// The API omits these when empty, so they are optional rather than nullable.
 	recurrence: z.array(z.string()).optional(),
