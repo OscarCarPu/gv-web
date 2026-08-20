@@ -122,6 +122,46 @@
 	margin-top: 0.15rem;
 }
 
+.printer-head-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-shrink: 0;
+}
+
+/* Stop print: danger-tinted .btn-inline. Filled once armed, so the second click is
+   unmistakably a different button from the one that armed it. */
+.btn-stop-print {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	color: var(--color-danger);
+	border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+}
+
+.btn-stop-print:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+}
+
+/* Both selectors: the plain .is-armed rule alone loses to the :hover:not(:disabled) above it,
+   which is more specific — and the pointer is necessarily over the button that just armed it. */
+.btn-stop-print.is-armed,
+.btn-stop-print.is-armed:hover:not(:disabled) {
+	background: var(--color-danger);
+	border-color: var(--color-danger);
+	color: var(--color-bg);
+}
+
+.btn-stop-print:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.btn-stop-print .icon {
+	width: 0.7rem;
+	height: 0.7rem;
+}
+
 .state-badge {
 	font-size: 0.72rem;
 	font-weight: 700;

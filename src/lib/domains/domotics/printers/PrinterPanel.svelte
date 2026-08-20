@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
+	import Icon from '$shared/components/Icon.svelte';
 	import { PrinterController } from './printerStatus.svelte';
 	import { PrinterRecordingsController } from './printerRecordings.svelte';
 	import PrinterFiles from './PrinterFiles.svelte';
@@ -22,6 +23,12 @@
 	// same state the panel below it is driven by.
 	// svelte-ignore state_referenced_locally
 	const recordings = new PrinterRecordingsController(id);
+
+	// Stopping is armed by a first click rather than confirmed in a modal: the app has no
+	// confirmation dialogs, but a single stray click must not throw away a six-hour print.
+	let stopArmed = $state(false);
+	let stopArmTimer: ReturnType<typeof setTimeout> | null = null;
+	const STOP_ARM_MS = 4000;
 
 	let camSrc = $state<string | null>(null);
 	let camReady = $state(false);
@@ -66,6 +73,7 @@
 			controller.stop();
 			recordings.stop();
 			if (camTimer) clearInterval(camTimer);
+			disarmStop();
 		};
 	});
 
@@ -73,7 +81,24 @@
 		controller.stop();
 		recordings.stop();
 		if (camTimer) clearInterval(camTimer);
+		disarmStop();
 	});
+
+	function disarmStop() {
+		if (stopArmTimer) clearTimeout(stopArmTimer);
+		stopArmTimer = null;
+		stopArmed = false;
+	}
+
+	function onStopClick() {
+		if (!stopArmed) {
+			stopArmed = true;
+			stopArmTimer = setTimeout(disarmStop, STOP_ARM_MS);
+			return;
+		}
+		disarmStop();
+		void controller.stopPrint();
+	}
 
 	const t = $derived(controller.telemetry);
 
@@ -139,7 +164,21 @@
 			<h2>{name}</h2>
 			<p class="printer-model">{model}</p>
 		</div>
-		<span class="state-badge {stateClass}">{t?.state ?? (t ? 'UNKNOWN' : '…')}</span>
+		<div class="printer-head-actions">
+			{#if controller.canStop}
+				<button
+					class="btn-inline btn-stop-print"
+					class:is-armed={stopArmed}
+					disabled={controller.stopping}
+					onclick={onStopClick}
+					onblur={disarmStop}
+				>
+					<Icon name="stop" />
+					{controller.stopping ? 'Stopping…' : stopArmed ? 'Confirm stop' : 'Stop print'}
+				</button>
+			{/if}
+			<span class="state-badge {stateClass}">{t?.state ?? (t ? 'UNKNOWN' : '…')}</span>
+		</div>
 	</div>
 
 	{#if t?.job?.progress != null}
