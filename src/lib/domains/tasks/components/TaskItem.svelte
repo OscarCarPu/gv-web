@@ -53,7 +53,7 @@
 	const hasProjectDue = $derived(!hasOwnDue && task.project_due_at !== null);
 </script>
 
-<div class="task-item" class:today={isToday} class:overdue={isOverdue}>
+<div class="task-item" class:today={isToday} class:overdue={isOverdue} class:urgent={task.urgent}>
 	<div class="task-info">
 		<div class="task-name-row">
 			<button class="task-name-btn" onclick={() => ondetail?.(task.id)}>{task.name}</button>

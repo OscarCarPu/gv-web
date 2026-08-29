@@ -45,6 +45,7 @@ export interface CreateTaskRequest {
 	task_type?: string;
 	recurrence?: number | null;
 	priority?: number | null;
+	estimate_hours?: string | null;
 }
 
 export interface TaskResponse {
@@ -58,6 +59,7 @@ export interface TaskResponse {
 	task_type: string;
 	recurrence?: number | null;
 	priority: number;
+	estimate_hours: string | null;
 	depends_on: TaskDepRef[];
 	blocks: TaskDepRef[];
 	blocked: boolean;
@@ -124,6 +126,7 @@ export interface UpdateTaskRequest {
 	task_type?: string;
 	recurrence?: number | null;
 	priority?: number | null;
+	estimate_hours?: string | null;
 }
 
 export interface UpdateTodoRequest {
@@ -148,6 +151,10 @@ export interface TaskByDueDateResponse {
 	recurrence?: number | null;
 	priority: number;
 	time_spent: number;
+	estimate_hours: string | null;
+	remaining_hours: string | null;
+	start_by: string | null;
+	urgent: boolean;
 	project_id: number | null;
 	project_name: string | null;
 	project_due_at: string | null;
@@ -181,6 +188,7 @@ export interface TaskFullResponse {
 	task_type: string;
 	recurrence?: number | null;
 	priority: number;
+	estimate_hours: string | null;
 	time_spent: number;
 	todos: TodoResponse[];
 	depends_on: TaskDepRef[];

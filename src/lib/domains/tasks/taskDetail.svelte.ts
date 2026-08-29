@@ -26,6 +26,7 @@ export interface TaskDetailApi {
 			task_type?: string;
 			recurrence?: number | null;
 			priority?: number | null;
+			estimate_hours?: string | null;
 		}
 	) => Promise<unknown>;
 	deleteTask: (id: number) => Promise<void>;
@@ -72,6 +73,7 @@ export class TaskDetail {
 	taskType = $state<'standard' | 'continuous' | 'recurring'>('standard');
 	recurrence = $state<number | null>(null);
 	priority = $state<number>(3);
+	estimateHours = $state('');
 	dependsOn = $state<TaskDepRef[]>([]);
 	blocks = $state<TaskDepRef[]>([]);
 	editingDescription = $state(false);
@@ -130,6 +132,7 @@ export class TaskDetail {
 		this.taskType = (t.task_type as 'standard' | 'continuous' | 'recurring') ?? 'standard';
 		this.recurrence = t.recurrence ?? null;
 		this.priority = t.priority ?? 3;
+		this.estimateHours = t.estimate_hours ?? '';
 		this.dependsOn = [...t.depends_on];
 		this.blocks = [...t.blocks];
 		this.#initialBlocks = [...t.blocks];
@@ -192,6 +195,7 @@ export class TaskDetail {
 					recurrence: this.taskType === 'recurring' ? this.recurrence : undefined,
 					priority: this.priority,
 					project_id: this.selectedProjectId,
+					estimate_hours: this.taskType === 'standard' ? this.estimateHours || null : null,
 				}),
 				this.#syncReverseDepends(),
 			]);

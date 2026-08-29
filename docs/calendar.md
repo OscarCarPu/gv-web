@@ -15,16 +15,56 @@ never expands a recurrence rule itself: `GET /calendar/events` already returns o
 src/lib/domains/calendar/
   api/calendar.api.ts, calendar.schemas.ts   — endpoints + Zod
   types/Calendar.types.ts
-  calendarView.svelte.ts                     — the page controller (range, events, calendars, SSE)
+  calendarView.svelte.ts                     — the page controller (range, events, calendars, SSE,
+                                                plan blocks, free/busy)
   forms/eventForm.svelte.ts                  — the create/edit sheet's controller
   utils/datetime.ts                          — calendar-specific time conversion (see below)
-  components/MonthGrid, TimeGrid, CalendarSidebar, AccountsSheet, EventFormSheet
+  components/MonthGrid, TimeGrid, CalendarSidebar, AccountsSheet, EventFormSheet,
+             CapacityPanel, CommitmentsSheet, CreatePlanFromEventWizard
+src/lib/domains/capacity/                    — api/capacity.api.ts + capacity.schemas.ts,
+                                                types/Capacity.types.ts (only consumed here)
 src/routes/calendar/                         — page + SSR seed
 src/routes/api/calendar/stream/+server.ts    — SSE proxy
 src/styles/calendar.css
 ```
 
 `TimeGrid` serves both week and day: a day is the same grid with one column.
+
+## Capacity and the day plan
+
+The `/tasks` day plan (`plan_blocks` — see [tasks.md](tasks.md#plan-block-subsystem)) and the flat
+daily-capacity constant (`capacity` domain, `gv-api`) both live outside this domain, but the
+calendar page is where they're surfaced alongside events:
+
+- **`CalendarView.load()`** additionally fetches `planApi.getRange(from, to)` (the visible grid
+  range) and `capacityApi.getFreeBusy(today, today+7)` (always the next 7 days, independent of
+  which range/mode the grid is showing) in the same `Promise.all` as the events fetch, exposing
+  them as `view.planBlocks` and `view.freeBusy`. `+page.server.ts` seeds both the same way it
+  seeds events, with the same `.catch(() => [])`-style fallback so a down API degrades to an empty
+  panel rather than a broken page.
+- **`view.hasPlan(instanceId)`** — true when some fetched plan block's `event_ref` equals the
+  event's `instance_id`. Drives whether `EventFormSheet` offers "Create plan" for that event.
+- **`CapacityPanel`** (sidebar, below the calendar list) lists the next 7 days' free/total hours
+  from `view.freeBusy`, one row per day. Its pen icon opens `CommitmentsSheet`, not an edit of the
+  capacity constant itself — there is nothing to edit, the constant isn't in this app at all (see
+  the API's `docs/api/capacity.md`).
+- **`CommitmentsSheet`** — full CRUD over `recurring_commitments` (weekly work/class-style
+  schedules that materialize as real `plan_blocks`, see [tasks.md](tasks.md) and the API's
+  `docs/business_logic/plan.md`). Lists existing commitments with a day-of-week/time summary and
+  an active/inactive toggle (`planApi.updateCommitment(id, { active })` — pausing generation
+  without deleting the commitment or its already-generated blocks); the create form picks a task,
+  a label, days via `cal-day-toggle` button pills, and start/end times. There is no `task_id`
+  field on update — a commitment's task cannot be changed after creation, only recreated.
+- **`CreatePlanFromEventWizard`** — reached from `EventFormSheet`'s "Create plan" button (shown
+  only when `hasPlan` is false), turns an event into a real commitment: pick no task / an existing
+  task / create a new one inline, adjust the block's start/end (pre-filled from the event's own
+  times, blank for an all-day event since it has no hours to prefill), and on submit: optionally
+  `calendarApi.updateEvent()` first if the times were adjusted (keeping the event and the block in
+  sync from the start), then `planApi.createBlock({ ..., event_ref: event.instance_id })`. Closes
+  the event sheet and reopens as this wizard rather than stacking sheets.
+- **Nothing here computes urgency or busy/free hours** — that's entirely server-side (`gv-api`'s
+  `capacity` and `plan` domains); this side only renders `view.freeBusy` and links blocks to
+  events.
 
 ## Non-obvious rules
 

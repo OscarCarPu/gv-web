@@ -14,6 +14,9 @@
 		calendars: Calendar[];
 		defaultCalendarId?: number;
 		refresh: () => Promise<void>;
+		/** Whether this event already has a plan_block linked to it. */
+		hasPlan?: boolean;
+		oncreateplan?: () => void;
 	}
 
 	let {
@@ -24,6 +27,8 @@
 		calendars,
 		defaultCalendarId,
 		refresh,
+		hasPlan = false,
+		oncreateplan,
 	}: Props = $props();
 
 	const form = new EventForm(() => calendars, {
@@ -192,6 +197,16 @@
 					· <a href={event.html_link} target="_blank" rel="noreferrer">Open in Google</a>
 				{/if}
 			</p>
+			{#if !hasPlan}
+				<button
+					type="button"
+					class="cal-btn"
+					data-action="create-plan"
+					onclick={() => oncreateplan?.()}
+				>
+					<Icon name="plus" /> Create plan
+				</button>
+			{/if}
 		{/if}
 	</div>
 

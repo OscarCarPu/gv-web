@@ -2,6 +2,10 @@ import { calendarApi } from './api/calendar.api';
 import type { Calendar, CalendarEvent, CalendarViewMode } from './types/Calendar.types';
 import { addToast } from '$lib/shared/stores/toast.svelte';
 import { toLocalDateString } from '$lib/shared/utils/datetime';
+import { planApi } from '$lib/domains/tasks/api/plan.api';
+import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
+import { capacityApi } from '$lib/domains/capacity/api/capacity.api';
+import type { DayFreeBusy } from '$lib/domains/capacity/types/Capacity.types';
 
 /** Monday-first, which is what a Spanish calendar looks like. */
 const WEEK_START = 1;
@@ -78,6 +82,8 @@ export class CalendarView {
 	anchor = $state<Date>(startOfDay(new Date()));
 	calendars = $state<Calendar[]>([]);
 	events = $state<CalendarEvent[]>([]);
+	planBlocks = $state<PlanBlockResponse[]>([]);
+	freeBusy = $state<DayFreeBusy[]>([]);
 	loading = $state(false);
 	error = $state<string | null>(null);
 	/** Set while a push notification is being followed up, so the UI can show it is live. */
@@ -87,10 +93,18 @@ export class CalendarView {
 	private refreshTimer: ReturnType<typeof setTimeout> | null = null;
 	private requestId = 0;
 
-	constructor(calendars: Calendar[], events: CalendarEvent[], mode: CalendarViewMode = 'month') {
+	constructor(
+		calendars: Calendar[],
+		events: CalendarEvent[],
+		mode: CalendarViewMode = 'month',
+		planBlocks: PlanBlockResponse[] = [],
+		freeBusy: DayFreeBusy[] = []
+	) {
 		this.calendars = calendars;
 		this.events = events;
 		this.mode = mode;
+		this.planBlocks = planBlocks;
+		this.freeBusy = freeBusy;
 	}
 
 	// --- range -------------------------------------------------------------------------
@@ -174,13 +188,20 @@ export class CalendarView {
 		const id = ++this.requestId;
 		this.loading = true;
 		try {
-			const events = await calendarApi.listEvents({
-				from: this.rangeStart.toISOString(),
-				to: this.rangeEnd.toISOString(),
-				visibleOnly: true,
-			});
+			const today = startOfDay(new Date());
+			const [events, range, freeBusy] = await Promise.all([
+				calendarApi.listEvents({
+					from: this.rangeStart.toISOString(),
+					to: this.rangeEnd.toISOString(),
+					visibleOnly: true,
+				}),
+				planApi.getRange(toLocalDateString(this.rangeStart), toLocalDateString(this.rangeEnd)),
+				capacityApi.getFreeBusy(toLocalDateString(today), toLocalDateString(addDays(today, 7))),
+			]);
 			if (id !== this.requestId) return;
 			this.events = events;
+			this.planBlocks = range.blocks;
+			this.freeBusy = freeBusy.days;
 			this.error = null;
 		} catch (e) {
 			if (id !== this.requestId) return;
@@ -188,6 +209,11 @@ export class CalendarView {
 		} finally {
 			if (id === this.requestId) this.loading = false;
 		}
+	}
+
+	/** Whether an event (by its instance_id) already has a plan block linked to it. */
+	hasPlan(instanceId: string): boolean {
+		return this.planBlocks.some((b) => b.event_ref === instanceId);
 	}
 
 	async reloadCalendars() {

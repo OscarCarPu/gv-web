@@ -1,13 +1,15 @@
 <script lang="ts">
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import { CalendarView } from '$lib/domains/calendar/calendarView.svelte';
+	import CapacityPanel from './CapacityPanel.svelte';
 
 	interface Props {
 		view: CalendarView;
 		onmanage: () => void;
+		oncommitments: () => void;
 	}
 
-	let { view, onmanage }: Props = $props();
+	let { view, onmanage, oncommitments }: Props = $props();
 </script>
 
 <aside class="cal-sidebar">
@@ -84,4 +86,6 @@
 			<Icon name="folder" /> Accounts
 		</button>
 	</div>
+
+	<CapacityPanel days={view.freeBusy} onmanage={oncommitments} />
 </aside>

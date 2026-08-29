@@ -32,6 +32,7 @@
 	let taskType = $state<'standard' | 'continuous' | 'recurring'>('standard');
 	let recurrence = $state<number | null>(null);
 	let priority = $state<number>(3);
+	let estimateHours = $state('');
 	let selectedProjectId = $state<number | null>(null);
 	let selectedParentId = $state<number | null>(null);
 	let projects = $state<ProjectListItem[]>([]);
@@ -50,6 +51,7 @@
 			taskType = 'standard';
 			recurrence = null;
 			priority = 3;
+			estimateHours = '';
 			nameError = false;
 			selectedDeps = [];
 			selectedProjectId = prefillProjectId ?? prefillParentId ?? null;
@@ -76,6 +78,7 @@
 					task_type: taskType !== 'standard' ? taskType : undefined,
 					recurrence: taskType === 'recurring' ? recurrence : undefined,
 					priority: priority !== 3 ? priority : undefined,
+					estimate_hours: taskType === 'standard' && estimateHours ? estimateHours : undefined,
 				});
 				if (startNow) {
 					await tasksApi.updateTask(created.id, { started_at: new Date().toISOString() });
@@ -166,6 +169,18 @@
 					<div class="detail-field">
 						<label for="create-recurrence">Every (days)</label>
 						<input id="create-recurrence" type="number" min="1" bind:value={recurrence} />
+					</div>
+				{/if}
+				{#if taskType === 'standard'}
+					<div class="detail-field">
+						<label for="create-estimate">Estimate (hours)</label>
+						<input
+							id="create-estimate"
+							type="number"
+							min="0"
+							step="0.5"
+							bind:value={estimateHours}
+						/>
 					</div>
 				{/if}
 				<div class="detail-field">

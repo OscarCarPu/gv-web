@@ -26,12 +26,15 @@ let bid = 0;
 function block(over: Partial<PlanBlockResponse> = {}): PlanBlockResponse {
 	return {
 		id: ++bid,
+		plan_date: iso(0),
 		started_at: iso(9),
 		ended_at: iso(10),
 		task_id: 100,
 		task_name: 'Task A',
 		label: 'Task A',
 		note: null,
+		event_ref: null,
+		commitment_id: null,
 		task_type: 'standard',
 		task_recurrence: null,
 		task_started_at: null,

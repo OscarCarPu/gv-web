@@ -19,6 +19,7 @@ function fullTask(id: number, dependsOnIds: number[]): TaskFullResponse {
 		task_type: 'standard',
 		recurrence: null,
 		priority: 3,
+		estimate_hours: null,
 		time_spent: 0,
 		todos: [],
 		depends_on: dependsOnIds.map(dep),

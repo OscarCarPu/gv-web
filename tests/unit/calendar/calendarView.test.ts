@@ -15,6 +15,18 @@ vi.mock('$lib/domains/calendar/api/calendar.api', () => ({
 	},
 }));
 
+vi.mock('$lib/domains/tasks/api/plan.api', () => ({
+	planApi: {
+		getRange: () => Promise.resolve({ from: '', to: '', blocks: [] }),
+	},
+}));
+
+vi.mock('$lib/domains/capacity/api/capacity.api', () => ({
+	capacityApi: {
+		getFreeBusy: () => Promise.resolve({ from: '', to: '', days: [] }),
+	},
+}));
+
 function makeCalendar(over: Partial<Calendar> = {}): Calendar {
 	return {
 		id: 1,

@@ -199,6 +199,18 @@
 			background: color-mix(in srgb, var(--color-danger) 12%, var(--color-bg));
 		}
 	}
+
+	/* A task with an estimate that no longer has enough free days left before it's due — should
+	   have been started already, even though it's not overdue yet. */
+	&.urgent:not(.overdue) {
+		border-color: color-mix(in srgb, var(--color-warning) 45%, transparent);
+		background: color-mix(in srgb, var(--color-warning) 8%, var(--color-bg));
+
+		&:hover {
+			border-color: color-mix(in srgb, var(--color-warning) 65%, transparent);
+			background: color-mix(in srgb, var(--color-warning) 12%, var(--color-bg));
+		}
+	}
 }
 
 .task-info {

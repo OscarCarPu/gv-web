@@ -31,6 +31,7 @@ export const TaskResponseSchema = z.object({
 	task_type: z.string(),
 	recurrence: z.number().nullable().optional(),
 	priority: z.number(),
+	estimate_hours: z.string().nullable(),
 	depends_on: z
 		.array(TaskDepRefSchema)
 		.nullable()
@@ -109,6 +110,7 @@ export const TaskFullResponseSchema = z.object({
 	task_type: z.string(),
 	recurrence: z.number().nullable().optional(),
 	priority: z.number(),
+	estimate_hours: z.string().nullable(),
 	time_spent: z.number(),
 	todos: z.array(TodoResponseSchema),
 	depends_on: z
@@ -226,6 +228,10 @@ const TaskByDueDateResponseSchema = z.object({
 	recurrence: z.number().nullable().optional(),
 	priority: z.number(),
 	time_spent: z.number(),
+	estimate_hours: z.string().nullable(),
+	remaining_hours: z.string().nullable(),
+	start_by: z.string().nullable(),
+	urgent: z.boolean(),
 	project_id: z.number().nullable(),
 	project_name: z.string().nullable(),
 	project_due_at: z.string().nullable(),

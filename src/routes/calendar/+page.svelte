@@ -10,19 +10,40 @@
 	import CalendarSidebar from '$lib/domains/calendar/components/CalendarSidebar.svelte';
 	import AccountsSheet from '$lib/domains/calendar/components/AccountsSheet.svelte';
 	import EventFormSheet from '$lib/domains/calendar/components/EventFormSheet.svelte';
+	import CreatePlanFromEventWizard from '$lib/domains/calendar/components/CreatePlanFromEventWizard.svelte';
+	import CommitmentsSheet from '$lib/domains/calendar/components/CommitmentsSheet.svelte';
 	import type { Calendar, CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
+	import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
+	import type { FreeBusyRangeResponse } from '$lib/domains/capacity/types/Capacity.types';
 
-	let { data }: { data: { calendars: Calendar[]; events: CalendarEvent[] } } = $props();
+	let {
+		data,
+	}: {
+		data: {
+			calendars: Calendar[];
+			events: CalendarEvent[];
+			planBlocks: PlanBlockResponse[];
+			freeBusy: FreeBusyRangeResponse;
+		};
+	} = $props();
 
 	// The SSR payload is a seed; the controller owns it from here on.
 	// svelte-ignore state_referenced_locally
-	const view = new CalendarView(data.calendars ?? [], data.events ?? []);
+	const view = new CalendarView(
+		data.calendars ?? [],
+		data.events ?? [],
+		'month',
+		data.planBlocks ?? [],
+		data.freeBusy?.days ?? []
+	);
 
 	let editing = $state<CalendarEvent | null>(null);
 	let creatingOn = $state<Date | null>(null);
 	let sheetOpen = $state(false);
 	let accountsOpen = $state(false);
 	let sidebarOpen = $state(false);
+	let planWizardOpen = $state(false);
+	let commitmentsOpen = $state(false);
 
 	onMount(() => {
 		// The consent flow comes back through the API, which redirects here with the outcome.
@@ -132,7 +153,11 @@
 
 	<div class="cal-body">
 		<div class="cal-sidebar-wrap" class:open={sidebarOpen}>
-			<CalendarSidebar {view} onmanage={() => (accountsOpen = true)} />
+			<CalendarSidebar
+				{view}
+				onmanage={() => (accountsOpen = true)}
+				oncommitments={() => (commitmentsOpen = true)}
+			/>
 		</div>
 
 		<main class="cal-main">
@@ -161,7 +186,21 @@
 	calendars={view.calendars}
 	defaultCalendarId={view.defaultCalendarId}
 	refresh={() => view.load()}
+	hasPlan={editing ? view.hasPlan(editing.instance_id) : false}
+	oncreateplan={() => {
+		sheetOpen = false;
+		planWizardOpen = true;
+	}}
 />
+
+<CreatePlanFromEventWizard
+	open={planWizardOpen}
+	onclose={() => (planWizardOpen = false)}
+	event={editing}
+	refresh={() => view.load()}
+/>
+
+<CommitmentsSheet open={commitmentsOpen} onclose={() => (commitmentsOpen = false)} />
 
 <AccountsSheet
 	open={accountsOpen}

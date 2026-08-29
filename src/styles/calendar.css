@@ -174,6 +174,74 @@
 	@apply mt-2 flex flex-col gap-2;
 }
 
+.cal-capacity-panel {
+	@apply mt-4 border-t pt-3;
+	border-color: var(--color-border);
+}
+
+.cal-capacity-header {
+	@apply mb-2 flex items-center justify-between;
+}
+
+.cal-capacity-list {
+	@apply flex flex-col gap-1;
+}
+
+.cal-capacity-row {
+	@apply flex items-center justify-between text-sm;
+}
+
+.cal-capacity-day {
+	@apply text-text-muted;
+}
+
+.cal-capacity-free {
+	@apply font-semibold;
+}
+
+.cal-capacity-total {
+	@apply text-text-muted text-xs;
+}
+
+.cal-commitment-list {
+	@apply mb-4 flex flex-col gap-2;
+}
+
+.cal-commitment-row {
+	@apply flex items-center gap-2 rounded-lg px-3 py-2;
+	background: var(--color-bg);
+
+	&.inactive {
+		@apply opacity-50;
+	}
+}
+
+.cal-commitment-info {
+	@apply flex flex-1 flex-col;
+}
+
+.cal-commitment-label {
+	@apply font-semibold;
+}
+
+.cal-commitment-meta {
+	@apply text-text-muted text-xs;
+}
+
+.cal-day-toggle {
+	@apply flex gap-1;
+
+	button {
+		@apply rounded-md border px-2 py-1 text-xs;
+		border-color: var(--color-border);
+
+		&.active {
+			@apply bg-primary text-white;
+			border-color: var(--color-primary);
+		}
+	}
+}
+
 /* Month grid */
 
 .cal-month {

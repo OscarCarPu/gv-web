@@ -90,6 +90,18 @@
 						<input id="task-recurrence" type="number" min="1" bind:value={detail.recurrence} />
 					</div>
 				{/if}
+				{#if detail.taskType === 'standard'}
+					<div class="detail-field">
+						<label for="task-estimate">Estimate (hours)</label>
+						<input
+							id="task-estimate"
+							type="number"
+							min="0"
+							step="0.5"
+							bind:value={detail.estimateHours}
+						/>
+					</div>
+				{/if}
 				<div class="detail-field">
 					<label for="task-priority">Priority</label>
 					<select id="task-priority" bind:value={detail.priority}>
