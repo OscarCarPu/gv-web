@@ -183,12 +183,13 @@ describe('TaskBoard', () => {
 			const tasks = Array.from({ length: 30 }, (_, i) => makeTask({ id: i + 1 }));
 			const data = makeData({ tasksByDueDate: tasks });
 			const board = new TaskBoard(() => data, refresh as unknown as () => Promise<void>, api);
+			const visibleCount = () => board.visibleDueSoonGroups.reduce((n, g) => n + g.tasks.length, 0);
 
-			expect(board.visibleDueDateTasks.length).toBe(15);
+			expect(visibleCount()).toBe(8);
 			board.showMore();
-			expect(board.visibleDueDateTasks.length).toBe(25);
+			expect(visibleCount()).toBe(16);
 			board.setDuePriority(null); // resets fold
-			expect(board.visibleDueDateTasks.length).toBe(15);
+			expect(visibleCount()).toBe(8);
 		});
 	});
 });

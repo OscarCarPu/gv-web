@@ -11,7 +11,6 @@
 	import AccountsSheet from '$lib/domains/calendar/components/AccountsSheet.svelte';
 	import EventFormSheet from '$lib/domains/calendar/components/EventFormSheet.svelte';
 	import CreatePlanFromEventWizard from '$lib/domains/calendar/components/CreatePlanFromEventWizard.svelte';
-	import CommitmentsSheet from '$lib/domains/calendar/components/CommitmentsSheet.svelte';
 	import type { Calendar, CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
 	import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
 	import type { FreeBusyRangeResponse } from '$lib/domains/capacity/types/Capacity.types';
@@ -43,7 +42,6 @@
 	let accountsOpen = $state(false);
 	let sidebarOpen = $state(false);
 	let planWizardOpen = $state(false);
-	let commitmentsOpen = $state(false);
 
 	onMount(() => {
 		// The consent flow comes back through the API, which redirects here with the outcome.
@@ -153,11 +151,7 @@
 
 	<div class="cal-body">
 		<div class="cal-sidebar-wrap" class:open={sidebarOpen}>
-			<CalendarSidebar
-				{view}
-				onmanage={() => (accountsOpen = true)}
-				oncommitments={() => (commitmentsOpen = true)}
-			/>
+			<CalendarSidebar {view} onmanage={() => (accountsOpen = true)} />
 		</div>
 
 		<main class="cal-main">
@@ -199,8 +193,6 @@
 	event={editing}
 	refresh={() => view.load()}
 />
-
-<CommitmentsSheet open={commitmentsOpen} onclose={() => (commitmentsOpen = false)} />
 
 <AccountsSheet
 	open={accountsOpen}

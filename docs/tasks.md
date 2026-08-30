@@ -55,9 +55,9 @@ Tasks have a `priority: number` field, 1 (highest/most urgent) to 5 (lowest), de
 
 ### Estimate & Urgency ("Due Soon")
 
-`standard` tasks can carry an optional `estimate_hours` (decimal string, same convention as money fields) — an "Estimate (hours)" number input (`step="0.5"`) in both `CreateBottomSheet` and `TaskBottomSheet`, shown only when `task_type === 'standard'`. `continuous` and `recurring` tasks never show or send the field.
+`standard` and `recurring` tasks can carry an optional `estimate_hours` (decimal string, same convention as money fields) — an "Estimate (hours)" number input (`step="0.5"`) in both `CreateBottomSheet` and `TaskBottomSheet`, shown whenever `task_type !== 'continuous'` (labeled "Estimate per cycle (hours)" for a recurring task, since the field means "per occurrence", not "in total"). `continuous` tasks never show or send it — they have no deadline to size an estimate against.
 
-The API computes urgency server-side from the estimate, the daily capacity constant, and hours already spoken for by `plan_blocks` (see [calendar.md](calendar.md) — the capacity domain lives there), and returns it on every `TaskByDueDateResponse`: `remaining_hours` (estimate minus time already spent/planned), `start_by` (the date by which the task must be started to still make its deadline given free hours between now and `due_at`), and `urgent` (boolean — `start_by` has arrived or passed). None of this is computed on the frontend; the client only renders it.
+The API computes urgency server-side from the estimate, the daily capacity constant, and hours already spoken for by `plan_blocks` (see [calendar.md](calendar.md) — the capacity domain lives there), and returns it on every `TaskByDueDateResponse`: `remaining_hours` (estimate minus time already spent/planned), `start_by` (the date by which the task must be started to still make its deadline given free hours between now and `due_at`), and `urgent` (boolean — `start_by` has arrived or passed). For a `recurring` task, "time already spent" is not counted — its `time_spent` accumulates across every past renewal, so `remaining_hours` is just the estimate minus what's already planned. None of this is computed on the frontend; the client only renders it.
 
 `TaskItem` adds an `.urgent` class (alongside `.today`/`.overdue`) when `task.urgent` is true, styled in `tasks.css` as a warning-tinted border/background — distinct from `.overdue`'s red, since urgent means "should have started" rather than "past its deadline" (`.urgent:not(.overdue)` so a task that's both stays red).
 
@@ -271,22 +271,45 @@ Always-visible "Plan de hoy" section on `/tasks`. The plan is a list of time-box
 
 #### PlanSection (`src/lib/domains/tasks/components/PlanSection.svelte`)
 
-- Props: `initial: PlanTodayResponse | null`, `ontimerstart`, `onafterchange`, `isTimerRunning`.
-- Renders the section header ("Plan de hoy" + `+ Bloque` button), the summary rows, and the block list.
-- Linked block actions: Empezar / Acabar / Renovar (matches `TaskItem` semantics — uses the joined `task_started_at`, `task_type`, `task_recurrence` to choose the label) and Iniciar / Asignar (timer). Both are implemented inside the section by calling `tasksApi.updateTask(...)` and the `ontimerstart` prop directly — no proxy through the plan service. Disabled when `task_finished_at` is set.
+- Props: `initial: PlanTodayResponse | null`, `freeBusy: DayFreeBusy[]`, `ontimerstart`, `onafterchange`, `isTimerRunning`.
+- Renders the section header ("Today's Plan" + `+ Block` button), the summary rows, the 7-day capacity strip, and the block list.
+- Linked block actions: Start / Done / Renew (matches `TaskItem` semantics — uses the joined `task_started_at`, `task_type`, `task_recurrence` to choose the label) and the timer's Start / Assign (both implemented inside the section by calling `tasksApi.updateTask(...)` and the `ontimerstart` prop directly — no proxy through the plan service). Disabled when `task_finished_at` is set.
 - Free-time blocks render the label, duration, and an inline note (truncated). No action buttons, just edit/delete.
 - All edit/delete go through `planApi`, then `await onafterchange()` to refresh the SSR data.
+
+**Viewing another day**: clicking a day in the capacity strip sets a local `selectedDate` (default: today) and switches the section's body — the header becomes "Plan · {day label}" with a "back to today" icon, the today-only summary/timeline/alarm UI (all of it genuinely tied to "now") is replaced by a plain block list fetched via `planApi.getRange(date, date+1)`, and "+ Block" creates on `selectedDate` instead of today. This is a separate, simpler code path (no `PlanBoard`, no now-line, no actual-vs-planned merge) rather than an attempt to generalize `PlanBoard` to arbitrary days — those concepts (a "now" line, entries-as-actual) only mean something for today. Edit/delete on another day's block call `planApi` directly and re-fetch that day (`refresh()` reloads both the SSR-backed today data and, when a non-today day is selected, that day's list).
 
 #### PlanBlockEditor (`src/lib/domains/tasks/components/PlanBlockEditor.svelte`)
 
 Modal for creating and editing a single block.
 
-- Mode toggle: **Tarea** / **Tiempo libre**. Switches between showing a task selector + optional label override, or a free-text "Qué harás" label.
-- Two `<input type="time">` for start/end (today's date is implied — the section is today-only).
+- Mode toggle: **Task** / **Free time**. Switches between showing a task selector + optional label override, or a free-text "What you'll do" label.
+- Two `<input type="time">` for start/end. `date?: string` prop (local `YYYY-MM-DD`, default today) anchors a _new_ block's times; editing an existing block always anchors to that block's own `plan_date` instead, regardless of what `date` was passed — moving a block to a different day is done by changing its date directly, not by reopening the editor on a different day. A small label under the title shows which day the form is anchored to, since the time inputs alone don't say.
 - Task selector loads via `tasksApi.listTasksFast()` on open (same source as `DepSelector`), grouped by project name.
 - Selecting a task auto-fills the label with the task's name; the user can override.
-- On submit, calls `planApi.createBlock` or `planApi.updateBlock`. Backend validation errors (`ended_at must be after started_at`, `plan block overlaps with an existing one`, `task not found`, etc.) are surfaced via toast.
+- On submit, calls `planApi.createBlock` or `planApi.updateBlock`, with `started_at`/`ended_at` built via `hhmmToISO(time, endOfDay, anchorDate)`. Backend validation errors (`ended_at must be after started_at`, `plan block overlaps with an existing one`, `task not found`, etc.) are surfaced via toast.
 - Cancel uses `.btn-outline` (proper-width text button) — not `.btn-cancel` which is icon-shaped.
+
+#### CommitmentsSheet (`src/lib/domains/tasks/components/CommitmentsSheet.svelte`)
+
+Full CRUD over `recurring_commitments` (weekly work/class-style schedules that materialize as
+real `plan_blocks` — see [business_logic/plan.md](../../gv-api/docs/business_logic/plan.md) on
+the API side). Opened from the pen icon in `PlanSection`'s capacity-strip header. Lives here
+rather than on `/calendar` — a commitment has nothing to do with calendar events, it only affects
+the day plan, so the calendar sidebar was the wrong home for it despite being where the capacity
+panel first shipped.
+
+- Lists existing commitments with a day-of-week/time summary, an edit (pen) icon, an
+  active/inactive toggle (`planApi.updateCommitment(id, { active })` — pauses generation without
+  deleting the commitment or its already-generated blocks), and delete.
+- **Edit** loads the commitment into the same form used to create one — label, days
+  (`.plan-day-toggle` button pills), start/end times — except the task selector is replaced by a
+  read-only line naming the task, since `UpdateCommitmentRequest` has no `task_id` field: a
+  commitment's task cannot be changed after creation, only recreated (delete + create new). The
+  form's primary button reads "Save changes" instead of "Add commitment" while editing, with a
+  "Cancel" button to drop back to create mode without saving.
+- Create/edit both call `planApi.createCommitment` / `planApi.updateCommitment`; the list refetches
+  (`planApi.listCommitments()`) after every mutation.
 
 ### API client (`src/lib/domains/tasks/api/plan.api.ts`)
 

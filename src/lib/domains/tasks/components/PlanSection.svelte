@@ -1,11 +1,15 @@
 <script lang="ts">
 	import Icon from '$lib/shared/components/Icon.svelte';
-	import { formatTime, isoToHHmm } from '$lib/shared/utils/datetime';
+	import { formatTime, isoToHHmm, toLocalDateString } from '$lib/shared/utils/datetime';
 	import { PlanBoard } from '$lib/domains/tasks/planBoard.svelte';
 	import { PlanAlarm } from '$lib/domains/tasks/planAlarm.svelte';
 	import PlanBlockEditor from './PlanBlockEditor.svelte';
+	import CommitmentsSheet from './CommitmentsSheet.svelte';
+	import { planApi } from '$lib/domains/tasks/api/plan.api';
+	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import type { PlanTodayResponse, PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
 	import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
+	import type { DayFreeBusy } from '$lib/domains/capacity/types/Capacity.types';
 	import type { TimerTask } from '$lib/domains/tasks/taskTimer.svelte';
 	import Modal from '$lib/shared/components/Modal.svelte';
 
@@ -13,6 +17,8 @@
 		initial: PlanTodayResponse | null;
 		/** Today's real time entries — these are what rewrite the past half of the plan. */
 		entries: TimeEntryWithTask[];
+		/** Next 7 days' capacity/busy/free breakdown — shows *why* a task is urgent at a glance. */
+		freeBusy: DayFreeBusy[];
 		onstart: (task: TimerTask) => void;
 		onassign: (task: TimerTask) => void;
 		onstopandstart: (task: TimerTask) => void;
@@ -24,6 +30,7 @@
 	let {
 		initial,
 		entries,
+		freeBusy,
 		onstart,
 		onassign,
 		onstopandstart,
@@ -31,6 +38,19 @@
 		onopenentry,
 		isTimerRunning,
 	}: Props = $props();
+
+	const capacityDayFormatter = new Intl.DateTimeFormat('en', { weekday: 'short', day: 'numeric' });
+
+	function capacityDayLabel(dateStr: string): string {
+		return capacityDayFormatter.format(new Date(`${dateStr}T00:00:00`));
+	}
+
+	function capacityFreePct(day: DayFreeBusy): number {
+		const capacity = parseFloat(day.capacity_hours);
+		const free = parseFloat(day.free_hours);
+		if (!Number.isFinite(capacity) || capacity <= 0) return 0;
+		return Math.max(0, Math.min(100, (free / capacity) * 100));
+	}
 
 	const board = new PlanBoard(
 		() => initial,
@@ -41,10 +61,56 @@
 
 	let editorOpen = $state(false);
 	let editingBlock = $state<PlanBlockResponse | null>(null);
+	let commitmentsOpen = $state(false);
+
+	// Clicking a day in the capacity strip switches the section to that day's plan instead of
+	// today's — a plain block list (no "now" line, no actual-vs-planned merge, those only make
+	// sense for today), and "+ Block" creates on that day. Selecting today's own cell goes back.
+	let selectedDate = $state(toLocalDateString());
+	const isToday = $derived(selectedDate === toLocalDateString());
+	let otherDayBlocks = $state<PlanBlockResponse[] | null>(null);
+
+	async function loadOtherDay(dateStr: string) {
+		const next = new Date(`${dateStr}T00:00:00`);
+		next.setDate(next.getDate() + 1);
+		try {
+			const range = await planApi.getRange(dateStr, toLocalDateString(next));
+			otherDayBlocks = [...range.blocks].sort(
+				(a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime()
+			);
+		} catch (e: unknown) {
+			addToast(e instanceof Error ? e.message : 'Error loading plan', 'error');
+			otherDayBlocks = [];
+		}
+	}
+
+	$effect(() => {
+		if (!isToday) loadOtherDay(selectedDate);
+	});
+
+	async function deleteOtherDayBlock(b: PlanBlockResponse) {
+		try {
+			await planApi.deleteBlock(b.id);
+			await refresh();
+		} catch (e: unknown) {
+			addToast(e instanceof Error ? e.message : 'Error deleting', 'error');
+		}
+	}
 
 	$effect(() => {
 		const id = setInterval(() => board.setNow(Date.now()), 60_000);
 		return () => clearInterval(id);
+	});
+
+	// "Back to top" only means something once there's somewhere to go back from.
+	let scrolledDown = $state(false);
+	$effect(() => {
+		function onScroll() {
+			scrolledDown = window.scrollY > 200;
+		}
+		window.addEventListener('scroll', onScroll, { passive: true });
+		onScroll();
+		return () => window.removeEventListener('scroll', onScroll);
 	});
 
 	// The minute interval above is enough to advance the "now" line, but not to keep up with a
@@ -65,6 +131,7 @@
 
 	async function refresh() {
 		await onafterchange();
+		if (!isToday) await loadOtherDay(selectedDate);
 	}
 
 	async function handleTimer(b: PlanBlockResponse) {
@@ -125,40 +192,127 @@
 <div id="plan-section" class="tasks-section">
 	<div class="section-header">
 		<div class="section-title">
-			<h2>Today's Plan</h2>
-			<button
-				class="btn-icon back-to-top"
-				onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-				title="Back to top"
-			>
-				<Icon name="arrow-up" />
-			</button>
+			<h2>{isToday ? "Today's Plan" : `Plan · ${capacityDayLabel(selectedDate)}`}</h2>
+			{#if !isToday}
+				<button
+					class="btn-icon"
+					onclick={() => (selectedDate = toLocalDateString())}
+					title="Back to today"
+					aria-label="Back to today"
+				>
+					<Icon name="rotate-left" />
+				</button>
+			{/if}
+			{#if scrolledDown}
+				<button
+					class="btn-icon back-to-top"
+					onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+					title="Back to top"
+				>
+					<Icon name="arrow-up" />
+				</button>
+			{/if}
 		</div>
 		<div class="section-actions">
-			<button
-				class="btn-icon plan-notify-btn"
-				class:active={alarm.enabled}
-				onclick={() => (alarm.enabled = !alarm.enabled)}
-				title={alarm.enabled ? 'Notifications on' : 'Notifications off'}
-				aria-label={alarm.enabled ? 'Disable block notifications' : 'Enable block notifications'}
-			>
-				<Icon name={alarm.enabled ? 'bell-sound' : 'bell'} />
-			</button>
-			<button
-				class="btn-icon"
-				onclick={() => board.cleanFuture()}
-				title="Clear future blocks"
-				aria-label="Clear future blocks"
-			>
-				<Icon name="trash" />
-			</button>
+			{#if isToday}
+				<button
+					class="btn-icon plan-notify-btn"
+					class:active={alarm.enabled}
+					onclick={() => (alarm.enabled = !alarm.enabled)}
+					title={alarm.enabled ? 'Notifications on' : 'Notifications off'}
+					aria-label={alarm.enabled ? 'Disable block notifications' : 'Enable block notifications'}
+				>
+					<Icon name={alarm.enabled ? 'bell-sound' : 'bell'} />
+				</button>
+				<button
+					class="btn-icon"
+					onclick={() => board.cleanFuture()}
+					title="Clear future blocks"
+					aria-label="Clear future blocks"
+				>
+					<Icon name="trash" />
+				</button>
+			{/if}
 			<button class="btn-primary btn-sm" onclick={openCreate}>
 				<Icon name="plus" /> Block
 			</button>
 		</div>
 	</div>
 
-	{#if board.data === null}
+	{#if freeBusy.length > 0}
+		<div class="capacity-strip-header">
+			<span class="capacity-strip-title">Free time (next 7 days)</span>
+			<button
+				type="button"
+				class="btn-icon"
+				title="Recurring commitments"
+				onclick={() => (commitmentsOpen = true)}
+			>
+				<Icon name="pen" />
+			</button>
+		</div>
+		<div class="capacity-strip">
+			{#each freeBusy as day (day.date)}
+				{@const pct = capacityFreePct(day)}
+				<button
+					type="button"
+					class="capacity-strip-day"
+					class:tight={pct > 0 && pct < 25}
+					class:full={pct <= 0}
+					class:selected={day.date === selectedDate}
+					onclick={() => (selectedDate = day.date)}
+				>
+					<span class="capacity-strip-label">{capacityDayLabel(day.date)}</span>
+					<div class="capacity-strip-bar">
+						<div class="capacity-strip-fill" style="height: {pct}%"></div>
+					</div>
+					<span class="capacity-strip-hours">{parseFloat(day.free_hours).toFixed(0)}h</span>
+				</button>
+			{/each}
+		</div>
+	{/if}
+
+	{#if !isToday}
+		{#if otherDayBlocks === null}
+			<div class="history-empty">
+				<Icon name="calendar-day" class="text-2xl" />
+				<span>Loading…</span>
+			</div>
+		{:else if otherDayBlocks.length === 0}
+			<div class="history-empty">
+				<Icon name="calendar-day" class="text-2xl" />
+				<span>No blocks for this day</span>
+			</div>
+		{:else}
+			<div class="plan-list">
+				{#each otherDayBlocks as b (b.id)}
+					<div class="plan-block" class:plan-block-free={b.task_id === null}>
+						<div class="plan-block-time">
+							{isoToHHmm(b.started_at)}<br />{isoToHHmm(b.ended_at)}
+						</div>
+						<div class="plan-block-body">
+							<div class="plan-block-name">{b.label}</div>
+							{#if b.note}
+								<div class="plan-block-meta"><span class="plan-block-note">{b.note}</span></div>
+							{/if}
+						</div>
+						<div class="plan-block-actions">
+							<button class="btn-icon" onclick={() => openEdit(b)} aria-label="Edit block">
+								<Icon name="pen" />
+							</button>
+							<button
+								class="btn-icon"
+								onclick={() => deleteOtherDayBlock(b)}
+								aria-label="Delete block"
+							>
+								<Icon name="trash" />
+							</button>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	{:else if board.data === null}
 		<div class="history-empty">
 			<Icon name="calendar-day" class="text-2xl" />
 			<span>Plan could not be loaded</span>
@@ -373,9 +527,12 @@
 <PlanBlockEditor
 	open={editorOpen}
 	block={editingBlock}
+	date={selectedDate}
 	onclose={() => (editorOpen = false)}
 	onsaved={refresh}
 />
+
+<CommitmentsSheet open={commitmentsOpen} onclose={() => (commitmentsOpen = false)} />
 
 <Modal open={alarm.alarmOpen} onclose={() => dismissAlarm()} narrow>
 	<div class="plan-alarm">

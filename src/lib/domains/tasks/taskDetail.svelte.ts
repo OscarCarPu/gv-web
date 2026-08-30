@@ -195,7 +195,7 @@ export class TaskDetail {
 					recurrence: this.taskType === 'recurring' ? this.recurrence : undefined,
 					priority: this.priority,
 					project_id: this.selectedProjectId,
-					estimate_hours: this.taskType === 'standard' ? this.estimateHours || null : null,
+					estimate_hours: this.taskType !== 'continuous' ? this.estimateHours || null : null,
 				}),
 				this.#syncReverseDepends(),
 			]);

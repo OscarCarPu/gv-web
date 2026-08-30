@@ -5,6 +5,11 @@ import { SvelteSet } from 'svelte/reactivity';
 import { toLocalDateString } from '$lib/shared/utils/datetime';
 import { buildRecurringDueAt } from '$lib/domains/tasks/utils/recurrence';
 import {
+	groupTasksByUrgency,
+	truncateDueSoonGroups,
+	type DueSoonGroup,
+} from '$lib/domains/tasks/utils/dueSoonGrouping';
+import {
 	flattenProjectsFromTree,
 	collectProjectIds,
 	filterTree,
@@ -13,8 +18,12 @@ import {
 } from '$lib/domains/tasks/utils/taskTree';
 import type { ActiveTreeNode, TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
 
-const FOLD_LIMIT = 15;
-const EXPAND_STEP = 10;
+// Deliberately smaller than the app's usual 15/10 fold (see CLAUDE.md): Due Soon cards carry
+// more per-item content (badges, urgency phrase) than a plain list row, and this section is
+// tiered by urgency now — "today + this week" should fit without much scroll, "later" is one
+// click away behind "show more" rather than pre-rendered.
+const FOLD_LIMIT = 8;
+const EXPAND_STEP = 8;
 
 /** Live slice of the page's SSR `data` the board reads + optimistically mutates. */
 export interface TaskBoardData {
@@ -92,8 +101,15 @@ export class TaskBoard {
 			});
 	}
 
-	get visibleDueDateTasks(): TaskByDueDateResponse[] {
-		return this.filteredByDueDate.slice(0, this.dueVisibleCount);
+	/** Due Soon split into urgency tiers, each internally sorted — see dueSoonGrouping.ts. */
+	get groupedDueDateTasks(): DueSoonGroup[] {
+		return groupTasksByUrgency(this.filteredByDueDate);
+	}
+
+	/** Same groups, truncated to the fold budget — tiering happens before folding, not after,
+	 *  so an urgent task ranked low in plain date order still isn't cut off by the fold. */
+	get visibleDueSoonGroups(): DueSoonGroup[] {
+		return truncateDueSoonGroups(this.groupedDueDateTasks, this.dueVisibleCount);
 	}
 
 	get dueTodayCount(): number {

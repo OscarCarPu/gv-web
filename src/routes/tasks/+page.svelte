@@ -34,7 +34,8 @@
 	const timer = new TaskTimer(entries);
 	const board = new TaskBoard(() => data, invalidateAll);
 
-	let commentExpanded = $state(false);
+	let activeTab = $state<'today' | 'projects'>('today');
+	let timerExpanded = $state(false);
 	let showTimeHistory = $state(false);
 	let showAgenda = $state(false);
 	let selectedTimeEntry = $state<TimeEntryWithTask | null>(null);
@@ -51,14 +52,12 @@
 	}
 
 	async function handleStop() {
-		commentExpanded = false;
 		addNotification('Time logged', 'success');
 		await timer.finish();
 		await entries.refresh();
 	}
 
 	async function handleCancel() {
-		commentExpanded = false;
 		resetManualRange();
 		addNotification('Time cancelled', 'success');
 		await timer.cancelTimer();
@@ -67,10 +66,6 @@
 
 	async function handleStartedAtChange(newDate: Date) {
 		await timer.updateStartedAt(newDate);
-	}
-
-	function scrollToSection(id: string) {
-		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
 
 	function scrollToTop() {
@@ -150,6 +145,17 @@
 		}
 	});
 
+	// "Back to top" only means something once there's somewhere to go back from.
+	let scrolledDown = $state(false);
+	$effect(() => {
+		function onScroll() {
+			scrolledDown = window.scrollY > 200;
+		}
+		window.addEventListener('scroll', onScroll, { passive: true });
+		onScroll();
+		return () => window.removeEventListener('scroll', onScroll);
+	});
+
 	// Manual-add row: retimes the *running* entry to an explicit HH:MM–HH:MM range (and thereby
 	// closes it). The clock is cleared locally first so the panel responds immediately; the
 	// store's `retimeToday` does the write and re-syncs the summary and today's entries.
@@ -163,7 +169,6 @@
 
 		const entryComment = timer.comment;
 		timer.reset();
-		commentExpanded = false;
 		resetManualRange();
 		addNotification('Time logged', 'success');
 		await entries.retimeToday(entryId, range, entryComment);
@@ -177,19 +182,18 @@
 <div class="container">
 	<h1>Tasks</h1>
 
-	<div class="task-timer-row">
-		<div class="task-timer-panel">
-			<div class="task-header">
-				<button
-					class="comment-toggle"
-					class:has-comment={timer.comment.length > 0}
-					onclick={() => {
-						commentExpanded = !commentExpanded;
-					}}
-					title="Comment"
-				>
-					<Icon name="comment" />
-				</button>
+	<div class="create-mode-toggle tasks-tab-toggle">
+		<button class:active={activeTab === 'today'} onclick={() => (activeTab = 'today')}>
+			Today
+		</button>
+		<button class:active={activeTab === 'projects'} onclick={() => (activeTab = 'projects')}>
+			Projects
+		</button>
+	</div>
+
+	{#if activeTab === 'today'}
+		<div class="task-timer-panel" class:expanded={timerExpanded}>
+			<div class="task-timer-compact">
 				<button id="timer-task-picker-trigger" class="comment-toggle" title="Select task">
 					<Icon name="pen" />
 				</button>
@@ -209,277 +213,290 @@
 						if (timer.selectedTaskId) openTaskDetail(timer.selectedTaskId);
 					}}
 				/>
-				<button
-					class="btn-cancel"
-					onclick={handleCancel}
-					disabled={!timer.activeTimeEntryId}
-					title="Cancel entry"><Icon name="xmark" /></button
-				>
-			</div>
-			{#if timer.selectedTaskDescription}
-				<div class="timer-task-description">
-					{@html linkify(timer.selectedTaskDescription)}
-				</div>
-			{/if}
-			{#if commentExpanded || timer.comment.length > 0}
-				<input
-					class="comment-input"
-					type="text"
-					placeholder="Comment..."
-					value={timer.comment}
-					oninput={(e) => timer.setComment(e.currentTarget.value)}
-				/>
-			{/if}
-
-			<div class="timer-row">
-				<div class="time-entries">
-					{#each timeEntries as entry (entry.id)}
-						<TimePicker value={entry.start} onchange={(v) => (entry.start = v)} />
-						<span class="time-separator">-</span>
-						<TimePicker value={entry.end} onchange={(v) => (entry.end = v)} />
-					{/each}
-					<button class="btn-primary" onclick={submitTimeEntry} disabled={!timer.activeTimeEntryId}
-						><Icon name="plus" /> Add</button
-					>
-				</div>
-
-				<div class="timer-controls">
-					<span id="timer-display-trigger" class="timer-display" class:clickable={timer.isRunning}>
-						{timer.formattedTime}
-					</span>
-					{#if timer.isRunning && timer.startedAtDate}
-						<StartedAtEditor startedAt={timer.startedAtDate} onchange={handleStartedAtChange} />
-					{/if}
-					{#if timer.isRunning}
-						<button class="btn-primary running" onclick={handleStop}>
-							<Icon name="stop" />
-							Stop
-						</button>
-					{:else}
-						<button class="btn-primary" onclick={() => timer.startClock()}>
-							<Icon name="play" />
-							Start
-						</button>
-					{/if}
-				</div>
-			</div>
-
-			<div class="time-summary">
-				<div
-					class="summary-item"
-					class:danger={summary.today < (dailyTarget * 5) / 6}
-					class:warning={summary.today >= (dailyTarget * 5) / 6 &&
-						summary.today <= (dailyTarget * 11) / 12}
-					class:completed={summary.today > (dailyTarget * 11) / 12}
-				>
-					<span class="summary-label">Today</span>
-					<div class="progress-track bg-bg">
-						<div
-							class="progress-fill"
-							style="width: {Math.min((summary.today / dailyTarget) * 100, 100)}%"
-						></div>
-					</div>
-					<span class="summary-value">{formatTime(summary.today)} / {dailyTargetLabel}</span>
-				</div>
-				<div class="summary-item" class:completed={summary.week >= summary.weekly_target_seconds}>
-					<span class="summary-label">Week</span>
-					<div class="progress-track bg-bg">
-						<div
-							class="progress-fill"
-							style="width: {Math.min((summary.week / summary.weekly_target_seconds) * 100, 100)}%"
-						></div>
-					</div>
-					<span class="summary-value"
-						>{formatTime(summary.week)} / {formatTime(summary.weekly_target_seconds)}</span
-					>
-				</div>
-				<div class="summary-actions">
-					<span class="summary-pace">{weekTargetTooltip}</span>
-					<button
-						class="btn-icon"
-						onclick={() => (showTimeHistory = true)}
-						aria-label="View history"
-					>
-						<Icon name="chart-line" />
+				<span id="timer-display-trigger" class="timer-display" class:clickable={timer.isRunning}>
+					{timer.formattedTime}
+				</span>
+				{#if timer.isRunning}
+					<button class="btn-primary running" onclick={handleStop}>
+						<Icon name="stop" />
+						Stop
 					</button>
-					<button class="btn-icon" onclick={() => (showAgenda = true)} aria-label="View agenda">
-						<Icon name="calendar-day" />
+				{:else}
+					<button class="btn-primary" onclick={() => timer.startClock()}>
+						<Icon name="play" />
+						Start
 					</button>
-				</div>
-			</div>
-		</div>
-
-		<aside class="task-shortcuts-panel" aria-label="Quick actions">
-			<button
-				class="task-shortcut"
-				onclick={() => scrollToSection('plan-section')}
-				title="Go to Today's Plan"
-			>
-				<Icon name="calendar-day" />
-				<span>Plan</span>
-			</button>
-			<button
-				class="task-shortcut"
-				onclick={() => scrollToSection('active-projects-section')}
-				title="Go to Active Projects"
-			>
-				<Icon name="folder" />
-				<span>Projects</span>
-			</button>
-		</aside>
-	</div>
-
-	<div class="tasks-content">
-		<div class="tasks-section">
-			<div class="section-header">
-				<h2>Due Soon <span class="summary-pace">{board.dueTodayCount}</span></h2>
-
-				<div class="priority-filter">
-					{#each [1, 2, 3, 4] as p (p)}
-						<button
-							class:active={board.duePriorityFilter === p}
-							onclick={() => board.setDuePriority(p)}
-							aria-label="Priority up to {p}">≤{p}</button
-						>
-					{/each}
-					<button
-						class:active={board.duePriorityFilter === null}
-						onclick={() => board.setDuePriority(null)}>All</button
-					>
-					{#if board.dueProjectOptions.length > 0}
-						<span class="filter-sep" aria-hidden="true">|</span>
-						<select
-							class="project-filter-select"
-							class:active={board.dueProjectFilter !== null}
-							value={board.dueProjectFilter}
-							onchange={(e) =>
-								board.setDueProject(
-									e.currentTarget.value === '' ? null : Number(e.currentTarget.value)
-								)}
-							aria-label="Filter by project"
-						>
-							<option value={null}>Project</option>
-							{#each board.dueProjectOptions as opt (opt.id)}
-								<option value={opt.id}>{' '.repeat(opt.depth * 2)}{opt.name}</option>
-							{/each}
-						</select>
-					{/if}
-				</div>
+				{/if}
 				<button
-					class="btn-primary btn-sm"
-					onclick={() => {
-						createMode = 'task';
-						createPrefillProjectId = null;
-						showCreate = true;
-					}}
+					class="btn-icon timer-expand-toggle"
+					onclick={() => (timerExpanded = !timerExpanded)}
+					aria-label={timerExpanded ? 'Collapse timer details' : 'Expand timer details'}
+					title="More"
 				>
-					<Icon name="plus" /> Task
+					<Icon name="chevron-down" />
 				</button>
 			</div>
-			<div class="task-list">
-				{#each board.visibleDueDateTasks as task, i (task.id)}
-					{@const taskDate = task.due_at ?? task.project_due_at}
-					{@const taskDateKey = taskDate ? taskDate.slice(0, 10) : 'no-date'}
-					{@const prevTask = board.visibleDueDateTasks[i - 1]}
-					{@const prevDate = prevTask ? (prevTask.due_at ?? prevTask.project_due_at) : null}
-					{@const prevDateKey = prevDate ? prevDate.slice(0, 10) : 'no-date'}
-					{@const isToday = taskDateKey === todayKey}
-					{@const isOverdue = taskDateKey !== 'no-date' && taskDateKey < todayKey}
-					{#if (i > 0 && taskDateKey !== prevDateKey) || (i === 0 && isToday)}
-						<div class="agenda-day-divider" class:today={isToday}>
-							<span class="agenda-day-line"></span>
-							<span class="agenda-day-label">{formatDueDay(taskDate)}</span>
-							<span class="agenda-day-line"></span>
+
+			{#if timerExpanded}
+				<div class="task-timer-expanded">
+					{#if timer.selectedTaskDescription}
+						<div class="timer-task-description">
+							{@html linkify(timer.selectedTaskDescription)}
 						</div>
 					{/if}
-					<TaskItem
-						{task}
-						{isToday}
-						{isOverdue}
+					<div class="comment-row">
+						<Icon name="comment" />
+						<input
+							class="comment-input"
+							type="text"
+							placeholder="Comment..."
+							value={timer.comment}
+							oninput={(e) => timer.setComment(e.currentTarget.value)}
+						/>
+						<button
+							class="btn-cancel"
+							onclick={handleCancel}
+							disabled={!timer.activeTimeEntryId}
+							title="Cancel entry"><Icon name="xmark" /></button
+						>
+					</div>
+
+					<div class="timer-row">
+						<div class="time-entries">
+							{#each timeEntries as entry (entry.id)}
+								<TimePicker value={entry.start} onchange={(v) => (entry.start = v)} />
+								<span class="time-separator">-</span>
+								<TimePicker value={entry.end} onchange={(v) => (entry.end = v)} />
+							{/each}
+							<button
+								class="btn-primary"
+								onclick={submitTimeEntry}
+								disabled={!timer.activeTimeEntryId}><Icon name="plus" /> Add</button
+							>
+						</div>
+
+						{#if timer.isRunning && timer.startedAtDate}
+							<div class="timer-controls">
+								<StartedAtEditor startedAt={timer.startedAtDate} onchange={handleStartedAtChange} />
+							</div>
+						{/if}
+					</div>
+
+					<div class="time-summary">
+						<div
+							class="summary-item"
+							class:danger={summary.today < (dailyTarget * 5) / 6}
+							class:warning={summary.today >= (dailyTarget * 5) / 6 &&
+								summary.today <= (dailyTarget * 11) / 12}
+							class:completed={summary.today > (dailyTarget * 11) / 12}
+						>
+							<span class="summary-label">Today</span>
+							<div class="progress-track bg-bg">
+								<div
+									class="progress-fill"
+									style="width: {Math.min((summary.today / dailyTarget) * 100, 100)}%"
+								></div>
+							</div>
+							<span class="summary-value">{formatTime(summary.today)} / {dailyTargetLabel}</span>
+						</div>
+						<div
+							class="summary-item"
+							class:completed={summary.week >= summary.weekly_target_seconds}
+						>
+							<span class="summary-label">Week</span>
+							<div class="progress-track bg-bg">
+								<div
+									class="progress-fill"
+									style="width: {Math.min(
+										(summary.week / summary.weekly_target_seconds) * 100,
+										100
+									)}%"
+								></div>
+							</div>
+							<span class="summary-value"
+								>{formatTime(summary.week)} / {formatTime(summary.weekly_target_seconds)}</span
+							>
+						</div>
+						<div class="summary-actions">
+							<span class="summary-pace">{weekTargetTooltip}</span>
+							<button
+								class="btn-icon"
+								onclick={() => (showTimeHistory = true)}
+								aria-label="View history"
+							>
+								<Icon name="chart-line" />
+							</button>
+							<button class="btn-icon" onclick={() => (showAgenda = true)} aria-label="View agenda">
+								<Icon name="calendar-day" />
+							</button>
+						</div>
+					</div>
+				</div>
+			{/if}
+		</div>
+
+		<div class="tasks-content">
+			<div class="tasks-section">
+				<div class="section-header">
+					<h2>Due Soon <span class="summary-pace">{board.dueTodayCount}</span></h2>
+
+					<div class="priority-filter">
+						{#each [1, 2, 3, 4] as p (p)}
+							<button
+								class:active={board.duePriorityFilter === p}
+								onclick={() => board.setDuePriority(p)}
+								aria-label="Priority up to {p}">≤{p}</button
+							>
+						{/each}
+						<button
+							class:active={board.duePriorityFilter === null}
+							onclick={() => board.setDuePriority(null)}>All</button
+						>
+						{#if board.dueProjectOptions.length > 0}
+							<span class="filter-sep" aria-hidden="true">|</span>
+							<select
+								class="project-filter-select"
+								class:active={board.dueProjectFilter !== null}
+								value={board.dueProjectFilter}
+								onchange={(e) =>
+									board.setDueProject(
+										e.currentTarget.value === '' ? null : Number(e.currentTarget.value)
+									)}
+								aria-label="Filter by project"
+							>
+								<option value={null}>Project</option>
+								{#each board.dueProjectOptions as opt (opt.id)}
+									<option value={opt.id}>{' '.repeat(opt.depth * 2)}{opt.name}</option>
+								{/each}
+							</select>
+						{/if}
+					</div>
+					<button
+						class="btn-primary btn-sm"
+						onclick={() => {
+							createMode = 'task';
+							createPrefillProjectId = null;
+							showCreate = true;
+						}}
+					>
+						<Icon name="plus" /> Task
+					</button>
+				</div>
+				<div class="task-list">
+					{#each board.visibleDueSoonGroups as group (group.tier)}
+						<div class="due-soon-tier tier-{group.tier}">
+							<span class="due-soon-tier-label">{group.label}</span>
+							{#each group.tasks as task, i (task.id)}
+								{@const taskDate = task.due_at ?? task.project_due_at}
+								{@const taskDateKey = taskDate ? taskDate.slice(0, 10) : 'no-date'}
+								{@const prevTask = group.tasks[i - 1]}
+								{@const prevDate = prevTask ? (prevTask.due_at ?? prevTask.project_due_at) : null}
+								{@const prevDateKey = prevDate ? prevDate.slice(0, 10) : 'no-date'}
+								{@const isToday = taskDateKey === todayKey}
+								{@const isOverdue = taskDateKey !== 'no-date' && taskDateKey < todayKey}
+								{#if (i > 0 && taskDateKey !== prevDateKey) || (i === 0 && isToday)}
+									<div class="agenda-day-divider" class:today={isToday}>
+										<span class="agenda-day-line"></span>
+										<span class="agenda-day-label">{formatDueDay(taskDate)}</span>
+										<span class="agenda-day-line"></span>
+									</div>
+								{/if}
+								<TaskItem
+									{task}
+									{isToday}
+									{isOverdue}
+									onstart={timerStart}
+									onassign={timerAssign}
+									onstopandstart={timerStopAndStart}
+									ontoggle={(id, action) => board.toggleTask(id, action)}
+									ondetail={openTaskDetail}
+									isTimerRunning={timer.isRunning}
+								/>
+							{/each}
+						</div>
+					{/each}
+					{#if board.hasMoreDueDateTasks}
+						<button class="show-more-btn" onclick={() => board.showMore()}>
+							<span class="show-more-line"></span>
+							<span class="show-more-pill">
+								<Icon name="chevron-down" />
+								<span>{board.remainingDueDateTasks} more</span>
+							</span>
+							<span class="show-more-line"></span>
+						</button>
+					{/if}
+				</div>
+			</div>
+
+			<PlanSection
+				initial={data.plan}
+				entries={entries.today}
+				freeBusy={data.freeBusy.days}
+				onstart={timerStart}
+				onassign={timerAssign}
+				onstopandstart={timerStopAndStart}
+				onafterchange={() => invalidateAll()}
+				onopenentry={(entry) => (selectedTimeEntry = entry)}
+				isTimerRunning={timer.isRunning}
+			/>
+		</div>
+	{/if}
+
+	{#if activeTab === 'projects'}
+		<div class="tasks-content tasks-content-wide">
+			<div id="active-projects-section" class="tasks-section">
+				<div class="section-header">
+					<div class="section-title">
+						<h2>Active Projects</h2>
+						{#if scrolledDown}
+							<button class="btn-icon back-to-top" onclick={scrollToTop} title="Back to top">
+								<Icon name="arrow-up" />
+							</button>
+						{/if}
+					</div>
+					<div class="priority-filter">
+						<button
+							class:active={board.treePriorityFilter === null}
+							onclick={() => board.setTreePriority(null)}>All</button
+						>
+						{#each [1, 2, 3, 4] as p (p)}
+							<button
+								class:active={board.treePriorityFilter === p}
+								onclick={() => board.setTreePriority(p)}
+								aria-label="Priority up to {p}">≤{p}</button
+							>
+						{/each}
+					</div>
+					<button
+						class="btn-primary btn-sm"
+						onclick={() => {
+							createMode = 'project';
+							createPrefillProjectId = null;
+							showCreate = true;
+						}}
+					>
+						<Icon name="plus" /> Project
+					</button>
+				</div>
+				<div class="task-list">
+					<TreeNode
+						nodes={board.filteredActiveTree}
 						onstart={timerStart}
 						onassign={timerAssign}
 						onstopandstart={timerStopAndStart}
-						ontoggle={(id, action) => board.toggleTask(id, action)}
-						ondetail={openTaskDetail}
+						ontoggle={(id, type, action) => board.toggleTreeNode(id, type, action)}
+						ondetail={openDetail}
+						oncreatetask={(projectId) => {
+							createMode = 'task';
+							createPrefillProjectId = projectId;
+							showCreate = true;
+						}}
 						isTimerRunning={timer.isRunning}
 					/>
-				{/each}
-				{#if board.hasMoreDueDateTasks}
-					<button class="show-more-btn" onclick={() => board.showMore()}>
-						<span class="show-more-line"></span>
-						<span class="show-more-pill">
-							<Icon name="chevron-down" />
-							<span>{board.remainingDueDateTasks} more</span>
-						</span>
-						<span class="show-more-line"></span>
-					</button>
-				{/if}
+				</div>
 			</div>
 		</div>
-
-		<PlanSection
-			initial={data.plan}
-			entries={entries.today}
-			onstart={timerStart}
-			onassign={timerAssign}
-			onstopandstart={timerStopAndStart}
-			onafterchange={() => invalidateAll()}
-			onopenentry={(entry) => (selectedTimeEntry = entry)}
-			isTimerRunning={timer.isRunning}
-		/>
-	</div>
-
-	<div class="tasks-content tasks-content-wide">
-		<div id="active-projects-section" class="tasks-section">
-			<div class="section-header">
-				<div class="section-title">
-					<h2>Active Projects</h2>
-					<button class="btn-icon back-to-top" onclick={scrollToTop} title="Back to top">
-						<Icon name="arrow-up" />
-					</button>
-				</div>
-				<div class="priority-filter">
-					<button
-						class:active={board.treePriorityFilter === null}
-						onclick={() => board.setTreePriority(null)}>All</button
-					>
-					{#each [1, 2, 3, 4] as p (p)}
-						<button
-							class:active={board.treePriorityFilter === p}
-							onclick={() => board.setTreePriority(p)}
-							aria-label="Priority up to {p}">≤{p}</button
-						>
-					{/each}
-				</div>
-				<button
-					class="btn-primary btn-sm"
-					onclick={() => {
-						createMode = 'project';
-						createPrefillProjectId = null;
-						showCreate = true;
-					}}
-				>
-					<Icon name="plus" /> Project
-				</button>
-			</div>
-			<div class="task-list">
-				<TreeNode
-					nodes={board.filteredActiveTree}
-					onstart={timerStart}
-					onassign={timerAssign}
-					onstopandstart={timerStopAndStart}
-					ontoggle={(id, type, action) => board.toggleTreeNode(id, type, action)}
-					ondetail={openDetail}
-					oncreatetask={(projectId) => {
-						createMode = 'task';
-						createPrefillProjectId = projectId;
-						showCreate = true;
-					}}
-					isTimerRunning={timer.isRunning}
-				/>
-			</div>
-		</div>
-	</div>
+	{/if}
 </div>
 
 <TaskBottomSheet taskId={selectedTaskId} onclose={() => (selectedTaskId = null)} />

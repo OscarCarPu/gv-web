@@ -20,7 +20,7 @@ src/lib/domains/calendar/
   forms/eventForm.svelte.ts                  — the create/edit sheet's controller
   utils/datetime.ts                          — calendar-specific time conversion (see below)
   components/MonthGrid, TimeGrid, CalendarSidebar, AccountsSheet, EventFormSheet,
-             CapacityPanel, CommitmentsSheet, CreatePlanFromEventWizard
+             CapacityPanel, CreatePlanFromEventWizard
 src/lib/domains/capacity/                    — api/capacity.api.ts + capacity.schemas.ts,
                                                 types/Capacity.types.ts (only consumed here)
 src/routes/calendar/                         — page + SSR seed
@@ -45,16 +45,12 @@ calendar page is where they're surfaced alongside events:
 - **`view.hasPlan(instanceId)`** — true when some fetched plan block's `event_ref` equals the
   event's `instance_id`. Drives whether `EventFormSheet` offers "Create plan" for that event.
 - **`CapacityPanel`** (sidebar, below the calendar list) lists the next 7 days' free/total hours
-  from `view.freeBusy`, one row per day. Its pen icon opens `CommitmentsSheet`, not an edit of the
-  capacity constant itself — there is nothing to edit, the constant isn't in this app at all (see
-  the API's `docs/api/capacity.md`).
-- **`CommitmentsSheet`** — full CRUD over `recurring_commitments` (weekly work/class-style
-  schedules that materialize as real `plan_blocks`, see [tasks.md](tasks.md) and the API's
-  `docs/business_logic/plan.md`). Lists existing commitments with a day-of-week/time summary and
-  an active/inactive toggle (`planApi.updateCommitment(id, { active })` — pausing generation
-  without deleting the commitment or its already-generated blocks); the create form picks a task,
-  a label, days via `cal-day-toggle` button pills, and start/end times. There is no `task_id`
-  field on update — a commitment's task cannot be changed after creation, only recreated.
+  from `view.freeBusy`, one row per day — purely informational here, no pen/edit icon. Managing
+  `recurring_commitments` (the thing that actually moves these numbers) lives on `/tasks` instead —
+  see `CommitmentsSheet` in [tasks.md](tasks.md#plan-block-subsystem) — since a commitment has
+  nothing to do with calendar events and putting its editor in the calendar sidebar read as
+  misplaced. There is nothing to edit for the capacity constant itself either — it isn't in this
+  app at all (see the API's `docs/api/capacity.md`).
 - **`CreatePlanFromEventWizard`** — reached from `EventFormSheet`'s "Create plan" button (shown
   only when `hasPlan` is false), turns an event into a real commitment: pick no task / an existing
   task / create a new one inline, adjust the block's start/end (pre-filled from the event's own

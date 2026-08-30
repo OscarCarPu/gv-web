@@ -1,24 +1,10 @@
 @reference "./app.css";
 
-.task-timer-row {
-	@apply mx-auto mt-6 flex w-full max-w-3xl items-stretch gap-3;
-}
+.tasks-tab-toggle {
+	@apply mx-auto w-fit;
 
-.task-timer-row > .task-timer-panel {
-	@apply mx-0 mt-0 flex-1;
-}
-
-.task-shortcuts-panel {
-	@apply bg-bg-light flex flex-col gap-2 rounded-xl px-3 py-4;
-	border: 1px solid var(--color-border);
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-
-	.task-shortcut {
-		@apply text-text-muted hover:text-primary hover:bg-bg flex cursor-pointer items-center gap-2 rounded-lg border-none bg-transparent px-3 py-2 text-sm font-medium transition-colors duration-200;
-
-		& > span {
-			@apply whitespace-nowrap;
-		}
+	& button {
+		@apply flex-none px-6;
 	}
 }
 
@@ -31,12 +17,29 @@
 }
 
 .task-timer-panel {
-	@apply bg-bg-light mx-auto mt-6 flex w-full max-w-3xl flex-col items-center gap-4 rounded-xl px-6 py-5;
+	@apply bg-bg-light mx-auto mt-4 flex w-full max-w-3xl flex-col gap-4 rounded-xl px-6 py-4;
 	border: 1px solid var(--color-border);
 	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 
-	.task-header {
+	.task-timer-compact {
 		@apply flex w-full items-center gap-2;
+	}
+
+	.timer-expand-toggle {
+		@apply text-text-muted hover:text-primary cursor-pointer rounded border-none bg-transparent p-1 transition-colors duration-200;
+
+		svg {
+			transition: transform 0.15s ease;
+		}
+	}
+
+	&.expanded .timer-expand-toggle svg {
+		transform: rotate(180deg);
+	}
+
+	.task-timer-expanded {
+		@apply flex w-full flex-col items-center gap-4 border-t pt-4;
+		border-color: var(--color-border);
 	}
 
 	.task-selector {
@@ -50,18 +53,18 @@
 
 	.comment-toggle {
 		@apply text-text-muted hover:text-text cursor-pointer rounded-lg border-none bg-transparent p-2 transition-colors duration-200;
-
-		&.has-comment {
-			@apply text-primary;
-		}
 	}
 
 	.timer-task-description {
 		@apply text-text-muted w-full text-sm whitespace-pre-wrap;
 	}
 
+	.comment-row {
+		@apply text-text-muted flex w-full items-center gap-2;
+	}
+
 	.comment-input {
-		@apply bg-bg text-text placeholder-text-muted/50 w-full rounded-lg border-none px-4 py-2 text-sm;
+		@apply bg-bg text-text placeholder-text-muted/50 flex-1 rounded-lg border-none px-4 py-2 text-sm;
 		outline: none;
 
 		&:focus {
@@ -127,7 +130,7 @@
 }
 
 .tasks-content {
-	@apply desktop:grid-cols-2 mt-3 grid grid-cols-1 gap-6;
+	@apply desktop:grid-cols-2 mt-3 grid grid-cols-1 items-start gap-6;
 }
 
 .tasks-section {
@@ -141,6 +144,35 @@
 
 .task-list {
 	@apply flex flex-col gap-2;
+}
+
+.due-soon-tier {
+	@apply flex flex-col gap-2;
+
+	&:not(:first-child) {
+		@apply mt-2;
+	}
+}
+
+.due-soon-tier-label {
+	@apply w-fit rounded-full px-2.5 py-1 text-xs font-bold tracking-wide uppercase;
+	background: var(--color-bg);
+	color: var(--color-text-muted);
+}
+
+.due-soon-tier.tier-overdue .due-soon-tier-label {
+	color: var(--color-danger);
+	background: color-mix(in srgb, var(--color-danger) 14%, var(--color-bg));
+}
+
+.due-soon-tier.tier-today .due-soon-tier-label {
+	color: var(--color-warning);
+	background: color-mix(in srgb, var(--color-warning) 14%, var(--color-bg));
+}
+
+.due-soon-tier.tier-week .due-soon-tier-label {
+	color: var(--color-primary);
+	background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg));
 }
 
 .show-more-btn {
@@ -243,6 +275,11 @@
 	.task-time {
 		@apply text-text-muted;
 	}
+}
+
+.task-urgency-note {
+	@apply mt-1 flex items-center gap-1.5 text-xs font-semibold;
+	color: var(--color-warning);
 }
 
 .tree-project-row {
@@ -732,6 +769,102 @@
 	@apply bg-danger/15 text-danger;
 }
 
+.capacity-strip-header {
+	@apply mt-3 flex items-center justify-between border-t pt-3;
+	border-color: var(--color-border);
+}
+
+.capacity-strip-title {
+	@apply text-text-muted text-xs font-semibold tracking-wide uppercase;
+}
+
+.capacity-strip {
+	@apply mt-2 flex items-end gap-2;
+}
+
+.capacity-strip-day {
+	@apply flex flex-1 cursor-pointer flex-col items-center gap-1 rounded-lg border-none bg-transparent py-1 transition-colors duration-200;
+
+	&:hover {
+		background: var(--color-overlay);
+	}
+
+	&.selected {
+		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+
+		.capacity-strip-label {
+			@apply text-primary font-semibold;
+		}
+	}
+}
+
+.capacity-strip-label {
+	@apply text-text-muted text-[10px] tracking-wide uppercase;
+}
+
+.capacity-strip-bar {
+	@apply bg-bg relative flex h-12 w-full items-end overflow-hidden rounded;
+}
+
+.capacity-strip-fill {
+	@apply bg-primary w-full rounded;
+}
+
+.capacity-strip-day.tight .capacity-strip-fill {
+	background: var(--color-warning);
+}
+
+.capacity-strip-day.full .capacity-strip-fill {
+	background: var(--color-danger);
+}
+
+.capacity-strip-hours {
+	@apply text-text-muted font-mono text-[11px] tabular-nums;
+}
+
+.plan-commitment-list {
+	@apply mb-4 flex flex-col gap-2;
+}
+
+.plan-commitment-row {
+	@apply flex items-center gap-2 rounded-lg px-3 py-2;
+	background: var(--color-bg);
+
+	&.inactive {
+		@apply opacity-50;
+	}
+}
+
+.plan-commitment-info {
+	@apply flex flex-1 flex-col;
+}
+
+.plan-commitment-label {
+	@apply font-semibold;
+}
+
+.plan-commitment-meta {
+	@apply text-text-muted text-xs;
+}
+
+.plan-commitment-editing-task {
+	@apply text-text-muted text-sm;
+}
+
+.plan-day-toggle {
+	@apply flex gap-1;
+
+	button {
+		@apply rounded-md border px-2 py-1 text-xs;
+		border-color: var(--color-border);
+
+		&.active {
+			@apply bg-primary text-white;
+			border-color: var(--color-primary);
+		}
+	}
+}
+
 .plan-list {
 	@apply mt-4 flex flex-col gap-2;
 }
@@ -919,6 +1052,10 @@
 
 .plan-editor-title {
 	@apply text-text text-lg font-bold;
+}
+
+.plan-editor-date {
+	@apply text-text-muted -mt-2 text-sm;
 }
 
 .plan-editor-mode {

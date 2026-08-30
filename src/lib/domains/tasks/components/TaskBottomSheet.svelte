@@ -90,9 +90,11 @@
 						<input id="task-recurrence" type="number" min="1" bind:value={detail.recurrence} />
 					</div>
 				{/if}
-				{#if detail.taskType === 'standard'}
+				{#if detail.taskType !== 'continuous'}
 					<div class="detail-field">
-						<label for="task-estimate">Estimate (hours)</label>
+						<label for="task-estimate">
+							{detail.taskType === 'recurring' ? 'Estimate per cycle (hours)' : 'Estimate (hours)'}
+						</label>
 						<input
 							id="task-estimate"
 							type="number"

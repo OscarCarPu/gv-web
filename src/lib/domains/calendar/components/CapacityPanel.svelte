@@ -1,13 +1,11 @@
 <script lang="ts">
-	import Icon from '$lib/shared/components/Icon.svelte';
 	import type { DayFreeBusy } from '$lib/domains/capacity/types/Capacity.types';
 
 	interface Props {
 		days: DayFreeBusy[];
-		onmanage: () => void;
 	}
 
-	let { days, onmanage }: Props = $props();
+	let { days }: Props = $props();
 
 	const dayLabel = new Intl.DateTimeFormat('en', { weekday: 'short', day: 'numeric' });
 
@@ -20,9 +18,6 @@
 <div class="cal-capacity-panel">
 	<div class="cal-capacity-header">
 		<span class="cal-label">Free time (next 7 days)</span>
-		<button type="button" class="btn-icon" title="Commitments" onclick={onmanage}>
-			<Icon name="pen" />
-		</button>
 	</div>
 	<ul class="cal-capacity-list">
 		{#each days as day (day.date)}

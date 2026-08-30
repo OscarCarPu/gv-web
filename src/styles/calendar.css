@@ -203,45 +203,6 @@
 	@apply text-text-muted text-xs;
 }
 
-.cal-commitment-list {
-	@apply mb-4 flex flex-col gap-2;
-}
-
-.cal-commitment-row {
-	@apply flex items-center gap-2 rounded-lg px-3 py-2;
-	background: var(--color-bg);
-
-	&.inactive {
-		@apply opacity-50;
-	}
-}
-
-.cal-commitment-info {
-	@apply flex flex-1 flex-col;
-}
-
-.cal-commitment-label {
-	@apply font-semibold;
-}
-
-.cal-commitment-meta {
-	@apply text-text-muted text-xs;
-}
-
-.cal-day-toggle {
-	@apply flex gap-1;
-
-	button {
-		@apply rounded-md border px-2 py-1 text-xs;
-		border-color: var(--color-border);
-
-		&.active {
-			@apply bg-primary text-white;
-			border-color: var(--color-primary);
-		}
-	}
-}
-
 /* Month grid */
 
 .cal-month {

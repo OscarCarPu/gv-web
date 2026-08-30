@@ -332,6 +332,12 @@
 	@apply px-2 py-1 text-xs;
 }
 
+/* A .btn variant (primary/success/etc.) carrying only an icon, no label — same colored
+   affordance, without the text-sized horizontal padding. */
+.btn-icon-only {
+	@apply px-2.5;
+}
+
 .btn-danger {
 	@apply btn bg-danger hover:bg-danger/80 text-white;
 

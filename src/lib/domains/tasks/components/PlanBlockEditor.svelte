@@ -3,7 +3,12 @@
 	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
 	import { planApi } from '$lib/domains/tasks/api/plan.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import { hhmmToISO, isoToHHmm } from '$lib/shared/utils/datetime';
+	import {
+		hhmmToISO,
+		isoToHHmm,
+		toLocalDateString,
+		formatDueDay,
+	} from '$lib/shared/utils/datetime';
 	import type { TaskListItem } from '$lib/domains/tasks/types/Task.types';
 	import type {
 		CreatePlanBlockRequest,
@@ -13,11 +18,20 @@
 	interface Props {
 		open: boolean;
 		block?: PlanBlockResponse | null;
+		/** Day (local `YYYY-MM-DD`) a *new* block lands on; ignored when editing — an edited
+		 *  block keeps its own day. Defaults to today. */
+		date?: string;
 		onclose: () => void;
 		onsaved: () => void;
 	}
 
-	let { open, block = null, onclose, onsaved }: Props = $props();
+	let { open, block = null, date, onclose, onsaved }: Props = $props();
+
+	/** The day times in this form are anchored to: the block's own day when editing, otherwise
+	 *  the day passed in (or today). */
+	function anchorDate(): string {
+		return block ? block.plan_date.slice(0, 10) : (date ?? toLocalDateString());
+	}
 
 	let tasks = $state<TaskListItem[]>([]);
 	let mode = $state<'task' | 'free'>('task');
@@ -80,8 +94,9 @@
 	async function save() {
 		if (saving) return;
 
-		const startedAt = hhmmToISO(startTime);
-		const endedAt = hhmmToISO(endTime, true);
+		const day = anchorDate();
+		const startedAt = hhmmToISO(startTime, false, day);
+		const endedAt = hhmmToISO(endTime, true, day);
 		if (new Date(endedAt) <= new Date(startedAt)) {
 			addToast('End time must be after start time', 'error');
 			return;
@@ -132,6 +147,7 @@
 <Modal {open} {onclose}>
 	<div class="plan-editor">
 		<h3 class="plan-editor-title">{block ? 'Edit block' : 'New block'}</h3>
+		<p class="plan-editor-date">{formatDueDay(`${anchorDate()}T00:00:00`)}</p>
 
 		<div class="plan-editor-mode">
 			<button class:active={mode === 'task'} onclick={() => (mode = 'task')}>Task</button>

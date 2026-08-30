@@ -22,9 +22,10 @@ export function formatTime(seconds: number): string {
 	return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
-/** Converts "HH:MM" into an ISO string anchored to today. If `endOfDay` and the value is "00:00", rolls to next-day 00:00. */
-export function hhmmToISO(hhmm: string, endOfDay = false): string {
-	const d = new Date();
+/** Converts "HH:MM" into an ISO string anchored to `anchorDate` (local `YYYY-MM-DD`, default
+ *  today). If `endOfDay` and the value is "00:00", rolls to next-day 00:00. */
+export function hhmmToISO(hhmm: string, endOfDay = false, anchorDate?: string): string {
+	const d = anchorDate ? new Date(`${anchorDate}T00:00:00`) : new Date();
 	const [h, m] = hhmm.split(':').map(Number);
 	d.setHours(h, m, 0, 0);
 	if (endOfDay && h === 0 && m === 0) {

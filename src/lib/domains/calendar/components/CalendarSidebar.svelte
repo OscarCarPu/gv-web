@@ -6,10 +6,9 @@
 	interface Props {
 		view: CalendarView;
 		onmanage: () => void;
-		oncommitments: () => void;
 	}
 
-	let { view, onmanage, oncommitments }: Props = $props();
+	let { view, onmanage }: Props = $props();
 </script>
 
 <aside class="cal-sidebar">
@@ -87,5 +86,5 @@
 		</button>
 	</div>
 
-	<CapacityPanel days={view.freeBusy} onmanage={oncommitments} />
+	<CapacityPanel days={view.freeBusy} />
 </aside>

@@ -78,7 +78,7 @@
 					task_type: taskType !== 'standard' ? taskType : undefined,
 					recurrence: taskType === 'recurring' ? recurrence : undefined,
 					priority: priority !== 3 ? priority : undefined,
-					estimate_hours: taskType === 'standard' && estimateHours ? estimateHours : undefined,
+					estimate_hours: taskType !== 'continuous' && estimateHours ? estimateHours : undefined,
 				});
 				if (startNow) {
 					await tasksApi.updateTask(created.id, { started_at: new Date().toISOString() });
@@ -171,9 +171,11 @@
 						<input id="create-recurrence" type="number" min="1" bind:value={recurrence} />
 					</div>
 				{/if}
-				{#if taskType === 'standard'}
+				{#if taskType !== 'continuous'}
 					<div class="detail-field">
-						<label for="create-estimate">Estimate (hours)</label>
+						<label for="create-estimate">
+							{taskType === 'recurring' ? 'Estimate per cycle (hours)' : 'Estimate (hours)'}
+						</label>
 						<input
 							id="create-estimate"
 							type="number"

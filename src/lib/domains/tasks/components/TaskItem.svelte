@@ -2,8 +2,8 @@
 	import type { TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
 	import type { TimerTask } from '$lib/domains/tasks/taskTimer.svelte';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
+	import { buildUrgencyPhrase } from '$lib/domains/tasks/utils/dueSoonGrouping';
 	import DepBadges from './DepBadges.svelte';
-	import { linkify } from '$shared/utils/linkify';
 	import { formatDateShort } from '$shared/utils/datetime';
 	import Icon from '$lib/shared/components/Icon.svelte';
 
@@ -51,6 +51,7 @@
 
 	const hasOwnDue = $derived(task.due_at !== null);
 	const hasProjectDue = $derived(!hasOwnDue && task.project_due_at !== null);
+	const urgencyPhrase = $derived(buildUrgencyPhrase(task));
 </script>
 
 <div class="task-item" class:today={isToday} class:overdue={isOverdue} class:urgent={task.urgent}>
@@ -74,9 +75,6 @@
 				{/if}
 			</span>
 		{/if}
-		{#if task.description}
-			<span class="task-description">{@html linkify(task.description)}</span>
-		{/if}
 		<div class="task-meta">
 			<span
 				class="status-badge"
@@ -91,6 +89,9 @@
 				<span class="task-due"><Icon name="calendar" /> {formatDateShort(task.due_at!)}</span>
 			{/if}
 			<span class="task-time"><Icon name="clock" /> {formattedTime()}</span>
+			{#if urgencyPhrase}
+				<span class="task-urgency-note"><Icon name="circle-exclamation" /> {urgencyPhrase}</span>
+			{/if}
 		</div>
 	</div>
 	<div class="task-actions">
@@ -110,23 +111,33 @@
 		{#if isTimerRunning}
 			<div class="btn-split">
 				<button
-					class="btn-primary"
+					class="btn-primary btn-icon-only"
 					onclick={() => onassign?.(toTimerTask())}
 					disabled={task.blocked}
+					title="Assign timer"
+					aria-label="Assign timer"
 				>
-					<Icon name="arrow-right" />Assign
+					<Icon name="arrow-right" />
 				</button>
 				<button
-					class="btn-success"
+					class="btn-success btn-icon-only"
 					onclick={() => onstopandstart?.(toTimerTask())}
 					disabled={task.blocked}
+					title={task.task_type === 'recurring' ? 'Renew & start timer' : 'Stop & start timer'}
+					aria-label={task.task_type === 'recurring' ? 'Renew & start timer' : 'Stop & start timer'}
 				>
-					<Icon name="play" />{task.task_type === 'recurring' ? 'Renew Start' : 'Stop Start'}
+					<Icon name="play" />
 				</button>
 			</div>
 		{:else}
-			<button class="btn-primary" onclick={() => onstart?.(toTimerTask())} disabled={task.blocked}>
-				<Icon name="play" />Start
+			<button
+				class="btn-primary btn-icon-only"
+				onclick={() => onstart?.(toTimerTask())}
+				disabled={task.blocked}
+				title="Start timer"
+				aria-label="Start timer"
+			>
+				<Icon name="play" />
 			</button>
 		{/if}
 	</div>
