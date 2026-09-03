@@ -34,6 +34,17 @@
 	let camReady = $state(false);
 	let camError = $state(false);
 
+	let camEl: HTMLDivElement;
+	let isFullscreen = $state(false);
+
+	function toggleFullscreen() {
+		if (document.fullscreenElement === camEl) {
+			void document.exitFullscreen();
+		} else {
+			void camEl.requestFullscreen();
+		}
+	}
+
 	let camTimer: ReturnType<typeof setInterval> | null = null;
 
 	// Only ever one frame request in flight, plus a backoff after a failure. Without this the
@@ -75,6 +86,12 @@
 			if (camTimer) clearInterval(camTimer);
 			disarmStop();
 		};
+	});
+
+	$effect(() => {
+		const onFullscreenChange = () => (isFullscreen = document.fullscreenElement === camEl);
+		document.addEventListener('fullscreenchange', onFullscreenChange);
+		return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
 	});
 
 	onDestroy(() => {
@@ -144,7 +161,7 @@
 </script>
 
 <section class="printer">
-	<div class="printer-cam">
+	<div class="printer-cam" bind:this={camEl}>
 		{#if camSrc}
 			<img src={camSrc} alt="{name} live camera" class:ready={camReady} />
 		{/if}
@@ -157,6 +174,14 @@
 		{#if recordings.isRecording}
 			<span class="cam-rec">● REC</span>
 		{/if}
+		<button
+			class="cam-fullscreen-btn"
+			title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+			aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen camera view'}
+			onclick={toggleFullscreen}
+		>
+			<Icon name={isFullscreen ? 'compress' : 'expand'} />
+		</button>
 	</div>
 
 	<div class="printer-head">
