@@ -63,13 +63,22 @@ describe('groupTasksByUrgency', () => {
 		expect(tiersOf(groups).later).toEqual([1]);
 	});
 
-	it('a task without an estimate never lands in today, and uses due_at as its effective date', () => {
+	it('a task without an estimate due tomorrow never lands in today, and uses due_at as its effective date', () => {
 		// No estimate_hours means no start_by, so urgent stays false regardless of how close
-		// due_at is — this must behave exactly like plain due-date sorting, never promoted.
+		// due_at is — this must behave exactly like plain due-date sorting, never promoted early.
 		const t = makeTask({ id: 1, due_at: '2026-08-30T00:00:00Z', urgent: false, start_by: null });
 		const groups = groupTasksByUrgency([t], TODAY);
 		expect(tiersOf(groups).week).toEqual([1]);
 		expect(tiersOf(groups).today).toEqual([]);
+	});
+
+	it('a task without an estimate due today still lands in today', () => {
+		// Due today is due today regardless of whether the task carries an estimate — only the
+		// early (pre-due-date) promotion depends on urgent/start_by.
+		const t = makeTask({ id: 1, due_at: `${TODAY}T00:00:00Z`, urgent: false, start_by: null });
+		const groups = groupTasksByUrgency([t], TODAY);
+		expect(tiersOf(groups).today).toEqual([1]);
+		expect(tiersOf(groups).week).toEqual([]);
 	});
 
 	it('a task with neither due_at nor project_due_at still appears, sorted last within later', () => {

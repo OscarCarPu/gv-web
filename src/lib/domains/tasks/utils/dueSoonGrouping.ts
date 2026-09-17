@@ -37,7 +37,7 @@ function addDays(dateStr: string, days: number): string {
 function tierFor(t: TaskByDueDateResponse, today: string, weekEdge: string): DueSoonTier {
 	const actual = actualDate(t);
 	if (actual !== null && actual < today) return 'overdue';
-	if (t.urgent) return 'today';
+	if (t.urgent || actual === today) return 'today';
 	const effective = effectiveDate(t);
 	if (effective !== null && effective <= weekEdge) return 'week';
 	return 'later';
@@ -60,8 +60,9 @@ function compareByDateThenPriority(
 /**
  * Splits Due Soon into four tiers so urgency changes a task's *position*, not just its color.
  * `overdue` / `today` sort by the real due date (what's actually closest); `week` / `later` sort
- * by the effective date — `start_by` when the task carries an estimate, otherwise its due date —
- * so an un-estimated task behaves exactly as before and never lands in `today` by accident.
+ * by the effective date — `start_by` when the task carries an estimate, otherwise its due date.
+ * A task due today always lands in `today`, estimate or not; the estimate only ever promotes a
+ * task *before* its due date (the `urgent` early warning) — it never demotes one due today.
  */
 export function groupTasksByUrgency(
 	tasks: TaskByDueDateResponse[],
