@@ -4,6 +4,7 @@ import {
 	ProjectResponseSchema,
 	ProjectResponseListSchema,
 	ProjectListItemListSchema,
+	ProjectParentCandidateListSchema,
 	ProjectDetailResponseSchema,
 	ProjectChildrenResponseSchema,
 	TaskResponseSchema,
@@ -21,6 +22,7 @@ import {
 } from './tasks.schemas';
 import type {
 	ProjectListItem,
+	ProjectParentCandidate,
 	ProjectResponse,
 	ProjectDetailResponse,
 	ProjectChildrenResponse,
@@ -67,6 +69,12 @@ export const tasksApi = {
 
 	async getProjectChildren(id: number, token?: string): Promise<ProjectChildrenResponse> {
 		return fetchAPI(`/tasks/projects/${id}/children`, ProjectChildrenResponseSchema, { token });
+	},
+
+	async getProjectParentCandidates(id: number, token?: string): Promise<ProjectParentCandidate[]> {
+		return fetchAPI(`/tasks/projects/${id}/parent-candidates`, ProjectParentCandidateListSchema, {
+			token,
+		});
 	},
 
 	async createProject(input: CreateProjectRequest, token?: string): Promise<ProjectResponse> {

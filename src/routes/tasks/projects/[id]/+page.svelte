@@ -88,6 +88,15 @@
 					</div>
 				</div>
 				<div class="detail-field">
+					<label for="project-parent">Parent project</label>
+					<select id="project-parent" bind:value={detail.parentId}>
+						<option value={null}>Root (no parent)</option>
+						{#each data.parentCandidates ?? [] as candidate (candidate.id)}
+							<option value={candidate.id}>{candidate.path}</option>
+						{/each}
+					</select>
+				</div>
+				<div class="detail-field">
 					<label for="project-desc">Description</label>
 					<textarea id="project-desc" bind:value={detail.description} rows="2"></textarea>
 				</div>

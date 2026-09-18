@@ -107,6 +107,7 @@ Full detail in [docs/tasks.md](docs/tasks.md). Non-obvious rules to remember whi
 - **Task types**: `standard` / `continuous` / `recurring`. Recurring requires `recurrence: number` (days). In "Due Soon" + "Active Projects", recurring tasks show "Renew" (reschedules `due_at = today + recurrence`) instead of "Done". Everywhere else, Finish sets `finished_at` normally. Use `getStatusLabel()` for badges
 - **Priority**: 1 (highest) to 5 (lowest), default `3`. Create omits when default (consistent with `task_type`); update always sends. Client-side priority filter on `/tasks` sections — projects in the tree are always kept regardless of children's priorities
 - **Overdue**: `TaskItem` applies `.overdue` class (red) when `due_at < today` on "Due Soon"
+- **Project parent**: editable on `/tasks/projects/[id]` via the "Parent project" select. Options come from `GET /tasks/projects/{id}/parent-candidates` (loaded in `+page.server.ts`; the API excludes the project, its whole subtree and finished projects — never recompute that client-side, and don't use `list-fast` for it). `ProjectDetail.save()` sends `parent_id` **only when it changed**; `null` = move to root, omitted = unchanged. The API rejects cycles with `409`
 
 ## Calendar domain — quick rules
 

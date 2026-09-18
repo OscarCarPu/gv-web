@@ -68,6 +68,46 @@ describe('ProjectDetail', () => {
 		expect(detail.saving).toBe(false);
 	});
 
+	it('load hydrates parentId from the project', () => {
+		const detail = new ProjectDetail(refresh, api);
+		detail.load(makeProject({ parent_id: 3 }));
+		expect(detail.parentId).toBe(3);
+
+		detail.load(makeProject({ parent_id: null }));
+		expect(detail.parentId).toBeNull();
+	});
+
+	it('save omits parent_id when the parent did not change', async () => {
+		const detail = new ProjectDetail(refresh, api);
+		detail.load(makeProject({ id: 7, parent_id: 3 }));
+		detail.name = 'renamed';
+
+		await detail.save();
+
+		const body = api.updateProject.mock.calls[0][1];
+		expect(body).not.toHaveProperty('parent_id');
+	});
+
+	it('save sends the new parent_id when the parent changed', async () => {
+		const detail = new ProjectDetail(refresh, api);
+		detail.load(makeProject({ id: 7, parent_id: null }));
+		detail.parentId = 5;
+
+		await detail.save();
+
+		expect(api.updateProject).toHaveBeenCalledWith(7, expect.objectContaining({ parent_id: 5 }));
+	});
+
+	it('save sends parent_id: null to move a project back to the root', async () => {
+		const detail = new ProjectDetail(refresh, api);
+		detail.load(makeProject({ id: 7, parent_id: 3 }));
+		detail.parentId = null;
+
+		await detail.save();
+
+		expect(api.updateProject).toHaveBeenCalledWith(7, expect.objectContaining({ parent_id: null }));
+	});
+
 	it('save still clears saving when the API rejects', async () => {
 		api.updateProject.mockRejectedValueOnce(new Error('boom'));
 		const detail = new ProjectDetail(refresh, api);

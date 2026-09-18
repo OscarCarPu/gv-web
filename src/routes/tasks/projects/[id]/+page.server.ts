@@ -10,5 +10,11 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 		return null;
 	});
 
-	return { projectChildren };
+	// Valid new parents (the API excludes the project itself and its whole subtree).
+	const parentCandidates = await tasksApi.getProjectParentCandidates(id, token).catch((error) => {
+		console.error('Failed to load parent candidates:', error);
+		return [];
+	});
+
+	return { projectChildren, parentCandidates };
 };

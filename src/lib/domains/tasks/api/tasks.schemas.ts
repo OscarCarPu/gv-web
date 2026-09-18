@@ -285,6 +285,14 @@ const ProjectListItemSchema = z.object({
 
 export const ProjectListItemListSchema = z.array(ProjectListItemSchema);
 
+const ProjectParentCandidateSchema = z.object({
+	id: z.number(),
+	name: z.string(),
+	path: z.string(),
+});
+
+export const ProjectParentCandidateListSchema = z.array(ProjectParentCandidateSchema);
+
 const TaskListItemSchema = z.object({
 	id: z.number(),
 	name: z.string(),

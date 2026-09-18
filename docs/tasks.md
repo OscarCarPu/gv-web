@@ -67,6 +67,7 @@ The API computes urgency server-side from the estimate, the daily capacity const
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ProjectResponse`             | id, name, description, due_at, parent_id, started_at, finished_at                                                                                                                                                                             |
 | `ProjectDetailResponse`       | Same + time_spent (aggregated)                                                                                                                                                                                                                |
+| `ProjectParentCandidate`      | id, name, path (full ancestor chain, `A / B / C`) — a valid new parent for a project; from `parent-candidates`                                                                                                                                |
 | `ProjectChildrenResponse`     | project + children[] (mixed tasks and sub-projects)                                                                                                                                                                                           |
 | `TaskDepRef`                  | id, name, due_at (dependency reference)                                                                                                                                                                                                       |
 | `TaskListItem`                | id, name, project_id, project_name, task_type?, recurrence?, priority? (for list-fast endpoint)                                                                                                                                               |
@@ -187,6 +188,7 @@ Full page for project management.
 ├─────────────────────────────────────┤
 │ Nombre: [____________]              │
 │ Fecha límite: [datetime-local]      │
+│ Proyecto padre: [select ▾]          │  ← Raíz o cualquier proyecto válido
 │ Descripción: [textarea]             │
 │                                     │
 │   Inicio         Fin      Tiempo    │
@@ -205,6 +207,12 @@ Full page for project management.
 - **ESC key**: Navigates back to `/tasks` (unless a BottomSheet is open)
 - **Children list**: Sub-projects link to their own page, tasks open TaskBottomSheet
 - **Create buttons**: Open CreateBottomSheet with prefilled project context
+- **Parent project select** (`#project-parent`): moves the project under another one, or back to the root. It sits below the Name / Due date row and above Description, bound to `detail.parentId` (`ProjectDetail` controller). The first option is `Root (no parent)` (`null`); the rest are the `path` of each candidate (`Home / Renovation / Kitchen`), so projects sharing a name stay distinguishable
+  - **Options come from the API, not the client**: `+page.server.ts` loads `GET /tasks/projects/{id}/parent-candidates` next to the project (same token, falls back to `[]` on error), and `invalidateAll()` after a save refreshes it. The API already excludes the project itself, all its descendants (any depth) and finished projects, and always keeps the current parent so the select can still show it. The client never computes the tree. Don't reuse `list-fast` here: it only lists started projects and would include the project's own subtree
+  - **`parent_id` is sent only when it changed** (`parentId !== project.parent_id` in `ProjectDetail.save()`), so an unrelated edit never triggers the API's tree validation. `parent_id: null` moves the project to the root; omitting the field leaves the parent unchanged
+  - **The subtree moves with it**: only this project's `parent_id` changes; its tasks and sub-projects follow, and `time_spent` on the old and new ancestors updates on the next load. After a successful save the "Proyecto padre" back-link follows the new parent
+  - **Errors**: the API answers `409` if the move would put a project inside its own subtree and `400` if the parent no longer exists. Since the candidate list already excludes those, they only happen on a race, so the save just shows the generic "Error saving project" toast
+  - `CreateBottomSheet` still picks its parent from `list-fast` (a new project has no subtree to exclude); only the edit flow uses candidates
 
 ### DepBadges (`src/lib/domains/tasks/components/DepBadges.svelte`)
 
@@ -417,7 +425,8 @@ Tasks with `due_at < today` appear in red on "Próximas a vencer". `TaskItem` ad
 | `GET`    | `/tasks/projects/{id}`                      | Project detail with time_spent                                                       |
 | `GET`    | `/tasks/projects/{id}/children`             | Project + child tasks/sub-projects                                                   |
 | `POST`   | `/tasks/projects`                           | Create project                                                                       |
-| `PATCH`  | `/tasks/projects/{id}`                      | Update project                                                                       |
+| `GET`    | `/tasks/projects/{id}/parent-candidates`    | Valid new parents (id, name, path): not itself, its subtree or finished              |
+| `PATCH`  | `/tasks/projects/{id}`                      | Update project (`parent_id`: id = move, `null` = root; `409` on cycle)               |
 | `DELETE` | `/tasks/projects/{id}`                      | Delete project                                                                       |
 | `GET`    | `/tasks/tasks/list-fast`                    | All unfinished tasks (id, name only)                                                 |
 | `GET`    | `/tasks/tasks/{id}`                         | Task detail with todos + dependencies                                                |

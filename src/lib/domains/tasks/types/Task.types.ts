@@ -3,6 +3,13 @@ export interface ProjectListItem {
 	name: string;
 }
 
+/** A project another project may be moved under; `path` is the full ancestor chain. */
+export interface ProjectParentCandidate {
+	id: number;
+	name: string;
+	path: string;
+}
+
 export interface TaskListItem {
 	id: number;
 	name: string;

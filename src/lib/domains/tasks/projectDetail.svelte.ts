@@ -11,6 +11,7 @@ export interface ProjectDetailApi {
 			name?: string | null;
 			description?: string | null;
 			due_at?: string | null;
+			parent_id?: number | null;
 			started_at?: string | null;
 			finished_at?: string | null;
 		}
@@ -39,6 +40,8 @@ export class ProjectDetail {
 	name = $state('');
 	description = $state('');
 	dueAt = $state('');
+	/** Selected parent project; `null` = root. */
+	parentId = $state<number | null>(null);
 
 	saving = $state(false);
 
@@ -54,6 +57,7 @@ export class ProjectDetail {
 			this.name = project.name;
 			this.description = project.description ?? '';
 			this.dueAt = toLocalDatetime(project.due_at);
+			this.parentId = project.parent_id;
 		}
 	}
 
@@ -62,11 +66,15 @@ export class ProjectDetail {
 		if (!project) return;
 		this.saving = true;
 		try {
-			await this.#api.updateProject(project.id, {
+			const body: Parameters<ProjectDetailApi['updateProject']>[1] = {
 				name: this.name,
 				description: this.description || null,
 				due_at: toISOString(this.dueAt),
-			});
+			};
+			// Only send the parent when it changed, so unrelated edits never trigger the API's
+			// tree validation. `null` moves the project to the root.
+			if (this.parentId !== project.parent_id) body.parent_id = this.parentId;
+			await this.#api.updateProject(project.id, body);
 			addNotification('Project updated', 'success');
 			await this.#refresh();
 		} catch {
