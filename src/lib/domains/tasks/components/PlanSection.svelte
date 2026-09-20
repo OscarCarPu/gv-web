@@ -2,6 +2,7 @@
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import { formatTime, isoToHHmm, toLocalDateString } from '$lib/shared/utils/datetime';
 	import { PlanBoard } from '$lib/domains/tasks/planBoard.svelte';
+	import { formatFreeHours } from '$lib/domains/capacity/utils/freeHours';
 	import { PlanAlarm } from '$lib/domains/tasks/planAlarm.svelte';
 	import PlanBlockEditor from './PlanBlockEditor.svelte';
 	import CommitmentsSheet from './CommitmentsSheet.svelte';
@@ -266,7 +267,7 @@
 					<div class="capacity-strip-bar">
 						<div class="capacity-strip-fill" style="height: {pct}%"></div>
 					</div>
-					<span class="capacity-strip-hours">{parseFloat(day.free_hours).toFixed(0)}h</span>
+					<span class="capacity-strip-hours">{formatFreeHours(day.free_hours)}</span>
 				</button>
 			{/each}
 		</div>

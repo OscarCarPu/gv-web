@@ -819,7 +819,8 @@
 }
 
 .capacity-strip-hours {
-	@apply text-text-muted font-mono text-[11px] tabular-nums;
+	/* "5h 30m" is wider than a narrow day cell: let it wrap at the space rather than overflow. */
+	@apply text-text-muted text-center font-mono text-[11px] leading-tight tabular-nums;
 }
 
 .plan-commitment-list {
