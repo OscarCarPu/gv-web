@@ -2,9 +2,11 @@
 	import { createDateNavigation } from '$shared/utils/dateNavigation.svelte';
 	import { Datepicker, Popover, type DateOrRange } from 'flowbite-svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
+	import { toLocalDateString } from '$shared/utils/datetime';
 
 	let { onDateChange }: { onDateChange?: (date: Date) => void } = $props();
 	const navDate = createDateNavigation();
+	let isToday = $derived(toLocalDateString(navDate.current) === toLocalDateString());
 
 	function handleReturnToday() {
 		navDate.returnToday();
@@ -30,8 +32,9 @@
 </script>
 
 <div class="date-navigation">
-	<button title="Return to today" onclick={handleReturnToday}>
-		<Icon name="rotate-left" />
+	<!-- invisible (not removed) so the arrows don't shift when it appears -->
+	<button title="Go to today" class:invisible={isToday} onclick={handleReturnToday}>
+		<Icon name="calendar-day" />
 	</button>
 	<button title="One day back" onclick={handleSubOneDay}>
 		<Icon name="arrow-left" />

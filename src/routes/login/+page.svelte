@@ -23,10 +23,6 @@
 			};
 		}}
 	>
-		<a href="/" class="back-link" title="Back">
-			<Icon name="arrow-left" />
-		</a>
-
 		<h1>Private Access</h1>
 
 		{#if form?.message}

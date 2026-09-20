@@ -25,7 +25,7 @@
 	});
 </script>
 
-{#if data.token || data.semiprivateToken || page.url.pathname === '/'}
+{#if data.token || data.semiprivateToken}
 	<header class="app-header">
 		<nav class="app-nav">
 			{#if data.token}
@@ -64,20 +64,14 @@
 			>
 				<Icon name={getTheme() === 'dark' ? 'sun' : 'moon'} />
 			</button>
-			{#if data.token || data.semiprivateToken}
-				<a href="/" class="home-btn" title="Home">
-					<Icon name="house" />
-				</a>
-				<form method="POST" action="/logout" use:enhance>
-					<button type="submit" class="logout-btn" title="Logout">
-						<Icon name="sign-out" />
-					</button>
-				</form>
-			{:else}
-				<a href="/login" class="logout-btn" title="Login">
-					<Icon name="lock" />
-				</a>
-			{/if}
+			<a href="/" class="home-btn" title="Home">
+				<Icon name="house" />
+			</a>
+			<form method="POST" action="/logout" use:enhance>
+				<button type="submit" class="logout-btn" title="Logout">
+					<Icon name="sign-out" />
+				</button>
+			</form>
 		</div>
 	</header>
 {/if}

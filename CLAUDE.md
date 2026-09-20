@@ -66,10 +66,9 @@ Login (password) returns `{ token, kind: 'tmp' | 'semi' }` (`LoginResponseSchema
 
 `hooks.server.ts` validates both JWTs on every request and guards routes by tier:
 
-- **Public** (`PUBLIC_ROUTES`): `/login`, `/login/2fa` — accessible without auth; redirect to `/habits` if `session` valid, to `/domotics` if `semiprivate` valid.
+- **Public** (`PUBLIC_ROUTES`): `/`, `/login`, `/login/2fa` — accessible without auth; redirect to `/tasks` if `session` valid, to `/domotics` if `semiprivate` valid. There is no landing page: `/` is a `+server.ts` that 303s anonymous visitors to `/login`.
 - **Semiprivate** (`SEMIPRIVATE_ROUTES`): `/domotics`, `/printers` — accessible with either `session` or `semiprivate`.
-- **Auth-only** (`AUTH_ONLY_ROUTES`): `/logout` — passes through regardless of auth state; the action clears both cookies and redirects to `/`.
-- **Open** (`OPEN_ROUTES`): `/` — if `session` valid, redirects to `/tasks`; if `semiprivate` valid, redirects to `/domotics`; otherwise passes through (unauthenticated landing page).
+- **Auth-only** (`AUTH_ONLY_ROUTES`): `/logout` — passes through regardless of auth state; the action clears both cookies and redirects to `/login`.
 - **Private** (everything else): requires valid `session`.
 
 ### Styling System
@@ -227,12 +226,6 @@ it; see `gv-api/docs/api/lights.md` for the real thing.
   SSR read timed out, because nothing could be added to an empty list
 - **Polling pauses while a scan runs** — a scan owns the radio for its whole window, and reads
   fired into it just time out and slow the scan down
-
-## Welcome page (`/`)
-
-Public portfolio/landing page at `src/routes/+page.svelte` — no auth required, fully open. Content is hardcoded (no API calls): CV summary, skills chips, language chips, certifications & awards grid, 3 featured Gitea projects in a 3-column grid. Styles in `src/styles/welcome.css` (uses `main:has(.welcome-page)` to zero out `main`'s `py-8` so the header sits flush). CV PDF is served statically from `static/CV.pdf`.
-
-**Header on `/`**: The app header (`+layout.svelte`) always renders on `/` regardless of auth state. When unauthenticated, it shows a login icon (lock) in place of home/logout. When authenticated, it shows the normal nav.
 
 ## Deployment
 
