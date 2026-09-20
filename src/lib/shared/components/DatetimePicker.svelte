@@ -119,6 +119,7 @@
 			inline
 			locale="en-US"
 			firstDayOfWeek={1}
+			classes={{ grid: 'datepicker-grid' }}
 		/>
 	</Popover>
 </div>

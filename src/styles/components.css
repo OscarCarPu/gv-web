@@ -279,6 +279,14 @@
 	}
 }
 
+/* Datepicker: flowbite only renders the weeks a month has (4-6), so the popover changes height
+   and the prev/next arrows move under the cursor. Reserve six week rows (day buttons are h-8). */
+
+.datepicker-grid {
+	grid-template-rows: auto repeat(6, 2rem);
+	align-content: start;
+}
+
 /* Modal */
 
 .modal-backdrop {
