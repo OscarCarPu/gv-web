@@ -566,6 +566,18 @@
 	height: 12px;
 }
 
+/* Lit while the mode runs, so a card that is animating itself never looks idle. */
+.light-crazy-btn.is-active {
+	opacity: 1;
+	color: var(--color-primary);
+	background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.light-crazy-btn:disabled {
+	cursor: default;
+	opacity: 0.25;
+}
+
 .lights-btn.danger {
 	color: var(--color-danger);
 	border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);

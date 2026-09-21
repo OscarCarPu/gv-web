@@ -28,6 +28,8 @@ export const LightStateSchema = z.object({
 	maxColorTemp: z.number(),
 	error: z.string().optional(),
 	updatedAt: z.number(),
+	/** The server is sweeping brightness and temperature on its own; any manual command ends it. */
+	crazy: z.boolean().default(false),
 });
 
 export const LightStatesSchema = z.object({
@@ -108,4 +110,5 @@ export type LightCommand =
 	| { type: 'power'; on: boolean }
 	| { type: 'brightness'; value: number }
 	| { type: 'color'; color: RGB }
-	| { type: 'colorTemp'; kelvin: number };
+	| { type: 'colorTemp'; kelvin: number }
+	| { type: 'crazy'; on: boolean };

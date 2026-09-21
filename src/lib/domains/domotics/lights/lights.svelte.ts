@@ -228,6 +228,18 @@ export class LightsController {
 		this.send(id, { type: 'power', on });
 	}
 
+	/**
+	 * Crazy mode runs on the server, which also ends it on any manual command, so this only
+	 * asks and shows what the bulb answers. Starting it switches the bulb on.
+	 */
+	toggleCrazy(id: string) {
+		const state = this.states.find((s) => s.id === id);
+		if (!state) return;
+		const on = !state.crazy;
+		this.patch(id, on ? { crazy: true, power: true } : { crazy: false });
+		this.send(id, { type: 'crazy', on });
+	}
+
 	setBrightness(id: string, value: number) {
 		// Deliberately does not assume this turns the bulb on. Brightness and power are separate
 		// frames on these bulbs, so dimming one that is off only changes how it will look when

@@ -94,6 +94,19 @@
 		<div class="light-head-actions">
 			<button
 				type="button"
+				class="light-edit-btn light-crazy-btn"
+				class:is-active={state.crazy}
+				disabled={busy || !state.online}
+				aria-pressed={state.crazy}
+				aria-label="{state.crazy ? 'Stop' : 'Start'} crazy mode on {state.name}"
+				title="Crazy mode"
+				onclick={() => controller.toggleCrazy(state.id)}
+			>
+				<Icon name="fire" />
+			</button>
+
+			<button
+				type="button"
 				class="light-edit-btn"
 				aria-label="Edit {state.name}"
 				title="Rename or remove"
