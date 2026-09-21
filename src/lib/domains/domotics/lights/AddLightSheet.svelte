@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import type { LightsController } from './lights.svelte';
@@ -29,8 +30,13 @@
 			selected = null;
 			name = '';
 			nameError = false;
-			controller.loadProtocols();
-			controller.scan();
+			// Untracked: scan() and loadProtocols() read controller state before their first
+			// await, and a tracked read of `scanning` re-runs this effect the moment a scan
+			// ends, starting another one forever.
+			untrack(() => {
+				controller.loadProtocols();
+				controller.scan();
+			});
 		}
 	});
 
