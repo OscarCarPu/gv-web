@@ -45,6 +45,8 @@ export class LightsController {
 	/** Bulbs with a write in flight — used to disable the switch, not to block input. */
 	busy = $state<Record<string, boolean>>({});
 	polling = $state(false);
+	/** A live read of the bulbs is in flight; separate from `polling` so it never stalls it. */
+	private forcing = false;
 
 	/** Adding a bulb: what the last scan heard, and the models we know how to drive. */
 	devices = $state<Discovered[]>([]);
@@ -83,9 +85,18 @@ export class LightsController {
 
 	// ---- polling ----
 
+	/**
+	 * Show what gv-api has cached straight away, then ask the bulbs for the real values.
+	 *
+	 * The cached read is instant but up to a poll interval old; the live one takes seconds (a
+	 * cold BLE connect) and would leave the page empty if it went first. Doing both means the
+	 * cards paint at once and then correct themselves. Only this once: the interval poll stays
+	 * on the cache, because a live read every few seconds would hold every bulb connected.
+	 */
 	start() {
 		this.stopped = false;
 		this.timer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+		void this.poll().then(() => this.syncLive());
 	}
 
 	stop() {
@@ -112,6 +123,21 @@ export class LightsController {
 			// reachability already shows on the cards.
 		} finally {
 			this.polling = false;
+		}
+	}
+
+	/** The bulbs' real state, skipping gv-api's cache. Slow by nature; see `start`. */
+	async syncLive() {
+		if (this.forcing || this.scanning || this.stopped) return;
+		this.forcing = true;
+		try {
+			const states = await lightsApi.states(undefined, true);
+			if (this.stopped) return;
+			this.merge(states);
+		} catch {
+			// The cached state is already on screen and the poll loop keeps going.
+		} finally {
+			this.forcing = false;
 		}
 	}
 
