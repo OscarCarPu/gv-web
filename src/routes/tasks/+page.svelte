@@ -161,14 +161,14 @@
 	let lastRefetch = 0;
 	$effect(() => {
 		function onVisibilityChange() {
-			if (document.visibilityChange !== 'visible') return;
+			if (document.visibilityState !== 'visible') return;
 			const now = Date.now();
 			if (now - lastRefetch < 5000) return;
 			lastRefetch = now;
 			invalidateAll();
 		}
-		document.addEventListener('visibilityChange', onVisibilityChange);
-		return () => document.removeEventListener('visibilityChange', onVisibilityChange);
+		document.addEventListener('visibilitychange', onVisibilityChange);
+		return () => document.removeEventListener('visibilitychange', onVisibilityChange);
 	});
 
 	// Manual-add row: retimes the *running* entry to an explicit HH:MM–HH:MM range (and thereby
