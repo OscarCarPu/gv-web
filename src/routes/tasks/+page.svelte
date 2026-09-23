@@ -156,6 +156,20 @@
 		return () => window.removeEventListener('scroll', onScroll);
 	});
 
+	// Re-sync data on tab regains focus
+	let lastRefetch = 0;
+	$effect(() => {
+		function onVisibilityChange() {
+			if (document.visibilityChange !== 'visible') return;
+			const now = Date.now();
+			if (now - lastRefetch < 5000) return;
+			lastRefetch = now;
+			invalidateAll();
+		}
+		document.addEventListener('visibilityChange', onVisibilityChange);
+		return () => document.removeEventListener('visibilityChange', onVisibilityChange);
+	});
+
 	// Manual-add row: retimes the *running* entry to an explicit HH:MM–HH:MM range (and thereby
 	// closes it). The clock is cleared locally first so the panel responds immediately; the
 	// store's `retimeToday` does the write and re-syncs the summary and today's entries.
