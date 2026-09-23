@@ -12,6 +12,7 @@ function makeProject(over: Partial<ProjectDetailResponse> = {}): ProjectDetailRe
 		started_at: null,
 		finished_at: null,
 		time_spent: 0,
+		priority: 3,
 		...over,
 	};
 }
@@ -96,6 +97,15 @@ describe('ProjectDetail', () => {
 		await detail.save();
 
 		expect(api.updateProject).toHaveBeenCalledWith(7, expect.objectContaining({ parent_id: 5 }));
+	});
+
+	it('load hydrates the priority and save sends the edited one', async () => {
+		const detail = new ProjectDetail(refresh, api);
+		detail.load(makeProject({ id: 7, priority: 2 }));
+		expect(detail.priority).toBe(2);
+		detail.priority = 4;
+		await detail.save();
+		expect(api.updateProject).toHaveBeenCalledWith(7, expect.objectContaining({ priority: 4 }));
 	});
 
 	it('save sends parent_id: null to move a project back to the root', async () => {

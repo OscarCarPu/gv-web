@@ -32,6 +32,8 @@
 	let taskType = $state<'standard' | 'continuous' | 'recurring'>('standard');
 	let recurrence = $state<number | null>(null);
 	let priority = $state<number>(3);
+	/** Default priority for the tasks of a new project. */
+	let projectPriority = $state<number>(3);
 	let estimateHours = $state('');
 	let selectedProjectId = $state<number | null>(null);
 	let selectedParentId = $state<number | null>(null);
@@ -51,14 +53,23 @@
 			taskType = 'standard';
 			recurrence = null;
 			priority = 3;
+			projectPriority = 3;
 			estimateHours = '';
 			nameError = false;
 			selectedDeps = [];
 			selectedProjectId = prefillProjectId ?? prefillParentId ?? null;
 			selectedParentId = prefillParentId ?? prefillProjectId ?? null;
-			tasksApi.listProjectsFast().then((p) => (projects = p));
+			tasksApi.listProjectsFast().then((p) => {
+				projects = p;
+				priority = priorityOf(selectedProjectId);
+			});
 		}
 	});
+
+	/** A new task starts at its project's priority; without a project, at 3. */
+	function priorityOf(projectId: number | null): number {
+		return projects.find((p) => p.id === projectId)?.priority ?? 3;
+	}
 
 	async function create() {
 		if (!name.trim()) {
@@ -77,7 +88,7 @@
 					depends_on: selectedDeps.length > 0 ? selectedDeps.map((d) => d.id) : undefined,
 					task_type: taskType !== 'standard' ? taskType : undefined,
 					recurrence: taskType === 'recurring' ? recurrence : undefined,
-					priority: priority !== 3 ? priority : undefined,
+					priority,
 					estimate_hours: taskType !== 'continuous' && estimateHours ? estimateHours : undefined,
 				});
 				if (startNow) {
@@ -92,6 +103,7 @@
 					description: description || null,
 					due_at: toISOString(dueAt),
 					parent_id: selectedParentId,
+					priority: projectPriority,
 				});
 				if (startNow) {
 					await tasksApi.updateProject(created.id, { started_at: new Date().toISOString() });
@@ -150,7 +162,11 @@
 			{#if currentMode === 'task'}
 				<div class="detail-field flex-1">
 					<label for="create-project">Project</label>
-					<select id="create-project" bind:value={selectedProjectId}>
+					<select
+						id="create-project"
+						bind:value={selectedProjectId}
+						onchange={() => (priority = priorityOf(selectedProjectId))}
+					>
 						<option value={null}>No project</option>
 						{#each projects as project (project.id)}
 							<option value={project.id}>{project.name}</option>
@@ -203,6 +219,16 @@
 						{#each projects as project (project.id)}
 							<option value={project.id}>{project.name}</option>
 						{/each}
+					</select>
+				</div>
+				<div class="detail-field">
+					<label for="create-project-priority">Task priority</label>
+					<select id="create-project-priority" bind:value={projectPriority}>
+						<option value={1}>1 · Urgent</option>
+						<option value={2}>2 · High</option>
+						<option value={3}>3 · Medium</option>
+						<option value={4}>4 · Low</option>
+						<option value={5}>5 · Very low</option>
 					</select>
 				</div>
 			{/if}

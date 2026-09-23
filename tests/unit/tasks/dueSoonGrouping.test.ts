@@ -23,6 +23,7 @@ function makeTask(over: Partial<TaskByDueDateResponse> = {}): TaskByDueDateRespo
 		estimate_hours: null,
 		remaining_hours: null,
 		start_by: null,
+		finish_by: null,
 		urgent: false,
 		project_id: null,
 		project_name: null,
@@ -39,6 +40,22 @@ function tiersOf(groups: DueSoonGroup[]): Record<string, number[]> {
 }
 
 describe('groupTasksByUrgency', () => {
+	it('uses finish_by over the inherited due date: a chain step past its own deadline is overdue', () => {
+		const t = makeTask({ id: 1, due_at: '2026-09-01T00:00:00Z', finish_by: '2026-08-28' });
+		expect(tiersOf(groupTasksByUrgency([t], TODAY)).overdue).toEqual([1]);
+	});
+
+	it('puts a chain step whose finish_by is today in today', () => {
+		const t = makeTask({ id: 1, due_at: '2026-09-01T00:00:00Z', finish_by: TODAY });
+		expect(tiersOf(groupTasksByUrgency([t], TODAY)).today).toEqual([1]);
+	});
+
+	it('sorts overdue by finish_by, not the shared inherited due date', () => {
+		const later = makeTask({ id: 1, due_at: '2026-09-01T00:00:00Z', finish_by: '2026-08-27' });
+		const sooner = makeTask({ id: 2, due_at: '2026-09-01T00:00:00Z', finish_by: '2026-08-25' });
+		expect(tiersOf(groupTasksByUrgency([later, sooner], TODAY)).overdue).toEqual([2, 1]);
+	});
+
 	it('puts a past-due task in overdue regardless of urgent', () => {
 		const t = makeTask({ id: 1, due_at: '2026-08-20T00:00:00Z', urgent: false });
 		const groups = groupTasksByUrgency([t], TODAY);

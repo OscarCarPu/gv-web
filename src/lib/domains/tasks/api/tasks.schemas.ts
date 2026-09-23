@@ -18,6 +18,7 @@ export const ProjectResponseSchema = z.object({
 	parent_id: z.number().nullable(),
 	started_at: z.string().nullable(),
 	finished_at: z.string().nullable(),
+	priority: z.number().default(3),
 });
 
 export const TaskResponseSchema = z.object({
@@ -83,6 +84,7 @@ export const ProjectDetailResponseSchema = z.object({
 	started_at: z.string().nullable(),
 	finished_at: z.string().nullable(),
 	time_spent: z.number(),
+	priority: z.number().default(3),
 });
 
 const TaskDetailResponseSchema = z.object({
@@ -231,6 +233,7 @@ const TaskByDueDateResponseSchema = z.object({
 	estimate_hours: z.string().nullable(),
 	remaining_hours: z.string().nullable(),
 	start_by: z.string().nullable(),
+	finish_by: z.string().nullable().default(null),
 	urgent: z.boolean(),
 	project_id: z.number().nullable(),
 	project_name: z.string().nullable(),
@@ -281,6 +284,7 @@ export const TimeEntryWithTaskListSchema = z.array(TimeEntryWithTaskSchema);
 const ProjectListItemSchema = z.object({
 	id: z.number(),
 	name: z.string(),
+	priority: z.number().default(3),
 });
 
 export const ProjectListItemListSchema = z.array(ProjectListItemSchema);

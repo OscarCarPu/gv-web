@@ -17,6 +17,7 @@
 	import TimerTaskPicker from '$lib/domains/tasks/components/TimerTaskPicker.svelte';
 	import type { TimeEntryWithTask, TaskListItem } from '$lib/domains/tasks/types/Task.types';
 	import { toLocalDateString, formatDueDay, formatTime } from '$lib/shared/utils/datetime';
+	import { deadlineOf } from '$lib/domains/tasks/utils/dueSoonGrouping';
 	import { buildPaceTooltip } from '$lib/domains/tasks/utils/paceLabel';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
@@ -401,11 +402,10 @@
 						<div class="due-soon-tier tier-{group.tier}">
 							<span class="due-soon-tier-label">{group.label}</span>
 							{#each group.tasks as task, i (task.id)}
-								{@const taskDate = task.due_at ?? task.project_due_at}
-								{@const taskDateKey = taskDate ? taskDate.slice(0, 10) : 'no-date'}
+								{@const taskDate = deadlineOf(task)}
+								{@const taskDateKey = taskDate ?? 'no-date'}
 								{@const prevTask = group.tasks[i - 1]}
-								{@const prevDate = prevTask ? (prevTask.due_at ?? prevTask.project_due_at) : null}
-								{@const prevDateKey = prevDate ? prevDate.slice(0, 10) : 'no-date'}
+								{@const prevDateKey = (prevTask ? deadlineOf(prevTask) : null) ?? 'no-date'}
 								{@const isToday = taskDateKey === todayKey}
 								{@const isOverdue = taskDateKey !== 'no-date' && taskDateKey < todayKey}
 								{#if (i > 0 && taskDateKey !== prevDateKey) || (i === 0 && isToday)}

@@ -14,6 +14,7 @@ export interface ProjectDetailApi {
 			parent_id?: number | null;
 			started_at?: string | null;
 			finished_at?: string | null;
+			priority?: number | null;
 		}
 	) => Promise<unknown>;
 	deleteProject: (id: number) => Promise<void>;
@@ -42,6 +43,8 @@ export class ProjectDetail {
 	dueAt = $state('');
 	/** Selected parent project; `null` = root. */
 	parentId = $state<number | null>(null);
+	/** Default priority for tasks created in this project. */
+	priority = $state(3);
 
 	saving = $state(false);
 
@@ -58,6 +61,7 @@ export class ProjectDetail {
 			this.description = project.description ?? '';
 			this.dueAt = toLocalDatetime(project.due_at);
 			this.parentId = project.parent_id;
+			this.priority = project.priority;
 		}
 	}
 
@@ -70,6 +74,7 @@ export class ProjectDetail {
 				name: this.name,
 				description: this.description || null,
 				due_at: toISOString(this.dueAt),
+				priority: this.priority,
 			};
 			// Only send the parent when it changed, so unrelated edits never trigger the API's
 			// tree validation. `null` moves the project to the root.

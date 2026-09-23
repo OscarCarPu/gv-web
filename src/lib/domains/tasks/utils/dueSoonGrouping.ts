@@ -18,10 +18,16 @@ const TIER_LABELS: Record<DueSoonTier, string> = {
 
 const WEEK_HORIZON_DAYS = 7;
 
-function actualDate(t: TaskByDueDateResponse): string | null {
-	const d = t.due_at ?? t.project_due_at;
+/**
+ * The day a task has to be done by: `finish_by` when the API computed one (earlier than the due
+ * date when a task it blocks has to start first), else its own or its project's due date.
+ */
+export function deadlineOf(t: TaskByDueDateResponse): string | null {
+	const d = t.finish_by ?? t.due_at ?? t.project_due_at;
 	return d ? d.slice(0, 10) : null;
 }
+
+const actualDate = deadlineOf;
 
 /** start_by when the task has one (it carries an estimate), else its actual date. */
 function effectiveDate(t: TaskByDueDateResponse): string | null {

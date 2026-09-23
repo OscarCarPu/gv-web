@@ -86,6 +86,16 @@
 						<label for="dtp-project-due">Due date</label>
 						<DatetimePicker bind:value={detail.dueAt} id="project-due" />
 					</div>
+					<div class="detail-field">
+						<label for="project-priority">Task priority</label>
+						<select id="project-priority" bind:value={detail.priority}>
+							<option value={1}>1 · Urgent</option>
+							<option value={2}>2 · High</option>
+							<option value={3}>3 · Medium</option>
+							<option value={4}>4 · Low</option>
+							<option value={5}>5 · Very low</option>
+						</select>
+					</div>
 				</div>
 				<div class="detail-field">
 					<label for="project-parent">Parent project</label>

@@ -16,6 +16,7 @@ function makeTask(over: Partial<TaskByDueDateResponse> = {}): TaskByDueDateRespo
 		estimate_hours: null,
 		remaining_hours: null,
 		start_by: null,
+		finish_by: null,
 		urgent: false,
 		project_id: null,
 		project_name: null,

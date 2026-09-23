@@ -49,7 +49,10 @@
 		return `${m}m`;
 	});
 
-	const hasOwnDue = $derived(task.due_at !== null);
+	// finish_by (when set) is the real deadline: earlier than due_at when a task this one blocks
+	// has to start first.
+	const ownDue = $derived(task.finish_by ?? task.due_at);
+	const hasOwnDue = $derived(ownDue !== null);
 	const hasProjectDue = $derived(!hasOwnDue && task.project_due_at !== null);
 	const urgencyPhrase = $derived(buildUrgencyPhrase(task));
 </script>
@@ -86,7 +89,7 @@
 			</span>
 			<span class="priority-badge p-{task.priority}">P{task.priority}</span>
 			{#if hasOwnDue}
-				<span class="task-due"><Icon name="calendar" /> {formatDateShort(task.due_at!)}</span>
+				<span class="task-due"><Icon name="calendar" /> {formatDateShort(ownDue!)}</span>
 			{/if}
 			<span class="task-time"><Icon name="clock" /> {formattedTime()}</span>
 			{#if urgencyPhrase}

@@ -1,6 +1,8 @@
 export interface ProjectListItem {
 	id: number;
 	name: string;
+	/** Default priority for tasks created in this project. */
+	priority: number;
 }
 
 /** A project another project may be moved under; `path` is the full ancestor chain. */
@@ -31,6 +33,7 @@ export interface CreateProjectRequest {
 	description?: string | null;
 	due_at?: string | null;
 	parent_id?: number | null;
+	priority?: number | null;
 }
 
 export interface ProjectResponse {
@@ -41,6 +44,7 @@ export interface ProjectResponse {
 	parent_id: number | null;
 	started_at: string | null;
 	finished_at: string | null;
+	priority: number;
 }
 
 export interface CreateTaskRequest {
@@ -120,6 +124,7 @@ export interface UpdateProjectRequest {
 	parent_id?: number | null;
 	started_at?: string | null;
 	finished_at?: string | null;
+	priority?: number | null;
 }
 
 export interface UpdateTaskRequest {
@@ -161,6 +166,8 @@ export interface TaskByDueDateResponse {
 	estimate_hours: string | null;
 	remaining_hours: string | null;
 	start_by: string | null;
+	/** Day this task has to be done by: its own due date, or the start of a task it blocks. */
+	finish_by: string | null;
 	urgent: boolean;
 	project_id: number | null;
 	project_name: string | null;
@@ -217,6 +224,7 @@ export interface ProjectDetailResponse {
 	started_at: string | null;
 	finished_at: string | null;
 	time_spent: number;
+	priority: number;
 }
 
 export interface ProjectChildNode {
