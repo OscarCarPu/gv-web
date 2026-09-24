@@ -170,6 +170,8 @@ export interface TaskByDueDateResponse {
 	start_by: string | null;
 	/** Day this task has to be done by: its own due date, or the start of a task it blocks. */
 	finish_by: string | null;
+	/** Position in the order work is done (1 = first); a dependency always precedes its dependent. */
+	work_order?: number | null;
 	urgent: boolean;
 	project_id: number | null;
 	project_name: string | null;

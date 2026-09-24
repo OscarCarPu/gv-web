@@ -235,6 +235,7 @@ const TaskByDueDateResponseSchema = z.object({
 	remaining_hours: z.string().nullable(),
 	start_by: z.string().nullable(),
 	finish_by: z.string().nullable().default(null),
+	work_order: z.number().nullable().optional(),
 	urgent: z.boolean(),
 	project_id: z.number().nullable(),
 	project_name: z.string().nullable(),

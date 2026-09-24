@@ -47,6 +47,24 @@ describe('groupTasksByUrgency', () => {
 		expect(tiersOf(groupTasksByUrgency([second, first], TODAY)).week).toEqual([2, 1]);
 	});
 
+	it('puts a dependency before its dependent on the same day, whatever their names', () => {
+		const dependent = makeTask({
+			id: 1,
+			name: 'A dependent',
+			start_by: '2026-08-31',
+			finish_by: '2026-08-31',
+			work_order: 5,
+		});
+		const dependency = makeTask({
+			id: 2,
+			name: 'Z dependency',
+			start_by: '2026-08-31',
+			finish_by: '2026-08-31',
+			work_order: 4,
+		});
+		expect(tiersOf(groupTasksByUrgency([dependent, dependency], TODAY)).week).toEqual([2, 1]);
+	});
+
 	it('orders a tier by priority first, then by date', () => {
 		const p3Soon = makeTask({ id: 1, priority: 3, start_by: '2026-08-30' });
 		const p2Later = makeTask({ id: 2, priority: 2, start_by: '2026-09-03' });

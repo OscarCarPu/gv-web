@@ -72,8 +72,10 @@ function compareByPriorityThenDate(
 	const da = dateFn(a) ?? NO_DATE_SORT_KEY;
 	const db = dateFn(b) ?? NO_DATE_SORT_KEY;
 	if (da !== db) return da < db ? -1 : 1;
-	// Same day: the one that has to be finished sooner goes first — in a dependency chain that is
-	// always the earlier step.
+	// Same day: follow the API's work order, which always puts a dependency before the task that
+	// depends on it — even when both share the same start and finish day.
+	if (a.work_order != null && b.work_order != null) return a.work_order - b.work_order;
+	// Without it, the one that has to be finished sooner goes first.
 	const fa = deadlineOf(a) ?? NO_DATE_SORT_KEY;
 	const fb = deadlineOf(b) ?? NO_DATE_SORT_KEY;
 	return fa < fb ? -1 : fa > fb ? 1 : 0;
