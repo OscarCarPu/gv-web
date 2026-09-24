@@ -16,8 +16,8 @@
 	import PlanSection from '$lib/domains/tasks/components/PlanSection.svelte';
 	import TimerTaskPicker from '$lib/domains/tasks/components/TimerTaskPicker.svelte';
 	import type { TimeEntryWithTask, TaskListItem } from '$lib/domains/tasks/types/Task.types';
-	import { toLocalDateString, formatDueDay, formatTime } from '$lib/shared/utils/datetime';
-	import { deadlineOf, dividerDateOf } from '$lib/domains/tasks/utils/dueSoonGrouping';
+	import { toLocalDateString, formatTime } from '$lib/shared/utils/datetime';
+	import { deadlineOf, priorityOf } from '$lib/domains/tasks/utils/dueSoonGrouping';
 	import { buildPaceTooltip } from '$lib/domains/tasks/utils/paceLabel';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
@@ -405,20 +405,11 @@
 								{@const taskDateKey = deadlineOf(task) ?? 'no-date'}
 								{@const isToday = taskDateKey === todayKey}
 								{@const isOverdue = taskDateKey !== 'no-date' && taskDateKey < todayKey}
-								{@const dividerDate = dividerDateOf(task, group.tier)}
-								{@const dividerKey = dividerDate ?? 'no-date'}
 								{@const prevTask = group.tasks[i - 1]}
-								{@const prevDividerKey =
-									(prevTask ? dividerDateOf(prevTask, group.tier) : null) ?? 'no-date'}
-								{@const startsDivider = group.tier === 'week' || group.tier === 'later'}
-								{#if (i > 0 && dividerKey !== prevDividerKey) || (i === 0 && isToday)}
-									<div class="agenda-day-divider" class:today={isToday}>
+								{#if i > 0 && priorityOf(task) !== priorityOf(prevTask)}
+									<div class="agenda-day-divider">
 										<span class="agenda-day-line"></span>
-										<span class="agenda-day-label"
-											>{startsDivider && dividerDate ? 'Start ' : ''}{formatDueDay(
-												dividerDate
-											)}</span
-										>
+										<span class="agenda-day-label">P{priorityOf(task)}</span>
 										<span class="agenda-day-line"></span>
 									</div>
 								{/if}

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	groupTasksByUrgency,
-	dividerDateOf,
+	priorityOf,
 	truncateDueSoonGroups,
 	buildUrgencyPhrase,
 	type DueSoonGroup,
@@ -47,12 +47,21 @@ describe('groupTasksByUrgency', () => {
 		expect(tiersOf(groupTasksByUrgency([second, first], TODAY)).week).toEqual([2, 1]);
 	});
 
-	it('divides week/later by the day to start and overdue/today by the deadline', () => {
-		const t = makeTask({ start_by: '2026-09-05', finish_by: '2026-09-06' });
-		expect(dividerDateOf(t, 'week')).toBe('2026-09-05');
-		expect(dividerDateOf(t, 'later')).toBe('2026-09-05');
-		expect(dividerDateOf(t, 'today')).toBe('2026-09-06');
-		expect(dividerDateOf(t, 'overdue')).toBe('2026-09-06');
+	it('orders a tier by priority first, then by date', () => {
+		const p3Soon = makeTask({ id: 1, priority: 3, start_by: '2026-08-30' });
+		const p2Later = makeTask({ id: 2, priority: 2, start_by: '2026-09-03' });
+		const p2Soon = makeTask({ id: 3, priority: 2, start_by: '2026-08-31' });
+		const p1Last = makeTask({ id: 4, priority: 1, start_by: '2026-09-04' });
+		expect(tiersOf(groupTasksByUrgency([p3Soon, p2Later, p2Soon, p1Last], TODAY)).week).toEqual([
+			4, 3, 2, 1,
+		]);
+	});
+
+	it('orders by the priority a task is worked on by, inherited from what it blocks', () => {
+		const study = makeTask({ id: 1, priority: 3, effective_priority: 2, start_by: '2026-09-05' });
+		const chore = makeTask({ id: 2, priority: 3, start_by: '2026-09-01' });
+		expect(priorityOf(study)).toBe(2);
+		expect(tiersOf(groupTasksByUrgency([chore, study], TODAY)).week).toEqual([1, 2]);
 	});
 
 	it('uses finish_by over the inherited due date: a chain step past its own deadline is overdue', () => {
@@ -120,15 +129,15 @@ describe('groupTasksByUrgency', () => {
 		expect(tiersOf(groups).later).toEqual([1, 2]);
 	});
 
-	it('sorts overdue/today by actual due date, priority breaking ties', () => {
+	it('sorts overdue/today by priority, then actual due date', () => {
 		const a = makeTask({ id: 1, due_at: '2026-08-30T00:00:00Z', urgent: true, priority: 3 });
 		const b = makeTask({ id: 2, due_at: '2026-08-30T00:00:00Z', urgent: true, priority: 1 });
 		const c = makeTask({ id: 3, due_at: '2026-08-31T00:00:00Z', urgent: true, priority: 1 });
 		const groups = groupTasksByUrgency([a, b, c], TODAY);
-		expect(tiersOf(groups).today).toEqual([2, 1, 3]);
+		expect(tiersOf(groups).today).toEqual([2, 3, 1]);
 	});
 
-	it('sorts week/later by effective date (start_by over due_at), priority breaking ties', () => {
+	it('sorts week/later within a priority by effective date (start_by over due_at)', () => {
 		// Same due date, but "a" must start sooner (start_by) than "b" — it should sort first
 		// even though its raw due_at is identical, which plain date sorting would have missed.
 		const a = makeTask({

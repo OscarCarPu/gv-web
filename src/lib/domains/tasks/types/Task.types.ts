@@ -162,6 +162,8 @@ export interface TaskByDueDateResponse {
 	task_type: string;
 	recurrence?: number | null;
 	priority: number;
+	/** Priority raised to the highest of anything the task blocks; what urgency schedules by. */
+	effective_priority?: number;
 	time_spent: number;
 	estimate_hours: string | null;
 	remaining_hours: string | null;

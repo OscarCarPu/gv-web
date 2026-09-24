@@ -229,6 +229,7 @@ const TaskByDueDateResponseSchema = z.object({
 	task_type: z.string(),
 	recurrence: z.number().nullable().optional(),
 	priority: z.number(),
+	effective_priority: z.number().optional(),
 	time_spent: z.number(),
 	estimate_hours: z.string().nullable(),
 	remaining_hours: z.string().nullable(),

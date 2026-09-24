@@ -52,34 +52,38 @@ function tierFor(t: TaskByDueDateResponse, today: string, weekEdge: string): Due
 /** Missing dates sort last within a tier without dropping the task. */
 const NO_DATE_SORT_KEY = '9999-99-99';
 
-function compareByDateThenPriority(
+/**
+ * The priority a task is worked on by: its own, raised to the highest priority of anything it
+ * blocks (the study behind a p2 exam is p2 work). Falls back to its own for an older API.
+ */
+export function priorityOf(t: TaskByDueDateResponse): number {
+	return t.effective_priority ?? t.priority;
+}
+
+/** Work order within a tier: p1 first, then p2 and so on; within a priority, by date. */
+function compareByPriorityThenDate(
 	a: TaskByDueDateResponse,
 	b: TaskByDueDateResponse,
 	dateFn: (t: TaskByDueDateResponse) => string | null
 ): number {
+	const pa = priorityOf(a);
+	const pb = priorityOf(b);
+	if (pa !== pb) return pa - pb;
 	const da = dateFn(a) ?? NO_DATE_SORT_KEY;
 	const db = dateFn(b) ?? NO_DATE_SORT_KEY;
 	if (da !== db) return da < db ? -1 : 1;
-	// Same start day: the one that has to be finished sooner goes first — in a dependency chain
-	// that is always the earlier step.
+	// Same day: the one that has to be finished sooner goes first — in a dependency chain that is
+	// always the earlier step.
 	const fa = deadlineOf(a) ?? NO_DATE_SORT_KEY;
 	const fb = deadlineOf(b) ?? NO_DATE_SORT_KEY;
-	if (fa !== fb) return fa < fb ? -1 : 1;
-	return a.priority - b.priority;
-}
-
-/**
- * The day a tier's day dividers group by — the same date the tier sorts by, so dividers never
- * run backwards: the deadline in `overdue` / `today`, the day to start in `week` / `later`.
- */
-export function dividerDateOf(t: TaskByDueDateResponse, tier: DueSoonTier): string | null {
-	return tier === 'overdue' || tier === 'today' ? deadlineOf(t) : effectiveDate(t);
+	return fa < fb ? -1 : fa > fb ? 1 : 0;
 }
 
 /**
  * Splits Due Soon into four tiers so urgency changes a task's *position*, not just its color.
- * `overdue` / `today` sort by the real due date (what's actually closest); `week` / `later` sort
- * by the effective date — `start_by` when the task carries an estimate, otherwise its due date.
+ * Within a tier tasks follow the work order: priority first (p1, then p2…), then date —
+ * `overdue` / `today` by the real deadline (what's actually closest), `week` / `later` by the
+ * effective date — `start_by` when the task carries an estimate, otherwise its deadline.
  * A task due today always lands in `today`, estimate or not; the estimate only ever promotes a
  * task *before* its due date (the `urgent` early warning) — it never demotes one due today.
  */
@@ -99,10 +103,10 @@ export function groupTasksByUrgency(
 		buckets[tierFor(t, today, weekEdge)].push(t);
 	}
 
-	buckets.overdue.sort((a, b) => compareByDateThenPriority(a, b, actualDate));
-	buckets.today.sort((a, b) => compareByDateThenPriority(a, b, actualDate));
-	buckets.week.sort((a, b) => compareByDateThenPriority(a, b, effectiveDate));
-	buckets.later.sort((a, b) => compareByDateThenPriority(a, b, effectiveDate));
+	buckets.overdue.sort((a, b) => compareByPriorityThenDate(a, b, actualDate));
+	buckets.today.sort((a, b) => compareByPriorityThenDate(a, b, actualDate));
+	buckets.week.sort((a, b) => compareByPriorityThenDate(a, b, effectiveDate));
+	buckets.later.sort((a, b) => compareByPriorityThenDate(a, b, effectiveDate));
 
 	return (['overdue', 'today', 'week', 'later'] as DueSoonTier[]).map((tier) => ({
 		tier,
