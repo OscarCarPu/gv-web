@@ -62,7 +62,9 @@
 				taskId = created.id;
 			}
 
-			if (startIso !== event.starts_at || endIso !== event.ends_at) {
+			// An all-day event stays all-day: the plan carves hours out of that day, it does not
+			// turn the event into a timed one (same as the Android wizard).
+			if (!event.all_day && (startIso !== event.starts_at || endIso !== event.ends_at)) {
 				await calendarApi.updateEvent(event.instance_id, { starts_at: startIso, ends_at: endIso });
 			}
 
