@@ -67,7 +67,7 @@ Login (password) returns `{ token, kind: 'tmp' | 'semi' }` (`LoginResponseSchema
 `hooks.server.ts` validates both JWTs on every request and guards routes by tier:
 
 - **Public** (`PUBLIC_ROUTES`): `/`, `/login`, `/login/2fa` — accessible without auth; redirect to `/tasks` if `session` valid, to `/domotics` if `semiprivate` valid. There is no landing page: `/` is a `+server.ts` that 303s anonymous visitors to `/login`.
-- **Semiprivate** (`SEMIPRIVATE_ROUTES`): `/domotics`, `/printers` — accessible with either `session` or `semiprivate`.
+- **Semiprivate** (`SEMIPRIVATE_ROUTES`): `/domotics`, `/printers`, `/rutas` — accessible with either `session` or `semiprivate`.
 - **Auth-only** (`AUTH_ONLY_ROUTES`): `/logout` — passes through regardless of auth state; the action clears both cookies and redirects to `/login`.
 - **Private** (everything else): requires valid `session`.
 

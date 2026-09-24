@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { env } from '$lib/config/env';
 
 const PUBLIC_ROUTES = ['/login', '/login/2fa', '/'];
-const SEMIPRIVATE_ROUTES = ['/domotics', '/printers'];
+const SEMIPRIVATE_ROUTES = ['/domotics', '/printers', '/rutas'];
 const AUTH_ONLY_ROUTES = ['/logout'];
 
 function isValidJWT(token: string): boolean {

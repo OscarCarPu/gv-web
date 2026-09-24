@@ -43,11 +43,11 @@
 				<a href="/habits" class="nav-link" class:active={page.url.pathname.startsWith('/habits')}
 					>Habits</a
 				>
+			{/if}
+			{#if data.token || data.semiprivateToken}
 				<a href="/rutas" class="nav-link" class:active={page.url.pathname.startsWith('/rutas')}
 					>Routes</a
 				>
-			{/if}
-			{#if data.token || data.semiprivateToken}
 				<a
 					href="/domotics"
 					class="nav-link"
