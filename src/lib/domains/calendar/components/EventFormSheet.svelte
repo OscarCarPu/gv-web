@@ -3,6 +3,8 @@
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import { EventForm } from '$lib/domains/calendar/forms/eventForm.svelte';
 	import { eventWhen } from '$lib/domains/calendar/utils/datetime';
+	import PlanTaskPicker from '$lib/domains/calendar/components/PlanTaskPicker.svelte';
+	import type { PlanTaskChoice } from '$lib/domains/calendar/utils/eventPlan';
 	import type { Calendar, CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
 
 	interface Props {
@@ -17,6 +19,8 @@
 		/** Whether this event already has a plan_block linked to it. */
 		hasPlan?: boolean;
 		oncreateplan?: () => void;
+		/** A new all-day event wants a plan: its hours are picked in the wizard. */
+		onplannew?: (event: CalendarEvent, choice: PlanTaskChoice) => void;
 	}
 
 	let {
@@ -29,11 +33,13 @@
 		refresh,
 		hasPlan = false,
 		oncreateplan,
+		onplannew,
 	}: Props = $props();
 
 	const form = new EventForm(() => calendars, {
 		onclose: () => onclose(),
 		refresh: () => refresh(),
+		onplan: (created, choice) => onplannew?.(created, choice),
 	});
 
 	$effect(() => {
@@ -164,6 +170,34 @@
 			<textarea id="cal-description" rows="3" bind:value={form.description} disabled={readOnly}
 			></textarea>
 		</div>
+
+		{#if !form.isEdit}
+			<label class="cal-switch">
+				<input type="checkbox" bind:checked={form.withPlan} disabled={!form.canPlan} />
+				Create a linked plan
+			</label>
+			{#if !form.canPlan}
+				<span class="cal-hint"
+					>A repeating event can't carry one plan — plan an occurrence once it exists.</span
+				>
+			{:else if form.withPlan}
+				<PlanTaskPicker
+					bind:mode={form.planTaskMode}
+					bind:taskId={form.planTaskId}
+					bind:newTaskName={form.planNewTaskName}
+					idPrefix="cal-plan"
+				/>
+				{#if form.allDay}
+					<span class="cal-hint"
+						>All-day: you'll pick the plan's hours right after creating it.</span
+					>
+				{:else}
+					<span class="cal-hint"
+						>The plan takes the event's hours and follows it when it moves.</span
+					>
+				{/if}
+			{/if}
+		{/if}
 
 		{#if form.hasAttendees}
 			<div class="detail-field">

@@ -2,6 +2,7 @@
 	import type { CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
 	import { CalendarView, sameDay } from '$lib/domains/calendar/calendarView.svelte';
 	import { chipInk, eventTime } from '$lib/domains/calendar/utils/datetime';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
 		view: CalendarView;
@@ -87,10 +88,14 @@
 						<button
 							type="button"
 							class="cal-chip all-day"
+							class:planned={view.hasPlan(event.instance_id)}
 							style="--chip: {event.color}; --chip-ink: {chipInk(event.color)}"
 							title={`${event.summary} — ${event.calendar_name}`}
 							onclick={() => onselect(event)}
 						>
+							{#if view.hasPlan(event.instance_id)}
+								<span class="cal-planned" title="Has a plan"><Icon name="check-circle" /></span>
+							{/if}
 							<span class="cal-chip-title">{event.summary || '(no title)'}</span>
 						</button>
 					{/each}
@@ -132,6 +137,7 @@
 					<button
 						type="button"
 						class="cal-event"
+						class:planned={view.hasPlan(event.instance_id)}
 						class:tentative={event.status === 'tentative'}
 						style="--top: {box.top}; --height: {box.height}; --lane: {lane}; --lanes: {layout.lanes}; --chip: {event.color}; --chip-ink: {chipInk(
 							event.color
@@ -140,6 +146,9 @@
 						onclick={() => onselect(event)}
 					>
 						<span class="cal-event-time">{eventTime(event.starts_at)}</span>
+						{#if view.hasPlan(event.instance_id)}
+							<span class="cal-planned" title="Has a plan"><Icon name="check-circle" /></span>
+						{/if}
 						<span class="cal-event-title">{event.summary || '(no title)'}</span>
 						{#if event.location}
 							<span class="cal-event-where">{event.location}</span>

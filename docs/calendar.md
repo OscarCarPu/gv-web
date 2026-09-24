@@ -43,7 +43,17 @@ calendar page is where they're surfaced alongside events:
   seeds events, with the same `.catch(() => [])`-style fallback so a down API degrades to an empty
   panel rather than a broken page.
 - **`view.hasPlan(instanceId)`** — true when some fetched plan block's `event_ref` equals the
-  event's `instance_id`. Drives whether `EventFormSheet` offers "Create plan" for that event.
+  event's `instance_id` (indexed once per load as a `Set`, since every chip asks). Drives whether
+  `EventFormSheet` offers "Create plan" for that event, and marks planned events in both grids
+  (`.planned`: a check before the title and a dashed outline — deliberately not a colour, which
+  belongs to the calendar).
+- **Creating an event with a linked plan** — the new-event form has a "Create a linked plan"
+  switch with the same task picker as the wizard (`PlanTaskPicker`: no task / existing, grouped
+  by project / new). A timed event lends the block its own hours (`createEventPlan` in
+  `utils/eventPlan.ts`, shared with the wizard); an all-day one has none, so the form hands the
+  created event and the chosen task to the wizard to pick them. A repeating event cannot carry
+  one — a block is one stretch of time — so the switch is disabled while a repeat is set. If the
+  block fails after the event was created, the event stays and the toast says so.
 - **`CapacityPanel`** (sidebar, below the calendar list) lists the next 7 days' free/total hours
   from `view.freeBusy`, one row per day — purely informational here, no pen/edit icon. Managing
   `recurring_commitments` (the thing that actually moves these numbers) lives on `/tasks` instead —

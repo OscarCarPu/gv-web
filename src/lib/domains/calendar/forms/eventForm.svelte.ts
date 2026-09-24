@@ -6,6 +6,12 @@ import {
 	isoToLocalInput,
 	localInputToISO,
 } from '$lib/domains/calendar/utils/datetime';
+import {
+	createEventPlan,
+	planTaskChoiceValid,
+	type PlanTaskChoice,
+	type PlanTaskMode,
+} from '$lib/domains/calendar/utils/eventPlan';
 import type {
 	Calendar,
 	CalendarEvent,
@@ -55,6 +61,11 @@ interface EventFormCallbacks {
 	onclose: () => void;
 	/** Reload the visible range once the write has landed. */
 	refresh: () => Promise<void>;
+	/**
+	 * A new all-day event asked for a plan: it has no hours to copy, so the caller hands it to
+	 * the plan wizard to pick them.
+	 */
+	onplan?: (event: CalendarEvent, choice: PlanTaskChoice) => void;
 }
 
 /**
@@ -70,6 +81,7 @@ export class EventForm {
 	#onclose: () => void;
 	#refresh: () => Promise<void>;
 	#getCalendars: () => Calendar[];
+	#onplan: ((event: CalendarEvent, choice: PlanTaskChoice) => void) | undefined;
 
 	event = $state<CalendarEvent | null>(null);
 
@@ -85,6 +97,12 @@ export class EventForm {
 	scope = $state<EventScope>('instance');
 	sendUpdates = $state<SendUpdates>('none');
 
+	/** New events only: also create a plan block linked to the event. */
+	withPlan = $state(false);
+	planTaskMode = $state<PlanTaskMode>('none');
+	planTaskId = $state<number | null>(null);
+	planNewTaskName = $state('');
+
 	saving = $state(false);
 	deleting = $state(false);
 	summaryError = $state(false);
@@ -96,6 +114,7 @@ export class EventForm {
 		this.#getCalendars = getCalendars;
 		this.#onclose = callbacks.onclose;
 		this.#refresh = callbacks.refresh;
+		this.#onplan = callbacks.onplan;
 	}
 
 	get calendars(): Calendar[] {
@@ -116,6 +135,14 @@ export class EventForm {
 		return !this.isEdit || !this.canScope || this.scope === 'all';
 	}
 
+	/**
+	 * A plan block is one stretch of time, so it can hang off a single event but not a whole
+	 * series; an occurrence of a recurring one can be planned after it exists.
+	 */
+	get canPlan(): boolean {
+		return !this.isEdit && this.recurrence === 'none';
+	}
+
 	get hasAttendees(): boolean {
 		return (this.event?.attendees?.length ?? 0) > 0;
 	}
@@ -128,6 +155,10 @@ export class EventForm {
 		this.summaryError = false;
 		this.timeError = false;
 		this.sendUpdates = 'none';
+		this.withPlan = false;
+		this.planTaskMode = 'none';
+		this.planTaskId = null;
+		this.planNewTaskName = '';
 
 		if (event) {
 			this.calendarId = event.calendar_id;
@@ -195,6 +226,18 @@ export class EventForm {
 			Number.isNaN(start.getTime()) ||
 			(!!this.endsAt &&
 				(Number.isNaN(end.getTime()) || (this.allDay ? end < start : end <= start)));
+		if (
+			!this.summaryError &&
+			!this.timeError &&
+			this.#planWanted() &&
+			!planTaskChoiceValid(this.#planChoice())
+		) {
+			addToast(
+				this.planTaskMode === 'new' ? 'Name the new task' : 'Choose a task for the plan',
+				'error'
+			);
+			return false;
+		}
 		return !this.summaryError && !this.timeError && this.calendarId !== null;
 	}
 
@@ -225,7 +268,7 @@ export class EventForm {
 				addToast('Event updated');
 			} else {
 				const recurrence = this.recurrenceForRequest();
-				await calendarApi.createEvent({
+				const created = await calendarApi.createEvent({
 					calendar_id: this.calendarId as number,
 					summary: this.summary.trim(),
 					description: this.description,
@@ -236,7 +279,11 @@ export class EventForm {
 					recurrence: recurrence?.length ? recurrence : undefined,
 					send_updates: this.sendUpdates,
 				});
-				addToast('Event created');
+				if (this.#planWanted()) {
+					if (await this.#planCreated(created)) return;
+				} else {
+					addToast('Event created');
+				}
 			}
 			await this.#refresh();
 			this.#onclose();
@@ -245,6 +292,37 @@ export class EventForm {
 		} finally {
 			this.saving = false;
 		}
+	}
+
+	#planWanted(): boolean {
+		return this.canPlan && this.withPlan;
+	}
+
+	#planChoice(): PlanTaskChoice {
+		return { mode: this.planTaskMode, taskId: this.planTaskId, newTaskName: this.planNewTaskName };
+	}
+
+	/**
+	 * Links a plan to the event that was just created. A timed event lends the plan its own
+	 * hours; an all-day one goes on to the wizard (returns true: the caller must not close, the
+	 * wizard takes over). The event already exists either way, so a failing plan is reported
+	 * without undoing it.
+	 */
+	async #planCreated(created: CalendarEvent): Promise<boolean> {
+		if (created.all_day && this.#onplan) {
+			addToast('Event created — now pick the hours for its plan');
+			await this.#refresh();
+			this.#onplan(created, this.#planChoice());
+			return true;
+		}
+		try {
+			await createEventPlan(created, created.starts_at, created.ends_at, this.#planChoice());
+			addToast('Event and plan created');
+		} catch (e) {
+			const message = e instanceof Error ? e.message : 'unknown error';
+			addToast(`Event created, but the plan failed: ${message}`, 'error');
+		}
+		return false;
 	}
 
 	async remove() {

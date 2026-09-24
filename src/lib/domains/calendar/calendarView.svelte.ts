@@ -213,8 +213,13 @@ export class CalendarView {
 
 	/** Whether an event (by its instance_id) already has a plan block linked to it. */
 	hasPlan(instanceId: string): boolean {
-		return this.planBlocks.some((b) => b.event_ref === instanceId);
+		return this.#plannedRefs.has(instanceId);
 	}
+
+	/** Every chip asks, so the linked refs are indexed once per load rather than scanned. */
+	#plannedRefs = $derived(
+		new Set(this.planBlocks.flatMap((b) => (b.event_ref ? [b.event_ref] : [])))
+	);
 
 	async reloadCalendars() {
 		try {

@@ -2,6 +2,7 @@
 	import type { CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
 	import { CalendarView, sameDay } from '$lib/domains/calendar/calendarView.svelte';
 	import { chipInk, eventTime } from '$lib/domains/calendar/utils/datetime';
+	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
 		view: CalendarView;
@@ -64,6 +65,7 @@
 						<button
 							type="button"
 							class="cal-chip"
+							class:planned={view.hasPlan(event.instance_id)}
 							class:all-day={event.all_day}
 							class:declined={event.status === 'tentative'}
 							style="--chip: {event.color}; --chip-ink: {chipInk(event.color)}"
@@ -72,6 +74,9 @@
 						>
 							{#if !event.all_day}
 								<span class="cal-chip-time">{eventTime(event.starts_at)}</span>
+							{/if}
+							{#if view.hasPlan(event.instance_id)}
+								<span class="cal-planned" title="Has a plan"><Icon name="check-circle" /></span>
 							{/if}
 							<span class="cal-chip-title">{event.summary || '(no title)'}</span>
 						</button>

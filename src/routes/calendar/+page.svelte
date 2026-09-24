@@ -14,6 +14,7 @@
 	import type { Calendar, CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
 	import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
 	import type { FreeBusyRangeResponse } from '$lib/domains/capacity/types/Capacity.types';
+	import type { PlanTaskChoice } from '$lib/domains/calendar/utils/eventPlan';
 
 	let {
 		data,
@@ -42,6 +43,7 @@
 	let accountsOpen = $state(false);
 	let sidebarOpen = $state(false);
 	let planWizardOpen = $state(false);
+	let planChoice = $state<PlanTaskChoice | null>(null);
 
 	onMount(() => {
 		// The consent flow comes back through the API, which redirects here with the outcome.
@@ -183,6 +185,13 @@
 	hasPlan={editing ? view.hasPlan(editing.instance_id) : false}
 	oncreateplan={() => {
 		sheetOpen = false;
+		planChoice = null;
+		planWizardOpen = true;
+	}}
+	onplannew={(created, choice) => {
+		sheetOpen = false;
+		editing = created;
+		planChoice = choice;
 		planWizardOpen = true;
 	}}
 />
@@ -191,6 +200,7 @@
 	open={planWizardOpen}
 	onclose={() => (planWizardOpen = false)}
 	event={editing}
+	initialChoice={planChoice}
 	refresh={() => view.load()}
 />
 

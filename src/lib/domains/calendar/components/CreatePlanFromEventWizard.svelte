@@ -1,24 +1,29 @@
 <script lang="ts">
 	import BottomSheet from '$lib/shared/components/BottomSheet.svelte';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import { tasksApi } from '$lib/domains/tasks/api/tasks.api';
-	import { planApi } from '$lib/domains/tasks/api/plan.api';
 	import { calendarApi } from '$lib/domains/calendar/api/calendar.api';
 	import { localInputToISO, isoToLocalInput } from '$lib/domains/calendar/utils/datetime';
+	import {
+		createEventPlan,
+		planTaskChoiceValid,
+		type PlanTaskChoice,
+		type PlanTaskMode,
+	} from '$lib/domains/calendar/utils/eventPlan';
+	import PlanTaskPicker from '$lib/domains/calendar/components/PlanTaskPicker.svelte';
 	import type { CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
-	import type { TaskListItem } from '$lib/domains/tasks/types/Task.types';
 
 	interface Props {
 		open: boolean;
 		onclose: () => void;
 		event: CalendarEvent | null;
 		refresh: () => Promise<void>;
+		/** Pre-selects the task, when it was already chosen while creating the event. */
+		initialChoice?: PlanTaskChoice | null;
 	}
 
-	let { open, onclose, event, refresh }: Props = $props();
+	let { open, onclose, event, refresh, initialChoice = null }: Props = $props();
 
-	let taskMode = $state<'none' | 'existing' | 'new'>('none');
-	let tasks = $state<TaskListItem[]>([]);
+	let taskMode = $state<PlanTaskMode>('none');
 	let selectedTaskId = $state<number | null>(null);
 	let newTaskName = $state('');
 	let startedAt = $state('');
@@ -28,13 +33,12 @@
 
 	$effect(() => {
 		if (open && event) {
-			taskMode = 'none';
-			selectedTaskId = null;
-			newTaskName = '';
+			taskMode = initialChoice?.mode ?? 'none';
+			selectedTaskId = initialChoice?.taskId ?? null;
+			newTaskName = initialChoice?.newTaskName ?? '';
 			startedAt = event.all_day ? '' : isoToLocalInput(event.starts_at);
 			endedAt = event.all_day ? '' : isoToLocalInput(event.ends_at);
 			timeError = false;
-			tasksApi.listTasksFast().then((t) => (tasks = t));
 		}
 	});
 
@@ -50,31 +54,21 @@
 			timeError = true;
 			return;
 		}
-		if (taskMode === 'new' && !newTaskName.trim()) return;
+		const choice = { mode: taskMode, taskId: selectedTaskId, newTaskName };
+		if (!planTaskChoiceValid(choice)) {
+			addToast(taskMode === 'new' ? 'Name the new task' : 'Choose a task', 'error');
+			return;
+		}
 
 		saving = true;
 		try {
-			let taskId: number | null = null;
-			if (taskMode === 'existing') {
-				taskId = selectedTaskId;
-			} else if (taskMode === 'new') {
-				const created = await tasksApi.createTask({ name: newTaskName.trim() });
-				taskId = created.id;
-			}
-
 			// An all-day event stays all-day: the plan carves hours out of that day, it does not
 			// turn the event into a timed one (same as the Android wizard).
 			if (!event.all_day && (startIso !== event.starts_at || endIso !== event.ends_at)) {
 				await calendarApi.updateEvent(event.instance_id, { starts_at: startIso, ends_at: endIso });
 			}
 
-			await planApi.createBlock({
-				started_at: startIso,
-				ended_at: endIso,
-				task_id: taskId,
-				label: taskId ? undefined : event.summary || 'Event',
-				event_ref: event.instance_id,
-			});
+			await createEventPlan(event, startIso, endIso, choice);
 
 			addToast('Plan created');
 			onclose();
@@ -91,34 +85,13 @@
 	<h3 class="modal-title">Create plan</h3>
 
 	<div class="detail-form">
-		<div class="detail-field">
-			<span class="cal-label">Task</span>
-			<div class="create-mode-toggle">
-				<button class:active={taskMode === 'none'} onclick={() => (taskMode = 'none')}
-					>No task</button
-				>
-				<button class:active={taskMode === 'existing'} onclick={() => (taskMode = 'existing')}
-					>Existing</button
-				>
-				<button class:active={taskMode === 'new'} onclick={() => (taskMode = 'new')}>New</button>
-			</div>
-		</div>
-
-		{#if taskMode === 'existing'}
-			<div class="detail-field">
-				<label for="plan-task-select">Choose a task</label>
-				<select id="plan-task-select" bind:value={selectedTaskId}>
-					<option value={null}>Select…</option>
-					{#each tasks as task (task.id)}
-						<option value={task.id}>{task.name}</option>
-					{/each}
-				</select>
-			</div>
-		{:else if taskMode === 'new'}
-			<div class="detail-field">
-				<label for="plan-task-new">New task name</label>
-				<input id="plan-task-new" type="text" bind:value={newTaskName} />
-			</div>
+		{#if open}
+			<PlanTaskPicker
+				bind:mode={taskMode}
+				bind:taskId={selectedTaskId}
+				bind:newTaskName
+				idPrefix="plan-wizard"
+			/>
 		{/if}
 
 		<div class="detail-inline-row">

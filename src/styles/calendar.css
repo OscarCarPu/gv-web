@@ -300,6 +300,18 @@
 	@apply truncate;
 }
 
+/* An event with a plan block linked to it: a check before the title and a dashed outline, so
+   it reads at a glance without depending on the calendar's colour. */
+.cal-chip.planned,
+.cal-event.planned {
+	outline: 1px dashed currentColor;
+	outline-offset: -1px;
+}
+
+.cal-planned {
+	@apply inline-flex shrink-0 text-[0.65rem];
+}
+
 .cal-more {
 	@apply text-text-muted hover:text-text cursor-pointer border-none bg-transparent px-1 text-left text-[0.65rem] font-medium;
 }

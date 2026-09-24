@@ -10,6 +10,7 @@
 		formatDueDay,
 	} from '$lib/shared/utils/datetime';
 	import type { TaskListItem } from '$lib/domains/tasks/types/Task.types';
+	import { groupTasksByProject } from '$lib/domains/tasks/utils/taskGroups';
 	import type {
 		CreatePlanBlockRequest,
 		PlanBlockResponse,
@@ -74,22 +75,7 @@
 		return `${h}:00`;
 	}
 
-	interface TaskGroup {
-		label: string;
-		tasks: TaskListItem[];
-	}
-
-	const grouped = $derived.by((): TaskGroup[] => {
-		const map = new Map<number | null, TaskGroup>();
-		for (const t of tasks) {
-			const key = t.project_id;
-			if (!map.has(key)) {
-				map.set(key, { label: t.project_name ?? 'No project', tasks: [] });
-			}
-			map.get(key)!.tasks.push(t);
-		}
-		return [...map.values()];
-	});
+	const grouped = $derived(groupTasksByProject(tasks));
 
 	async function save() {
 		if (saving) return;
@@ -177,7 +163,7 @@
 					}}
 				>
 					<option value={null}>Select a task...</option>
-					{#each grouped as g (g.label)}
+					{#each grouped as g (g.projectId)}
 						<optgroup label={g.label}>
 							{#each g.tasks as t (t.id)}
 								<option value={t.id}>{t.name}</option>

@@ -15,6 +15,15 @@ vi.mock('$lib/domains/calendar/api/calendar.api', () => ({
 	},
 }));
 
+const createBlock = vi.fn();
+const createTask = vi.fn();
+vi.mock('$lib/domains/tasks/api/plan.api', () => ({
+	planApi: { createBlock: (...a: unknown[]) => createBlock(...a) },
+}));
+vi.mock('$lib/domains/tasks/api/tasks.api', () => ({
+	tasksApi: { createTask: (...a: unknown[]) => createTask(...a) },
+}));
+
 const toasts: { message: string; type?: string }[] = [];
 vi.mock('$lib/shared/stores/toast.svelte', () => ({
 	addToast: (message: string, type?: string) => toasts.push({ message, type }),
@@ -85,8 +94,11 @@ describe('EventForm', () => {
 	let closed: number;
 	let refreshed: number;
 
+	let planned: { event: CalendarEvent; choice: unknown }[];
+
 	function newForm(calendars: Calendar[] = [calendar()]) {
 		return new EventForm(() => calendars, {
+			onplan: (e, choice) => planned.push({ event: e, choice }),
 			onclose: () => {
 				closed++;
 			},
@@ -101,6 +113,9 @@ describe('EventForm', () => {
 		toasts.length = 0;
 		closed = 0;
 		refreshed = 0;
+		planned = [];
+		createBlock.mockResolvedValue({});
+		createTask.mockResolvedValue({ id: 99 });
 		createEvent.mockResolvedValue(event());
 		updateEvent.mockResolvedValue(event());
 		deleteEvent.mockResolvedValue(undefined);
@@ -355,6 +370,91 @@ describe('EventForm', () => {
 			await form.move(2);
 			expect(moveEvent).toHaveBeenCalledWith('7', 2, 'none');
 			expect(toasts.at(-1)?.message).toContain('recreated');
+		});
+	});
+
+	describe('creating with a linked plan', () => {
+		function plannedForm() {
+			const form = newForm();
+			form.reset(null, 1);
+			form.summary = 'Dentist';
+			form.startsAt = '2026-08-20T17:00';
+			form.endsAt = '2026-08-20T18:00';
+			form.withPlan = true;
+			return form;
+		}
+
+		it("links a block with the new event's hours and the chosen task", async () => {
+			const form = plannedForm();
+			form.planTaskMode = 'existing';
+			form.planTaskId = 5;
+			await form.save();
+
+			expect(createBlock).toHaveBeenCalledWith({
+				started_at: '2026-08-20T15:00:00Z',
+				ended_at: '2026-08-20T16:00:00Z',
+				task_id: 5,
+				label: undefined,
+				event_ref: '7',
+			});
+			expect(closed).toBe(1);
+		});
+
+		it('creates the new task first when asked to', async () => {
+			const form = plannedForm();
+			form.planTaskMode = 'new';
+			form.planNewTaskName = ' Checkup ';
+			await form.save();
+
+			expect(createTask).toHaveBeenCalledWith({ name: 'Checkup' });
+			expect(createBlock).toHaveBeenCalledWith(expect.objectContaining({ task_id: 99 }));
+		});
+
+		it('refuses an incomplete task choice before creating anything', async () => {
+			const form = plannedForm();
+			form.planTaskMode = 'existing';
+			await form.save();
+
+			expect(createEvent).not.toHaveBeenCalled();
+			expect(createBlock).not.toHaveBeenCalled();
+		});
+
+		it('hands an all-day event to the wizard with the task already chosen', async () => {
+			const created = event({ all_day: true, instance_id: '8' });
+			createEvent.mockResolvedValueOnce(created);
+			const form = plannedForm();
+			form.setAllDay(true);
+			form.planTaskMode = 'existing';
+			form.planTaskId = 5;
+			await form.save();
+
+			expect(createBlock).not.toHaveBeenCalled();
+			expect(planned).toEqual([
+				{ event: created, choice: { mode: 'existing', taskId: 5, newTaskName: '' } },
+			]);
+			expect(closed).toBe(0);
+		});
+
+		it('never plans a repeating event', async () => {
+			const form = plannedForm();
+			form.recurrence = 'weekly';
+			await form.save();
+
+			expect(form.canPlan).toBe(false);
+			expect(createEvent).toHaveBeenCalled();
+			expect(createBlock).not.toHaveBeenCalled();
+		});
+
+		it('keeps the event and says so when the plan fails', async () => {
+			createBlock.mockRejectedValueOnce(new Error('overlaps another block'));
+			const form = plannedForm();
+			await form.save();
+
+			expect(toasts.at(-1)).toEqual({
+				message: 'Event created, but the plan failed: overlaps another block',
+				type: 'error',
+			});
+			expect(closed).toBe(1);
 		});
 	});
 });
