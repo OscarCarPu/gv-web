@@ -60,7 +60,20 @@ function compareByDateThenPriority(
 	const da = dateFn(a) ?? NO_DATE_SORT_KEY;
 	const db = dateFn(b) ?? NO_DATE_SORT_KEY;
 	if (da !== db) return da < db ? -1 : 1;
+	// Same start day: the one that has to be finished sooner goes first — in a dependency chain
+	// that is always the earlier step.
+	const fa = deadlineOf(a) ?? NO_DATE_SORT_KEY;
+	const fb = deadlineOf(b) ?? NO_DATE_SORT_KEY;
+	if (fa !== fb) return fa < fb ? -1 : 1;
 	return a.priority - b.priority;
+}
+
+/**
+ * The day a tier's day dividers group by — the same date the tier sorts by, so dividers never
+ * run backwards: the deadline in `overdue` / `today`, the day to start in `week` / `later`.
+ */
+export function dividerDateOf(t: TaskByDueDateResponse, tier: DueSoonTier): string | null {
+	return tier === 'overdue' || tier === 'today' ? deadlineOf(t) : effectiveDate(t);
 }
 
 /**

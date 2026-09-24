@@ -17,7 +17,7 @@
 	import TimerTaskPicker from '$lib/domains/tasks/components/TimerTaskPicker.svelte';
 	import type { TimeEntryWithTask, TaskListItem } from '$lib/domains/tasks/types/Task.types';
 	import { toLocalDateString, formatDueDay, formatTime } from '$lib/shared/utils/datetime';
-	import { deadlineOf } from '$lib/domains/tasks/utils/dueSoonGrouping';
+	import { deadlineOf, dividerDateOf } from '$lib/domains/tasks/utils/dueSoonGrouping';
 	import { buildPaceTooltip } from '$lib/domains/tasks/utils/paceLabel';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
@@ -402,16 +402,23 @@
 						<div class="due-soon-tier tier-{group.tier}">
 							<span class="due-soon-tier-label">{group.label}</span>
 							{#each group.tasks as task, i (task.id)}
-								{@const taskDate = deadlineOf(task)}
-								{@const taskDateKey = taskDate ?? 'no-date'}
-								{@const prevTask = group.tasks[i - 1]}
-								{@const prevDateKey = (prevTask ? deadlineOf(prevTask) : null) ?? 'no-date'}
+								{@const taskDateKey = deadlineOf(task) ?? 'no-date'}
 								{@const isToday = taskDateKey === todayKey}
 								{@const isOverdue = taskDateKey !== 'no-date' && taskDateKey < todayKey}
-								{#if (i > 0 && taskDateKey !== prevDateKey) || (i === 0 && isToday)}
+								{@const dividerDate = dividerDateOf(task, group.tier)}
+								{@const dividerKey = dividerDate ?? 'no-date'}
+								{@const prevTask = group.tasks[i - 1]}
+								{@const prevDividerKey =
+									(prevTask ? dividerDateOf(prevTask, group.tier) : null) ?? 'no-date'}
+								{@const startsDivider = group.tier === 'week' || group.tier === 'later'}
+								{#if (i > 0 && dividerKey !== prevDividerKey) || (i === 0 && isToday)}
 									<div class="agenda-day-divider" class:today={isToday}>
 										<span class="agenda-day-line"></span>
-										<span class="agenda-day-label">{formatDueDay(taskDate)}</span>
+										<span class="agenda-day-label"
+											>{startsDivider && dividerDate ? 'Start ' : ''}{formatDueDay(
+												dividerDate
+											)}</span
+										>
 										<span class="agenda-day-line"></span>
 									</div>
 								{/if}

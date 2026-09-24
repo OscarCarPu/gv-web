@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	groupTasksByUrgency,
+	dividerDateOf,
 	truncateDueSoonGroups,
 	buildUrgencyPhrase,
 	type DueSoonGroup,
@@ -40,6 +41,20 @@ function tiersOf(groups: DueSoonGroup[]): Record<string, number[]> {
 }
 
 describe('groupTasksByUrgency', () => {
+	it('breaks a start_by tie by the sooner deadline, so a chain keeps its order', () => {
+		const second = makeTask({ id: 1, start_by: '2026-09-05', finish_by: '2026-09-06' });
+		const first = makeTask({ id: 2, start_by: '2026-09-05', finish_by: '2026-09-05' });
+		expect(tiersOf(groupTasksByUrgency([second, first], TODAY)).week).toEqual([2, 1]);
+	});
+
+	it('divides week/later by the day to start and overdue/today by the deadline', () => {
+		const t = makeTask({ start_by: '2026-09-05', finish_by: '2026-09-06' });
+		expect(dividerDateOf(t, 'week')).toBe('2026-09-05');
+		expect(dividerDateOf(t, 'later')).toBe('2026-09-05');
+		expect(dividerDateOf(t, 'today')).toBe('2026-09-06');
+		expect(dividerDateOf(t, 'overdue')).toBe('2026-09-06');
+	});
+
 	it('uses finish_by over the inherited due date: a chain step past its own deadline is overdue', () => {
 		const t = makeTask({ id: 1, due_at: '2026-09-01T00:00:00Z', finish_by: '2026-08-28' });
 		expect(tiersOf(groupTasksByUrgency([t], TODAY)).overdue).toEqual([1]);
