@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import TimePicker from '$lib/shared/components/TimePicker.svelte';
 	import TaskItem from '$lib/domains/tasks/components/TaskItem.svelte';
@@ -136,14 +137,22 @@
 		else selectedTaskId = id;
 	}
 
-	let lastHandledEntryId: number | null = null;
-
+	// Follow the server's running entry whenever `data` changes (first load or a refetch), so a
+	// timer started or stopped elsewhere shows up here. Timer state is read untracked: only a new
+	// payload may drive this, or a local start would be undone before `data` catches up.
 	$effect(() => {
-		if (data.activeTimeEntry && !timer.isRunning) {
-			if (data.activeTimeEntry.id === lastHandledEntryId) return;
-			lastHandledEntryId = data.activeTimeEntry.id;
-			timer.restore(data.activeTimeEntry);
-		}
+		const active = data.activeTimeEntry;
+		untrack(() => {
+			const localId = timer.activeTimeEntryId;
+			if (active) {
+				if (active.id === localId) return;
+				if (timer.isRunning) timer.reset();
+				timer.restore(active);
+			} else if (localId !== null) {
+				// Stopped elsewhere. A local start still waiting on its entry id is left alone.
+				timer.reset();
+			}
+		});
 	});
 
 	// "Back to top" only means something once there's somewhere to go back from.
@@ -157,18 +166,27 @@
 		return () => window.removeEventListener('scroll', onScroll);
 	});
 
-	// Re-sync data on tab regains focus
+	// Re-sync data when the page comes back. `visibilitychange` only fires on tab switches and
+	// minimising; switching to another window leaves the page "visible", so `focus` covers that.
+	// Both usually fire together, hence the throttle. `entries.refresh()` is needed on top of
+	// `invalidateAll()` because once the store has fetched on its own, its copies of today's
+	// entries and the summary shadow the SSR payload.
 	let lastRefetch = 0;
 	$effect(() => {
-		function onVisibilityChange() {
+		function resync() {
 			if (document.visibilityState !== 'visible') return;
 			const now = Date.now();
 			if (now - lastRefetch < 5000) return;
 			lastRefetch = now;
 			invalidateAll();
+			entries.refresh();
 		}
-		document.addEventListener('visibilitychange', onVisibilityChange);
-		return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+		document.addEventListener('visibilitychange', resync);
+		window.addEventListener('focus', resync);
+		return () => {
+			document.removeEventListener('visibilitychange', resync);
+			window.removeEventListener('focus', resync);
+		};
 	});
 
 	// Manual-add row: retimes the *running* entry to an explicit HH:MM–HH:MM range (and thereby
