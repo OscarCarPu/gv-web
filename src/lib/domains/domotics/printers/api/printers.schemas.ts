@@ -37,6 +37,8 @@ export const PrinterFileSchema = z.object({
 	displayName: z.string(),
 	size: z.number().optional(),
 	readOnly: z.boolean().optional(),
+	/** Last modified, epoch ms. */
+	modifiedAt: z.number().optional(),
 });
 
 export const PrinterStorageSchema = z.object({

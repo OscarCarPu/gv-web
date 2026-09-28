@@ -9,6 +9,7 @@ import {
 } from '$lib/server/domotics/printers/files';
 import { digestHeader, parseChallenge } from '$lib/server/domotics/printers/prusalink';
 import {
+	arrangeFiles,
 	hasAcceptedExtension,
 	uploadErrorMessage,
 } from '$lib/domains/domotics/printers/printerFiles.svelte';
@@ -252,5 +253,66 @@ describe('uploadTimeoutMs', () => {
 
 	it('gives a big file far more room than the old flat 180s cap', () => {
 		expect(uploadTimeoutMs(65_779_363)).toBeGreaterThan(180_000);
+	});
+});
+
+describe('arrangeFiles', () => {
+	const f = (displayName: string, size?: number, modifiedAt?: number) => ({
+		name: displayName.toUpperCase(),
+		displayName,
+		size,
+		modifiedAt,
+	});
+	const files = [
+		f('benchy.bgcode', 300, 2000),
+		f('Case_lid.gcode', 100, 3000),
+		f('case_base.gcode', 200, 1000),
+		f('mystery.gcode'), // printer reported neither size nor date
+	];
+	const names = (list: { displayName: string }[]) => list.map((x) => x.displayName);
+
+	it('sorts names case-insensitively in both directions', () => {
+		expect(names(arrangeFiles(files, '', 'name', 'asc'))).toEqual([
+			'benchy.bgcode',
+			'case_base.gcode',
+			'Case_lid.gcode',
+			'mystery.gcode',
+		]);
+		expect(names(arrangeFiles(files, '', 'name', 'desc'))[0]).toBe('mystery.gcode');
+	});
+
+	it('sorts by date and size, newest and biggest first when descending', () => {
+		expect(names(arrangeFiles(files, '', 'date', 'desc')).slice(0, 3)).toEqual([
+			'Case_lid.gcode',
+			'benchy.bgcode',
+			'case_base.gcode',
+		]);
+		expect(names(arrangeFiles(files, '', 'size', 'asc')).slice(0, 3)).toEqual([
+			'Case_lid.gcode',
+			'case_base.gcode',
+			'benchy.bgcode',
+		]);
+	});
+
+	it('keeps files without the sort value at the bottom in either direction', () => {
+		for (const key of ['date', 'size'] as const) {
+			for (const dir of ['asc', 'desc'] as const) {
+				expect(names(arrangeFiles(files, '', key, dir)).at(-1)).toBe('mystery.gcode');
+			}
+		}
+	});
+
+	it('filters by a case-insensitive substring of the display name', () => {
+		expect(names(arrangeFiles(files, '  CASE ', 'name', 'asc'))).toEqual([
+			'case_base.gcode',
+			'Case_lid.gcode',
+		]);
+		expect(arrangeFiles(files, 'nothing', 'name', 'asc')).toEqual([]);
+	});
+
+	it('does not reorder the input array', () => {
+		const before = names(files);
+		arrangeFiles(files, '', 'size', 'desc');
+		expect(names(files)).toEqual(before);
 	});
 });

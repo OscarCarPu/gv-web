@@ -499,7 +499,7 @@
 
 .file-row {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto auto;
+	grid-template-columns: auto minmax(0, 1fr) auto auto auto;
 	align-items: center;
 	gap: 0.6rem;
 	padding: 0.4rem 0.5rem;
@@ -512,6 +512,104 @@
 
 .file-row.is-busy {
 	opacity: 0.55;
+}
+
+.file-row.is-selected {
+	background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+}
+
+.file-check,
+.files-select-all input {
+	accent-color: var(--color-danger);
+	cursor: pointer;
+}
+
+.file-date {
+	font-size: 0.72rem;
+	color: var(--color-text-muted);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+/* ---- File list toolbar: search, sort, bulk select ---- */
+.files-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.files-search {
+	flex: 1 1 10rem;
+	min-width: 0;
+	font-size: 0.8rem;
+	color: var(--color-text);
+	background: var(--color-bg-light);
+	border: 1px solid var(--color-border);
+	border-radius: 8px;
+	padding: 0.35rem 0.6rem;
+}
+
+.files-search:focus {
+	outline: none;
+	border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+}
+
+.files-sort {
+	display: inline-flex;
+	border: 1px solid var(--color-border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.files-sort-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	font-size: 0.74rem;
+	font-weight: 600;
+	color: var(--color-text-muted);
+	background: transparent;
+	border: none;
+	padding: 0.3rem 0.55rem;
+	cursor: pointer;
+}
+
+.files-sort-btn + .files-sort-btn {
+	border-left: 1px solid var(--color-border);
+}
+
+.files-sort-btn.is-active {
+	color: var(--color-primary);
+	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.files-sort-btn .icon {
+	width: 0.6rem;
+	height: 0.6rem;
+	transition: transform 0.15s ease;
+}
+
+.files-sort-btn .icon.is-desc {
+	transform: rotate(180deg);
+}
+
+.files-bulk {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	min-height: 1.7rem;
+	padding: 0 0.5rem;
+}
+
+.files-select-all {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	font-size: 0.74rem;
+	color: var(--color-text-muted);
+	cursor: pointer;
 }
 
 .file-name {

@@ -2,7 +2,12 @@
 	import { onDestroy } from 'svelte';
 	import Icon from '$shared/components/Icon.svelte';
 	import { formatBytes as size, formatEta } from './format';
-	import { ACCEPT_ATTR, PrinterFilesController, type Upload } from './printerFiles.svelte';
+	import {
+		ACCEPT_ATTR,
+		PrinterFilesController,
+		type FileSortKey,
+		type Upload,
+	} from './printerFiles.svelte';
 
 	interface Props {
 		id: string;
@@ -38,13 +43,57 @@
 		};
 	});
 
-	onDestroy(() => controller.stop());
+	onDestroy(() => {
+		controller.stop();
+		disarmDelete();
+	});
 
 	const blocked = $derived(!online ? 'PrusaLink unreachable' : controller.blockedReason);
 	const enabled = $derived(blocked === null);
 
-	const visible = $derived(expanded ? controller.files : controller.files.slice(0, FOLD_AT));
-	const hidden = $derived(Math.max(0, controller.files.length - FOLD_AT));
+	const visible = $derived(expanded ? controller.shown : controller.shown.slice(0, FOLD_AT));
+	const hidden = $derived(Math.max(0, controller.shown.length - FOLD_AT));
+
+	const SORT_KEYS: { key: FileSortKey; label: string }[] = [
+		{ key: 'name', label: 'Name' },
+		{ key: 'date', label: 'Date' },
+		{ key: 'size', label: 'Size' },
+	];
+
+	const dateFmt = new Intl.DateTimeFormat('en-GB', {
+		day: 'numeric',
+		month: 'short',
+		year: '2-digit',
+	});
+	const timeFmt = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+
+	// Bulk delete arms on the first click and runs on the second, like Stop print: no dialogs in
+	// this app, but one stray click must not empty the printer's drive.
+	let deleteArmed = $state(false);
+	let deleteArmTimer: ReturnType<typeof setTimeout> | null = null;
+	const DELETE_ARM_MS = 4000;
+
+	function disarmDelete() {
+		if (deleteArmTimer) clearTimeout(deleteArmTimer);
+		deleteArmTimer = null;
+		deleteArmed = false;
+	}
+
+	function onDeleteSelected() {
+		if (!deleteArmed) {
+			deleteArmed = true;
+			deleteArmTimer = setTimeout(disarmDelete, DELETE_ARM_MS);
+			return;
+		}
+		disarmDelete();
+		void controller.removeSelected();
+	}
+
+	// A changed selection means a different thing to confirm; make the user arm it again.
+	$effect(() => {
+		void controller.selected.size;
+		disarmDelete();
+	});
 
 	function onDrop(e: DragEvent) {
 		e.preventDefault();
@@ -204,10 +253,90 @@
 	{:else if controller.files.length === 0}
 		<p class="files-empty">No files on the printer.</p>
 	{:else}
+		<div class="files-toolbar">
+			<input
+				type="search"
+				class="files-search"
+				placeholder="Search files"
+				aria-label="Search files"
+				bind:value={controller.query}
+			/>
+			<div class="files-sort" role="group" aria-label="Sort files">
+				{#each SORT_KEYS as s (s.key)}
+					{@const active = controller.sortKey === s.key}
+					<button
+						class="files-sort-btn"
+						class:is-active={active}
+						aria-pressed={active}
+						title={active
+							? `Sorted ${controller.sortDir === 'asc' ? 'ascending' : 'descending'}`
+							: `Sort by ${s.label.toLowerCase()}`}
+						onclick={() => controller.sortBy(s.key)}
+					>
+						{s.label}
+						{#if active}
+							<Icon name="arrow-up" class={controller.sortDir === 'desc' ? 'is-desc' : ''} />
+						{/if}
+					</button>
+				{/each}
+			</div>
+		</div>
+
+		<div class="files-bulk">
+			<label class="files-select-all">
+				<input
+					type="checkbox"
+					checked={controller.allSelected}
+					indeterminate={controller.selected.size > 0 && !controller.allSelected}
+					disabled={controller.deletable.length === 0 || controller.deleting}
+					onchange={() => controller.toggleAll()}
+				/>
+				{controller.query.trim() ? 'Select matches' : 'Select all'}
+			</label>
+			{#if controller.selected.size > 0}
+				<button
+					class="btn-inline btn-stop-print"
+					class:is-armed={deleteArmed}
+					disabled={controller.deleting}
+					onclick={onDeleteSelected}
+					onblur={disarmDelete}
+				>
+					<Icon name="trash" />
+					{controller.deleting
+						? 'Deleting…'
+						: deleteArmed
+							? `Confirm delete ${controller.selected.size}`
+							: `Delete ${controller.selected.size}`}
+				</button>
+			{/if}
+		</div>
+
+		{#if controller.shown.length === 0}
+			<p class="files-empty">No files match “{controller.query.trim()}”.</p>
+		{/if}
+
 		<ul class="file-list">
 			{#each visible as f (f.name)}
-				<li class="file-row" class:is-busy={controller.busy === f.name}>
+				<li
+					class="file-row"
+					class:is-busy={controller.busy === f.name}
+					class:is-selected={controller.selected.has(f.name)}
+				>
+					<input
+						type="checkbox"
+						class="file-check"
+						aria-label="Select {f.displayName}"
+						checked={controller.selected.has(f.name)}
+						disabled={f.readOnly === true || controller.deleting}
+						onchange={() => controller.toggle(f.name)}
+					/>
 					<span class="file-name">{f.displayName}</span>
+					<span
+						class="file-date"
+						title={f.modifiedAt != null ? timeFmt.format(f.modifiedAt) : undefined}
+					>
+						{f.modifiedAt != null ? dateFmt.format(f.modifiedAt) : '—'}
+					</span>
 					<span class="file-size">{size(f.size)}</span>
 					<span class="file-actions">
 						<button
@@ -237,7 +366,7 @@
 			<button class="files-more-btn" onclick={() => (expanded = true)}>
 				Show {hidden} more
 			</button>
-		{:else if expanded && controller.files.length > FOLD_AT}
+		{:else if expanded && controller.shown.length > FOLD_AT}
 			<button class="files-more-btn" onclick={() => (expanded = false)}>Show less</button>
 		{/if}
 	{/if}

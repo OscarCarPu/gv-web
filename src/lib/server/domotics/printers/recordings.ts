@@ -19,10 +19,13 @@ import type { Printer } from './config';
 
 /** Where recordings live. Matches the Docker volume mount; relative paths resolve against cwd. */
 const ROOT = process.env.PRINTER_RECORDINGS_DIR || 'data/recordings';
-/** Hard stop, so a recording someone forgot about cannot run forever. */
-const MAX_MINUTES = envNumber(process.env.PRINTER_RECORDING_MAX_MINUTES, 240);
-/** Retention budget per printer. Oldest recordings are pruned to stay under it. */
-const MAX_BYTES = envNumber(process.env.PRINTER_RECORDINGS_MAX_GB, 10) * 1024 ** 3;
+/** Hard stop, so a recording someone forgot about cannot run forever. 30h covers the longest prints. */
+const MAX_MINUTES = envNumber(process.env.PRINTER_RECORDING_MAX_MINUTES, 30 * 60);
+/**
+ * Retention budget per printer, and the size cap of a single recording. Oldest are pruned first.
+ * 30 GiB holds 30h of footage (~0.87 GiB/h at the camera's bitrate) so time, not size, ends a recording.
+ */
+const MAX_BYTES = envNumber(process.env.PRINTER_RECORDINGS_MAX_GB, 30) * 1024 ** 3;
 /**
  * `copy` muxes the camera's own H.264 with no re-encode — the whole point, since this box has no
  * cycles to spare. Override with a real encoder (e.g. `libx264`) only if the source codec turns

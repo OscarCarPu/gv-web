@@ -47,6 +47,8 @@ type PrinterFile = {
 	displayName: string;
 	size?: number;
 	readOnly?: boolean;
+	/** Last modified, epoch ms. */
+	modifiedAt?: number;
 };
 
 type PrinterStorage = {
@@ -137,6 +139,8 @@ type RawChild = {
 	/** Buddy firmware uses `ro`; `read_only` is the spec's name. Accept either. */
 	ro?: boolean;
 	read_only?: boolean;
+	/** Last modified, epoch seconds. */
+	m_timestamp?: number;
 };
 
 async function getJson<T>(printer: Printer, path: string): Promise<T | null> {
@@ -206,6 +210,9 @@ async function fillInSizes(printer: Printer, storage: string, files: PrinterFile
 		const info = await getJson<RawChild>(printer, filePath(storage, file.name)).catch(() => null);
 		if (info?.size != null) file.size = info.size;
 		if (file.readOnly == null) file.readOnly = info?.ro ?? info?.read_only;
+		if (file.modifiedAt == null && info?.m_timestamp != null) {
+			file.modifiedAt = info.m_timestamp * 1000;
+		}
 	});
 }
 
@@ -232,6 +239,7 @@ export async function fetchFiles(printer: Printer): Promise<PrinterFiles> {
 				displayName: c.display_name ?? (c.name as string),
 				size: c.size,
 				readOnly: c.ro ?? c.read_only,
+				modifiedAt: c.m_timestamp != null ? c.m_timestamp * 1000 : undefined,
 			}));
 
 		await fillInSizes(printer, storage, files);

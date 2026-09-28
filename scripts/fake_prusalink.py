@@ -174,7 +174,7 @@ class Handler(BaseHTTPRequestHandler):
                     "display_name": name,
                     "type": "PRINT_FILE",
                     "ro": False,
-                    "m_timestamp": 1700000000,
+                    "m_timestamp": int(os.path.getmtime(os.path.join(UPLOAD_DIR, name))),
                 }
             )
         return {"name": STORAGE, "type": "FOLDER", "children": children}
@@ -194,7 +194,7 @@ class Handler(BaseHTTPRequestHandler):
             "type": "PRINT_FILE",
             "ro": False,
             "size": os.path.getsize(os.path.join(UPLOAD_DIR, name)),
-            "m_timestamp": 1700000000,
+            "m_timestamp": int(os.path.getmtime(os.path.join(UPLOAD_DIR, name))),
         }
 
     def _storage_payload(self) -> dict:

@@ -1,6 +1,7 @@
 // Controller for the print-file drop zone: lists what is on the printer, uploads dropped
 // files and starts/deletes prints. Same shape as PrinterController in ./printerStatus.svelte.ts.
 
+import { SvelteSet } from 'svelte/reactivity';
 import { addToast } from '$shared/stores/toast.svelte';
 import {
 	ActiveUploadsSchema,
@@ -55,6 +56,48 @@ export function uploadErrorMessage(status: number, serverError = ''): string {
 	}
 }
 
+export type FileSortKey = 'name' | 'date' | 'size';
+export type SortDir = 'asc' | 'desc';
+
+/** Direction a key starts in when first picked: newest and biggest first, names A→Z. */
+export const DEFAULT_DIR: Record<FileSortKey, SortDir> = {
+	name: 'asc',
+	date: 'desc',
+	size: 'desc',
+};
+
+/**
+ * Filters by a case-insensitive substring of the display name, then sorts. Files missing the
+ * sort value (no size / no date reported) always sink to the bottom, whatever the direction.
+ * Ties fall back to the name so the order is stable between polls.
+ */
+export function arrangeFiles(
+	files: PrinterFile[],
+	query: string,
+	key: FileSortKey,
+	dir: SortDir
+): PrinterFile[] {
+	const q = query.trim().toLowerCase();
+	const byName = (a: PrinterFile, b: PrinterFile) =>
+		a.displayName.localeCompare(b.displayName, undefined, { numeric: true, sensitivity: 'base' });
+	const sign = dir === 'asc' ? 1 : -1;
+	const valueOf = (f: PrinterFile) => (key === 'size' ? f.size : f.modifiedAt);
+
+	return files
+		.filter((f) => !q || f.displayName.toLowerCase().includes(q))
+		.sort((a, b) => {
+			if (key === 'name') return sign * byName(a, b);
+			const va = valueOf(a);
+			const vb = valueOf(b);
+			if (va == null || vb == null) {
+				if (va != null) return -1;
+				if (vb != null) return 1;
+				return byName(a, b);
+			}
+			return va === vb ? byName(a, b) : sign * (va - vb);
+		});
+}
+
 export type UploadStatus = 'uploading' | 'sending' | 'done' | 'error' | 'conflict';
 
 export type Upload = {
@@ -91,6 +134,16 @@ export class PrinterFilesController {
 	uploads = $state<Upload[]>([]);
 	/** Name of the file a print/delete is currently in flight for. */
 	busy = $state<string | null>(null);
+	/** Files marked for a bulk delete, by name. */
+	selected = new SvelteSet<string>();
+	/** True while a bulk delete is running. */
+	deleting = $state(false);
+
+	query = $state('');
+	sortKey = $state<FileSortKey>('date');
+	sortDir = $state<SortDir>(DEFAULT_DIR.date);
+	/** The list as shown: searched and sorted. */
+	shown = $derived(arrangeFiles(this.files, this.query, this.sortKey, this.sortDir));
 
 	// Deliberately outside $state: a native XHR must not be wrapped in a reactive proxy.
 	private xhrs = new Map<number, XMLHttpRequest>();
@@ -111,6 +164,10 @@ export class PrinterFilesController {
 			if (!res.ok) throw new Error(`status ${res.status}`);
 			const data = PrinterFilesSchema.parse(await res.json());
 			this.files = data.files;
+			// Forget marks on files that are gone, so the count never includes ghosts.
+			for (const name of this.selected) {
+				if (!data.files.some((f) => f.name === name)) this.selected.delete(name);
+			}
 			this.storage = data.storage ?? null;
 			this.online = data.online;
 			this.error = data.error ?? null;
@@ -412,6 +469,83 @@ export class PrinterFilesController {
 		} finally {
 			this.busy = null;
 		}
+	}
+
+	/** Picking the active key flips its direction; a new key starts in its natural direction. */
+	sortBy(key: FileSortKey): void {
+		if (this.sortKey === key) {
+			this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+			return;
+		}
+		this.sortKey = key;
+		this.sortDir = DEFAULT_DIR[key];
+	}
+
+	/**
+	 * What "select all" acts on: the files the search currently shows, minus read-only ones
+	 * (which cannot be deleted anyway). So search + select all marks exactly the matches.
+	 */
+	get deletable(): PrinterFile[] {
+		return this.shown.filter((f) => f.readOnly !== true);
+	}
+
+	get allSelected(): boolean {
+		const deletable = this.deletable;
+		return deletable.length > 0 && deletable.every((f) => this.selected.has(f.name));
+	}
+
+	toggle(name: string): void {
+		if (this.selected.has(name)) this.selected.delete(name);
+		else this.selected.add(name);
+	}
+
+	toggleAll(): void {
+		if (this.allSelected) {
+			for (const f of this.deletable) this.selected.delete(f.name);
+			return;
+		}
+		for (const f of this.deletable) this.selected.add(f.name);
+	}
+
+	/**
+	 * Deletes every marked file. One DELETE at a time: PrusaLink is a small embedded server and
+	 * the USB drive is FAT32, so parallel requests buy nothing but failures. Keeps going past a
+	 * failure (e.g. the file currently printing) and leaves the failed ones marked.
+	 */
+	async removeSelected(): Promise<void> {
+		const names = [...this.selected];
+		if (names.length === 0 || this.deleting) return;
+		this.deleting = true;
+
+		let removed = 0;
+		let firstError: string | null = null;
+		try {
+			for (const name of names) {
+				this.busy = name;
+				try {
+					const res = await fetch(`${this.base}?name=${encodeURIComponent(name)}`, {
+						method: 'DELETE',
+						headers: { Accept: 'application/json' },
+					});
+					const body = await res.json().catch(() => null);
+					if (!res.ok) throw new Error(body?.error ?? `status ${res.status}`);
+					this.selected.delete(name);
+					removed++;
+				} catch (e) {
+					firstError ??= `${name}: ${e instanceof Error ? e.message : 'could not delete'}`;
+				}
+			}
+		} finally {
+			this.busy = null;
+			this.deleting = false;
+		}
+
+		const failed = names.length - removed;
+		if (removed > 0) addToast(`${removed} file${removed === 1 ? '' : 's'} deleted`);
+		if (failed > 0) {
+			addToast(`${failed} could not be deleted. ${firstError ?? ''}`.trim(), 'error');
+		}
+		await this.refresh();
 	}
 
 	start(): void {
