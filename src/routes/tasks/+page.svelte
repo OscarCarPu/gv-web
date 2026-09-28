@@ -142,7 +142,6 @@
 	// payload may drive this, or a local start would be undone before `data` catches up.
 	$effect(() => {
 		const active = data.activeTimeEntry;
-		console.log('[timer-sync] data changed, active=', active?.id);
 		untrack(() => {
 			const localId = timer.activeTimeEntryId;
 			if (active) {
@@ -174,15 +173,12 @@
 	// entries and the summary shadow the SSR payload.
 	let lastRefetch = 0;
 	$effect(() => {
-		console.log('[resync] listeners installed');
-		function resync(e: Event) {
-			console.log('[resync] event', e.type, document.visibilityState, Date.now() - lastRefetch);
+		function resync() {
 			if (document.visibilityState !== 'visible') return;
 			const now = Date.now();
 			if (now - lastRefetch < 5000) return;
 			lastRefetch = now;
-			console.log('[resync] invalidateAll');
-			invalidateAll().then(() => console.log('[resync] done', data.activeTimeEntry?.id, data.tasksByDueDate.length));
+			void invalidateAll();
 			entries.refresh();
 		}
 		document.addEventListener('visibilitychange', resync);
