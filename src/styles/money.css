@@ -486,11 +486,15 @@
 
 /* --- Budgets --- */
 
-.money-month-nav {
+/* Compound selectors (`.shared.money-*`) so these overrides win over the shared classes no
+   matter which stylesheet loads last: the production build orders the chunks differently from
+   dev (tasks.css lands after money.css), and equal-specificity rules then flip. */
+
+.date-navigation.money-month-nav {
 	@apply mt-4 mb-4;
 
 	& > p {
-		@apply w-[14rem] cursor-default;
+		@apply cursor-default;
 	}
 }
 
@@ -507,7 +511,7 @@
 	max-width: 100%;
 }
 
-.money-budget-row {
+.task-item.money-budget-row {
 	@apply w-full cursor-pointer flex-col items-stretch gap-1.5 text-left;
 	margin-left: calc(var(--budget-depth, 0) * 1.25rem);
 	width: calc(100% - var(--budget-depth, 0) * 1.25rem);
@@ -564,7 +568,7 @@
 	@apply text-text-muted hover:text-primary mt-1 cursor-pointer self-start border-none bg-transparent p-0 text-xs underline-offset-2 hover:underline;
 }
 
-.money-budget-scope {
+.create-mode-toggle.money-budget-scope {
 	@apply mt-1;
 }
 
@@ -580,6 +584,6 @@
 	@apply text-text-muted text-xs tabular-nums;
 }
 
-.money-budget-period {
+.create-mode-toggle.money-budget-period {
 	@apply mb-2;
 }
