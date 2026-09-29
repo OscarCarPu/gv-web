@@ -25,9 +25,14 @@
 		/** Unsaved edits; owned by the section so the editor can add to it too. */
 		draft: PlanDraft;
 		onedit: (b: PlanBlockResponse) => void;
+		/** Start the timer on the block's task. */
+		onstarttimer: (b: PlanBlockResponse) => Promise<void> | void;
+		/** Stop the running timer and start one on the block's task. */
+		onstopandstart: (b: PlanBlockResponse) => Promise<void> | void;
+		isTimerRunning: boolean;
 	}
 
-	let { board, draft, onedit }: Props = $props();
+	let { board, draft, onedit, onstarttimer, onstopandstart, isTimerRunning }: Props = $props();
 
 	const HOUR_PX = 56;
 	/** Pointer travel before a press on a block counts as a move rather than a click. */
@@ -395,6 +400,18 @@
 		bind:this={menuEl}
 		style="left: {menu.x}px; top: {menu.y}px"
 	>
+		{#if !menuItem.isNew && menuItem.block.task_id !== null && !PlanBoard.isFinished(menuItem.block)}
+			{#if isTimerRunning}
+				<button role="menuitem" onclick={() => menuAction(onstopandstart)}>
+					<Icon name="play" />
+					{menuItem.block.task_type === 'recurring' ? 'Renew & start' : 'Stop & start'}
+				</button>
+			{:else}
+				<button role="menuitem" onclick={() => menuAction(onstarttimer)}>
+					<Icon name="play" /> Start timer
+				</button>
+			{/if}
+		{/if}
 		{#if !menuItem.isNew}
 			<button role="menuitem" onclick={editFromMenu}>
 				<Icon name="pen" /> Edit

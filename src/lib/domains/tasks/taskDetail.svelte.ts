@@ -174,6 +174,22 @@ export class TaskDetail {
 		}
 	}
 
+	/** Un-complete the task: clear `finished_at` (the API takes an explicit null as "clear"). */
+	async clearFinished(): Promise<void> {
+		const id = this.#taskId;
+		if (id == null || !this.task) return;
+		const prev = this.task.finished_at;
+		this.task.finished_at = null;
+		addNotification('Task reopened', 'success');
+		try {
+			await this.#api.updateTask(id, { finished_at: null });
+			await Promise.all([this.#loadTask(), this.#refresh()]);
+		} catch {
+			if (this.task) this.task.finished_at = prev;
+			addToast('Error reopening task', 'error');
+		}
+	}
+
 	// ── save ────────────────────────────────────────────────────────────
 
 	async save(): Promise<void> {

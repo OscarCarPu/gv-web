@@ -157,7 +157,17 @@
 				<div class="detail-info-item">
 					<span class="detail-info-label">End</span>
 					{#if detail.task.finished_at}
-						<span class="detail-info-value">{formatDateFull(detail.task.finished_at)}</span>
+						<div class="detail-info-value-row">
+							<span class="detail-info-value">{formatDateFull(detail.task.finished_at)}</span>
+							<button
+								class="value-clear-btn"
+								onclick={() => detail.clearFinished()}
+								title="Remove end (reopen task)"
+								aria-label="Remove end (reopen task)"
+							>
+								<Icon name="xmark" />
+							</button>
+						</div>
 					{:else}
 						<button class="btn-action-sm" onclick={() => detail.setFinished()}>Finish</button>
 					{/if}

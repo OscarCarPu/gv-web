@@ -413,7 +413,14 @@
 			</div>
 		{/if}
 		{#if agendaView}
-			<PlanAgenda {board} {draft} onedit={openEdit} />
+			<PlanAgenda
+				{board}
+				{draft}
+				onedit={openEdit}
+				onstarttimer={handleTimer}
+				onstopandstart={handleTimerStopAndStart}
+				{isTimerRunning}
+			/>
 		{:else if board.data.blocks.length === 0 && entries.length === 0}
 			<div class="history-empty">
 				<Icon name="calendar-day" class="text-2xl" />

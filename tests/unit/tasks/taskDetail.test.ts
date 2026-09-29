@@ -149,6 +149,30 @@ describe('TaskDetail', () => {
 		});
 	});
 
+	describe('clearFinished', () => {
+		it('sends an explicit null so the API reopens the task', async () => {
+			const api = createMockApi(makeFull({ id: 1, finished_at: '2026-09-28T10:00:00Z' }));
+			const detail = new TaskDetail(api, { onclose, refresh });
+			await detail.load(1);
+
+			await detail.clearFinished();
+
+			expect(api.updateTask).toHaveBeenCalledWith(1, { finished_at: null });
+			expect(refresh).toHaveBeenCalled();
+		});
+
+		it('restores finished_at when the API rejects', async () => {
+			const api = createMockApi(makeFull({ id: 1, finished_at: '2026-09-28T10:00:00Z' }));
+			const detail = new TaskDetail(api, { onclose, refresh });
+			await detail.load(1);
+			api.updateTask.mockRejectedValueOnce(new Error('boom'));
+
+			await detail.clearFinished();
+
+			expect(detail.task?.finished_at).toBe('2026-09-28T10:00:00Z');
+		});
+	});
+
 	describe('save', () => {
 		it('blocks save with an empty name and sets nameError', async () => {
 			const api = createMockApi(makeFull({ id: 1, name: 'X' }));
