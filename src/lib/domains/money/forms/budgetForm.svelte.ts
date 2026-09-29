@@ -10,7 +10,7 @@ import type {
 	SetBudgetRequest,
 } from '$lib/domains/money/types/Money.types';
 
-interface BudgetFormApi {
+export interface BudgetFormApi {
 	setBudget: (categoryId: number, input: SetBudgetRequest) => Promise<void>;
 	deleteBudget: (
 		categoryId: number,
