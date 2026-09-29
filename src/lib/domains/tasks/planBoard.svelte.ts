@@ -14,7 +14,7 @@ import type {
 	CreatePlanBlockRequest,
 	UpdatePlanBlockRequest,
 } from '$lib/domains/tasks/types/Plan.types';
-import { sameTask, splitPoint } from '$lib/domains/tasks/utils/planAgenda';
+import { sameTask, splitPoint, type SaveStep } from '$lib/domains/tasks/utils/planAgenda';
 import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
 
 interface PlanBoardApi {
@@ -209,18 +209,25 @@ export class PlanBoard {
 
 	// ── agenda edits ────────────────────────────────────────────────────
 
-	/** New start/end for a block, from dragging one of its edges in the agenda. */
-	async resizeBlock(b: PlanBlockResponse, startMs: number, endMs: number): Promise<void> {
+	/** Apply the agenda's draft: one PUT per step, in the order `planSaveSteps` worked out
+	 *  (the API checks overlap on every PUT, so the order is what makes a swap possible).
+	 *  Returns whether every step went through; on failure the refreshed plan shows how far it
+	 *  got and the draft stays, so saving again resumes. */
+	async saveTimes(steps: SaveStep[]): Promise<boolean> {
+		let ok = true;
 		try {
-			await this.#api.plan.updateBlock(b.id, {
-				started_at: new Date(startMs).toISOString(),
-				ended_at: new Date(endMs).toISOString(),
-			});
+			for (const s of steps) {
+				await this.#api.plan.updateBlock(s.id, {
+					started_at: new Date(s.startMs).toISOString(),
+					ended_at: new Date(s.endMs).toISOString(),
+				});
+			}
 		} catch (e: unknown) {
-			addToast(e instanceof Error ? e.message : 'Error resizing', 'error');
+			ok = false;
+			addToast(e instanceof Error ? e.message : 'Error saving', 'error');
 		}
-		// Refresh on failure too: the agenda shows the dragged edge until new data lands.
 		await this.#refresh();
+		return ok;
 	}
 
 	/** Cut a block at its midpoint into two back-to-back blocks with the same task, label and

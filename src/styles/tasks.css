@@ -1028,8 +1028,9 @@
 		@apply cursor-progress;
 	}
 
-	&.dragging {
-		@apply cursor-ns-resize;
+	&.dragging,
+	&.dragging .plan-agenda-block {
+		@apply cursor-grabbing;
 	}
 }
 
@@ -1061,7 +1062,11 @@
 }
 
 .plan-agenda-block {
-	@apply absolute right-0 left-1 z-10 flex cursor-pointer overflow-hidden rounded-md px-2 text-left;
+	@apply absolute z-10 flex cursor-grab overflow-hidden rounded-md px-2 text-left;
+	/* Overlapping blocks (allowed while editing) sit side by side in lanes. */
+	left: calc(0.25rem + var(--lane, 0) * (100% - 0.25rem) / var(--lanes, 1));
+	width: calc((100% - 0.25rem) / var(--lanes, 1) - 2px);
+	touch-action: none;
 	border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
 	border-left: 3px solid var(--color-primary);
 	background: color-mix(in srgb, var(--color-primary) 14%, var(--color-bg));
@@ -1090,6 +1095,37 @@
 
 .plan-agenda-current {
 	box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+/* Moved or resized, not saved yet. */
+.plan-agenda-dirty {
+	border-style: dashed;
+	border-left-style: solid;
+}
+
+/* Shares time with another block — the API would reject it, so Save waits. */
+.plan-agenda-conflict {
+	border-color: var(--color-danger);
+	border-left-color: var(--color-danger);
+}
+
+.plan-agenda-savebar {
+	@apply sticky top-2 z-40 mb-3 flex items-center gap-2 rounded-lg px-3 py-2;
+	border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+	background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-light));
+
+	&.has-conflicts {
+		border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
+		background: color-mix(in srgb, var(--color-danger) 10%, var(--color-bg-light));
+
+		.plan-agenda-savebar-text {
+			@apply text-danger;
+		}
+	}
+}
+
+.plan-agenda-savebar-text {
+	@apply text-text flex flex-1 items-center gap-1.5 text-sm font-medium;
 }
 
 .plan-agenda-past,

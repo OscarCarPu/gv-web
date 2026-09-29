@@ -2,12 +2,16 @@ import { describe, it, expect, vi } from 'vitest';
 import {
 	MIN_BLOCK_MS,
 	agendaRange,
-	edgeLimits,
+	blockSpan,
+	conflictIds,
+	dragSpan,
 	hourMarks,
+	layoutLanes,
 	mergeCandidate,
-	resolveEdge,
-	sortBlocks,
+	planSaveSteps,
+	spansOverlap,
 	splitPoint,
+	type IdSpan,
 } from '$lib/domains/tasks/utils/planAgenda';
 import { PlanBoard } from '$lib/domains/tasks/planBoard.svelte';
 import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
@@ -42,37 +46,103 @@ describe('agendaRange', () => {
 	});
 
 	it('widens to whole hours around blocks and now', () => {
-		const blocks = [block({ started_at: iso(6, 30), ended_at: iso(7) })];
-		const range = agendaRange(blocks, at(21, 10));
+		const spans = [blockSpan(block({ started_at: iso(6, 30), ended_at: iso(7) }))];
+		const range = agendaRange(spans, at(21, 10));
 		expect(range).toEqual({ startMs: at(6), endMs: at(22) });
 		expect(hourMarks(range)).toHaveLength(17);
 	});
 });
 
-describe('edge limits', () => {
+describe('dragSpan', () => {
 	const range = { startMs: at(8), endMs: at(20) };
-	const sorted = sortBlocks([
-		block({ started_at: iso(11), ended_at: iso(12) }),
-		block({ started_at: iso(9), ended_at: iso(10) }),
-	]);
+	const origin = { startMs: at(9), endMs: at(10) };
+	const min = (m: number) => m * 60_000;
 
-	it('stops a start edge at the previous block and short of its own end', () => {
-		expect(edgeLimits(sorted, 1, 'start', range)).toEqual({
-			min: at(10),
-			max: at(12) - MIN_BLOCK_MS,
+	it('moves an edge in 5-minute steps, never past the other edge', () => {
+		expect(dragSpan(origin, 'end', min(22), range)).toEqual({ startMs: at(9), endMs: at(10, 20) });
+		expect(dragSpan(origin, 'start', min(90), range)).toEqual({
+			startMs: at(10) - MIN_BLOCK_MS,
+			endMs: at(10),
 		});
 	});
 
-	it('stops an end edge at the next block, or the grid end for the last one', () => {
-		expect(edgeLimits(sorted, 0, 'end', range).max).toBe(at(11));
-		expect(edgeLimits(sorted, 1, 'end', range).max).toBe(at(20));
+	it('moves the whole block keeping its length, inside the grid', () => {
+		expect(dragSpan(origin, 'move', min(47), range)).toEqual({
+			startMs: at(9, 45),
+			endMs: at(10, 45),
+		});
+		expect(dragSpan(origin, 'move', -min(300), range)).toEqual({ startMs: at(8), endMs: at(9) });
+	});
+});
+
+describe('overlaps', () => {
+	const spans: IdSpan[] = [
+		{ id: 1, startMs: at(9), endMs: at(10) },
+		{ id: 2, startMs: at(9, 30), endMs: at(11) },
+		{ id: 3, startMs: at(10, 30), endMs: at(12) },
+		{ id: 4, startMs: at(12), endMs: at(13) },
+	];
+
+	it('flags every block sharing time, not touching ones', () => {
+		expect([...conflictIds(spans)].sort()).toEqual([1, 2, 3]);
 	});
 
-	it('snaps to 5 minutes and clamps', () => {
-		const limits = { min: at(10), max: at(11) };
-		expect(resolveEdge(at(10, 22), limits)).toBe(at(10, 20));
-		expect(resolveEdge(at(9, 40), limits)).toBe(at(10));
-		expect(resolveEdge(at(11, 30), limits)).toBe(at(11));
+	it('lays overlapping blocks out in lanes, lone ones full width', () => {
+		const lanes = layoutLanes(spans);
+		expect(lanes.get(1)).toEqual({ lane: 0, lanes: 2 });
+		expect(lanes.get(2)).toEqual({ lane: 1, lanes: 2 });
+		expect(lanes.get(3)).toEqual({ lane: 0, lanes: 2 });
+		expect(lanes.get(4)).toEqual({ lane: 0, lanes: 1 });
+	});
+});
+
+describe('planSaveSteps', () => {
+	/** Replays the steps the way the API would, failing on any overlap. */
+	function replay(current: IdSpan[], steps: NonNullable<ReturnType<typeof planSaveSteps>>) {
+		const state = new Map(current.map((s) => [s.id, s]));
+		for (const step of steps) {
+			for (const [id, other] of state) {
+				if (id !== step.id) expect(spansOverlap(step, other)).toBe(false);
+			}
+			state.set(step.id, step);
+		}
+		return [...state.values()].map(({ id, startMs, endMs }) => ({ id, startMs, endMs }));
+	}
+
+	it('orders moves so each one lands on free time', () => {
+		const current = [
+			{ id: 1, startMs: at(9), endMs: at(10) },
+			{ id: 2, startMs: at(10), endMs: at(11) },
+		];
+		// 2 moves later first, then 1 can grow into the freed hour.
+		const target = [
+			{ id: 1, startMs: at(9), endMs: at(11) },
+			{ id: 2, startMs: at(11), endMs: at(12) },
+		];
+		const steps = planSaveSteps(current, target)!;
+		expect(steps.map((s) => s.id)).toEqual([2, 1]);
+		expect(replay(current, steps)).toEqual(target);
+	});
+
+	it('parks one block to swap two adjacent ones', () => {
+		const current = [
+			{ id: 1, startMs: at(9), endMs: at(10) },
+			{ id: 2, startMs: at(10), endMs: at(11) },
+		];
+		const target = [
+			{ id: 1, startMs: at(10), endMs: at(11) },
+			{ id: 2, startMs: at(9), endMs: at(10) },
+		];
+		const steps = planSaveSteps(current, target)!;
+		expect(steps.some((s) => s.parking)).toBe(true);
+		expect(replay(current, steps).sort((a, b) => a.id - b.id)).toEqual(target);
+	});
+
+	it('skips unchanged blocks and refuses an overlapping target', () => {
+		const current = [{ id: 1, startMs: at(9), endMs: at(10) }];
+		expect(planSaveSteps(current, current)).toEqual([]);
+		const overlapping = [...current, { id: 2, startMs: at(9, 30), endMs: at(10, 30) }];
+		expect(planSaveSteps(overlapping, overlapping)).toBeNull();
 	});
 });
 
@@ -160,13 +230,19 @@ describe('PlanBoard agenda edits', () => {
 		expect(api.plan.deleteBlock).not.toHaveBeenCalled();
 	});
 
-	it('resize sends both edges', async () => {
-		const { api, board } = setup();
-		const b = block();
-		await board.resizeBlock(b, at(8, 45), at(10));
-		expect(api.plan.updateBlock).toHaveBeenCalledWith(b.id, {
-			started_at: iso(8, 45),
-			ended_at: iso(10),
-		});
+	it('saveTimes sends each step in order and reports failure', async () => {
+		const { api, refresh, board } = setup();
+		const steps = [
+			{ id: 2, startMs: at(11), endMs: at(12), parking: false },
+			{ id: 1, startMs: at(9), endMs: at(11), parking: false },
+		];
+		expect(await board.saveTimes(steps)).toBe(true);
+		expect(api.plan.updateBlock.mock.calls).toEqual([
+			[2, { started_at: iso(11), ended_at: iso(12) }],
+			[1, { started_at: iso(9), ended_at: iso(11) }],
+		]);
+		api.plan.updateBlock.mockRejectedValueOnce(new Error('plan block overlaps'));
+		expect(await board.saveTimes(steps)).toBe(false);
+		expect(refresh).toHaveBeenCalledTimes(2);
 	});
 });
