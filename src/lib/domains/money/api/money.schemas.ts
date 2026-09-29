@@ -120,3 +120,44 @@ export const EstimationResultSchema = z.object({
 	rate: z.string(),
 	saving: z.string(),
 });
+
+const BudgetTotalsSchema = z.object({
+	budgeted: z.string(),
+	actual: z.string(),
+	unbudgeted: z.string(),
+	overspent: z.string(),
+});
+
+const BudgetItemSchema = z.object({
+	category_id: z.number(),
+	name: z.string(),
+	parent_id: z.number().nullable(),
+	type: z.enum(['income', 'expense']),
+	depth: z.number(),
+	budget: z.string(),
+	actual: z.string(),
+	remaining: z.string(),
+	progress: z.number(),
+	status: z.enum(['ok', 'warning', 'over', 'pending', 'met']),
+	since: z.string(),
+});
+
+const BudgetAmountSchema = z.object({
+	category_id: z.number(),
+	amount: z.string(),
+});
+
+export const BudgetMonthSchema = z.object({
+	month: z.string(),
+	month_progress: z.number(),
+	expense: BudgetTotalsSchema,
+	income: BudgetTotalsSchema,
+	items: z
+		.array(BudgetItemSchema)
+		.nullable()
+		.transform((v) => v ?? []),
+	averages: z
+		.array(BudgetAmountSchema)
+		.nullable()
+		.transform((v) => v ?? []),
+});

@@ -22,6 +22,7 @@
 	import { buildPaceTooltip } from '$lib/domains/tasks/utils/paceLabel';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
+	import PageTabs from '$lib/shared/components/PageTabs.svelte';
 	import { linkify } from '$lib/shared/utils/linkify';
 
 	let { data } = $props();
@@ -215,14 +216,14 @@
 <div class="container">
 	<h1>Tasks</h1>
 
-	<div class="create-mode-toggle tasks-tab-toggle">
-		<button class:active={activeTab === 'today'} onclick={() => (activeTab = 'today')}>
-			Today
-		</button>
-		<button class:active={activeTab === 'projects'} onclick={() => (activeTab = 'projects')}>
-			Projects
-		</button>
-	</div>
+	<PageTabs
+		tabs={[
+			{ value: 'today', label: 'Today' },
+			{ value: 'projects', label: 'Projects' },
+		]}
+		active={activeTab}
+		onselect={(value) => (activeTab = value)}
+	/>
 
 	{#if activeTab === 'today'}
 		<div class="task-timer-panel" class:expanded={timerExpanded}>

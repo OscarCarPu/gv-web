@@ -10,15 +10,11 @@
 	<title>Money</title>
 </svelte:head>
 
-<div class="container">
-	<h1>Money</h1>
+<div class="money-content">
+	<OverviewCard overview={data.overview} accounts={data.accounts} categories={data.categories} />
 
-	<div class="money-content">
-		<OverviewCard overview={data.overview} accounts={data.accounts} categories={data.categories} />
-
-		<div class="money-side">
-			<AccountsCard accounts={data.accounts} />
-			<CategoriesCard categories={data.categories} />
-		</div>
+	<div class="money-side">
+		<AccountsCard accounts={data.accounts} />
+		<CategoriesCard categories={data.categories} />
 	</div>
 </div>

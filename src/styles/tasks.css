@@ -1,13 +1,5 @@
 @reference "./app.css";
 
-.tasks-tab-toggle {
-	@apply mx-auto w-fit;
-
-	& button {
-		@apply flex-none px-6;
-	}
-}
-
 .section-header .back-to-top {
 	@apply text-text-muted hover:text-primary cursor-pointer rounded border-none bg-transparent p-1 transition-colors duration-200;
 }

@@ -130,3 +130,58 @@ export interface EstimationResult {
 	rate: string;
 	saving: string;
 }
+
+// --- Budgets ---
+
+/** How far a budget change reaches: this month and every later one, or this month only. */
+export type BudgetScope = 'forward' | 'month';
+
+export type BudgetStatus = 'ok' | 'warning' | 'over' | 'pending' | 'met';
+
+export interface BudgetTotals {
+	budgeted: string;
+	actual: string;
+	/** Actual in categories no budget covers (incl. uncategorized). */
+	unbudgeted: string;
+	/** Expense beyond the budgets, nested budgets counted once (0 for income). */
+	overspent: string;
+}
+
+export interface BudgetItem {
+	category_id: number;
+	name: string;
+	parent_id: number | null;
+	type: 'income' | 'expense';
+	/** Number of budgeted ancestors of the same type (for nesting). */
+	depth: number;
+	budget: string;
+	actual: string;
+	remaining: string;
+	progress: number;
+	status: BudgetStatus;
+	/** `YYYY-MM` the budget in effect started. */
+	since: string;
+}
+
+export interface BudgetAmount {
+	category_id: number;
+	amount: string;
+}
+
+export interface BudgetMonth {
+	/** `YYYY-MM`. */
+	month: string;
+	/** Elapsed share of the month: 1 past, 0 future, in between for the current one. */
+	month_progress: number;
+	expense: BudgetTotals;
+	income: BudgetTotals;
+	items: BudgetItem[];
+	/** Average of the last 3 complete months per category (subtree), for suggestions. */
+	averages: BudgetAmount[];
+}
+
+export interface SetBudgetRequest {
+	month: string;
+	amount: string;
+	scope: BudgetScope;
+}

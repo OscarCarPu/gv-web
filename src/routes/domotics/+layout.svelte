@@ -4,6 +4,7 @@
 	import '$styles/uptime.css';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import PageTabs from '$lib/shared/components/PageTabs.svelte';
 
 	let { children } = $props();
 
@@ -19,13 +20,14 @@
 <div class="domotics-page">
 	<header class="domotics-head">
 		<h1>Domotics</h1>
-		<nav class="domotics-tabs">
-			<a href={printers} class="domotics-tab" class:active={page.url.pathname === printers}>
-				Printers
-			</a>
-			<a href={lights} class="domotics-tab" class:active={page.url.pathname === lights}>Lights</a>
-			<a href={uptime} class="domotics-tab" class:active={page.url.pathname === uptime}>Uptime</a>
-		</nav>
+		<PageTabs
+			tabs={[
+				{ value: printers, label: 'Printers', href: printers },
+				{ value: lights, label: 'Lights', href: lights },
+				{ value: uptime, label: 'Uptime', href: uptime },
+			]}
+			active={page.url.pathname}
+		/>
 	</header>
 
 	{@render children()}

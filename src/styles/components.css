@@ -689,3 +689,40 @@
 		transform: translateX(20px);
 	}
 }
+
+/* Page subtabs (PageTabs component: /tasks, /money, /domotics) */
+
+.page-tabs {
+	display: flex;
+	gap: 0.25rem;
+	margin: 0.875rem auto 0;
+	padding: 0.25rem;
+	background: var(--color-bg-light);
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	width: fit-content;
+}
+
+.page-tab {
+	padding: 0.4rem 1.1rem;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	border-radius: 9px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--color-text-muted);
+	text-decoration: none;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
+}
+
+.page-tab:hover {
+	color: var(--color-text);
+}
+
+.page-tab.active {
+	background: var(--color-primary);
+	color: #fff;
+}

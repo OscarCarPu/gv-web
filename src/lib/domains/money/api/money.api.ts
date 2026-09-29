@@ -12,6 +12,7 @@ import {
 	CategoryStatsSchema,
 	MonthlyStatsSchema,
 	EstimationResultSchema,
+	BudgetMonthSchema,
 } from './money.schemas';
 import type {
 	Account,
@@ -30,6 +31,9 @@ import type {
 	StatsGranularity,
 	EstimationMode,
 	EstimationResult,
+	BudgetMonth,
+	BudgetScope,
+	SetBudgetRequest,
 } from '../types/Money.types';
 
 export const moneyApi = {
@@ -213,5 +217,33 @@ export const moneyApi = {
 		qs.set('end_month', params.end_month);
 		qs.set('mode', params.mode);
 		return fetchAPI(`/finance/stats/estimation?${qs}`, EstimationResultSchema, { token });
+	},
+
+	// --- Budgets ---
+
+	/** A month's budgets vs actuals; `month` is `YYYY-MM` (omit for the current month). */
+	async getBudgets(month?: string, token?: string): Promise<BudgetMonth> {
+		const suffix = month ? `?${new URLSearchParams({ month })}` : '';
+		return fetchAPI(`/finance/budgets${suffix}`, BudgetMonthSchema, { token });
+	},
+
+	async setBudget(categoryId: number, input: SetBudgetRequest, token?: string): Promise<void> {
+		return fetchAPI(`/finance/budgets/${categoryId}`, z.void(), {
+			method: 'PUT',
+			body: JSON.stringify(input),
+			token,
+		});
+	},
+
+	async deleteBudget(
+		categoryId: number,
+		params: { month: string; scope: BudgetScope },
+		token?: string
+	): Promise<void> {
+		const qs = new URLSearchParams({ month: params.month, scope: params.scope });
+		return fetchAPI(`/finance/budgets/${categoryId}?${qs}`, z.void(), {
+			method: 'DELETE',
+			token,
+		});
 	},
 };

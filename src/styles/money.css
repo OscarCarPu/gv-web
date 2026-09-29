@@ -483,3 +483,87 @@
 	background: var(--color-bg);
 	border: 1px solid var(--color-border);
 }
+
+/* --- Budgets --- */
+
+.money-month-nav {
+	@apply mt-4 mb-4;
+
+	& > p {
+		@apply w-[14rem] cursor-default;
+	}
+}
+
+.money-budget-tiles {
+	@apply desktop:flex-nowrap flex-wrap;
+
+	.money-tile {
+		@apply desktop:basis-0 basis-[calc(50%-0.375rem)];
+	}
+}
+
+.money-tile-sub {
+	@apply text-text-muted truncate text-xs;
+	max-width: 100%;
+}
+
+.money-budget-row {
+	@apply w-full cursor-pointer flex-col items-stretch gap-1.5 text-left;
+	margin-left: calc(var(--budget-depth, 0) * 1.25rem);
+	width: calc(100% - var(--budget-depth, 0) * 1.25rem);
+}
+
+.money-budget-head {
+	@apply flex items-baseline gap-3;
+}
+
+.money-budget-name {
+	@apply min-w-0 flex-1 truncate font-medium;
+}
+
+.money-budget-amounts {
+	@apply text-sm whitespace-nowrap tabular-nums;
+}
+
+.money-budget-of {
+	@apply text-text-muted;
+}
+
+.money-budget-pct {
+	@apply text-text-muted w-12 text-right text-sm tabular-nums;
+}
+
+.money-budget-bar {
+	@apply relative flex;
+}
+
+.money-budget-row.over {
+	.progress-fill {
+		@apply bg-danger;
+	}
+
+	.money-budget-pct {
+		color: var(--color-danger);
+	}
+}
+
+.money-budget-row.met .money-budget-pct {
+	color: var(--color-success);
+}
+
+.money-budget-pace {
+	@apply bg-text absolute -top-1 -bottom-1 w-0.5 rounded-full opacity-60;
+	transform: translateX(-50%);
+}
+
+.money-budget-meta {
+	@apply text-text-muted flex justify-between gap-3 text-xs;
+}
+
+.money-budget-suggest {
+	@apply text-text-muted hover:text-primary mt-1 cursor-pointer self-start border-none bg-transparent p-0 text-xs underline-offset-2 hover:underline;
+}
+
+.money-budget-scope {
+	@apply mt-1;
+}
