@@ -1019,9 +1019,163 @@
 	color: var(--color-primary);
 }
 
+/* --- Plan: agenda view (time grid, drag a block's edges to retime it) --- */
+
+.plan-agenda {
+	@apply mt-4 select-none;
+
+	&.busy {
+		@apply cursor-progress;
+	}
+
+	&.dragging {
+		@apply cursor-ns-resize;
+	}
+}
+
+.plan-agenda-grid {
+	@apply relative;
+	margin-left: 3rem;
+}
+
+.plan-agenda-hour {
+	@apply absolute right-0 left-0 h-px;
+	background: var(--color-border-light);
+}
+
+.plan-agenda-hour-label {
+	@apply text-text-muted absolute -translate-y-1/2 font-mono text-[11px] tabular-nums;
+	right: calc(100% + 0.5rem);
+}
+
+.plan-agenda-now {
+	@apply pointer-events-none absolute right-0 left-0 z-20 h-px;
+	background: var(--color-primary);
+}
+
+.plan-agenda-now-label {
+	@apply absolute -translate-y-1/2 font-mono text-[11px] font-semibold tabular-nums;
+	right: calc(100% + 0.5rem);
+	color: var(--color-primary);
+	background: var(--color-bg-light);
+}
+
+.plan-agenda-block {
+	@apply absolute right-0 left-1 z-10 flex cursor-pointer overflow-hidden rounded-md px-2 text-left;
+	border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+	border-left: 3px solid var(--color-primary);
+	background: color-mix(in srgb, var(--color-primary) 14%, var(--color-bg));
+
+	&:hover,
+	&.plan-agenda-active {
+		background: color-mix(in srgb, var(--color-primary) 20%, var(--color-bg));
+	}
+
+	&.plan-agenda-active {
+		@apply z-30;
+		border-color: color-mix(in srgb, var(--color-primary) 70%, transparent);
+	}
+}
+
+.plan-agenda-free {
+	border-color: var(--color-border-strong);
+	border-left-color: var(--color-text-muted);
+	background: color-mix(in srgb, var(--color-text-muted) 8%, var(--color-bg));
+
+	&:hover,
+	&.plan-agenda-active {
+		background: color-mix(in srgb, var(--color-text-muted) 14%, var(--color-bg));
+	}
+}
+
+.plan-agenda-current {
+	box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.plan-agenda-past,
+.plan-agenda-finished {
+	@apply opacity-60;
+}
+
+.plan-agenda-body {
+	@apply flex min-w-0 flex-1 flex-col py-1 leading-tight;
+}
+
+.plan-agenda-name {
+	@apply text-text truncate text-sm font-semibold;
+}
+
+.plan-agenda-time {
+	@apply text-text-muted truncate font-mono text-[11px] tabular-nums;
+}
+
+.plan-agenda-note {
+	@apply text-text-muted truncate text-xs italic;
+}
+
+/* Too short for stacked lines: name and time share one row, the note goes. */
+.plan-agenda-short {
+	.plan-agenda-body {
+		@apply flex-row items-center gap-2 py-0;
+	}
+
+	.plan-agenda-note {
+		@apply hidden;
+	}
+}
+
+/* Invisible grab strips over the top and bottom edges; a bar appears on hover. */
+.plan-agenda-handle {
+	@apply absolute right-0 left-0 z-10 cursor-ns-resize;
+	height: 8px;
+	touch-action: none;
+
+	&::after {
+		@apply absolute left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-full opacity-0 transition-opacity;
+		content: '';
+		top: 2px;
+		background: var(--color-text-muted);
+	}
+
+	&:hover::after {
+		@apply opacity-100;
+	}
+}
+
+.plan-agenda-handle-start {
+	@apply top-0;
+}
+
+.plan-agenda-handle-end {
+	@apply bottom-0;
+}
+
+.plan-agenda-menu {
+	@apply bg-surface fixed z-50 flex min-w-44 flex-col rounded-lg p-1;
+	border: 1px solid var(--color-border-strong);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+
+	button {
+		@apply text-text flex cursor-pointer items-center gap-2 rounded-md border-none bg-transparent px-3 py-1.5 text-left text-sm;
+
+		&:hover:not(:disabled) {
+			background: var(--color-overlay);
+		}
+
+		&:disabled {
+			@apply cursor-not-allowed opacity-40;
+		}
+	}
+
+	.plan-agenda-menu-danger {
+		@apply text-danger;
+	}
+}
+
 /* --- Plan notify bell button --- */
 
-.plan-notify-btn {
+.plan-notify-btn,
+.plan-view-btn {
 	&.active {
 		color: var(--color-primary);
 	}

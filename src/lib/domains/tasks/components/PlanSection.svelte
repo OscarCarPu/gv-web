@@ -5,6 +5,7 @@
 	import { formatFreeHours } from '$lib/domains/capacity/utils/freeHours';
 	import { PlanAlarm } from '$lib/domains/tasks/planAlarm.svelte';
 	import PlanBlockEditor from './PlanBlockEditor.svelte';
+	import PlanAgenda from './PlanAgenda.svelte';
 	import CommitmentsSheet from './CommitmentsSheet.svelte';
 	import { planApi } from '$lib/domains/tasks/api/plan.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
@@ -63,6 +64,27 @@
 	let editorOpen = $state(false);
 	let editingBlock = $state<PlanBlockResponse | null>(null);
 	let commitmentsOpen = $state(false);
+
+	// List vs. agenda (time grid with draggable edges). Remembered per browser — it is a view
+	// preference, nothing else depends on it.
+	const VIEW_KEY = 'plan-view';
+	let agendaView = $state(false);
+	$effect(() => {
+		try {
+			agendaView = localStorage.getItem(VIEW_KEY) === 'agenda';
+		} catch {
+			// Storage blocked — stay on the list.
+		}
+	});
+
+	function toggleView() {
+		agendaView = !agendaView;
+		try {
+			localStorage.setItem(VIEW_KEY, agendaView ? 'agenda' : 'list');
+		} catch {
+			// Non-persistent is fine.
+		}
+	}
 
 	// Clicking a day in the capacity strip switches the section to that day's plan instead of
 	// today's — a plain block list (no "now" line, no actual-vs-planned merge, those only make
@@ -226,6 +248,16 @@
 					<Icon name={alarm.enabled ? 'bell-sound' : 'bell'} />
 				</button>
 				<button
+					class="btn-icon plan-view-btn"
+					class:active={agendaView}
+					onclick={toggleView}
+					title={agendaView ? 'Show as list' : 'Show as agenda'}
+					aria-label={agendaView ? 'Show as list' : 'Show as agenda'}
+					aria-pressed={agendaView}
+				>
+					<Icon name="clock" />
+				</button>
+				<button
 					class="btn-icon"
 					onclick={() => board.cleanFuture()}
 					title="Clear future blocks"
@@ -344,7 +376,9 @@
 			</div>
 		</div>
 
-		{#if board.data.blocks.length === 0 && entries.length === 0}
+		{#if agendaView}
+			<PlanAgenda {board} onedit={openEdit} />
+		{:else if board.data.blocks.length === 0 && entries.length === 0}
 			<div class="history-empty">
 				<Icon name="calendar-day" class="text-2xl" />
 				<span>No blocks for today</span>

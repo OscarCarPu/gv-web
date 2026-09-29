@@ -8,11 +8,19 @@ import {
 	type PlanTimeline,
 	type PlanTimelineItem,
 } from '$lib/domains/tasks/utils/planOverlay';
-import type { PlanTodayResponse, PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
+import type {
+	PlanTodayResponse,
+	PlanBlockResponse,
+	CreatePlanBlockRequest,
+	UpdatePlanBlockRequest,
+} from '$lib/domains/tasks/types/Plan.types';
+import { sameTask, splitPoint } from '$lib/domains/tasks/utils/planAgenda';
 import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
 
 interface PlanBoardApi {
 	plan: {
+		createBlock: (input: CreatePlanBlockRequest) => Promise<unknown>;
+		updateBlock: (id: number, input: UpdatePlanBlockRequest) => Promise<unknown>;
 		deleteBlock: (id: number) => Promise<void>;
 		deleteFutureBlocks: () => Promise<void>;
 	};
@@ -197,5 +205,61 @@ export class PlanBoard {
 			const msg = e instanceof Error ? e.message : 'Error cleaning';
 			addToast(msg, 'error');
 		}
+	}
+
+	// ── agenda edits ────────────────────────────────────────────────────
+
+	/** New start/end for a block, from dragging one of its edges in the agenda. */
+	async resizeBlock(b: PlanBlockResponse, startMs: number, endMs: number): Promise<void> {
+		try {
+			await this.#api.plan.updateBlock(b.id, {
+				started_at: new Date(startMs).toISOString(),
+				ended_at: new Date(endMs).toISOString(),
+			});
+		} catch (e: unknown) {
+			addToast(e instanceof Error ? e.message : 'Error resizing', 'error');
+		}
+		// Refresh on failure too: the agenda shows the dragged edge until new data lands.
+		await this.#refresh();
+	}
+
+	/** Cut a block at its midpoint into two back-to-back blocks with the same task, label and
+	 *  note. Shrinks the original first — creating the second half before would overlap it. */
+	async splitBlock(b: PlanBlockResponse): Promise<void> {
+		const cut = splitPoint(b);
+		if (cut === null) {
+			addToast('Block is too short to split', 'error');
+			return;
+		}
+		const cutIso = new Date(cut).toISOString();
+		try {
+			await this.#api.plan.updateBlock(b.id, { ended_at: cutIso });
+			await this.#api.plan.createBlock({
+				started_at: cutIso,
+				ended_at: b.ended_at,
+				task_id: b.task_id,
+				label: b.label,
+				note: b.note,
+			});
+		} catch (e: unknown) {
+			addToast(e instanceof Error ? e.message : 'Error splitting', 'error');
+		}
+		await this.#refresh();
+	}
+
+	/** Fold `next` into `b`: `b` stretches to `next`'s end, absorbing any gap between them.
+	 *  `next` goes first — stretching `b` over it would overlap. */
+	async mergeBlocks(b: PlanBlockResponse, next: PlanBlockResponse): Promise<void> {
+		if (!sameTask(b, next)) return;
+		try {
+			await this.#api.plan.deleteBlock(next.id);
+			await this.#api.plan.updateBlock(b.id, {
+				ended_at: next.ended_at,
+				...(b.note === null && next.note !== null ? { note: next.note } : {}),
+			});
+		} catch (e: unknown) {
+			addToast(e instanceof Error ? e.message : 'Error merging', 'error');
+		}
+		await this.#refresh();
 	}
 }
