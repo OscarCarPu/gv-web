@@ -14,6 +14,7 @@ import {
 	type IdSpan,
 } from '$lib/domains/tasks/utils/planAgenda';
 import { PlanBoard } from '$lib/domains/tasks/planBoard.svelte';
+import { PlanDraft } from '$lib/domains/tasks/planDraft.svelte';
 import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
 
 const at = (h: number, min = 0) => new Date(2026, 8, 29, h, min, 0, 0).getTime();
@@ -229,20 +230,94 @@ describe('PlanBoard agenda edits', () => {
 		await board.mergeBlocks(block(), block({ task_id: 7 }));
 		expect(api.plan.deleteBlock).not.toHaveBeenCalled();
 	});
+});
 
-	it('saveTimes sends each step in order and reports failure', async () => {
-		const { api, refresh, board } = setup();
-		const steps = [
-			{ id: 2, startMs: at(11), endMs: at(12), parking: false },
-			{ id: 1, startMs: at(9), endMs: at(11), parking: false },
-		];
-		expect(await board.saveTimes(steps)).toBe(true);
-		expect(api.plan.updateBlock.mock.calls).toEqual([
-			[2, { started_at: iso(11), ended_at: iso(12) }],
-			[1, { started_at: iso(9), ended_at: iso(11) }],
-		]);
-		api.plan.updateBlock.mockRejectedValueOnce(new Error('plan block overlaps'));
-		expect(await board.saveTimes(steps)).toBe(false);
-		expect(refresh).toHaveBeenCalledTimes(2);
+describe('PlanDraft', () => {
+	function setup() {
+		const api = {
+			createBlock: vi.fn().mockResolvedValue({}),
+			updateBlock: vi.fn().mockResolvedValue({}),
+		};
+		return { api, draft: new PlanDraft(api), refresh: vi.fn().mockResolvedValue(undefined) };
+	}
+
+	it('ignores a drafted span once the server times change under it', () => {
+		const { draft } = setup();
+		const b = block({ started_at: iso(9), ended_at: iso(10) });
+		draft.setSpan(b.id, { startMs: at(11), endMs: at(12) }, blockSpan(b));
+		expect(draft.spanFor(b)).toEqual({ startMs: at(11), endMs: at(12) });
+		expect(draft.dirtyCount([b])).toBe(1);
+		const edited = { ...b, started_at: iso(13), ended_at: iso(14) };
+		expect(draft.spanFor(edited)).toBeNull();
+		expect(draft.dirtyCount([edited])).toBe(0);
+	});
+
+	it('saves a new overlapping block after moving the one in its way', async () => {
+		const { api, draft, refresh } = setup();
+		const existing = block({ started_at: iso(9), ended_at: iso(10) });
+		// The new block was refused for sitting on 9–10; the user moved the old one to 10–11.
+		draft.addNew({ task_id: null, label: 'Call', note: null }, 'Call', {
+			startMs: at(9),
+			endMs: at(10),
+		});
+		draft.setSpan(existing.id, { startMs: at(10), endMs: at(11) }, blockSpan(existing));
+		const newId = draft.added[0].id;
+		const ok = await draft.save(
+			() => [existing],
+			[
+				{ id: existing.id, startMs: at(10), endMs: at(11) },
+				{ id: newId, startMs: at(9), endMs: at(10) },
+			],
+			refresh
+		);
+		expect(ok).toBe(true);
+		expect(api.updateBlock).toHaveBeenCalledWith(existing.id, {
+			started_at: iso(10),
+			ended_at: iso(11),
+		});
+		expect(api.createBlock).toHaveBeenCalledWith({
+			task_id: null,
+			label: 'Call',
+			note: null,
+			started_at: iso(9),
+			ended_at: iso(10),
+		});
+		expect(api.updateBlock.mock.invocationCallOrder[0]).toBeLessThan(
+			api.createBlock.mock.invocationCallOrder[0]
+		);
+		expect(draft.added).toEqual([]);
+		expect(refresh).toHaveBeenCalled();
+	});
+
+	it('keeps what did not save, and never recreates what did', async () => {
+		const { api, draft, refresh } = setup();
+		draft.addNew({ label: 'A' }, 'A', { startMs: at(9), endMs: at(10) });
+		draft.addNew({ label: 'B' }, 'B', { startMs: at(11), endMs: at(12) });
+		const [a, b] = draft.added.map((n) => n.id);
+		api.createBlock.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error('boom'));
+		const ok = await draft.save(
+			() => [],
+			[
+				{ id: a, startMs: at(9), endMs: at(10) },
+				{ id: b, startMs: at(11), endMs: at(12) },
+			],
+			refresh
+		);
+		expect(ok).toBe(false);
+		expect(draft.added.map((n) => n.label)).toEqual(['B']);
+	});
+
+	it('refuses to save while blocks overlap', async () => {
+		const { api, draft, refresh } = setup();
+		const ok = await draft.save(
+			() => [],
+			[
+				{ id: -1, startMs: at(9), endMs: at(10) },
+				{ id: -2, startMs: at(9, 30), endMs: at(10, 30) },
+			],
+			refresh
+		);
+		expect(ok).toBe(false);
+		expect(api.createBlock).not.toHaveBeenCalled();
 	});
 });

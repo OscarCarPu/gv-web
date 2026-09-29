@@ -2,6 +2,7 @@
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import { formatTime, isoToHHmm, toLocalDateString } from '$lib/shared/utils/datetime';
 	import { PlanBoard } from '$lib/domains/tasks/planBoard.svelte';
+	import { PlanDraft } from '$lib/domains/tasks/planDraft.svelte';
 	import { formatFreeHours } from '$lib/domains/capacity/utils/freeHours';
 	import { PlanAlarm } from '$lib/domains/tasks/planAlarm.svelte';
 	import PlanBlockEditor from './PlanBlockEditor.svelte';
@@ -9,7 +10,11 @@
 	import CommitmentsSheet from './CommitmentsSheet.svelte';
 	import { planApi } from '$lib/domains/tasks/api/plan.api';
 	import { addToast } from '$lib/shared/stores/toast.svelte';
-	import type { PlanTodayResponse, PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
+	import type {
+		PlanTodayResponse,
+		PlanBlockResponse,
+		CreatePlanBlockRequest,
+	} from '$lib/domains/tasks/types/Plan.types';
 	import type { TimeEntryWithTask } from '$lib/domains/tasks/types/Task.types';
 	import type { DayFreeBusy } from '$lib/domains/capacity/types/Capacity.types';
 	import type { TimerTask } from '$lib/domains/tasks/taskTimer.svelte';
@@ -77,13 +82,36 @@
 		}
 	});
 
-	function toggleView() {
-		agendaView = !agendaView;
+	function setView(agenda: boolean) {
+		agendaView = agenda;
 		try {
 			localStorage.setItem(VIEW_KEY, agendaView ? 'agenda' : 'list');
 		} catch {
 			// Non-persistent is fine.
 		}
+	}
+
+	// Unsaved agenda edits. Lives here, not in the agenda, so it survives switching views and
+	// the editor can drop a refused block into it.
+	const draft = new PlanDraft();
+	const dirtyCount = $derived(draft.dirtyCount(board.data?.blocks ?? []));
+
+	$effect(() => {
+		if (dirtyCount === 0) return;
+		const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+		window.addEventListener('beforeunload', warn);
+		return () => window.removeEventListener('beforeunload', warn);
+	});
+
+	/** A new block that overlaps others: keep it as an unsaved block in the agenda, where it
+	 *  can be moved into place (or the others moved out of its way) and saved. */
+	function addOverlapping(payload: CreatePlanBlockRequest, label: string) {
+		const { started_at, ended_at, ...fields } = payload;
+		draft.addNew(fields, label, {
+			startMs: new Date(started_at).getTime(),
+			endMs: new Date(ended_at).getTime(),
+		});
+		setView(true);
 	}
 
 	// Clicking a day in the capacity strip switches the section to that day's plan instead of
@@ -250,7 +278,7 @@
 				<button
 					class="btn-icon plan-view-btn"
 					class:active={agendaView}
-					onclick={toggleView}
+					onclick={() => setView(!agendaView)}
 					title={agendaView ? 'Show as list' : 'Show as agenda'}
 					aria-label={agendaView ? 'Show as list' : 'Show as agenda'}
 					aria-pressed={agendaView}
@@ -376,8 +404,16 @@
 			</div>
 		</div>
 
+		{#if !agendaView && dirtyCount > 0}
+			<div class="plan-agenda-savebar">
+				<span class="plan-agenda-savebar-text">
+					{dirtyCount} unsaved agenda {dirtyCount === 1 ? 'change' : 'changes'}
+				</span>
+				<button class="btn-primary btn-sm" onclick={() => setView(true)}>Open agenda</button>
+			</div>
+		{/if}
 		{#if agendaView}
-			<PlanAgenda {board} onedit={openEdit} />
+			<PlanAgenda {board} {draft} onedit={openEdit} />
 		{:else if board.data.blocks.length === 0 && entries.length === 0}
 			<div class="history-empty">
 				<Icon name="calendar-day" class="text-2xl" />
@@ -565,6 +601,7 @@
 	date={selectedDate}
 	onclose={() => (editorOpen = false)}
 	onsaved={refresh}
+	onoverlap={isToday ? addOverlapping : undefined}
 />
 
 <CommitmentsSheet open={commitmentsOpen} onclose={() => (commitmentsOpen = false)} />

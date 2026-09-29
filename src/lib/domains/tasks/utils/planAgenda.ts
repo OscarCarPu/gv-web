@@ -193,11 +193,14 @@ export function layoutLanes(spans: IdSpan[]): Map<number, { lane: number; lanes:
 export interface SaveStep extends IdSpan {
 	/** A temporary one-minute spot, used to break a cycle (two blocks swapping places). */
 	parking: boolean;
+	/** A block that only exists in the draft (not in `current`): POST it instead of PUT. */
+	create: boolean;
 }
 
 /**
- * The single-block updates that take the server from `current` to `target`, ordered so none
- * of them overlaps what is on the server at that moment. A block whose target is still taken
+ * The single-block writes that take the server from `current` to `target`, ordered so none
+ * of them overlaps what is on the server at that moment. A target id missing from `current`
+ * is a new block and becomes a create. A block whose target is still taken
  * waits; when every remaining block waits on another (a swap), one is parked in a free minute
  * close to where it is, which frees its slot. Returns null when `target` itself overlaps.
  */
@@ -208,7 +211,7 @@ export function planSaveSteps(current: IdSpan[], target: IdSpan[]): SaveStep[] |
 	const pending = target
 		.filter((t) => {
 			const c = state.get(t.id);
-			return c !== undefined && !sameSpan(c, t);
+			return c === undefined || !sameSpan(c, t);
 		})
 		.sort((a, b) => a.startMs - b.startMs);
 	const steps: SaveStep[] = [];
@@ -226,15 +229,17 @@ export function planSaveSteps(current: IdSpan[], target: IdSpan[]): SaveStep[] |
 		const i = pending.findIndex((t) => free(t.id, t));
 		if (i !== -1) {
 			const t = pending.splice(i, 1)[0];
+			steps.push({ ...t, parking: false, create: !state.has(t.id) });
 			state.set(t.id, { startMs: t.startMs, endMs: t.endMs });
-			steps.push({ ...t, parking: false });
 			continue;
 		}
-		const stuck = pending[0];
+		// Only a block already on the server has somewhere to be parked from.
+		const stuck = pending.find((t) => state.has(t.id));
+		if (!stuck) return null;
 		const spot = parkingSpot(stuck.id, state, pending);
 		if (!spot) return null;
 		state.set(stuck.id, spot);
-		steps.push({ id: stuck.id, ...spot, parking: true });
+		steps.push({ id: stuck.id, ...spot, parking: true, create: false });
 	}
 	return pending.length === 0 ? steps : null;
 }

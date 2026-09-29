@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Icon from '$lib/shared/components/Icon.svelte';
 	import { formatTime, isoToHHmm } from '$lib/shared/utils/datetime';
-	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import { PlanBoard } from '$lib/domains/tasks/planBoard.svelte';
+	import type { PlanDraft } from '$lib/domains/tasks/planDraft.svelte';
 	import {
 		HOUR_MS,
 		agendaRange,
@@ -12,7 +12,6 @@
 		hourMarks,
 		layoutLanes,
 		mergeCandidate,
-		planSaveSteps,
 		sameSpan,
 		splitPoint,
 		type AgendaDragMode,
@@ -23,30 +22,20 @@
 
 	interface Props {
 		board: PlanBoard;
+		/** Unsaved edits; owned by the section so the editor can add to it too. */
+		draft: PlanDraft;
 		onedit: (b: PlanBlockResponse) => void;
 	}
 
-	let { board, onedit }: Props = $props();
+	let { board, draft, onedit }: Props = $props();
 
 	const HOUR_PX = 56;
 	/** Pointer travel before a press on a block counts as a move rather than a click. */
 	const MOVE_THRESHOLD_PX = 4;
 
-	// ── draft ───────────────────────────────────────────────────────────
-	//
-	// Drags only change the draft; nothing reaches the API until Save. Each entry remembers the
-	// server times it was drafted against (`base`): when the server's times for that block change
-	// underneath it (the editor saved it, a refresh brought someone else's change), the entry is
-	// stale and ignored — the server wins.
-
-	let draft = $state<Record<number, { span: Span; base: Span }>>({});
+	// Drags only change the draft; nothing reaches the API until Save.
 
 	const serverBlocks = $derived(board.data?.blocks ?? []);
-
-	function draftFor(b: PlanBlockResponse): Span | null {
-		const d = draft[b.id];
-		return d && sameSpan(d.base, blockSpan(b)) ? d.span : null;
-	}
 
 	interface Drag {
 		id: number;
@@ -66,17 +55,53 @@
 	 *  the editor does not open. */
 	let swallowClick = false;
 
-	/** What the grid shows: server times, overridden by the draft, overridden by a live drag. */
+	/** What the grid shows: server times overridden by the draft, plus the draft's new blocks,
+	 *  all overridden by a live drag. New blocks get a stand-in response so the template can
+	 *  treat both alike. */
 	const items = $derived(
-		serverBlocks
-			.map((b) => {
+		[
+			...serverBlocks.map((b) => {
 				const server = blockSpan(b);
-				const drafted = draftFor(b);
-				const span = drag?.id === b.id && drag.moved ? drag.value : (drafted ?? server);
-				return { block: b, span, server, dirty: !sameSpan(drafted ?? server, server) };
-			})
+				const drafted = draft.spanFor(b);
+				return {
+					block: b,
+					span: drafted ?? server,
+					server: server as Span | null,
+					isNew: false,
+					dirty: !sameSpan(drafted ?? server, server),
+				};
+			}),
+			...draft.added.map((n) => ({
+				block: standIn(n.id, n.fields, n.label, n.span),
+				span: n.span,
+				server: null,
+				isNew: true,
+				dirty: true,
+			})),
+		]
+			.map((it) => (drag?.id === it.block.id && drag.moved ? { ...it, span: drag.value } : it))
 			.sort((a, b) => a.span.startMs - b.span.startMs)
 	);
+
+	function standIn(
+		id: number,
+		fields: PlanDraft['added'][number]['fields'],
+		label: string,
+		span: Span
+	): PlanBlockResponse {
+		return {
+			id,
+			plan_date: '',
+			started_at: new Date(span.startMs).toISOString(),
+			ended_at: new Date(span.endMs).toISOString(),
+			task_id: fields.task_id ?? null,
+			task_name: fields.task_id ? label : null,
+			label,
+			note: fields.note ?? null,
+			event_ref: null,
+			commitment_id: null,
+		};
+	}
 
 	const idSpans = $derived(items.map((it) => ({ id: it.block.id, ...it.span })));
 	const conflicts = $derived(conflictIds(idSpans));
@@ -146,13 +171,7 @@
 		drag = null;
 		if (!d.moved || sameSpan(d.value, d.origin)) return;
 		const b = serverBlocks.find((x) => x.id === d.id);
-		if (!b) return;
-		const server = blockSpan(b);
-		if (sameSpan(d.value, server)) {
-			delete draft[d.id];
-		} else {
-			draft[d.id] = { span: d.value, base: server };
-		}
+		draft.setSpan(d.id, d.value, b ? blockSpan(b) : null);
 	}
 
 	function cancelDrag() {
@@ -177,40 +196,15 @@
 
 	// ── save / discard ──────────────────────────────────────────────────
 
-	function discard() {
-		draft = {};
-	}
-
 	function save() {
-		const steps = planSaveSteps(
-			serverBlocks.map((b) => ({ id: b.id, ...blockSpan(b) })),
-			idSpans
-		);
-		if (steps === null) {
-			addToast('Some blocks overlap — fix them before saving', 'error');
-			return;
-		}
 		run(async () => {
-			if (await board.saveTimes(steps)) {
-				draft = {};
-				return;
-			}
-			// Part of it went through (maybe a block is sitting in a parking minute). Re-anchor
-			// what is left to the server's new times so the draft is not dropped as stale and
-			// Save can simply be pressed again.
-			for (const b of serverBlocks) {
-				const d = draft[b.id];
-				if (d) d.base = blockSpan(b);
-			}
+			await draft.save(
+				() => board.data?.blocks ?? [],
+				idSpans,
+				() => board.refresh()
+			);
 		});
 	}
-
-	$effect(() => {
-		if (dirtyCount === 0) return;
-		const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-		window.addEventListener('beforeunload', warn);
-		return () => window.removeEventListener('beforeunload', warn);
-	});
 
 	// ── context menu ────────────────────────────────────────────────────
 
@@ -256,7 +250,7 @@
 			items.map((it) => it.block),
 			menuIndex
 		);
-		return next ? items[menuIndex + 1] : null;
+		return next && !items[menuIndex + 1].isNew ? items[menuIndex + 1] : null;
 	});
 	/** Split and merge work on the server's times; with unsaved changes on either block they
 	 *  would act on something the user no longer sees. */
@@ -276,12 +270,17 @@
 	function editFromMenu() {
 		const it = menuItem;
 		closeMenu();
-		if (it) onedit(withSpan(it.block, it.span));
+		if (it) edit(it);
 	}
 
 	async function deleteBlock(b: PlanBlockResponse) {
-		await board.deleteBlock(b);
-		delete draft[b.id];
+		if (!draft.isNew(b.id)) await board.deleteBlock(b);
+		draft.remove(b.id);
+	}
+
+	/** New blocks have no server row yet, so there is nothing for the editor to PUT to. */
+	function edit(it: (typeof items)[number]) {
+		if (!it.isNew) onedit(withSpan(it.block, it.span));
 	}
 </script>
 
@@ -303,7 +302,9 @@
 					{dirtyCount} unsaved {dirtyCount === 1 ? 'change' : 'changes'}
 				{/if}
 			</span>
-			<button class="btn-outline btn-sm" onclick={discard} disabled={busy}>Discard</button>
+			<button class="btn-outline btn-sm" onclick={() => draft.discard()} disabled={busy}
+				>Discard</button
+			>
 			<button class="btn-primary btn-sm" onclick={save} disabled={busy || conflicts.size > 0}>
 				<Icon name="check" /> Save
 			</button>
@@ -336,6 +337,7 @@
 				class:plan-agenda-finished={PlanBoard.isFinished(b)}
 				class:plan-agenda-short={heightPx < 34}
 				class:plan-agenda-dirty={it.dirty}
+				class:plan-agenda-new={it.isNew}
 				class:plan-agenda-conflict={conflicts.has(b.id)}
 				class:plan-agenda-active={drag?.id === b.id || menu?.id === b.id}
 				style="top: {toPx(
@@ -349,10 +351,10 @@
 				onpointercancel={cancelDrag}
 				onclick={() => {
 					if (swallowClick) swallowClick = false;
-					else onedit(withSpan(b, span));
+					else edit(it);
 				}}
 				onkeydown={(e) => {
-					if (e.key === 'Enter') onedit(withSpan(b, span));
+					if (e.key === 'Enter') edit(it);
 				}}
 				oncontextmenu={(e) => openMenu(e, b.id)}
 			>
@@ -393,29 +395,32 @@
 		bind:this={menuEl}
 		style="left: {menu.x}px; top: {menu.y}px"
 	>
-		<button role="menuitem" onclick={editFromMenu}>
-			<Icon name="pen" /> Edit
-		</button>
-		<button
-			role="menuitem"
-			disabled={menuLocked || splitPoint(menuItem.block) === null}
-			title={menuLocked ? 'Save or discard your changes first' : undefined}
-			onclick={() => menuAction((b) => board.splitBlock(b))}
-		>
-			<Icon name="compress" /> Split in two
-		</button>
-		{#if menuMergeNext}
+		{#if !menuItem.isNew}
+			<button role="menuitem" onclick={editFromMenu}>
+				<Icon name="pen" /> Edit
+			</button>
 			<button
 				role="menuitem"
-				disabled={menuLocked}
+				disabled={menuLocked || splitPoint(menuItem.block) === null}
 				title={menuLocked ? 'Save or discard your changes first' : undefined}
-				onclick={() => menuAction((b, next) => (next ? board.mergeBlocks(b, next) : undefined))}
+				onclick={() => menuAction((b) => board.splitBlock(b))}
 			>
-				<Icon name="expand" /> Merge with next
+				<Icon name="compress" /> Split in two
 			</button>
+			{#if menuMergeNext}
+				<button
+					role="menuitem"
+					disabled={menuLocked}
+					title={menuLocked ? 'Save or discard your changes first' : undefined}
+					onclick={() => menuAction((b, next) => (next ? board.mergeBlocks(b, next) : undefined))}
+				>
+					<Icon name="expand" /> Merge with next
+				</button>
+			{/if}
 		{/if}
 		<button role="menuitem" class="plan-agenda-menu-danger" onclick={() => menuAction(deleteBlock)}>
-			<Icon name="trash" /> Delete
+			<Icon name="trash" />
+			{menuItem.isNew ? 'Remove' : 'Delete'}
 		</button>
 	</div>
 {/if}

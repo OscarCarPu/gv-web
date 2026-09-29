@@ -24,9 +24,12 @@
 		date?: string;
 		onclose: () => void;
 		onsaved: () => void;
+		/** When set, a *new* block the API refuses for overlapping is handed here (with the
+		 *  name to show for it) instead of failing, so it can be placed by hand in the agenda. */
+		onoverlap?: (payload: CreatePlanBlockRequest, label: string) => void;
 	}
 
-	let { open, block = null, date, onclose, onsaved }: Props = $props();
+	let { open, block = null, date, onclose, onsaved, onoverlap }: Props = $props();
 
 	/** The day times in this form are anchored to: the block's own day when editing, otherwise
 	 *  the day passed in (or today). */
@@ -117,7 +120,15 @@
 					label: label.trim() || null,
 					note: note.trim() || null,
 				};
-				await planApi.createBlock(payload);
+				try {
+					await planApi.createBlock(payload);
+				} catch (e: unknown) {
+					if (!onoverlap || !(e instanceof Error) || !e.message.includes('overlaps')) throw e;
+					const taskName = tasks.find((t) => t.id === taskId)?.name;
+					onoverlap(payload, mode === 'task' ? (taskName ?? 'Task') : label.trim());
+					onclose();
+					return;
+				}
 			}
 			onsaved();
 			onclose();

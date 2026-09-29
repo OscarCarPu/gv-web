@@ -1103,6 +1103,11 @@
 	border-left-style: solid;
 }
 
+/* Only in the draft: the API refused it (it overlapped), Save creates it. */
+.plan-agenda-new {
+	border-left-style: dashed;
+}
+
 /* Shares time with another block — the API would reject it, so Save waits. */
 .plan-agenda-conflict {
 	border-color: var(--color-danger);
@@ -1110,13 +1115,18 @@
 }
 
 .plan-agenda-savebar {
-	@apply sticky top-2 z-40 mb-3 flex items-center gap-2 rounded-lg px-3 py-2;
+	@apply sticky top-2 z-40 mt-4 mb-3 flex items-center gap-2 rounded-lg px-3 py-2;
 	border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
 	background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-light));
 
 	&.has-conflicts {
 		border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
 		background: color-mix(in srgb, var(--color-danger) 10%, var(--color-bg-light));
+
+		/* Inside the agenda the grid's own top margin already spaces it. */
+		.plan-agenda .plan-agenda-savebar {
+			@apply mt-0;
+		}
 
 		.plan-agenda-savebar-text {
 			@apply text-danger;
