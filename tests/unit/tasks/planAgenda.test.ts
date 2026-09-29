@@ -42,15 +42,17 @@ function block(over: Partial<PlanBlockResponse> = {}): PlanBlockResponse {
 }
 
 describe('agendaRange', () => {
-	it('defaults to the working day when nothing is outside it', () => {
-		expect(agendaRange([], at(12))).toEqual({ startMs: at(8), endMs: at(20) });
+	it('defaults to 07:00 through 03:00 of the next day', () => {
+		expect(agendaRange([], at(12))).toEqual({ startMs: at(7), endMs: at(27) });
+		expect(hourMarks(agendaRange([], at(12)))).toHaveLength(21);
 	});
 
 	it('widens to whole hours around blocks and now', () => {
-		const spans = [blockSpan(block({ started_at: iso(6, 30), ended_at: iso(7) }))];
-		const range = agendaRange(spans, at(21, 10));
-		expect(range).toEqual({ startMs: at(6), endMs: at(22) });
-		expect(hourMarks(range)).toHaveLength(17);
+		const spans = [
+			blockSpan(block({ started_at: iso(6, 30), ended_at: iso(7) })),
+			blockSpan(block({ started_at: iso(27), ended_at: iso(27, 30) })),
+		];
+		expect(agendaRange(spans, at(12))).toEqual({ startMs: at(6), endMs: at(28) });
 	});
 });
 

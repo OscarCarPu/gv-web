@@ -61,13 +61,14 @@ export function sortBlocks(blocks: PlanBlockResponse[]): PlanBlockResponse[] {
 
 /**
  * The hours the grid shows: whole hours covering every span and "now", never narrower than
- * the default working day, so an empty plan still has room to look at.
+ * 07:00 to 03:00 of the next day (hours past 23 roll over), so an empty plan still has room
+ * to look at and a late evening fits.
  */
 export function agendaRange(
 	spans: Span[],
 	nowMs: number,
-	defaultFromHour = 8,
-	defaultToHour = 20
+	defaultFromHour = 7,
+	defaultToHour = 27
 ): AgendaRange {
 	const day = new Date(nowMs);
 	day.setHours(0, 0, 0, 0);
