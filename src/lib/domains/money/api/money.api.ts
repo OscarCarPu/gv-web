@@ -13,12 +13,14 @@ import {
 	MonthlyStatsSchema,
 	EstimationResultSchema,
 	BudgetMonthSchema,
+	OverviewTransactionListSchema,
 } from './money.schemas';
 import type {
 	Account,
 	Category,
 	Transaction,
 	Overview,
+	OverviewTransaction,
 	CreateAccountRequest,
 	UpdateAccountRequest,
 	CreateCategoryRequest,
@@ -226,6 +228,20 @@ export const moneyApi = {
 	async getBudgets(month?: string, token?: string): Promise<BudgetMonth> {
 		const suffix = month ? `?${new URLSearchParams({ month })}` : '';
 		return fetchAPI(`/finance/budgets${suffix}`, BudgetMonthSchema, { token });
+	},
+
+	/** The transactions a budget counted in the month (or, for a yearly budget, its year). */
+	async getBudgetTransactions(
+		categoryId: number,
+		params: { month: string; period: BudgetPeriod },
+		token?: string
+	): Promise<OverviewTransaction[]> {
+		const qs = new URLSearchParams({ month: params.month, period: params.period });
+		return fetchAPI(
+			`/finance/budgets/${categoryId}/transactions?${qs}`,
+			OverviewTransactionListSchema,
+			{ token }
+		);
 	},
 
 	async setBudget(categoryId: number, input: SetBudgetRequest, token?: string): Promise<void> {

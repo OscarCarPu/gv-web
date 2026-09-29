@@ -1,6 +1,23 @@
+import { moneyApi } from '$lib/domains/money/api/money.api';
+import { addToast } from '$lib/shared/stores/toast.svelte';
 import { formatMoney } from '$lib/shared/utils/money';
 import { currentMonth, formatMonth, shiftMonth } from '$lib/domains/money/utils/budgetMonth';
-import type { BudgetItem, BudgetMonth } from '$lib/domains/money/types/Money.types';
+import type {
+	BudgetItem,
+	BudgetMonth,
+	BudgetPeriod,
+	OverviewTransaction,
+} from '$lib/domains/money/types/Money.types';
+
+const FOLD_LIMIT = 15;
+const EXPAND_STEP = 10;
+
+export interface MoneyBudgetsApi {
+	getBudgetTransactions: (
+		categoryId: number,
+		params: { month: string; period: BudgetPeriod }
+	) => Promise<OverviewTransaction[]>;
+}
 
 function runningPace(progress: number): number | null {
 	return progress > 0 && progress < 1 ? progress : null;
@@ -25,18 +42,79 @@ interface BudgetGroup {
 
 /**
  * Owns the budgets page's view state: month navigation (the month lives in the URL, so
- * this only derives the neighbours), the grouped monthly and yearly rows, the balances, and
- * the create/edit sheet. The `BudgetMonth` comes from the SSR loader and is injected as a
- * getter so the controller reads live data after `invalidateAll`.
+ * this only derives the neighbours), the grouped monthly and yearly rows, the balances, the
+ * create/edit sheet, and the expanded row with the transactions its budget counted. The
+ * `BudgetMonth` comes from the SSR loader and is injected as a getter so the controller reads
+ * live data after `invalidateAll`.
  */
 export class MoneyBudgets {
 	#getData: () => BudgetMonth;
+	#api: MoneyBudgetsApi;
 
 	sheetOpen = $state(false);
 	editing = $state<BudgetItem | null>(null);
 
-	constructor(getData: () => BudgetMonth) {
+	// The expanded row, keyed with the month so navigating collapses it.
+	#expandedKey = $state<string | null>(null);
+	#transactions = $state<Record<string, OverviewTransaction[]>>({});
+	#loadingKey = $state<string | null>(null);
+	visibleCount = $state(FOLD_LIMIT);
+
+	constructor(getData: () => BudgetMonth, api: MoneyBudgetsApi = moneyApi) {
 		this.#getData = getData;
+		this.#api = api;
+	}
+
+	#key(item: BudgetItem): string {
+		return `${this.month}:${item.period}:${item.category_id}`;
+	}
+
+	isExpanded(item: BudgetItem): boolean {
+		return this.#expandedKey === this.#key(item);
+	}
+
+	isLoading(item: BudgetItem): boolean {
+		return this.#loadingKey === this.#key(item);
+	}
+
+	/** Everything loaded for the row (cached from a previous expand until the refetch lands). */
+	transactionsOf(item: BudgetItem): OverviewTransaction[] {
+		return this.#transactions[this.#key(item)] ?? [];
+	}
+
+	visibleTransactionsOf(item: BudgetItem): OverviewTransaction[] {
+		return this.transactionsOf(item).slice(0, this.visibleCount);
+	}
+
+	remainingOf(item: BudgetItem): number {
+		return Math.max(this.transactionsOf(item).length - this.visibleCount, 0);
+	}
+
+	showMore(item: BudgetItem): void {
+		this.visibleCount = Math.min(this.visibleCount + EXPAND_STEP, this.transactionsOf(item).length);
+	}
+
+	/** Expand a row and (re)load its transactions, or collapse it if it was open. */
+	async toggle(item: BudgetItem): Promise<void> {
+		const key = this.#key(item);
+		if (this.#expandedKey === key) {
+			this.#expandedKey = null;
+			return;
+		}
+		this.#expandedKey = key;
+		this.visibleCount = FOLD_LIMIT;
+		this.#loadingKey = key;
+		try {
+			const list = await this.#api.getBudgetTransactions(item.category_id, {
+				month: this.month,
+				period: item.period,
+			});
+			this.#transactions = { ...this.#transactions, [key]: list };
+		} catch {
+			addToast('Error loading transactions', 'error');
+		} finally {
+			if (this.#loadingKey === key) this.#loadingKey = null;
+		}
 	}
 
 	get month(): string {

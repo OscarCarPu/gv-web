@@ -587,3 +587,20 @@
 .create-mode-toggle.money-budget-period {
 	@apply mb-2;
 }
+
+.money-budget-chevron {
+	@apply text-text-muted flex text-xs transition-transform;
+}
+
+.money-budget-row.expanded .money-budget-chevron {
+	@apply rotate-90;
+}
+
+.btn-icon.money-budget-edit {
+	@apply -my-1 shrink-0;
+}
+
+.money-budget-txs {
+	@apply mb-2 flex flex-col gap-1;
+	margin-left: calc(var(--budget-depth, 0) * 1.25rem + 1.25rem);
+}

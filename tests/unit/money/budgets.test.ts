@@ -149,6 +149,54 @@ describe('MoneyBudgets', () => {
 		expect(c.yearlyGroups[0].items.map((i) => i.name)).toEqual(['IBI']);
 	});
 
+	it('expands a row, loads what its budget counted and collapses on a second click', async () => {
+		const txs = Array.from({ length: 20 }, (_, i) => ({
+			id: i + 1,
+			type: 'expense' as const,
+			amount: '1.00',
+			account_name: 'Bank',
+			to_account_name: null,
+			category_name: 'Food',
+			description: null,
+			occurred_at: '2026-03-05T10:00:00Z',
+		}));
+		const api = { getBudgetTransactions: vi.fn().mockResolvedValue(txs) };
+		const c = new MoneyBudgets(() => month(), api);
+		const food = item({ category_id: 2, name: 'Food' });
+
+		const pending = c.toggle(food);
+		expect(c.isExpanded(food)).toBe(true);
+		expect(c.isLoading(food)).toBe(true);
+		await pending;
+		expect(api.getBudgetTransactions).toHaveBeenCalledWith(2, {
+			month: '2026-03',
+			period: 'monthly',
+		});
+		expect(c.isLoading(food)).toBe(false);
+		expect(c.visibleTransactionsOf(food)).toHaveLength(15);
+		expect(c.remainingOf(food)).toBe(5);
+		c.showMore(food);
+		expect(c.remainingOf(food)).toBe(0);
+
+		await c.toggle(food);
+		expect(c.isExpanded(food)).toBe(false);
+	});
+
+	it('keeps only one row expanded and separates monthly from yearly', async () => {
+		const api = { getBudgetTransactions: vi.fn().mockResolvedValue([]) };
+		const c = new MoneyBudgets(() => month(), api);
+		const monthly = item({ category_id: 2, name: 'Food' });
+		const yearly = item({ category_id: 2, name: 'Food', period: 'yearly' });
+		await c.toggle(monthly);
+		await c.toggle(yearly);
+		expect(c.isExpanded(monthly)).toBe(false);
+		expect(c.isExpanded(yearly)).toBe(true);
+		expect(api.getBudgetTransactions).toHaveBeenLastCalledWith(2, {
+			month: '2026-03',
+			period: 'yearly',
+		});
+	});
+
 	it('opens the sheet for create and edit', () => {
 		const c = new MoneyBudgets(() => month());
 		const food = item({ category_id: 2, name: 'Food' });

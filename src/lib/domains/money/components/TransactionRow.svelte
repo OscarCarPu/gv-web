@@ -11,8 +11,9 @@
 
 	interface Props {
 		tx: OverviewTransaction;
-		onedit: (id: number) => void;
-		ondelete: (id: number) => void;
+		/** Omit both for a read-only row (e.g. a budget's transactions). */
+		onedit?: (id: number) => void;
+		ondelete?: (id: number) => void;
 	}
 
 	let { tx, onedit, ondelete }: Props = $props();
@@ -25,17 +26,28 @@
 <div class="task-item money-tx-row">
 	<div class="money-tx-info">
 		<span class="status-badge {getTypeBadgeClass(tx.type)}">{getTypeLabel(tx.type)}</span>
-		<button class="task-name-btn money-tx-text" onclick={() => onedit(tx.id)}>
-			<span class="money-tx-name">{name}</span>
-			<span class="money-tx-account">
-				· {tx.account_name}{#if tx.to_account_name}&nbsp;→ {tx.to_account_name}{/if}
+		{#if onedit}
+			<button class="task-name-btn money-tx-text" onclick={() => onedit(tx.id)}>
+				<span class="money-tx-name">{name}</span>
+				<span class="money-tx-account">
+					· {tx.account_name}{#if tx.to_account_name}&nbsp;→ {tx.to_account_name}{/if}
+				</span>
+			</button>
+		{:else}
+			<span class="money-tx-text">
+				<span class="money-tx-name">{name}</span>
+				<span class="money-tx-account">
+					· {tx.category_name ?? tx.account_name}
+				</span>
 			</span>
-		</button>
+		{/if}
 	</div>
 	<div class="task-actions">
 		<span class={amountClass}>{prefix}{formatMoney(tx.amount)}</span>
-		<button class="btn-icon" title="Delete" onclick={() => ondelete(tx.id)}>
-			<Icon name="trash" />
-		</button>
+		{#if ondelete}
+			<button class="btn-icon" title="Delete" onclick={() => ondelete(tx.id)}>
+				<Icon name="trash" />
+			</button>
+		{/if}
 	</div>
 </div>

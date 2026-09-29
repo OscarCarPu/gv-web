@@ -6,8 +6,9 @@
 	import { currentMonth } from '$lib/domains/money/utils/budgetMonth';
 	import { MoneyBudgets } from '$lib/domains/money/budgets.svelte';
 	import BudgetRow from './BudgetRow.svelte';
+	import BudgetTransactions from './BudgetTransactions.svelte';
 	import BudgetFormSheet from './BudgetFormSheet.svelte';
-	import type { BudgetMonth, Category } from '$lib/domains/money/types/Money.types';
+	import type { BudgetItem, BudgetMonth, Category } from '$lib/domains/money/types/Money.types';
 
 	interface Props {
 		budgets: BudgetMonth;
@@ -22,7 +23,8 @@
 		goto(`${resolve('/money/budgets')}?month=${month}`, { noScroll: true, keepFocus: true });
 	}
 
-	const openEdit = (item: Parameters<typeof controller.openEdit>[0]) => controller.openEdit(item);
+	const openEdit = (item: BudgetItem) => controller.openEdit(item);
+	const toggle = (item: BudgetItem) => controller.toggle(item);
 </script>
 
 <div class="date-navigation money-month-nav">
@@ -96,7 +98,7 @@
 				<h3 class="money-group-label">{group.label}</h3>
 				<div class="task-list">
 					{#each group.items as item (item.category_id)}
-						<BudgetRow {item} pace={controller.pace} onedit={openEdit} />
+						{@render budgetRow(item, controller.pace)}
 					{/each}
 				</div>
 			{/if}
@@ -115,7 +117,7 @@
 				{#if group.items.length > 0}
 					<div class="task-list">
 						{#each group.items as item (item.category_id)}
-							<BudgetRow {item} pace={controller.yearPace} onedit={openEdit} />
+							{@render budgetRow(item, controller.yearPace)}
 						{/each}
 					</div>
 				{/if}
@@ -123,6 +125,20 @@
 		{/if}
 	{/if}
 </section>
+
+{#snippet budgetRow(item: BudgetItem, pace: number | null)}
+	{@const expanded = controller.isExpanded(item)}
+	<BudgetRow {item} {pace} {expanded} ontoggle={toggle} onedit={openEdit} />
+	{#if expanded}
+		<BudgetTransactions
+			transactions={controller.visibleTransactionsOf(item)}
+			loading={controller.isLoading(item)}
+			depth={item.depth}
+			remaining={controller.remainingOf(item)}
+			onshowmore={() => controller.showMore(item)}
+		/>
+	{/if}
+{/snippet}
 
 <BudgetFormSheet
 	open={controller.sheetOpen}

@@ -44,7 +44,7 @@ export const TransactionListSchema = z
 	.nullable()
 	.transform((v) => v ?? []);
 
-const OverviewTransactionSchema = z.object({
+export const OverviewTransactionSchema = z.object({
 	id: z.number(),
 	type: TransactionTypeSchema,
 	amount: z.string(),
@@ -175,3 +175,8 @@ export const BudgetMonthSchema = z.object({
 	averages: BudgetAmountListSchema,
 	previous_year: BudgetAmountListSchema,
 });
+
+export const OverviewTransactionListSchema = z
+	.array(OverviewTransactionSchema)
+	.nullable()
+	.transform((v) => v ?? []);
