@@ -133,8 +133,11 @@ export interface EstimationResult {
 
 // --- Budgets ---
 
-/** How far a budget change reaches: this month and every later one, or this month only. */
-export type BudgetScope = 'forward' | 'month';
+/** What a budget is measured against: one calendar month or one calendar year. */
+export type BudgetPeriod = 'monthly' | 'yearly';
+
+/** How far a budget change reaches: this period and every later one, or this period only. */
+export type BudgetScope = 'forward' | 'once';
 
 export type BudgetStatus = 'ok' | 'warning' | 'over' | 'pending' | 'met';
 
@@ -149,6 +152,7 @@ export interface BudgetTotals {
 
 export interface BudgetItem {
 	category_id: number;
+	period: BudgetPeriod;
 	name: string;
 	parent_id: number | null;
 	type: 'income' | 'expense';
@@ -159,13 +163,24 @@ export interface BudgetItem {
 	remaining: string;
 	progress: number;
 	status: BudgetStatus;
-	/** `YYYY-MM` the budget in effect started. */
+	/** Period the budget in effect started: `YYYY-MM` (monthly) or `YYYY` (yearly). */
 	since: string;
 }
 
 export interface BudgetAmount {
 	category_id: number;
 	amount: string;
+}
+
+export interface BudgetYear {
+	/** `YYYY`. */
+	year: string;
+	/** Elapsed share of the year. */
+	year_progress: number;
+	/** Yearly budgets only: `actual` is what their categories took this year. */
+	expense: BudgetTotals;
+	income: BudgetTotals;
+	items: BudgetItem[];
 }
 
 export interface BudgetMonth {
@@ -176,12 +191,20 @@ export interface BudgetMonth {
 	expense: BudgetTotals;
 	income: BudgetTotals;
 	items: BudgetItem[];
-	/** Average of the last 3 complete months per category (subtree), for suggestions. */
+	/** Monthly budgeted net plus a twelfth of the yearly budgeted net. */
+	planned_balance: string;
+	/** Yearly budgets of the year containing `month`. */
+	yearly: BudgetYear;
+	/** Average of the last 3 complete months per category (subtree), to suggest monthly budgets. */
 	averages: BudgetAmount[];
+	/** Previous calendar year's total per category (subtree), to suggest yearly budgets. */
+	previous_year: BudgetAmount[];
 }
 
 export interface SetBudgetRequest {
+	/** `YYYY-MM`; for a yearly budget only the year is used. */
 	month: string;
 	amount: string;
 	scope: BudgetScope;
+	period: BudgetPeriod;
 }

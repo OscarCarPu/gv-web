@@ -567,3 +567,19 @@
 .money-budget-scope {
 	@apply mt-1;
 }
+
+.money-budget-year-header {
+	@apply mt-4 flex items-baseline justify-between gap-3;
+
+	.money-group-label {
+		@apply mb-2;
+	}
+}
+
+.money-budget-year-summary {
+	@apply text-text-muted text-xs tabular-nums;
+}
+
+.money-budget-period {
+	@apply mb-2;
+}

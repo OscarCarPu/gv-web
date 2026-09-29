@@ -32,6 +32,7 @@ import type {
 	EstimationMode,
 	EstimationResult,
 	BudgetMonth,
+	BudgetPeriod,
 	BudgetScope,
 	SetBudgetRequest,
 } from '../types/Money.types';
@@ -237,10 +238,14 @@ export const moneyApi = {
 
 	async deleteBudget(
 		categoryId: number,
-		params: { month: string; scope: BudgetScope },
+		params: { month: string; scope: BudgetScope; period: BudgetPeriod },
 		token?: string
 	): Promise<void> {
-		const qs = new URLSearchParams({ month: params.month, scope: params.scope });
+		const qs = new URLSearchParams({
+			month: params.month,
+			scope: params.scope,
+			period: params.period,
+		});
 		return fetchAPI(`/finance/budgets/${categoryId}?${qs}`, z.void(), {
 			method: 'DELETE',
 			token,

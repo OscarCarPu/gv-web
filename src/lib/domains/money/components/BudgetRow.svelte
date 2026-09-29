@@ -5,7 +5,7 @@
 
 	interface Props {
 		item: BudgetItem;
-		/** Elapsed share of the month, or null outside the current month. */
+		/** Elapsed share of the budget's period, or null outside the current one. */
 		pace: number | null;
 		onedit: (item: BudgetItem) => void;
 	}
@@ -49,6 +49,6 @@
 	</div>
 	<div class="money-budget-meta">
 		<span class:amount-negative={item.status === 'over'}>{note}</span>
-		<span>since {formatMonth(item.since, true)}</span>
+		<span>since {item.period === 'yearly' ? item.since : formatMonth(item.since, true)}</span>
 	</div>
 </button>

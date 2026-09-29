@@ -130,6 +130,7 @@ const BudgetTotalsSchema = z.object({
 
 const BudgetItemSchema = z.object({
 	category_id: z.number(),
+	period: z.enum(['monthly', 'yearly']),
 	name: z.string(),
 	parent_id: z.number().nullable(),
 	type: z.enum(['income', 'expense']),
@@ -147,17 +148,30 @@ const BudgetAmountSchema = z.object({
 	amount: z.string(),
 });
 
+const BudgetItemListSchema = z
+	.array(BudgetItemSchema)
+	.nullable()
+	.transform((v) => v ?? []);
+
+const BudgetAmountListSchema = z
+	.array(BudgetAmountSchema)
+	.nullable()
+	.transform((v) => v ?? []);
+
 export const BudgetMonthSchema = z.object({
 	month: z.string(),
 	month_progress: z.number(),
 	expense: BudgetTotalsSchema,
 	income: BudgetTotalsSchema,
-	items: z
-		.array(BudgetItemSchema)
-		.nullable()
-		.transform((v) => v ?? []),
-	averages: z
-		.array(BudgetAmountSchema)
-		.nullable()
-		.transform((v) => v ?? []),
+	items: BudgetItemListSchema,
+	planned_balance: z.string(),
+	yearly: z.object({
+		year: z.string(),
+		year_progress: z.number(),
+		expense: BudgetTotalsSchema,
+		income: BudgetTotalsSchema,
+		items: BudgetItemListSchema,
+	}),
+	averages: BudgetAmountListSchema,
+	previous_year: BudgetAmountListSchema,
 });

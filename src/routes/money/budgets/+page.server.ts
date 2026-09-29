@@ -17,7 +17,16 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 				expense: zero,
 				income: zero,
 				items: [],
+				planned_balance: '0.00',
+				yearly: {
+					year: month.slice(0, 4),
+					year_progress: 0,
+					expense: zero,
+					income: zero,
+					items: [],
+				},
 				averages: [],
+				previous_year: [],
 			};
 		}),
 		moneyApi.listCategories(token).catch((error) => {

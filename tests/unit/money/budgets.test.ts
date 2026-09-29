@@ -10,6 +10,7 @@ import type { BudgetItem, BudgetMonth, Category } from '$lib/domains/money/types
 
 function item(over: Partial<BudgetItem> & { category_id: number; name: string }): BudgetItem {
 	return {
+		period: 'monthly',
 		parent_id: null,
 		type: 'expense',
 		depth: 0,
@@ -30,7 +31,16 @@ function month(over: Partial<BudgetMonth> = {}): BudgetMonth {
 		expense: { budgeted: '500', actual: '400', unbudgeted: '30', overspent: '20.5' },
 		income: { budgeted: '2000', actual: '1800', unbudgeted: '0', overspent: '0' },
 		items: [],
+		planned_balance: '1500.00',
+		yearly: {
+			year: '2026',
+			year_progress: 0.2,
+			expense: { budgeted: '950', actual: '425', unbudgeted: '0', overspent: '0' },
+			income: { budgeted: '0', actual: '0', unbudgeted: '0', overspent: '0' },
+			items: [],
+		},
 		averages: [],
+		previous_year: [],
 		...over,
 	};
 }
@@ -106,8 +116,8 @@ describe('MoneyBudgets', () => {
 	});
 
 	it('computes planned and real balance and the off-budget sum', () => {
-		const c = new MoneyBudgets(() => month());
-		expect(c.forecast).toBe(1500);
+		const c = new MoneyBudgets(() => month({ planned_balance: '1420.83' }));
+		expect(c.forecast).toBe(1420.83);
 		expect(c.balance).toBe(1400);
 		expect(c.balanceLabel.startsWith('+')).toBe(true);
 		expect(c.offBudget).toBeCloseTo(50.5);
@@ -116,6 +126,27 @@ describe('MoneyBudgets', () => {
 			month({ income: { budgeted: '0', actual: '0', unbudgeted: '0', overspent: '0' } })
 		);
 		expect(negative.balanceLabel.startsWith('−')).toBe(true);
+	});
+
+	it('exposes the yearly section with its own pace', () => {
+		const empty = new MoneyBudgets(() => month());
+		expect(empty.hasYearly).toBe(false);
+		expect(empty.isEmpty).toBe(true);
+
+		const base = month();
+		const c = new MoneyBudgets(() =>
+			month({
+				yearly: {
+					...base.yearly,
+					items: [item({ category_id: 9, name: 'IBI', period: 'yearly', since: '2025' })],
+				},
+			})
+		);
+		expect(c.hasYearly).toBe(true);
+		expect(c.isEmpty).toBe(false);
+		expect(c.year).toBe('2026');
+		expect(c.yearPace).toBe(0.2);
+		expect(c.yearlyGroups[0].items.map((i) => i.name)).toEqual(['IBI']);
 	});
 
 	it('opens the sheet for create and edit', () => {
@@ -150,7 +181,10 @@ describe('BudgetForm', () => {
 	function make() {
 		return new BudgetForm(
 			() => CATEGORIES,
-			() => [{ category_id: 1, amount: '372.10' }],
+			() => ({
+				averages: [{ category_id: 1, amount: '372.10' }],
+				previous_year: [{ category_id: 1, amount: '4400.00' }],
+			}),
 			{
 				onclose: onclose as unknown as () => void,
 				refresh: refresh as unknown as () => Promise<void>,
@@ -181,14 +215,16 @@ describe('BudgetForm', () => {
 		]);
 	});
 
-	it('suggests the 3-month average of the chosen category', () => {
+	it('suggests the 3-month average, or last year for a yearly budget', () => {
 		const f = make();
 		f.reset(null, '2026-03');
-		expect(f.average).toBeNull();
+		expect(f.suggestion).toBeNull();
 		f.categoryId = 1;
-		expect(f.average).toBe('372.10');
-		f.useAverage();
+		expect(f.suggestion).toBe('372.10');
+		f.useSuggestion();
 		expect(f.amount).toBe(372.1);
+		f.period = 'yearly';
+		expect(f.suggestion).toBe('4400.00');
 	});
 
 	it('validates before saving', async () => {
@@ -208,12 +244,13 @@ describe('BudgetForm', () => {
 		f.reset(null, '2026-03');
 		f.categoryId = 1;
 		f.amount = 400;
-		f.scope = 'month';
+		f.scope = 'once';
 		await f.save();
 		expect(api.setBudget).toHaveBeenCalledWith(1, {
 			month: '2026-03',
 			amount: '400.00',
-			scope: 'month',
+			scope: 'once',
+			period: 'monthly',
 		});
 		expect(onclose).toHaveBeenCalled();
 		expect(refresh).toHaveBeenCalled();
@@ -226,7 +263,24 @@ describe('BudgetForm', () => {
 		expect(f.amount).toBe(250);
 		expect(f.scope).toBe('forward');
 		await f.remove();
-		expect(api.deleteBudget).toHaveBeenCalledWith(1, { month: '2026-03', scope: 'forward' });
+		expect(api.deleteBudget).toHaveBeenCalledWith(1, {
+			month: '2026-03',
+			scope: 'forward',
+			period: 'monthly',
+		});
 		expect(refresh).toHaveBeenCalled();
+	});
+
+	it('keeps the period of the budget being edited', async () => {
+		const f = make();
+		f.reset(item({ category_id: 1, name: 'IBI', period: 'yearly', budget: '450' }), '2026-03');
+		expect(f.period).toBe('yearly');
+		await f.save();
+		expect(api.setBudget).toHaveBeenCalledWith(1, {
+			month: '2026-03',
+			amount: '450.00',
+			scope: 'forward',
+			period: 'yearly',
+		});
 	});
 });

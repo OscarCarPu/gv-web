@@ -4,32 +4,42 @@
 	import { formatMoney } from '$lib/shared/utils/money';
 	import { formatMonth } from '$lib/domains/money/utils/budgetMonth';
 	import { BudgetForm } from '$lib/domains/money/forms/budgetForm.svelte';
-	import type { BudgetAmount, BudgetItem, Category } from '$lib/domains/money/types/Money.types';
+	import type { BudgetMonth, BudgetItem, Category } from '$lib/domains/money/types/Money.types';
 
 	interface Props {
 		open: boolean;
 		onclose: () => void;
 		item?: BudgetItem | null;
-		month: string;
 		categories: Category[];
-		averages: BudgetAmount[];
+		/** The loaded month: its `month`, and its averages / previous-year totals for suggestions. */
+		budgets: BudgetMonth;
 	}
 
-	let { open, onclose, item = null, month, categories, averages }: Props = $props();
+	let { open, onclose, item = null, categories, budgets }: Props = $props();
 
 	const form = new BudgetForm(
 		() => categories,
-		() => averages,
+		() => budgets,
 		{ onclose: () => onclose(), refresh: invalidateAll }
 	);
 
+	let yearly = $derived(form.period === 'yearly');
+	let periodLabel = $derived(yearly ? form.month.slice(0, 4) : formatMonth(form.month, true));
+
 	$effect(() => {
-		if (open) form.reset(item, month);
+		if (open) form.reset(item, budgets.month);
 	});
 </script>
 
 <BottomSheet {open} {onclose} constrained>
 	<h3 class="modal-title">{item ? `Budget · ${item.name}` : 'New budget'}</h3>
+
+	{#if !item}
+		<div class="create-mode-toggle money-budget-period">
+			<button class:active={!yearly} onclick={() => (form.period = 'monthly')}>Monthly</button>
+			<button class:active={yearly} onclick={() => (form.period = 'yearly')}>Yearly</button>
+		</div>
+	{/if}
 
 	<div class="detail-form">
 		{#if !item}
@@ -54,7 +64,7 @@
 		{/if}
 
 		<div class="detail-field">
-			<label for="budget-amount">Monthly amount</label>
+			<label for="budget-amount">{yearly ? 'Yearly amount' : 'Monthly amount'}</label>
 			<input
 				id="budget-amount"
 				type="number"
@@ -66,9 +76,9 @@
 				oninput={() => (form.amountError = false)}
 				onkeydown={(e) => e.key === 'Enter' && form.save()}
 			/>
-			{#if form.average !== null}
-				<button class="money-budget-suggest" onclick={() => form.useAverage()}>
-					3-month average: {formatMoney(form.average)}
+			{#if form.suggestion !== null}
+				<button class="money-budget-suggest" onclick={() => form.useSuggestion()}>
+					{yearly ? 'Last year' : '3-month average'}: {formatMoney(form.suggestion)}
 				</button>
 			{/if}
 		</div>
@@ -77,10 +87,10 @@
 			<span class="detail-info-label">Applies to</span>
 			<div class="create-mode-toggle money-budget-scope">
 				<button class:active={form.scope === 'forward'} onclick={() => (form.scope = 'forward')}>
-					From {formatMonth(month, true)} on
+					From {periodLabel} on
 				</button>
-				<button class:active={form.scope === 'month'} onclick={() => (form.scope = 'month')}>
-					{formatMonth(month, true)} only
+				<button class:active={form.scope === 'once'} onclick={() => (form.scope = 'once')}>
+					{periodLabel} only
 				</button>
 			</div>
 		</div>

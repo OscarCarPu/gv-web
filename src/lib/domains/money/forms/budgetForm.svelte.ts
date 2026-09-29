@@ -5,6 +5,7 @@ import { buildCategoryOptions, type CategoryOption } from '$lib/domains/money/ut
 import type {
 	BudgetAmount,
 	BudgetItem,
+	BudgetPeriod,
 	BudgetScope,
 	Category,
 	SetBudgetRequest,
@@ -14,7 +15,7 @@ export interface BudgetFormApi {
 	setBudget: (categoryId: number, input: SetBudgetRequest) => Promise<void>;
 	deleteBudget: (
 		categoryId: number,
-		params: { month: string; scope: BudgetScope }
+		params: { month: string; scope: BudgetScope; period: BudgetPeriod }
 	) => Promise<void>;
 }
 
@@ -28,22 +29,30 @@ interface CategoryOptionGroup {
 	options: CategoryOption[];
 }
 
+/** Suggested amounts per category: 3-month average for monthly, last year for yearly. */
+interface BudgetSuggestions {
+	averages: BudgetAmount[];
+	previous_year: BudgetAmount[];
+}
+
 /**
- * Owns `BudgetFormSheet`'s logic: category / amount / scope fields, create-vs-edit
- * seeding, the 3-month average suggestion, and save / remove (then `invalidateAll`).
- * Categories and averages are injected as getters; the month is fixed per `reset`.
+ * Owns `BudgetFormSheet`'s logic: category / period / amount / scope fields, create-vs-edit
+ * seeding, the suggested amount (3-month average or last year's total), and save / remove
+ * (then `invalidateAll`). Categories and suggestions are injected as getters; the month is
+ * fixed per `reset` (a yearly budget uses its year).
  */
 export class BudgetForm {
 	#api: BudgetFormApi;
 	#onclose: () => void;
 	#refresh: () => Promise<void>;
 	#getCategories: () => Category[];
-	#getAverages: () => BudgetAmount[];
+	#getSuggestions: () => BudgetSuggestions;
 
 	#item = $state<BudgetItem | null>(null);
 	#month = $state('');
 
 	categoryId = $state<number | null>(null);
+	period = $state<BudgetPeriod>('monthly');
 	amount = $state<string | number>('');
 	scope = $state<BudgetScope>('forward');
 
@@ -53,12 +62,12 @@ export class BudgetForm {
 
 	constructor(
 		getCategories: () => Category[],
-		getAverages: () => BudgetAmount[],
+		getSuggestions: () => BudgetSuggestions,
 		{ onclose, refresh }: BudgetFormCallbacks,
 		api: BudgetFormApi = moneyApi
 	) {
 		this.#getCategories = getCategories;
-		this.#getAverages = getAverages;
+		this.#getSuggestions = getSuggestions;
 		this.#onclose = onclose;
 		this.#refresh = refresh;
 		this.#api = api;
@@ -80,27 +89,34 @@ export class BudgetForm {
 		];
 	}
 
-	/** Average of the last 3 complete months for the chosen category, if any. */
-	get average(): string | null {
+	get month(): string {
+		return this.#month;
+	}
+
+	/** Suggested amount for the chosen category and period, if there is any history. */
+	get suggestion(): string | null {
 		const id = this.categoryId;
 		if (id === null) return null;
-		return this.#getAverages().find((a) => a.category_id === id)?.amount ?? null;
+		const s = this.#getSuggestions();
+		const list = this.period === 'yearly' ? s.previous_year : s.averages;
+		return list.find((a) => a.category_id === id)?.amount ?? null;
 	}
 
 	reset(item: BudgetItem | null, month: string): void {
 		this.#item = item;
 		this.#month = month;
 		this.categoryId = item?.category_id ?? null;
+		this.period = item?.period ?? 'monthly';
 		this.amount = item ? parseFloat(item.budget) : '';
 		this.scope = 'forward';
 		this.categoryError = false;
 		this.amountError = false;
 	}
 
-	useAverage(): void {
-		const avg = this.average;
-		if (avg !== null) {
-			this.amount = parseFloat(avg);
+	useSuggestion(): void {
+		const value = this.suggestion;
+		if (value !== null) {
+			this.amount = parseFloat(value);
 			this.amountError = false;
 		}
 	}
@@ -118,6 +134,7 @@ export class BudgetForm {
 				month: this.#month,
 				amount: amount.toFixed(2),
 				scope: this.scope,
+				period: this.period,
 			});
 			addNotification(this.#item ? 'Budget updated' : 'Budget created', 'success');
 			this.#onclose();
@@ -134,7 +151,11 @@ export class BudgetForm {
 		if (!item) return;
 		this.saving = true;
 		try {
-			await this.#api.deleteBudget(item.category_id, { month: this.#month, scope: this.scope });
+			await this.#api.deleteBudget(item.category_id, {
+				month: this.#month,
+				scope: this.scope,
+				period: item.period,
+			});
 			addNotification('Budget removed', 'success');
 			this.#onclose();
 			await this.#refresh();

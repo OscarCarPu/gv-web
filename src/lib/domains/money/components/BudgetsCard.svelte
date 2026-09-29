@@ -101,6 +101,26 @@
 				</div>
 			{/if}
 		{/each}
+
+		{#if controller.hasYearly}
+			<div class="money-budget-year-header">
+				<h3 class="money-group-label">Yearly · {controller.year}</h3>
+				<span class="money-budget-year-summary">
+					{formatMoney(budgets.yearly.expense.actual)} of {formatMoney(
+						budgets.yearly.expense.budgeted
+					)} spent
+				</span>
+			</div>
+			{#each controller.yearlyGroups as group (group.type)}
+				{#if group.items.length > 0}
+					<div class="task-list">
+						{#each group.items as item (item.category_id)}
+							<BudgetRow {item} pace={controller.yearPace} onedit={openEdit} />
+						{/each}
+					</div>
+				{/if}
+			{/each}
+		{/if}
 	{/if}
 </section>
 
@@ -108,7 +128,6 @@
 	open={controller.sheetOpen}
 	onclose={() => controller.closeSheet()}
 	item={controller.editing}
-	month={budgets.month}
 	{categories}
-	averages={budgets.averages}
+	{budgets}
 />
