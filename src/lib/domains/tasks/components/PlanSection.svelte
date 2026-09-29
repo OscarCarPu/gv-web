@@ -418,6 +418,7 @@
 				{draft}
 				onedit={openEdit}
 				onstarttimer={handleTimer}
+				onassign={handleAssign}
 				onstopandstart={handleTimerStopAndStart}
 				{isTimerRunning}
 			/>
