@@ -56,6 +56,17 @@ export function uploadErrorMessage(status: number, serverError = ''): string {
 	}
 }
 
+/**
+ * Files above this are sent as a series of PATCH chunks instead of one PUT. The Cloudflare tunnel
+ * in front of the app rejects request bodies over 100 MB (Free/Pro), and the failure is an opaque
+ * dropped connection; chunks keep every request far below that. Also sized so one chunk finishes
+ * well inside the tunnel's ~100s per-request limit on a slow home uplink.
+ */
+export const CHUNK_SIZE = 25 * 1024 * 1024;
+const CHUNK_RETRIES = 3;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export type FileSortKey = 'name' | 'date' | 'size';
 export type SortDir = 'asc' | 'desc';
 
@@ -147,6 +158,8 @@ export class PrinterFilesController {
 
 	// Deliberately outside $state: a native XHR must not be wrapped in a reactive proxy.
 	private xhrs = new Map<number, XMLHttpRequest>();
+	/** Uploads the user cancelled, so a chunked loop stops instead of retrying the aborted chunk. */
+	private cancelled = new Set<number>();
 	/** Progress pollers, keyed by server-side upload id. */
 	private watchers = new Map<string, ReturnType<typeof setInterval>>();
 
@@ -350,6 +363,8 @@ export class PrinterFilesController {
 		// not notify, only its $state proxy does.
 		const entry = this.uploads[this.uploads.length - 1];
 
+		if (file.size > CHUNK_SIZE) return this.uploadChunked(file, entry, id, uploadId, overwrite);
+
 		return new Promise<void>((resolve) => {
 			const xhr = new XMLHttpRequest();
 			this.xhrs.set(id, xhr);
@@ -413,6 +428,122 @@ export class PrinterFilesController {
 		});
 	}
 
+	/**
+	 * Sends one chunk as a PATCH. Resolves with the HTTP status (0 for a network failure, -1 for an
+	 * abort) and the parsed JSON body, if any — never rejects, so the caller owns the retry policy.
+	 */
+	private sendChunk(
+		id: number,
+		file: File,
+		uploadId: string,
+		offset: number,
+		overwrite: boolean,
+		onProgress: (loaded: number) => void
+	): Promise<{ status: number; body: Record<string, unknown> | null }> {
+		const end = Math.min(offset + CHUNK_SIZE, file.size);
+		return new Promise((resolve) => {
+			const xhr = new XMLHttpRequest();
+			this.xhrs.set(id, xhr);
+			const done = (status: number) => {
+				this.xhrs.delete(id);
+				let body: Record<string, unknown> | null = null;
+				try {
+					body = JSON.parse(xhr.responseText);
+				} catch {
+					// Not our JSON — a gateway error page; the status alone is explained upstream.
+				}
+				resolve({ status, body });
+			};
+
+			xhr.open('PATCH', overwrite ? `${this.base}?overwrite=1` : this.base);
+			xhr.setRequestHeader('Accept', 'application/json');
+			xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+			xhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
+			xhr.setRequestHeader('X-Upload-Id', uploadId);
+			xhr.setRequestHeader('X-Upload-Offset', String(offset));
+			xhr.setRequestHeader('X-Upload-Total', String(file.size));
+
+			xhr.upload.onprogress = (e) => {
+				if (e.lengthComputable) onProgress(e.loaded);
+			};
+			xhr.onload = () => done(xhr.status);
+			xhr.onerror = () => done(0);
+			xhr.onabort = () => done(-1);
+			xhr.send(file.slice(offset, end));
+		});
+	}
+
+	/**
+	 * Large-file path: PATCH the file in CHUNK_SIZE pieces, in order. A transient failure retries
+	 * the same chunk (the server treats a repeated offset as already received), and a 409 carries
+	 * the byte count the server really has, so the loop resumes from there. The last chunk is
+	 * answered with 202 and from then on this behaves exactly like the single-PUT path.
+	 */
+	private uploadChunked(
+		file: File,
+		entry: Upload,
+		id: number,
+		uploadId: string,
+		overwrite: boolean
+	): Promise<void> {
+		return new Promise<void>((resolve) => {
+			const finish = () => {
+				this.xhrs.delete(id);
+				this.cancelled.delete(id);
+				resolve();
+			};
+			const fail = (message: string) => {
+				entry.status = 'error';
+				entry.error = message;
+				finish();
+			};
+
+			void (async () => {
+				let offset = 0;
+				let retries = 0;
+
+				while (offset < file.size) {
+					const res = await this.sendChunk(id, file, uploadId, offset, overwrite, (loaded) => {
+						entry.sent = Math.min(offset + loaded, file.size);
+					});
+
+					if (this.cancelled.has(id) || res.status === -1) return fail('Upload cancelled');
+
+					if (res.status >= 200 && res.status < 300) {
+						retries = 0;
+						if (res.status === 202) {
+							entry.sent = entry.size;
+							entry.status = 'sending';
+							this.watch(entry, finish);
+							return;
+						}
+						const received = res.body?.received;
+						offset = typeof received === 'number' ? received : offset + CHUNK_SIZE;
+						entry.sent = Math.min(offset, file.size);
+						continue;
+					}
+
+					const received = res.body?.received;
+					if (res.status === 409 && typeof received === 'number' && retries < CHUNK_RETRIES) {
+						retries++;
+						offset = received;
+						continue;
+					}
+
+					const transient = res.status === 0 || res.status >= 500;
+					if (transient && retries < CHUNK_RETRIES) {
+						retries++;
+						await sleep(1000 * retries);
+						continue;
+					}
+
+					const serverError = typeof res.body?.error === 'string' ? res.body.error : '';
+					return fail(uploadErrorMessage(res.status, serverError));
+				}
+			})();
+		});
+	}
+
 	/** Replays a conflicted upload with Overwrite: ?1. Needs the original bytes. */
 	replace(entry: Upload): void {
 		const file = entry.file;
@@ -429,6 +560,7 @@ export class PrinterFilesController {
 	}
 
 	cancel(entry: Upload): void {
+		this.cancelled.add(entry.id);
 		this.xhrs.get(entry.id)?.abort();
 	}
 

@@ -188,7 +188,7 @@ Route: `/domotics` (semiprivate), a shell with two tabs — `/domotics/printers`
 
 ### Printers tab
 
-Everything printer-facing is server-only — RTSP URLs and PrusaLink credentials live in `src/lib/server/domotics/printers/` and never reach the browser. `BODY_SIZE_LIMIT` is a required prod setting; the 512K default rejects every real gcode upload.
+Everything printer-facing is server-only — RTSP URLs and PrusaLink credentials live in `src/lib/server/domotics/printers/` and never reach the browser. `BODY_SIZE_LIMIT` is a required prod setting; the 512K default rejects every real gcode upload. Files over 25 MiB upload as ordered PATCH chunks (staged on disk by `chunkedUpload.ts`, then forwarded like a plain PUT) because the Cloudflare tunnel rejects request bodies over 100 MB; `BODY_SIZE_LIMIT` only has to exceed one chunk.
 
 - **Three ffmpeg lifecycles, deliberately separate**: `camera.ts` keeps one warm process per printer for the live MJPEG preview and kills it after 30s idle; `recordings.ts` spawns its own for a recording and keeps it alive until stopped. Never merge them — the preview must idle out while a recording must not
 - **Recording is a backend job**: `POST /domotics/printers/[id]/recordings?action=start|stop` starts/stops ffmpeg in the server process. It keeps running with the page closed, and a returning page just sees it still going. The client controller holds no recording state of its own, only what the server reports
