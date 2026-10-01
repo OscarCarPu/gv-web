@@ -13,16 +13,15 @@ RUN bun run lint && bun run check && bun run test
 
 RUN bun run build
 
-FROM oven/bun:1.3.13
+FROM oven/bun:1.3.13-alpine
 WORKDIR /app
 
 # ffmpeg powers the printer camera proxy (RTSP -> in-memory MJPEG frames)
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
-	&& rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache ffmpeg
 
+# adapter-node bundles devDependencies into build/, and every package is a
+# devDependency, so the server needs no node_modules at runtime
 COPY --from=builder /app/build ./build
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
 
 ENV PORT=3000
 EXPOSE 3000
