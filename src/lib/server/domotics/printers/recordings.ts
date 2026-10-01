@@ -12,10 +12,12 @@
 // time, size = size), so a restart mid-recording loses the ffmpeg handle but never the recording.
 
 import { spawn, type ChildProcess } from 'node:child_process';
-import { createReadStream } from 'node:fs';
-import { mkdir, readdir, rm, stat } from 'node:fs/promises';
+import { createReadStream, existsSync } from 'node:fs';
+import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Printer } from './config';
+import { fetchPrusaStatus, type PrinterTelemetry } from './prusalink';
 
 /** Where recordings live. Matches the Docker volume mount; relative paths resolve against cwd. */
 const ROOT = process.env.PRINTER_RECORDINGS_DIR || 'data/recordings';
@@ -32,6 +34,17 @@ const MAX_BYTES = envNumber(process.env.PRINTER_RECORDINGS_MAX_GB, 30) * 1024 **
  * out to be something browsers will not play.
  */
 const VIDEO_CODEC = process.env.PRINTER_RECORDING_VIDEO_CODEC || 'copy';
+/**
+ * Burns the recording's elapsed time, the nozzle's Z and the job's time left into the footage.
+ * A filter needs decoded frames, so this costs a real encode (~half a core at 720p25) instead of
+ * `copy`. `0` turns it off and goes back to muxing the camera's own stream.
+ */
+const OVERLAY = process.env.PRINTER_RECORDING_OVERLAY !== '0';
+/** The image installs font-dejavu; elsewhere fontconfig picks a monospace face. */
+const OVERLAY_FONT =
+	process.env.PRINTER_RECORDING_FONT || '/usr/share/fonts/dejavu/DejaVuSansMono-Bold.ttf';
+/** Z moves once per layer and time-left once a minute, so a few seconds behind is plenty. */
+const OVERLAY_POLL_MS = 5_000;
 
 /** How long ffmpeg gets to finish the file itself before signals escalate. */
 const STOP_GRACE_MS = 5_000;
@@ -121,6 +134,7 @@ type Active = {
 	stderr: string;
 	exited: boolean;
 	stopping: boolean;
+	stopOverlay?: () => void;
 };
 
 const active = new Map<string, Active>();
@@ -234,6 +248,10 @@ export async function startRecording(printer: Printer): Promise<Recording> {
 	const { name, at } = await freeName(dir);
 	const path = join(dir, name);
 
+	// drawtext refuses to start without its text file, so the first one is written before ffmpeg.
+	const overlayPath = OVERLAY ? join(tmpdir(), `gv-recording-overlay-${printer.id}.txt`) : null;
+	if (overlayPath) await writeOverlay(overlayPath, overlayText(null));
+
 	const proc = spawn(
 		'ffmpeg',
 		[
@@ -244,8 +262,7 @@ export async function startRecording(printer: Printer): Promise<Recording> {
 			'-i',
 			printer.rtsp,
 			'-an',
-			'-c:v',
-			VIDEO_CODEC,
+			...videoArgs(overlayPath),
 			'-f',
 			'mp4',
 			// Fragmented: the file stays playable even when the process is killed or the container
@@ -264,6 +281,7 @@ export async function startRecording(printer: Printer): Promise<Recording> {
 
 	const live: Active = { name, path, proc, stderr: '', exited: false, stopping: false };
 	active.set(printer.id, live);
+	if (overlayPath) live.stopOverlay = pollOverlay(printer, overlayPath);
 
 	proc.stderr?.on('data', (chunk: Buffer) => {
 		live.stderr = (live.stderr + chunk.toString()).slice(-STDERR_KEEP);
@@ -272,12 +290,14 @@ export async function startRecording(printer: Printer): Promise<Recording> {
 	// 'error' fires instead of 'exit' when the binary itself cannot be run (ffmpeg not installed).
 	proc.on('error', (e) => {
 		live.exited = true;
+		live.stopOverlay?.();
 		live.stderr = `${live.stderr}\n${e.message}`.slice(-STDERR_KEEP);
 		active.delete(printer.id);
 	});
 
 	proc.on('exit', () => {
 		live.exited = true;
+		live.stopOverlay?.();
 		active.delete(printer.id);
 		// Best-effort housekeeping; nothing here is worth failing a request over.
 		void makePoster(path).finally(() => pruneOldest(printer.id).catch(() => {}));
@@ -358,6 +378,90 @@ export async function deleteRecording(printerId: string, name: string): Promise<
 		throw new RecordingError('Recording not found', 404);
 	}
 	await removeFiles(printerId, name);
+}
+
+// ---- overlay ----
+
+/** `7h 14m`, `14m`, `<1m` — the minute is as fine as the printer's own estimate gets. */
+export function formatTimeLeft(seconds: number): string {
+	const minutes = Math.floor(seconds / 60);
+	if (minutes < 1) return '<1m';
+	const h = Math.floor(minutes / 60);
+	return h ? `${h}h ${String(minutes % 60).padStart(2, '0')}m` : `${minutes}m`;
+}
+
+/**
+ * The overlay, as drawtext text. The first line is expanded by ffmpeg on every frame — `pts` is
+ * the time since the recording started, so it stays exact between polls; the rest is whatever
+ * the printer last reported, or a dash when it reported nothing.
+ */
+export function overlayText(t: PrinterTelemetry | null): string {
+	const z = t?.axisZ != null ? `${t.axisZ.toFixed(2)} mm` : '—';
+	const left = t?.job?.timeRemaining != null ? formatTimeLeft(t.job.timeRemaining) : '—';
+	return [`REC  %{pts:gmtime:0:%H\\:%M\\:%S}`, `Z    ${z}`, `LEFT ${left}`].join('\n');
+}
+
+/** Escapes a value for a filtergraph option. */
+function filterValue(v: string): string {
+	return v.replace(/[\\':,;[\]]/g, (c) => `\\${c}`);
+}
+
+/** Encoder and filter arguments for a recording, with the overlay text read from `textfile`. */
+export function videoArgs(textfile: string | null, font = OVERLAY_FONT): string[] {
+	if (!textfile) return ['-c:v', VIDEO_CODEC];
+	const face = existsSync(font) ? `fontfile=${filterValue(font)}` : 'font=monospace';
+	const drawtext = [
+		`drawtext=${face}`,
+		`textfile=${filterValue(textfile)}`,
+		// Re-read once a second; the poller replaces the file by rename, so a read is never torn.
+		'reload=25',
+		'x=16:y=16:fontsize=26:line_spacing=6:fontcolor=white',
+		'box=1:boxcolor=black@0.55:boxborderw=10',
+	].join(':');
+	return [
+		'-vf',
+		drawtext,
+		'-c:v',
+		VIDEO_CODEC === 'copy' ? 'libx264' : VIDEO_CODEC,
+		'-preset',
+		'veryfast',
+		'-crf',
+		'26',
+		// A keyframe every 2s: each one closes an fmp4 fragment, and seeking lands on them.
+		'-g',
+		'50',
+		'-pix_fmt',
+		'yuv420p',
+		'-threads',
+		'2',
+	];
+}
+
+async function writeOverlay(path: string, text: string): Promise<void> {
+	await writeFile(`${path}.tmp`, text);
+	await rename(`${path}.tmp`, path);
+}
+
+/** Keeps the overlay file current until the returned stop is called. */
+function pollOverlay(printer: Printer, path: string): () => void {
+	let stopped = false;
+	let timer: ReturnType<typeof setTimeout> | undefined;
+
+	const tick = async () => {
+		const t = await fetchPrusaStatus(printer).catch(() => null);
+		if (stopped) return;
+		await writeOverlay(path, overlayText(t?.online ? t : null)).catch(() => {});
+		if (stopped) await rm(path, { force: true });
+		else timer = setTimeout(tick, OVERLAY_POLL_MS);
+	};
+	void tick();
+
+	return () => {
+		if (stopped) return;
+		stopped = true;
+		clearTimeout(timer);
+		void rm(path, { force: true });
+	};
 }
 
 // ---- posters ----

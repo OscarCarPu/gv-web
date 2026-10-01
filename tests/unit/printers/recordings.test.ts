@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
 	firstErrorLine,
+	formatTimeLeft,
+	overlayText,
 	parseRange,
 	parseRecordingName,
 	recordingName,
 	recordingPath,
+	videoArgs,
 } from '$lib/server/domotics/printers/recordings';
 import { formatBytes, formatClock } from '$lib/domains/domotics/printers/format';
 
@@ -117,5 +120,46 @@ describe('formatClock', () => {
 
 	it('never goes negative when clocks disagree', () => {
 		expect(formatClock(-5_000)).toBe('00:00');
+	});
+});
+
+describe('recording overlay', () => {
+	const telemetry = {
+		configured: true,
+		online: true,
+		temps: {},
+		fans: {},
+		axisZ: 76.7,
+		job: { timeRemaining: 26040 },
+	};
+
+	it('shows Z and time left under a per-frame elapsed clock', () => {
+		expect(overlayText(telemetry).split('\n')).toEqual([
+			'REC  %{pts:gmtime:0:%H\\:%M\\:%S}',
+			'Z    76.70 mm',
+			'LEFT 7h 14m',
+		]);
+	});
+
+	it('dashes what the printer did not report', () => {
+		expect(overlayText(null)).toContain('Z    —');
+		expect(overlayText({ ...telemetry, job: undefined })).toContain('LEFT —');
+	});
+
+	it('formats time left down to the minute', () => {
+		expect(formatTimeLeft(59)).toBe('<1m');
+		expect(formatTimeLeft(14 * 60 + 5)).toBe('14m');
+		expect(formatTimeLeft(3600 + 5 * 60)).toBe('1h 05m');
+	});
+
+	it('muxes the camera stream untouched without an overlay', () => {
+		expect(videoArgs(null)).toEqual(['-c:v', 'copy']);
+	});
+
+	it('encodes when drawing, escaping the paths for the filtergraph', () => {
+		const args = videoArgs('/tmp/a:b.txt', '/nonexistent.ttf');
+		const filter = args[args.indexOf('-vf') + 1];
+		expect(filter).toMatch(/^drawtext=font=monospace:textfile=\/tmp\/a\\:b\.txt:/);
+		expect(args[args.indexOf('-c:v') + 1]).toBe('libx264');
 	});
 });

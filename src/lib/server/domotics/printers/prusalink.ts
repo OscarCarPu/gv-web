@@ -6,7 +6,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { Printer } from './config';
 
-type PrinterTelemetry = {
+export type PrinterTelemetry = {
 	configured: boolean;
 	online: boolean;
 	state?: string;
