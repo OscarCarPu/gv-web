@@ -1,5 +1,6 @@
 services:
   gv-web:
+    image: gv-web
     build:
       context: .
       args:
