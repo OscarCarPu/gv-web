@@ -13,7 +13,8 @@ jobs:
         run: |
           git config --global --add safe.directory /home/ocp/docker/gv/gv-web
           cd /home/ocp/docker/gv/gv-web
-          git pull
+          git fetch origin
+          git reset --hard origin/main
           make up
 
       - name: Push to ECR
