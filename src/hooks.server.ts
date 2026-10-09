@@ -1,6 +1,7 @@
-import { redirect, type Handle, json } from '@sveltejs/kit';
+import { error, redirect, type Handle, json } from '@sveltejs/kit';
 import { StatusCodes } from 'http-status-codes';
 import { env } from '$lib/config/env';
+import { FAILOVER_CODE, FAILOVER_MESSAGE, isFailoverBlocked } from '$lib/server/failover';
 
 const PUBLIC_ROUTES = ['/login', '/login/2fa', '/'];
 const SEMIPRIVATE_ROUTES = ['/domotics', '/printers', '/rutas'];
@@ -80,6 +81,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 			redirect(StatusCodes.SEE_OTHER, '/login');
 		}
+	}
+
+	// After auth, so a logged-out request still lands on /login instead of learning the deployment.
+	if (isFailoverBlocked(pathname)) {
+		if (isApiRequest || event.request.method !== 'GET') {
+			return json(
+				{ error: FAILOVER_MESSAGE, code: FAILOVER_CODE },
+				{ status: StatusCodes.SERVICE_UNAVAILABLE }
+			);
+		}
+		error(StatusCodes.SERVICE_UNAVAILABLE, { message: FAILOVER_MESSAGE, code: FAILOVER_CODE });
 	}
 
 	const response = await resolve(event);

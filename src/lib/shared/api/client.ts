@@ -3,6 +3,23 @@ import { browser } from '$app/environment';
 import { env } from '$lib/config/env';
 import { getDeviceId } from '$lib/shared/utils/deviceId';
 
+/** A failed API call. `code` is the API's machine-readable reason, when it sends one. */
+export class ApiError extends Error {
+	constructor(
+		message: string,
+		readonly status: number,
+		readonly code?: string
+	) {
+		super(message);
+		this.name = 'ApiError';
+	}
+}
+
+/** The backend is running on the backup server and this feature needs the home LAN. */
+export function isUnavailableOnFailover(e: unknown): boolean {
+	return e instanceof ApiError && e.code === 'unavailable_on_failover';
+}
+
 let clientToken: string | undefined;
 
 export function setClientToken(token: string | undefined) {
@@ -51,7 +68,7 @@ export async function fetchAPI<T>(
 	if (!response.ok) {
 		const errorData = await response.json().catch(() => ({}));
 		const message = errorData.error || `API Error: ${response.status} ${response.statusText}`;
-		throw new Error(message);
+		throw new ApiError(message, response.status, errorData.code);
 	}
 
 	if (response.status === 204 || schema instanceof z.ZodVoid) {
