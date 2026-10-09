@@ -65,6 +65,39 @@ describe('groupTasksByUrgency', () => {
 		expect(tiersOf(groupTasksByUrgency([dependent, dependency], TODAY)).week).toEqual([2, 1]);
 	});
 
+	it('follows the API work_order inside a tier, over finish_by and the due date', () => {
+		const fic = makeTask({
+			id: 207,
+			urgent: true,
+			due_at: '2026-10-18T00:00:00Z',
+			finish_by: TODAY,
+			work_order: 4,
+		});
+		const fundamentos = makeTask({
+			id: 172,
+			urgent: true,
+			due_at: '2026-10-12T00:00:00Z',
+			finish_by: TODAY,
+			work_order: 2,
+		});
+		const recuperacion = makeTask({
+			id: 171,
+			urgent: true,
+			due_at: '2026-10-12T00:00:00Z',
+			finish_by: TODAY,
+			work_order: 1,
+		});
+		expect(tiersOf(groupTasksByUrgency([fic, fundamentos, recuperacion], TODAY)).today).toEqual([
+			171, 172, 207,
+		]);
+	});
+
+	it('falls back to priority and date when only one of two tasks has a work_order', () => {
+		const withOrder = makeTask({ id: 1, priority: 3, start_by: '2026-08-31', work_order: 1 });
+		const without = makeTask({ id: 2, priority: 2, start_by: '2026-09-03' });
+		expect(tiersOf(groupTasksByUrgency([withOrder, without], TODAY)).week).toEqual([2, 1]);
+	});
+
 	it('orders a tier by priority first, then by date', () => {
 		const p3Soon = makeTask({ id: 1, priority: 3, start_by: '2026-08-30' });
 		const p2Later = makeTask({ id: 2, priority: 2, start_by: '2026-09-03' });

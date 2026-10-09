@@ -60,22 +60,19 @@ export function priorityOf(t: TaskByDueDateResponse): number {
 	return t.effective_priority ?? t.priority;
 }
 
-/** Work order within a tier: p1 first, then p2 and so on; within a priority, by date. */
+/** Work order within a tier: the API's work_order, else p1 first, then by date. */
 function compareByPriorityThenDate(
 	a: TaskByDueDateResponse,
 	b: TaskByDueDateResponse,
 	dateFn: (t: TaskByDueDateResponse) => string | null
 ): number {
+	if (a.work_order != null && b.work_order != null) return a.work_order - b.work_order;
 	const pa = priorityOf(a);
 	const pb = priorityOf(b);
 	if (pa !== pb) return pa - pb;
 	const da = dateFn(a) ?? NO_DATE_SORT_KEY;
 	const db = dateFn(b) ?? NO_DATE_SORT_KEY;
 	if (da !== db) return da < db ? -1 : 1;
-	// Same day: follow the API's work order, which always puts a dependency before the task that
-	// depends on it — even when both share the same start and finish day.
-	if (a.work_order != null && b.work_order != null) return a.work_order - b.work_order;
-	// Without it, the one that has to be finished sooner goes first.
 	const fa = deadlineOf(a) ?? NO_DATE_SORT_KEY;
 	const fb = deadlineOf(b) ?? NO_DATE_SORT_KEY;
 	return fa < fb ? -1 : fa > fb ? 1 : 0;
@@ -83,9 +80,9 @@ function compareByPriorityThenDate(
 
 /**
  * Splits Due Soon into four tiers so urgency changes a task's *position*, not just its color.
- * Within a tier tasks follow the work order: priority first (p1, then p2…), then date —
- * `overdue` / `today` by the real deadline (what's actually closest), `week` / `later` by the
- * effective date — `start_by` when the task carries an estimate, otherwise its deadline.
+ * Within a tier tasks follow the API's `work_order`. When it is missing: priority first (p1,
+ * then p2…), then date — `overdue` / `today` by deadline, `week` / `later` by the effective
+ * date — `start_by` when the task carries an estimate, otherwise its deadline.
  * A task due today always lands in `today`, estimate or not; the estimate only ever promotes a
  * task *before* its due date (the `urgent` early warning) — it never demotes one due today.
  */
