@@ -5,6 +5,7 @@
 // recording, and a page that comes back simply sees it still running.
 
 import { addToast } from '$shared/stores/toast.svelte';
+import { apiFetch } from '$shared/api/client';
 import { RecordingsSchema, type Recording } from './api/printers.schemas';
 
 /** Idle polling is only for the odd recording started from another device; recording needs the
@@ -47,7 +48,7 @@ export class PrinterRecordingsController {
 
 	async refresh(): Promise<void> {
 		try {
-			const res = await fetch(this.base, { headers: { Accept: 'application/json' } });
+			const res = await apiFetch(this.base, { headers: { Accept: 'application/json' } });
 			if (!res.ok) throw new Error(`status ${res.status}`);
 			const data = RecordingsSchema.parse(await res.json());
 			this.recordings = data.recordings;
@@ -65,7 +66,7 @@ export class PrinterRecordingsController {
 		if (this.busy) return;
 		this.busy = true;
 		try {
-			const res = await fetch(`${this.base}?action=${action}`, {
+			const res = await apiFetch(`${this.base}?action=${action}`, {
 				method: 'POST',
 				headers: { Accept: 'application/json' },
 			});
@@ -92,7 +93,7 @@ export class PrinterRecordingsController {
 	async remove(name: string): Promise<void> {
 		this.deleting = name;
 		try {
-			const res = await fetch(`${this.base}?name=${encodeURIComponent(name)}`, {
+			const res = await apiFetch(`${this.base}?name=${encodeURIComponent(name)}`, {
 				method: 'DELETE',
 				headers: { Accept: 'application/json' },
 			});

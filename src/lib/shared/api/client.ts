@@ -9,6 +9,21 @@ export function setClientToken(token: string | undefined) {
 	clientToken = token;
 }
 
+export function apiUrl(path: string): string {
+	return `${browser ? env.API_URL : env.SERVER_API_URL}${path}`;
+}
+
+export function authHeaders(): Record<string, string> {
+	return clientToken ? { Authorization: `Bearer ${clientToken}` } : {};
+}
+
+export function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+	return fetch(apiUrl(path), {
+		...init,
+		headers: { ...authHeaders(), ...(init.headers as Record<string, string>) },
+	});
+}
+
 export async function fetchAPI<T>(
 	endpoint: string,
 	schema: z.ZodType<T>,

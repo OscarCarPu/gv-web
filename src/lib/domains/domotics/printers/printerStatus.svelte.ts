@@ -1,4 +1,5 @@
 import { addToast } from '$shared/stores/toast.svelte';
+import { apiFetch } from '$shared/api/client';
 import { TelemetrySchema, type Telemetry } from './api/printers.schemas';
 
 // Controller for a single printer view: polls telemetry on an interval and
@@ -30,7 +31,7 @@ export class PrinterController {
 
 	async poll() {
 		try {
-			const res = await fetch(`/domotics/printers/${this.id}/status`);
+			const res = await apiFetch(`/domotics/printers/${this.id}/status`);
 			if (!res.ok) throw new Error(`status ${res.status}`);
 			this.telemetry = TelemetrySchema.parse(await res.json());
 			this.error = null;
@@ -53,7 +54,7 @@ export class PrinterController {
 		if (this.stopping) return;
 		this.stopping = true;
 		try {
-			const res = await fetch(`/domotics/printers/${this.id}/job`, {
+			const res = await apiFetch(`/domotics/printers/${this.id}/job`, {
 				method: 'DELETE',
 				headers: { Accept: 'application/json' },
 			});

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import Icon from '$shared/components/Icon.svelte';
+	import { apiFetch } from '$shared/api/client';
 	import { PrinterController } from './printerStatus.svelte';
 	import { PrinterRecordingsController } from './printerRecordings.svelte';
 	import PrinterFiles from './PrinterFiles.svelte';
@@ -55,24 +56,23 @@
 	let camRetryAt = 0;
 	const CAM_ERROR_BACKOFF_MS = 3000;
 
-	function refreshCam() {
+	async function refreshCam() {
 		if (camInFlight || Date.now() < camRetryAt) return;
 		camInFlight = true;
-
-		const url = `/domotics/printers/${id}/camera?t=${Date.now()}`;
-		const img = new Image();
-		img.onload = () => {
-			camInFlight = false;
-			camSrc = url;
+		try {
+			const res = await apiFetch(`/domotics/printers/${id}/camera`);
+			if (!res.ok) throw new Error(`status ${res.status}`);
+			const next = URL.createObjectURL(await res.blob());
+			if (camSrc) URL.revokeObjectURL(camSrc);
+			camSrc = next;
 			camReady = true;
 			camError = false;
-		};
-		img.onerror = () => {
-			camInFlight = false;
+		} catch {
 			camRetryAt = Date.now() + CAM_ERROR_BACKOFF_MS;
 			camError = true;
-		};
-		img.src = url;
+		} finally {
+			camInFlight = false;
+		}
 	}
 
 	$effect(() => {
@@ -84,6 +84,7 @@
 			controller.stop();
 			recordings.stop();
 			if (camTimer) clearInterval(camTimer);
+			if (camSrc) URL.revokeObjectURL(camSrc);
 			disarmStop();
 		};
 	});
@@ -261,13 +262,13 @@
 
 	<PrinterFiles {id} online={t?.online ?? false} />
 
-	<PrinterRecordings {id} controller={recordings} />
+	<PrinterRecordings controller={recordings} />
 
 	{#if t && !t.configured}
 		<p class="notice">
 			PrusaLink telemetry not configured. Set <code>PRUSALINK_HOST</code>,
-			<code>PRUSALINK_USER</code> and <code>PRUSALINK_PASSWORD</code> to show temperatures, progress and
-			state.
+			<code>PRUSALINK_USER</code> and <code>PRUSALINK_PASSWORD</code> in gv-api to show temperatures,
+			progress and state.
 		</p>
 	{:else if t && t.configured && !t.online}
 		<p class="notice notice-error">

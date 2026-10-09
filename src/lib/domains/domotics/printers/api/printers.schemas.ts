@@ -30,6 +30,14 @@ export const TelemetrySchema = z.object({
 	error: z.string().optional(),
 });
 
+export const PrinterInfoSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	model: z.string(),
+});
+
+export const PrinterListSchema = z.array(PrinterInfoSchema);
+
 export type Telemetry = z.infer<typeof TelemetrySchema>;
 
 export const PrinterFileSchema = z.object({
@@ -91,6 +99,8 @@ export const RecordingSchema = z.object({
 	sizeBytes: z.number(),
 	recording: z.boolean(),
 	poster: z.string().optional(),
+	url: z.string(),
+	posterUrl: z.string().optional(),
 });
 
 export const RecordingsSchema = z.object({

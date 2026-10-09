@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import { apiUrl } from '$shared/api/client';
 	import Icon from '$shared/components/Icon.svelte';
 	import Modal from '$shared/components/Modal.svelte';
 	import { formatDateFull } from '$shared/utils/datetime';
@@ -8,12 +8,11 @@
 	import type { Recording } from './api/printers.schemas';
 
 	interface Props {
-		id: string;
 		/** Owned by PrinterPanel so the camera tile can show the REC badge from the same state. */
 		controller: PrinterRecordingsController;
 	}
 
-	let { id, controller }: Props = $props();
+	let { controller }: Props = $props();
 
 	let expanded = $state(false);
 	let playing = $state<Recording | null>(null);
@@ -36,21 +35,11 @@
 	const visible = $derived(expanded ? saved : saved.slice(0, FOLD_AT));
 	const hidden = $derived(Math.max(0, saved.length - FOLD_AT));
 
-	function fileUrl(name: string): string {
-		return resolve('/domotics/printers/[id]/recordings/[name]', { id, name });
-	}
-
 	function poster(r: Recording): string | undefined {
-		return r.poster ? fileUrl(r.poster) : undefined;
+		return r.posterUrl ? apiUrl(r.posterUrl) : undefined;
 	}
 
-	/**
-	 * Name the file is saved under. The `download` attribute settles this client-side, so the
-	 * links stay plain resolved routes — the server's `?download=1` is for direct URLs only.
-	 */
-	function downloadName(r: Recording): string {
-		return `${id}_${r.name}`;
-	}
+	const downloadUrl = (r: Recording) => `${apiUrl(r.url)}&download=1`;
 </script>
 
 <div class="printer-recordings">
@@ -121,8 +110,7 @@
 							<div class="file-actions">
 								<a
 									class="btn-icon"
-									href={resolve('/domotics/printers/[id]/recordings/[name]', { id, name: r.name })}
-									download={downloadName(r)}
+									href={downloadUrl(r)}
 									title="Download"
 									aria-label="Download recording from {formatDateFull(r.startedAt)}"
 								>
@@ -164,16 +152,10 @@
 				</span>
 			</div>
 			<!-- svelte-ignore a11y_media_has_caption -->
-			<video src={fileUrl(playing.name)} poster={poster(playing)} controls autoplay playsinline
+			<video src={apiUrl(playing.url)} poster={poster(playing)} controls autoplay playsinline
 			></video>
 			<div class="rec-player-actions">
-				<a
-					class="btn-inline"
-					href={resolve('/domotics/printers/[id]/recordings/[name]', { id, name: playing.name })}
-					download={downloadName(playing)}
-				>
-					Download
-				</a>
+				<a class="btn-inline" href={downloadUrl(playing)}> Download </a>
 				<button class="btn-inline" onclick={() => (playing = null)}>Close</button>
 			</div>
 		</div>

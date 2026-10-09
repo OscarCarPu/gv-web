@@ -3,6 +3,7 @@
 
 import { SvelteSet } from 'svelte/reactivity';
 import { addToast } from '$shared/stores/toast.svelte';
+import { apiFetch, apiUrl, authHeaders } from '$shared/api/client';
 import {
 	ActiveUploadsSchema,
 	PrinterFilesSchema,
@@ -12,11 +13,15 @@ import {
 } from './api/printers.schemas';
 
 /**
- * Mirrors ALLOWED_EXTENSIONS in $lib/server/domotics/printers/files.ts so a bad drop fails instantly.
+ * Mirrors allowedExtensions in gv-api's internal/printers/files.go so a bad drop fails instantly.
  * `.bgc` / `.gco` are the FAT32 8.3 short forms the printer itself uses; kept in step with the
  * server list so the two cannot drift.
  */
 const ACCEPTED_EXTENSIONS = ['.bgcode', '.gcode', '.bgc', '.gco', '.g'];
+
+function setAuth(xhr: XMLHttpRequest): void {
+	for (const [k, v] of Object.entries(authHeaders())) xhr.setRequestHeader(k, v);
+}
 
 export const ACCEPT_ATTR = ACCEPTED_EXTENSIONS.join(',');
 
@@ -41,7 +46,7 @@ export function uploadErrorMessage(status: number, serverError = ''): string {
 		case 403:
 			return 'Your session expired. Reload the page and sign in again.';
 		case 413:
-			return 'File too large for the server. Raise BODY_SIZE_LIMIT.';
+			return 'File too large for the server.';
 		case 502:
 		case 503:
 			return 'The server was unreachable during the upload. It may be restarting.';
@@ -173,7 +178,7 @@ export class PrinterFilesController {
 
 	async refresh(): Promise<void> {
 		try {
-			const res = await fetch(this.base, { headers: { Accept: 'application/json' } });
+			const res = await apiFetch(this.base, { headers: { Accept: 'application/json' } });
 			if (!res.ok) throw new Error(`status ${res.status}`);
 			const data = PrinterFilesSchema.parse(await res.json());
 			this.files = data.files;
@@ -229,7 +234,9 @@ export class PrinterFilesController {
 	 */
 	async adoptActiveUploads(): Promise<void> {
 		try {
-			const res = await fetch(`${this.base}/progress`, { headers: { Accept: 'application/json' } });
+			const res = await apiFetch(`${this.base}/progress`, {
+				headers: { Accept: 'application/json' },
+			});
 			if (!res.ok) return;
 			const { uploads } = ActiveUploadsSchema.parse(await res.json());
 
@@ -294,9 +301,12 @@ export class PrinterFilesController {
 
 		const timer = setInterval(async () => {
 			try {
-				const res = await fetch(`${this.base}/progress?u=${encodeURIComponent(entry.serverId)}`, {
-					headers: { Accept: 'application/json' },
-				});
+				const res = await apiFetch(
+					`${this.base}/progress?u=${encodeURIComponent(entry.serverId)}`,
+					{
+						headers: { Accept: 'application/json' },
+					}
+				);
 				if (!res.ok) return;
 				const p = UploadProgressSchema.parse(await res.json());
 
@@ -381,11 +391,10 @@ export class PrinterFilesController {
 			const startPolling = () => this.watch(entry, finish);
 
 			const url = overwrite ? `${this.base}?overwrite=1` : this.base;
-			xhr.open('PUT', url);
+			xhr.open('PUT', apiUrl(url));
+			setAuth(xhr);
 			xhr.setRequestHeader('Accept', 'application/json');
 			xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-			// A custom header forces a CORS preflight, which is what keeps this endpoint safe from
-			// cross-origin posts (SvelteKit's CSRF check ignores octet-stream bodies).
 			xhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
 			// Lets /files/progress report how far the server has got forwarding to the printer.
 			xhr.setRequestHeader('X-Upload-Id', uploadId);
@@ -455,7 +464,8 @@ export class PrinterFilesController {
 				resolve({ status, body });
 			};
 
-			xhr.open('PATCH', overwrite ? `${this.base}?overwrite=1` : this.base);
+			xhr.open('PATCH', apiUrl(overwrite ? `${this.base}?overwrite=1` : this.base));
+			setAuth(xhr);
 			xhr.setRequestHeader('Accept', 'application/json');
 			xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 			xhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
@@ -571,7 +581,7 @@ export class PrinterFilesController {
 	async print(name: string): Promise<void> {
 		this.busy = name;
 		try {
-			const res = await fetch(`${this.base}?name=${encodeURIComponent(name)}`, {
+			const res = await apiFetch(`${this.base}?name=${encodeURIComponent(name)}`, {
 				method: 'POST',
 				headers: { Accept: 'application/json' },
 			});
@@ -588,7 +598,7 @@ export class PrinterFilesController {
 	async remove(name: string): Promise<void> {
 		this.busy = name;
 		try {
-			const res = await fetch(`${this.base}?name=${encodeURIComponent(name)}`, {
+			const res = await apiFetch(`${this.base}?name=${encodeURIComponent(name)}`, {
 				method: 'DELETE',
 				headers: { Accept: 'application/json' },
 			});
@@ -655,7 +665,7 @@ export class PrinterFilesController {
 			for (const name of names) {
 				this.busy = name;
 				try {
-					const res = await fetch(`${this.base}?name=${encodeURIComponent(name)}`, {
+					const res = await apiFetch(`${this.base}?name=${encodeURIComponent(name)}`, {
 						method: 'DELETE',
 						headers: { Accept: 'application/json' },
 					});
