@@ -12,7 +12,8 @@
 
 	let { data, children } = $props();
 
-	$effect(() => {
+	// pre: child effects start requests on mount and must find the token already set
+	$effect.pre(() => {
 		setClientToken(data.token ?? data.semiprivateToken);
 	});
 
