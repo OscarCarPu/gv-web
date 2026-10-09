@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import Icon from '$shared/components/Icon.svelte';
-	import { apiFetch } from '$shared/api/client';
+	import { apiFetch, apiUrl } from '$shared/api/client';
 	import { PrinterController } from './printerStatus.svelte';
 	import { PrinterRecordingsController } from './printerRecordings.svelte';
 	import PrinterFiles from './PrinterFiles.svelte';
@@ -11,11 +11,9 @@
 		id: string;
 		name: string;
 		model: string;
-		/** Camera refresh interval in ms (200 = ~5 fps). */
-		camIntervalMs?: number;
 	}
 
-	let { id, name, model, camIntervalMs = 200 }: Props = $props();
+	let { id, name, model }: Props = $props();
 
 	// One panel per printer, keyed by id: it never changes under us.
 	// svelte-ignore state_referenced_locally
@@ -46,45 +44,34 @@
 		}
 	}
 
-	let camTimer: ReturnType<typeof setInterval> | null = null;
-
-	// Only ever one frame request in flight, plus a backoff after a failure. Without this the
-	// 200ms timer keeps firing while requests are still open: when the camera is unreachable
-	// each one blocks ~5s server-side, so they pile up past the browser's per-host connection
-	// limit and starve the telemetry and print-file requests on this same page.
-	let camInFlight = false;
-	let camRetryAt = 0;
+	let camTimer: ReturnType<typeof setTimeout> | null = null;
 	const CAM_ERROR_BACKOFF_MS = 3000;
 
-	async function refreshCam() {
-		if (camInFlight || Date.now() < camRetryAt) return;
-		camInFlight = true;
+	async function connectCam() {
 		try {
-			const res = await apiFetch(`/domotics/printers/${id}/camera`);
+			const res = await apiFetch(`/domotics/printers/${id}/camera/url`);
 			if (!res.ok) throw new Error(`status ${res.status}`);
-			const next = URL.createObjectURL(await res.blob());
-			if (camSrc) URL.revokeObjectURL(camSrc);
-			camSrc = next;
-			camReady = true;
-			camError = false;
+			camSrc = apiUrl((await res.json()).url);
 		} catch {
-			camRetryAt = Date.now() + CAM_ERROR_BACKOFF_MS;
-			camError = true;
-		} finally {
-			camInFlight = false;
+			camFailed();
 		}
+	}
+
+	function camFailed() {
+		camError = true;
+		camReady = false;
+		camSrc = null;
+		camTimer = setTimeout(connectCam, CAM_ERROR_BACKOFF_MS);
 	}
 
 	$effect(() => {
 		controller.start(2000);
 		recordings.start();
-		refreshCam();
-		camTimer = setInterval(refreshCam, camIntervalMs);
+		void connectCam();
 		return () => {
 			controller.stop();
 			recordings.stop();
-			if (camTimer) clearInterval(camTimer);
-			if (camSrc) URL.revokeObjectURL(camSrc);
+			if (camTimer) clearTimeout(camTimer);
 			disarmStop();
 		};
 	});
@@ -98,7 +85,7 @@
 	onDestroy(() => {
 		controller.stop();
 		recordings.stop();
-		if (camTimer) clearInterval(camTimer);
+		if (camTimer) clearTimeout(camTimer);
 		disarmStop();
 	});
 
@@ -164,7 +151,16 @@
 <section class="printer">
 	<div class="printer-cam" bind:this={camEl}>
 		{#if camSrc}
-			<img src={camSrc} alt="{name} live camera" class:ready={camReady} />
+			<img
+				src={camSrc}
+				alt="{name} live camera"
+				class:ready={camReady}
+				onload={() => {
+					camReady = true;
+					camError = false;
+				}}
+				onerror={camFailed}
+			/>
 		{/if}
 		{#if !camReady}
 			<div class="cam-placeholder">
