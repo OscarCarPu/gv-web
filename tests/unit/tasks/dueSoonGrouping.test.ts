@@ -268,4 +268,17 @@ describe('buildUrgencyPhrase', () => {
 		const t = makeTask({ urgent: true, remaining_hours: '10', start_by: '2026-08-25' });
 		expect(buildUrgencyPhrase(t, TODAY)).toBe("10h left · should've started 4d ago");
 	});
+
+	it('puts recurring tasks first in Start Today, ignoring priority and work order', () => {
+		const std = makeTask({ id: 1, due_at: TODAY, priority: 1, work_order: 1 });
+		const rec = makeTask({
+			id: 2,
+			due_at: TODAY,
+			priority: 5,
+			work_order: 2,
+			task_type: 'recurring',
+		});
+		const tiers = tiersOf(groupTasksByUrgency([std, rec], TODAY));
+		expect(tiers.today).toEqual([2, 1]);
+	});
 });

@@ -83,6 +83,7 @@ function compareByPriorityThenDate(
  * Within a tier tasks follow the API's `work_order`. When it is missing: priority first (p1,
  * then p2…), then date — `overdue` / `today` by deadline, `week` / `later` by the effective
  * date — `start_by` when the task carries an estimate, otherwise its deadline.
+ * Recurring tasks head `today`, ahead of priority and work order.
  * A task due today always lands in `today`, estimate or not; the estimate only ever promotes a
  * task *before* its due date (the `urgent` early warning) — it never demotes one due today.
  */
@@ -103,7 +104,12 @@ export function groupTasksByUrgency(
 	}
 
 	buckets.overdue.sort((a, b) => compareByPriorityThenDate(a, b, actualDate));
-	buckets.today.sort((a, b) => compareByPriorityThenDate(a, b, actualDate));
+	buckets.today.sort((a, b) => {
+		const ra = a.task_type === 'recurring';
+		const rb = b.task_type === 'recurring';
+		if (ra !== rb) return ra ? -1 : 1;
+		return compareByPriorityThenDate(a, b, actualDate);
+	});
 	buckets.week.sort((a, b) => compareByPriorityThenDate(a, b, effectiveDate));
 	buckets.later.sort((a, b) => compareByPriorityThenDate(a, b, effectiveDate));
 
