@@ -113,14 +113,48 @@
 
 	const idSpans = $derived(items.map((it) => ({ id: it.block.id, ...it.span })));
 	const conflicts = $derived(conflictIds(idSpans));
-	const lanes = $derived(layoutLanes(idSpans));
+
+	/** The past is what was done, not what was planned: blocks that ended before now are left
+	 *  out (unless they carry unsaved edits, which must stay reachable), and the one in
+	 *  progress is drawn from now on. The block's real span still drives dragging and saving. */
+	const planned = $derived(
+		items
+			.filter((it) => it.dirty || it.span.endMs > board.nowMs)
+			.map((it) => ({
+				...it,
+				shownStartMs: Math.max(it.span.startMs, Math.min(board.nowMs, it.span.endMs)),
+			}))
+	);
+	const lanes = $derived(
+		layoutLanes(
+			planned.map((it) => ({ id: it.block.id, startMs: it.shownStartMs, endMs: it.span.endMs }))
+		)
+	);
+
+	/** Time actually logged today, each entry as a block at its real clock position. */
+	const done = $derived(
+		board.items.flatMap((it) =>
+			it.kind === 'actual'
+				? [
+						{
+							id: it.entryId,
+							name: it.taskName,
+							note: it.comment,
+							running: it.running,
+							span: {
+								startMs: new Date(it.startedAt).getTime(),
+								endMs: new Date(it.endedAt).getTime(),
+							},
+						},
+					]
+				: []
+		)
+	);
+	const doneLanes = $derived(layoutLanes(done.map((d) => ({ id: d.id, ...d.span }))));
 	const dirtyCount = $derived(items.filter((it) => it.dirty).length);
 
 	const liveRange = $derived(
-		agendaRange(
-			items.map((it) => it.span),
-			board.nowMs
-		)
+		agendaRange([...items.map((it) => it.span), ...done.map((d) => d.span)], board.nowMs)
 	);
 	const range = $derived(drag?.range ?? liveRange);
 	const marks = $derived(hourMarks(range));
@@ -332,10 +366,33 @@
 			</div>
 		{/if}
 
-		{#each items as it (it.block.id)}
+		{#each done as d (d.id)}
+			{@const heightPx = toPx(d.span.endMs) - toPx(d.span.startMs)}
+			{@const lane = doneLanes.get(d.id) ?? { lane: 0, lanes: 1 }}
+			<div
+				class="plan-agenda-block plan-agenda-done"
+				class:plan-agenda-running={d.running}
+				class:plan-agenda-short={heightPx < 34}
+				style="top: {toPx(
+					d.span.startMs
+				)}px; height: {heightPx}px; --lane: {lane.lane}; --lanes: {lane.lanes}"
+			>
+				<div class="plan-agenda-body">
+					<span class="plan-agenda-name">{d.name}</span>
+					<span class="plan-agenda-time">
+						{isoToHHmm(d.span.startMs)}–{isoToHHmm(d.span.endMs)} · {formatTime(
+							(d.span.endMs - d.span.startMs) / 1000
+						)}
+					</span>
+					{#if d.note}<span class="plan-agenda-note">{d.note}</span>{/if}
+				</div>
+			</div>
+		{/each}
+
+		{#each planned as it (it.block.id)}
 			{@const b = it.block}
 			{@const span = it.span}
-			{@const heightPx = toPx(span.endMs) - toPx(span.startMs)}
+			{@const heightPx = toPx(span.endMs) - toPx(it.shownStartMs)}
 			{@const lane = lanes.get(b.id) ?? { lane: 0, lanes: 1 }}
 			<div
 				class="plan-agenda-block"
@@ -349,7 +406,7 @@
 				class:plan-agenda-conflict={conflicts.has(b.id)}
 				class:plan-agenda-active={drag?.id === b.id || menu?.id === b.id}
 				style="top: {toPx(
-					span.startMs
+					it.shownStartMs
 				)}px; height: {heightPx}px; --lane: {lane.lane}; --lanes: {lane.lanes}"
 				role="button"
 				tabindex="0"

@@ -1106,6 +1106,19 @@
 	border-left-color: var(--color-danger);
 }
 
+/* Time actually logged: solid, not draggable. */
+.plan-agenda-done {
+	@apply cursor-default;
+	z-index: 5;
+	border-color: color-mix(in srgb, var(--color-success) 40%, transparent);
+	border-left-color: var(--color-success);
+	background: color-mix(in srgb, var(--color-success) 16%, var(--color-bg));
+
+	&:hover {
+		background: color-mix(in srgb, var(--color-success) 16%, var(--color-bg));
+	}
+}
+
 .plan-agenda-savebar {
 	@apply sticky top-2 z-40 mt-4 mb-3 flex items-center gap-2 rounded-lg px-3 py-2;
 	border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
