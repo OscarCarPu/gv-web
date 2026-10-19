@@ -431,6 +431,7 @@ Tasks with `due_at < today` appear in red on "Próximas a vencer". `TaskItem` ad
 | -------- | ------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `GET`    | `/tasks/tree`                               | Active project/task tree (accepts `?min_priority=N`)                                 |
 | `GET`    | `/tasks/tasks/by-due-date`                  | Tasks sorted by due date (accepts `?min_priority=N`)                                 |
+| `GET`    | `/tasks/tasks/by-due-date/slack`            | `{ slack_minutes }`: minutes free today (+) or that don't fit (−); feeds the Start Today chip |
 | `GET`    | `/tasks/projects`                           | Root projects list                                                                   |
 | `GET`    | `/tasks/projects/{id}`                      | Project detail with time_spent                                                       |
 | `GET`    | `/tasks/projects/{id}/children`             | Project + child tasks/sub-projects                                                   |

@@ -152,6 +152,21 @@
 	color: var(--color-text-muted);
 }
 
+.due-soon-tier-head {
+	@apply flex items-center gap-2;
+}
+
+.due-soon-slack {
+	@apply rounded-full px-2.5 py-1 text-xs font-semibold;
+	color: var(--color-success);
+	background: color-mix(in srgb, var(--color-success) 14%, var(--color-bg));
+
+	&.over {
+		color: var(--color-danger);
+		background: color-mix(in srgb, var(--color-danger) 14%, var(--color-bg));
+	}
+}
+
 .due-soon-tier.tier-overdue .due-soon-tier-label {
 	color: var(--color-danger);
 	background: color-mix(in srgb, var(--color-danger) 14%, var(--color-bg));

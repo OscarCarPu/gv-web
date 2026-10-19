@@ -19,6 +19,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		plan,
 		todayTimeEntries,
 		freeBusy,
+		dueSlack,
 	] = await Promise.all([
 		tasksApi.getTasksByDueDate(token).catch((error) => {
 			console.error('Failed to load tasks by due date:', error);
@@ -60,6 +61,10 @@ export const load: PageServerLoad = async ({ cookies }) => {
 				console.error('Failed to load free/busy:', error);
 				return { from: '', to: '', days: [] };
 			}),
+		tasksApi.getDueSoonSlack(token).catch((error) => {
+			console.error('Failed to load due-soon slack:', error);
+			return null;
+		}),
 	]);
 
 	return {
@@ -70,5 +75,6 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		plan,
 		todayTimeEntries,
 		freeBusy,
+		dueSlack,
 	};
 };

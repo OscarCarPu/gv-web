@@ -4,6 +4,7 @@ import {
 	priorityOf,
 	truncateDueSoonGroups,
 	buildUrgencyPhrase,
+	buildSlackChip,
 	type DueSoonGroup,
 } from '$lib/domains/tasks/utils/dueSoonGrouping';
 import type { TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
@@ -280,5 +281,20 @@ describe('buildUrgencyPhrase', () => {
 		});
 		const tiers = tiersOf(groupTasksByUrgency([std, rec], TODAY));
 		expect(tiers.today).toEqual([2, 1]);
+	});
+});
+
+describe('buildSlackChip', () => {
+	it('is null without data or at exactly zero', () => {
+		expect(buildSlackChip(null)).toBeNull();
+		expect(buildSlackChip({ slack_minutes: 0 })).toBeNull();
+	});
+
+	it('reads positive minutes as free time', () => {
+		expect(buildSlackChip({ slack_minutes: 210 })).toEqual({ kind: 'free', text: '3h 30m free' });
+	});
+
+	it('reads negative minutes as hours that do not fit', () => {
+		expect(buildSlackChip({ slack_minutes: -120 })).toEqual({ kind: 'over', text: '2h over' });
 	});
 });

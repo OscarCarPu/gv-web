@@ -18,7 +18,7 @@
 	import TimerTaskPicker from '$lib/domains/tasks/components/TimerTaskPicker.svelte';
 	import type { TimeEntryWithTask, TaskListItem } from '$lib/domains/tasks/types/Task.types';
 	import { toLocalDateString, formatTime } from '$lib/shared/utils/datetime';
-	import { deadlineOf, priorityOf } from '$lib/domains/tasks/utils/dueSoonGrouping';
+	import { deadlineOf, priorityOf, buildSlackChip } from '$lib/domains/tasks/utils/dueSoonGrouping';
 	import { buildPaceTooltip } from '$lib/domains/tasks/utils/paceLabel';
 	import { addNotification } from '$lib/shared/stores/notification.svelte';
 	import Icon from '$lib/shared/components/Icon.svelte';
@@ -48,6 +48,7 @@
 	let dailyTarget = $derived(summary.daily_target_seconds);
 	let dailyTargetLabel = $derived(formatTime(summary.daily_target_seconds));
 	let weekTargetTooltip = $derived(buildPaceTooltip(summary));
+	let slackChip = $derived(buildSlackChip(data.dueSlack));
 
 	/** Reset the manual-add row to its default range. */
 	function resetManualRange() {
@@ -419,7 +420,12 @@
 				<div class="task-list">
 					{#each board.visibleDueSoonGroups as group (group.tier)}
 						<div class="due-soon-tier tier-{group.tier}">
-							<span class="due-soon-tier-label">{group.label}</span>
+							<div class="due-soon-tier-head">
+								<span class="due-soon-tier-label">{group.label}</span>
+								{#if group.tier === 'today' && slackChip}
+									<span class="due-soon-slack {slackChip.kind}">{slackChip.text}</span>
+								{/if}
+							</div>
 							{#each group.tasks as task, i (task.id)}
 								{@const taskDateKey = deadlineOf(task) ?? 'no-date'}
 								{@const isToday = taskDateKey === todayKey}

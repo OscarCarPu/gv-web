@@ -181,6 +181,11 @@ export interface TaskByDueDateResponse {
 	blocked: boolean;
 }
 
+/** Signed minutes of room today: positive = free before the plan gets tight, negative = doesn't fit. */
+export interface DueSoonSlack {
+	slack_minutes: number;
+}
+
 export interface TaskDetailResponse {
 	id: number;
 	project_id: number | null;

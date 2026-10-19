@@ -1,5 +1,5 @@
-import { toLocalDateString } from '$lib/shared/utils/datetime';
-import type { TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
+import { toLocalDateString, formatTime } from '$lib/shared/utils/datetime';
+import type { TaskByDueDateResponse, DueSoonSlack } from '$lib/domains/tasks/types/Task.types';
 
 export type DueSoonTier = 'overdue' | 'today' | 'week' | 'later';
 
@@ -163,4 +163,15 @@ export function buildUrgencyPhrase(
 	const startLabel =
 		daysLate === 1 ? "should've started yesterday" : `should've started ${daysLate}d ago`;
 	return `${hoursLabel} · ${startLabel}`;
+}
+
+/** The Start Today chip: "3h 30m free" or "2h over". Null when there is nothing to say (no data, or exactly 0). */
+export function buildSlackChip(
+	slack: DueSoonSlack | null
+): { kind: 'over' | 'free'; text: string } | null {
+	if (!slack || slack.slack_minutes === 0) return null;
+	const text = formatTime(Math.abs(slack.slack_minutes) * 60);
+	return slack.slack_minutes < 0
+		? { kind: 'over', text: `${text} over` }
+		: { kind: 'free', text: `${text} free` };
 }

@@ -253,6 +253,10 @@ const TaskByDueDateResponseSchema = z.object({
 
 export const TaskByDueDateResponseListSchema = z.array(TaskByDueDateResponseSchema);
 
+export const DueSoonSlackSchema = z.object({
+	slack_minutes: z.number().int(),
+});
+
 // --- History schemas ---
 
 export const TimeEntryHistoryResponseSchema = z.object({

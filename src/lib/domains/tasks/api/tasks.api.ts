@@ -15,6 +15,7 @@ import {
 	ActiveTimeEntryResponseSchema,
 	ActiveTreeNodeListSchema,
 	TaskByDueDateResponseListSchema,
+	DueSoonSlackSchema,
 	TimeEntrySummaryResponseSchema,
 	TimeEntryHistoryResponseSchema,
 	TimeEntryWithTaskListSchema,
@@ -42,6 +43,7 @@ import type {
 	UpdateTimeEntryRequest,
 	ActiveTreeNode,
 	TaskByDueDateResponse,
+	DueSoonSlack,
 	TaskListItem,
 	TimeEntrySummaryResponse,
 	TimeEntryHistoryResponse,
@@ -139,6 +141,10 @@ export const tasksApi = {
 
 	async getTasksByDueDate(token?: string): Promise<TaskByDueDateResponse[]> {
 		return fetchAPI('/tasks/tasks/by-due-date', TaskByDueDateResponseListSchema, { token });
+	},
+
+	async getDueSoonSlack(token?: string): Promise<DueSoonSlack> {
+		return fetchAPI('/tasks/tasks/by-due-date/slack', DueSoonSlackSchema, { token });
 	},
 
 	// --- Todos ---
