@@ -1,1 +1,1 @@
-bun run test:unit -- --run
+bun run lint && bun run check && bun run test:unit -- --run
