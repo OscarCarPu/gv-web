@@ -427,39 +427,39 @@ Tasks with `due_at < today` appear in red on "Próximas a vencer". `TaskItem` ad
 
 ## API Endpoints
 
-| Method   | Endpoint                                    | Purpose                                                                                       |
-| -------- | ------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `GET`    | `/tasks/tree`                               | Active project/task tree (accepts `?min_priority=N`)                                          |
-| `GET`    | `/tasks/tasks/by-due-date`                  | Tasks sorted by due date (accepts `?min_priority=N`)                                          |
-| `GET`    | `/tasks/tasks/by-due-date/slack`            | `{ slack_minutes }`: minutes free today (+) or that don't fit (−); feeds the Start Today chip |
-| `GET`    | `/tasks/projects`                           | Root projects list                                                                            |
-| `GET`    | `/tasks/projects/{id}`                      | Project detail with time_spent                                                                |
-| `GET`    | `/tasks/projects/{id}/children`             | Project + child tasks/sub-projects                                                            |
-| `POST`   | `/tasks/projects`                           | Create project                                                                                |
-| `GET`    | `/tasks/projects/{id}/parent-candidates`    | Valid new parents (id, name, path): not itself, its subtree or finished                       |
-| `PATCH`  | `/tasks/projects/{id}`                      | Update project (`parent_id`: id = move, `null` = root; `409` on cycle)                        |
-| `DELETE` | `/tasks/projects/{id}`                      | Delete project                                                                                |
-| `GET`    | `/tasks/tasks/list-fast`                    | All unfinished tasks (id, name only)                                                          |
-| `GET`    | `/tasks/tasks/{id}`                         | Task detail with todos + dependencies                                                         |
-| `POST`   | `/tasks/tasks`                              | Create task (accepts `depends_on: int[]`)                                                     |
-| `PATCH`  | `/tasks/tasks/{id}`                         | Update task (accepts `depends_on: int[]`)                                                     |
-| `DELETE` | `/tasks/tasks/{id}`                         | Delete task                                                                                   |
-| CRUD     | `/tasks/todos`                              | Todo management                                                                               |
-| CRUD     | `/tasks/time-entries`                       | Time entry management                                                                         |
-| `GET`    | `/tasks/time-entries/active`                | Currently running time entry                                                                  |
-| `GET`    | `/tasks/time-entries/summary`               | Today + week totals + daily/weekly target + pace breakdown                                    |
-| `GET`    | `/tasks/time-entries/history`               | Aggregated history (daily/weekly/monthly)                                                     |
-| `GET`    | `/tasks/time-entries?start_time=&end_time=` | Time entries with task/project info (agenda)                                                  |
-| `GET`    | `/plan/today`                               | Today's plan blocks + totals + budget                                                         |
-| `GET`    | `/plan/range`                               | Plan blocks across an arbitrary date range (used by `/calendar`, not `/tasks`)                |
-| `POST`   | `/plan/blocks`                              | Create a plan block (accepts `event_ref` to link a calendar event)                            |
-| `PUT`    | `/plan/blocks/{id}`                         | Update a plan block                                                                           |
-| `DELETE` | `/plan/blocks/{id}`                         | Delete a plan block                                                                           |
-| `GET`    | `/plan/commitments`                         | List recurring commitments                                                                    |
-| `POST`   | `/plan/commitments`                         | Create a recurring commitment                                                                 |
-| `PUT`    | `/plan/commitments/{id}`                    | Update a recurring commitment (no `task_id`)                                                  |
-| `DELETE` | `/plan/commitments/{id}`                    | Delete a recurring commitment                                                                 |
-| `GET`    | `/capacity/free-busy`                       | Daily capacity/busy/free breakdown for a date range (see [calendar.md](calendar.md))          |
+| Method   | Endpoint                                    | Purpose                                                                                                                                                                                                   |
+| -------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/tasks/tree`                               | Active project/task tree (accepts `?min_priority=N`)                                                                                                                                                      |
+| `GET`    | `/tasks/tasks/by-due-date`                  | Tasks sorted by due date (accepts `?min_priority=N`)                                                                                                                                                      |
+| `GET`    | `/tasks/tasks/by-due-date/slack`            | `{ slack_minutes }`: minutes free today (+) or that don't fit (−); feeds the chip next to the Due Soon heading, always shown (0 reads "0h free"); with no estimated tasks it is all of today that is left |
+| `GET`    | `/tasks/projects`                           | Root projects list                                                                                                                                                                                        |
+| `GET`    | `/tasks/projects/{id}`                      | Project detail with time_spent                                                                                                                                                                            |
+| `GET`    | `/tasks/projects/{id}/children`             | Project + child tasks/sub-projects                                                                                                                                                                        |
+| `POST`   | `/tasks/projects`                           | Create project                                                                                                                                                                                            |
+| `GET`    | `/tasks/projects/{id}/parent-candidates`    | Valid new parents (id, name, path): not itself, its subtree or finished                                                                                                                                   |
+| `PATCH`  | `/tasks/projects/{id}`                      | Update project (`parent_id`: id = move, `null` = root; `409` on cycle)                                                                                                                                    |
+| `DELETE` | `/tasks/projects/{id}`                      | Delete project                                                                                                                                                                                            |
+| `GET`    | `/tasks/tasks/list-fast`                    | All unfinished tasks (id, name only)                                                                                                                                                                      |
+| `GET`    | `/tasks/tasks/{id}`                         | Task detail with todos + dependencies                                                                                                                                                                     |
+| `POST`   | `/tasks/tasks`                              | Create task (accepts `depends_on: int[]`)                                                                                                                                                                 |
+| `PATCH`  | `/tasks/tasks/{id}`                         | Update task (accepts `depends_on: int[]`)                                                                                                                                                                 |
+| `DELETE` | `/tasks/tasks/{id}`                         | Delete task                                                                                                                                                                                               |
+| CRUD     | `/tasks/todos`                              | Todo management                                                                                                                                                                                           |
+| CRUD     | `/tasks/time-entries`                       | Time entry management                                                                                                                                                                                     |
+| `GET`    | `/tasks/time-entries/active`                | Currently running time entry                                                                                                                                                                              |
+| `GET`    | `/tasks/time-entries/summary`               | Today + week totals + daily/weekly target + pace breakdown                                                                                                                                                |
+| `GET`    | `/tasks/time-entries/history`               | Aggregated history (daily/weekly/monthly)                                                                                                                                                                 |
+| `GET`    | `/tasks/time-entries?start_time=&end_time=` | Time entries with task/project info (agenda)                                                                                                                                                              |
+| `GET`    | `/plan/today`                               | Today's plan blocks + totals + budget                                                                                                                                                                     |
+| `GET`    | `/plan/range`                               | Plan blocks across an arbitrary date range (used by `/calendar`, not `/tasks`)                                                                                                                            |
+| `POST`   | `/plan/blocks`                              | Create a plan block (accepts `event_ref` to link a calendar event)                                                                                                                                        |
+| `PUT`    | `/plan/blocks/{id}`                         | Update a plan block                                                                                                                                                                                       |
+| `DELETE` | `/plan/blocks/{id}`                         | Delete a plan block                                                                                                                                                                                       |
+| `GET`    | `/plan/commitments`                         | List recurring commitments                                                                                                                                                                                |
+| `POST`   | `/plan/commitments`                         | Create a recurring commitment                                                                                                                                                                             |
+| `PUT`    | `/plan/commitments/{id}`                    | Update a recurring commitment (no `task_id`)                                                                                                                                                              |
+| `DELETE` | `/plan/commitments/{id}`                    | Delete a recurring commitment                                                                                                                                                                             |
+| `GET`    | `/capacity/free-busy`                       | Daily capacity/busy/free breakdown for a date range (see [calendar.md](calendar.md))                                                                                                                      |
 
 ## Floating Reminder
 

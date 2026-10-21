@@ -285,9 +285,9 @@ describe('buildUrgencyPhrase', () => {
 });
 
 describe('buildSlackChip', () => {
-	it('is null without data or at exactly zero', () => {
+	it('is null without data, plain at zero', () => {
 		expect(buildSlackChip(null)).toBeNull();
-		expect(buildSlackChip({ slack_minutes: 0 })).toBeNull();
+		expect(buildSlackChip({ slack_minutes: 0 })).toEqual({ kind: 'free', text: '0h free' });
 	});
 
 	it('reads positive minutes as free time', () => {

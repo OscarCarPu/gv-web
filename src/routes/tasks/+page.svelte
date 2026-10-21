@@ -373,7 +373,12 @@
 		<div class="tasks-content">
 			<div class="tasks-section">
 				<div class="section-header">
-					<h2>Due Soon <span class="summary-pace">{board.dueTodayCount}</span></h2>
+					<h2>
+						Due Soon <span class="summary-pace">{board.dueTodayCount}</span>
+						{#if slackChip}
+							<span class="due-soon-slack {slackChip.kind}">{slackChip.text}</span>
+						{/if}
+					</h2>
 
 					<div class="priority-filter">
 						{#each [1, 2, 3, 4] as p (p)}
@@ -422,9 +427,6 @@
 						<div class="due-soon-tier tier-{group.tier}">
 							<div class="due-soon-tier-head">
 								<span class="due-soon-tier-label">{group.label}</span>
-								{#if group.tier === 'today' && slackChip}
-									<span class="due-soon-slack {slackChip.kind}">{slackChip.text}</span>
-								{/if}
 							</div>
 							{#each group.tasks as task, i (task.id)}
 								{@const taskDateKey = deadlineOf(task) ?? 'no-date'}
