@@ -173,6 +173,14 @@ Backend endpoints: `GET /finance/stats/networth`, `/by-category`, `/monthly`. Da
 
 Route: `/domotics` (semiprivate), a shell with two tabs — `/domotics/printers` and `/domotics/lights`. `/domotics` itself redirects to the printers tab, and the old `/printers` 308s to `/domotics/printers` so existing bookmarks survive. Client code lives in `src/lib/domains/domotics/{printers,lights}/`; both tabs are interfaces over gv-api, so there is no server code. The shell and everything lights-related is styled in `domotics.css`; printer furniture stays in `printers.css`. Both are imported by `/domotics/+layout.svelte` — the root layout imports neither.
 
+### Uptime tab
+
+`/domotics/uptime`, code in `src/lib/domains/domotics/uptime/`, styled in `uptime.css` (imported by `/domotics/+layout.svelte`). One series, the service: gv-api keeps the history itself (a 30 s heartbeat plus the failover record, see `gv-api/docs/api/uptime.md`).
+
+- **Three kinds of time**: up, down and failover. The percentage counts failover as uptime; the timeline draws it in a darker green (`.uptime-seg.is-failover`) and the legend (`KIND_LABELS`) names it.
+- **Nothing polls**: Refresh reads again. `UptimeController.segments` positions the API's windows using its clipped `seconds`, so the bar and the percentage tell the same story.
+- **On the backup server** the API answers 503 `unavailable_on_failover` (and `hooks.server.ts` blocks `/domotics` first); the tab shows the message.
+
 ### Printers tab
 
 **The printers backend is in gv-api, not here** — PrusaLink, ffmpeg (camera and recordings), file staging and the credentials all live in `gv-api/internal/printers`; see `gv-api/docs/api/printers.md`. This tab is an interface over `/domotics/printers/*`; there is no `+server.ts` in front of it, and gv-web has no ffmpeg, volume or `BODY_SIZE_LIMIT` for it.

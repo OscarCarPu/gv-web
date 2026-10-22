@@ -3,30 +3,10 @@
 .uptime-bar {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	justify-content: flex-end;
 	gap: 1rem;
 	margin-bottom: 1rem;
 	flex-wrap: wrap;
-}
-
-.uptime-freshness {
-	display: flex;
-	flex-direction: column;
-	gap: 0.125rem;
-	font-size: 0.875rem;
-	color: var(--color-text-muted);
-}
-
-.uptime-freshness .is-stale {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.375rem;
-	color: var(--color-warning);
-	font-weight: 600;
-}
-
-.uptime-stale-note {
-	font-size: 0.75rem;
 }
 
 .uptime-actions {
@@ -118,10 +98,6 @@
 	border-radius: 14px;
 }
 
-.uptime-card.is-down {
-	border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
-}
-
 .uptime-card-head {
 	display: flex;
 	align-items: flex-start;
@@ -153,11 +129,6 @@
 .uptime-dot.is-up {
 	background: var(--color-success);
 	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 20%, transparent);
-}
-
-.uptime-dot.is-down {
-	background: var(--color-danger);
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
 }
 
 .uptime-state {
@@ -245,6 +216,10 @@
 	background: color-mix(in srgb, var(--color-success) 70%, transparent);
 }
 
+.uptime-seg.is-failover {
+	background: color-mix(in srgb, var(--color-success) 55%, black);
+}
+
 .uptime-seg.is-down {
 	background: var(--color-danger);
 	/* Outages are usually minutes inside a month; without a floor they are invisible. */
@@ -266,6 +241,41 @@
 	justify-content: space-between;
 	font-size: 0.6875rem;
 	color: var(--color-text-muted);
+}
+
+.uptime-legend {
+	list-style: none;
+	margin: 0.25rem 0 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem 1rem;
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+}
+
+.uptime-legend li {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.uptime-swatch {
+	width: 10px;
+	height: 10px;
+	border-radius: 3px;
+}
+
+.uptime-swatch.is-up {
+	background: color-mix(in srgb, var(--color-success) 70%, transparent);
+}
+
+.uptime-swatch.is-down {
+	background: var(--color-danger);
+}
+
+.uptime-swatch.is-failover {
+	background: color-mix(in srgb, var(--color-success) 55%, black);
 }
 
 /* ---- Footer and outage list ---- */
@@ -345,17 +355,4 @@
 	color: var(--color-text-muted);
 	max-width: 46ch;
 	margin: 0 auto;
-}
-
-.uptime-error-hint {
-	margin-top: 0.6rem;
-	font-size: 0.8125rem;
-}
-
-.uptime-error code {
-	font-family: ui-monospace, monospace;
-	font-size: 0.75rem;
-	padding: 0.1rem 0.3rem;
-	border-radius: 5px;
-	background: var(--color-bg-light);
 }

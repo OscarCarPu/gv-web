@@ -1,63 +1,50 @@
 <script lang="ts">
-	import { DEVICE_LABELS, type DeviceOverview } from './api/uptime.schemas';
+	import { KIND_LABELS } from './api/uptime.schemas';
+	import type { Overview } from './api/uptime.schemas';
 	import { formatAgo, formatDuration, formatMoment, formatPercent } from './format';
 	import type { UptimeController } from './uptime.svelte';
 
 	let {
-		device,
+		overview,
 		controller,
 	}: {
-		device: DeviceOverview;
+		overview: Overview;
 		controller: UptimeController;
 	} = $props();
 
-	const entry = $derived(controller.windowsFor(device.device));
-	const segments = $derived(controller.segmentsFor(device.device));
-	const outages = $derived(controller.outagesFor(device.device));
+	const report = $derived(controller.report);
+	const segments = $derived(controller.segments);
+	const outages = $derived(controller.outages);
 
-	/** How long the current state has held. The open window is the only duration we can be sure of. */
 	const held = $derived.by(() => {
-		if (!device.since) return null;
-		const started = new Date(device.since).getTime();
-		if (Number.isNaN(started)) return null;
-		return formatDuration((Date.now() - started) / 1000);
+		const started = new Date(overview.up_since).getTime();
+		return Number.isNaN(started) ? null : formatDuration((Date.now() - started) / 1000);
 	});
 </script>
 
-<article class="uptime-card" class:is-down={device.state === 'down'}>
+<article class="uptime-card">
 	<header class="uptime-card-head">
 		<div class="uptime-card-title">
-			<span
-				class="uptime-dot"
-				class:is-up={device.state === 'up'}
-				class:is-down={device.state === 'down'}
-			></span>
-			<h2>{DEVICE_LABELS[device.device]}</h2>
+			<span class="uptime-dot is-up"></span>
+			<h2>Service</h2>
 		</div>
 		<div class="uptime-state">
-			{#if device.state === 'unknown'}
-				<span class="uptime-state-word">No data</span>
-				<span class="uptime-state-detail">nothing published yet</span>
-			{:else}
-				<span class="uptime-state-word">{device.state === 'up' ? 'Up' : 'Down'}</span>
-				<span class="uptime-state-detail">
-					{held ? `for ${held}` : ''}
-					{#if device.since}
-						· since {formatMoment(device.since)}
-					{/if}
-				</span>
-			{/if}
+			<span class="uptime-state-word">Up</span>
+			<span class="uptime-state-detail">
+				{held ? `for ${held}` : ''} · since {formatMoment(overview.up_since)}
+			</span>
 		</div>
 	</header>
 
-	{#if device.ranges.length > 0}
+	{#if overview.ranges.length > 0}
 		<div class="uptime-tiles">
-			{#each device.ranges as range (range.range)}
+			{#each overview.ranges as range (range.range)}
 				<div class="uptime-tile">
 					<span class="uptime-tile-value">{formatPercent(range.uptime)}</span>
 					<span class="uptime-tile-label">{range.range}</span>
-					<!-- Ranges are floored at the device's first event, so `all` and `year` can name
-					     the same day on a young device. Showing the start makes that visible. -->
+					<span class="uptime-tile-since">
+						{formatDuration(range.down_seconds)} down · {formatDuration(range.failover_seconds)} failover
+					</span>
 					<span class="uptime-tile-since">from {formatMoment(range.range_start)}</span>
 				</div>
 			{/each}
@@ -65,34 +52,34 @@
 	{/if}
 
 	<div class="uptime-timeline">
-		<div
-			class="uptime-track"
-			role="img"
-			aria-label="Uptime timeline for {DEVICE_LABELS[device.device]}"
-		>
+		<div class="uptime-track" role="img" aria-label="Uptime timeline">
 			{#each segments as segment, i (i)}
 				<span
-					class="uptime-seg is-{segment.state}"
+					class="uptime-seg is-{segment.kind}"
 					style="left: {segment.left}%; width: {segment.width}%"
 					title={segment.label}
 				></span>
 			{/each}
 		</div>
 		<div class="uptime-axis">
-			<span>{controller.report ? formatMoment(controller.report.from) : ''}</span>
-			<span>{controller.report ? formatMoment(controller.report.to) : 'now'}</span>
+			<span>{report ? formatMoment(report.from) : ''}</span>
+			<span>{report ? formatMoment(report.to) : 'now'}</span>
 		</div>
+		<ul class="uptime-legend">
+			{#each Object.entries(KIND_LABELS) as [kind, label] (kind)}
+				<li><span class="uptime-swatch is-{kind}"></span>{label}</li>
+			{/each}
+		</ul>
 	</div>
 
 	<footer class="uptime-card-foot">
-		{#if entry}
-			<span class="uptime-foot-main">
-				{formatPercent(entry.uptime)} over the selected range
-			</span>
+		{#if report}
+			<span class="uptime-foot-main">{formatPercent(report.uptime)} over the selected range</span>
 			<span class="uptime-foot-detail">
-				{entry.outages}
-				{entry.outages === 1 ? 'outage' : 'outages'} · {formatDuration(entry.down_seconds)} down
-				{#if entry.truncated}
+				{report.outages}
+				{report.outages === 1 ? 'downtime' : 'downtimes'} · {formatDuration(report.down_seconds)} down
+				· {formatDuration(report.failover_seconds)} on failover
+				{#if report.truncated}
 					· list trimmed
 				{/if}
 			</span>
@@ -106,12 +93,7 @@
 			{#each outages as outage (outage.start_time)}
 				<li>
 					<span class="uptime-outage-when">{formatMoment(outage.start_time)}</span>
-					<span class="uptime-outage-length">
-						{formatDuration(outage.seconds)}
-						{#if outage.end_time === null}
-							· ongoing
-						{/if}
-					</span>
+					<span class="uptime-outage-length">{formatDuration(outage.seconds)}</span>
 					<span class="uptime-outage-ago">{formatAgo(outage.start_time)}</span>
 				</li>
 			{/each}
