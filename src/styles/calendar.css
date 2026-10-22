@@ -103,77 +103,6 @@
 	@apply flex flex-col gap-4;
 }
 
-.cal-account-group {
-	@apply flex flex-col gap-1;
-}
-
-.cal-account-head {
-	@apply flex items-center justify-between gap-2;
-}
-
-.cal-account-email {
-	@apply text-text-muted truncate text-xs font-semibold tracking-wide uppercase;
-}
-
-.cal-badge-ok {
-	@apply text-success;
-}
-
-.cal-badge-warn {
-	@apply text-warning;
-}
-
-.cal-cal-row {
-	@apply flex items-center gap-1;
-
-	&.disabled {
-		@apply opacity-60;
-	}
-}
-
-.cal-cal-toggle {
-	@apply hover:bg-overlay flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm;
-}
-
-.cal-cal-check {
-	@apply sr-only;
-
-	&:focus-visible + .cal-dot {
-		outline: 2px solid var(--color-primary);
-		outline-offset: 2px;
-	}
-}
-
-.cal-cal-enable {
-	@apply text-text-muted hover:text-text hover:bg-overlay flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-none bg-transparent px-1 py-1 text-left text-sm;
-}
-
-.cal-cal-name {
-	@apply truncate;
-}
-
-.cal-dot {
-	@apply h-3 w-3 shrink-0 rounded-full transition-colors;
-	background: var(--chip);
-	border: 2px solid var(--chip);
-
-	&.off {
-		background: transparent;
-	}
-}
-
-.cal-readonly {
-	@apply text-text-muted shrink-0 text-xs;
-}
-
-.cal-empty-note {
-	@apply text-text-muted text-sm;
-}
-
-.cal-sidebar-actions {
-	@apply mt-2 flex flex-col gap-2;
-}
-
 .cal-capacity-panel {
 	@apply mt-4 border-t pt-3;
 	border-color: var(--color-border);
@@ -270,30 +199,19 @@
 /* Event chip, shared by both grids */
 
 .cal-chip {
+	--chip: var(--color-primary);
 	@apply flex w-full shrink-0 cursor-pointer items-center gap-1 overflow-hidden rounded border-none px-1 py-0.5 text-left text-xs leading-tight transition-opacity hover:opacity-80;
 	background: color-mix(in srgb, var(--chip) 22%, transparent);
 	color: var(--color-text);
 	border-left: 3px solid var(--chip);
 
-	&.all-day {
-		background: var(--chip);
-		color: var(--chip-ink, #fff);
-		border-left: none;
-	}
-
-	&.declined {
-		@apply opacity-60;
-		text-decoration: line-through;
+	&.static {
+		@apply cursor-default hover:opacity-100;
 	}
 }
 
 .cal-chip-time {
 	@apply text-text-muted shrink-0 text-[0.65rem] tabular-nums;
-}
-
-.cal-chip.all-day .cal-chip-time {
-	color: var(--chip-ink, #fff);
-	opacity: 0.8;
 }
 
 .cal-chip-title {
@@ -343,10 +261,6 @@
 	@apply text-text-muted hover:text-text cursor-pointer border-none bg-transparent text-xs font-semibold tracking-wide uppercase;
 }
 
-.cal-allday-row {
-	@apply flex flex-col gap-0.5;
-}
-
 .cal-time-body {
 	@apply grid min-h-0 flex-1 overflow-y-auto;
 	grid-template-columns: var(--gutter) repeat(auto-fit, minmax(0, 1fr));
@@ -383,6 +297,7 @@
 /* Row layout, wrapping: a half-hour box shows "09:00 Standup" on one line, and a longer one
    lets the location wrap onto the next. */
 .cal-event {
+	--chip: var(--color-primary);
 	@apply absolute flex cursor-pointer flex-row flex-wrap items-baseline gap-x-1 overflow-hidden rounded border-none px-1 py-0.5 text-left text-xs leading-tight;
 	top: calc(var(--top) * var(--hour) / 60);
 	height: calc(var(--height) * var(--hour) / 60);
@@ -396,9 +311,8 @@
 		@apply z-10 opacity-90;
 	}
 
-	&.tentative {
-		background: color-mix(in srgb, var(--chip) 35%, transparent);
-		color: var(--color-text);
+	&.static {
+		@apply cursor-default;
 	}
 }
 
@@ -408,14 +322,6 @@
 
 .cal-event-title {
 	@apply truncate font-medium;
-}
-
-.cal-event-where {
-	@apply w-full;
-}
-
-.cal-event-where {
-	@apply truncate text-[0.65rem] opacity-80;
 }
 
 /* The current time, drawn across today's column only. */
@@ -483,77 +389,4 @@
 	& input {
 		@apply accent-primary h-4 w-4 cursor-pointer;
 	}
-}
-
-.cal-guests {
-	@apply flex flex-col gap-1 text-sm;
-
-	& li {
-		@apply flex items-center justify-between gap-2;
-	}
-}
-
-.cal-guest-status {
-	@apply text-text-muted text-xs;
-}
-
-.cal-move {
-	@apply mt-4 flex flex-wrap items-end gap-2;
-
-	& label {
-		@apply text-text-muted w-full text-sm font-medium;
-	}
-
-	& select {
-		@apply bg-bg border-text-muted/20 text-text flex-1 rounded-lg border px-3 py-2 text-sm;
-	}
-}
-
-.cal-subtitle {
-	@apply text-text mt-6 mb-2 text-sm font-semibold tracking-wide uppercase;
-}
-
-.cal-account-card {
-	@apply bg-bg mt-3 rounded-xl p-3;
-	border: 1px solid var(--color-border);
-
-	&.needs-reauth {
-		border-color: color-mix(in srgb, var(--color-warning) 40%, transparent);
-	}
-}
-
-.cal-account-card-head {
-	@apply flex items-center justify-between gap-2;
-}
-
-.cal-account-card-actions {
-	@apply mt-3 flex gap-2;
-}
-
-.cal-connect {
-	@apply mt-4 w-full justify-center;
-}
-
-.cal-runs {
-	@apply flex flex-col gap-1 text-xs;
-
-	& li {
-		@apply text-text-muted flex flex-wrap items-center gap-2;
-
-		&.failed {
-			@apply text-danger;
-		}
-	}
-}
-
-.cal-run-when {
-	@apply tabular-nums;
-}
-
-.cal-run-what {
-	@apply uppercase;
-}
-
-.cal-run-counts {
-	@apply tabular-nums;
 }

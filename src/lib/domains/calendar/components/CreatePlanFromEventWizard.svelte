@@ -36,8 +36,8 @@
 			taskMode = initialChoice?.mode ?? 'none';
 			selectedTaskId = initialChoice?.taskId ?? null;
 			newTaskName = initialChoice?.newTaskName ?? '';
-			startedAt = event.all_day ? '' : isoToLocalInput(event.starts_at);
-			endedAt = event.all_day ? '' : isoToLocalInput(event.ends_at);
+			startedAt = isoToLocalInput(event.start_time);
+			endedAt = isoToLocalInput(event.end_time);
 			timeError = false;
 		}
 	});
@@ -62,10 +62,8 @@
 
 		saving = true;
 		try {
-			// An all-day event stays all-day: the plan carves hours out of that day, it does not
-			// turn the event into a timed one (same as the Android wizard).
-			if (!event.all_day && (startIso !== event.starts_at || endIso !== event.ends_at)) {
-				await calendarApi.updateEvent(event.instance_id, { starts_at: startIso, ends_at: endIso });
+			if (startIso !== event.start_time || endIso !== event.end_time) {
+				await calendarApi.updateEvent(event.id, { start_time: startIso, end_time: endIso });
 			}
 
 			await createEventPlan(event, startIso, endIso, choice);

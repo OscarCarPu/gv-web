@@ -17,19 +17,6 @@ export function isoToLocalInput(iso: string): string {
 	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-/** Local `YYYY-MM-DD` for a date input, from an instant. */
-export function isoToDateInput(iso: string): string {
-	const d = new Date(iso);
-	const pad = (n: number) => String(n).padStart(2, '0');
-	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-export function addDaysToDateInput(date: string, days: number): string {
-	const d = new Date(`${date}T00:00:00`);
-	d.setDate(d.getDate() + days);
-	return isoToDateInput(d.toISOString());
-}
-
 const timeFormatter = new Intl.DateTimeFormat('en', {
 	hour: '2-digit',
 	minute: '2-digit',
@@ -39,48 +26,4 @@ const timeFormatter = new Intl.DateTimeFormat('en', {
 /** `HH:MM` in the viewer's zone. */
 export function eventTime(iso: string): string {
 	return timeFormatter.format(new Date(iso));
-}
-
-/**
- * The label for an event's when: a time range, or the day span for an all-day event.
- *
- * The all-day case reads the dates rather than the instants, for the same reason placement does:
- * the instants belong to the calendar's zone, not the viewer's. The API's end is exclusive, so
- * the last day named is the one before it — the convention Google's own UI shows.
- */
-export function eventWhen(
-	startsAt: string,
-	endsAt: string,
-	allDay: boolean,
-	startDate?: string,
-	endDate?: string
-): string {
-	if (!allDay) return `${eventTime(startsAt)} – ${eventTime(endsAt)}`;
-	const fmt = new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short' });
-	const first = startDate ? new Date(`${startDate}T00:00:00`) : new Date(startsAt);
-	const lastMs = endDate
-		? new Date(`${endDate}T00:00:00`).getTime() - 86_400_000
-		: new Date(endsAt).getTime() - 86_400_000;
-	const last = new Date(lastMs);
-	if (fmt.format(first) === fmt.format(last)) return 'All day';
-	return `All day, ${fmt.format(first)} – ${fmt.format(last)}`;
-}
-
-/**
- * The ink to write on a chip of this colour.
- *
- * Calendar colours arrive from the API and can be anything — gv's palette, or a colour the user
- * pinned by hand. Hardcoding white text works until someone picks a pale one and the title
- * vanishes, so the choice is made per colour, by relative luminance (the WCAG formula).
- */
-export function chipInk(color: string): string {
-	const hex = color.trim().replace('#', '');
-	if (hex.length !== 6) return '#ffffff';
-	const channel = (offset: number) => {
-		const value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
-		return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
-	};
-	const luminance = 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
-	// The threshold is where white and near-black are equally readable; above it, dark ink wins.
-	return luminance > 0.45 ? '#111827' : '#ffffff';
 }

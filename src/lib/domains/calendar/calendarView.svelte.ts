@@ -1,6 +1,10 @@
 import { calendarApi } from './api/calendar.api';
-import type { Calendar, CalendarEvent, CalendarViewMode } from './types/Calendar.types';
-import { addToast } from '$lib/shared/stores/toast.svelte';
+import type {
+	CalendarEvent,
+	CalendarItem,
+	CalendarSource,
+	CalendarViewMode,
+} from './types/Calendar.types';
 import { toLocalDateString } from '$lib/shared/utils/datetime';
 import { planApi } from '$lib/domains/tasks/api/plan.api';
 import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
@@ -36,27 +40,26 @@ export function sameDay(a: Date, b: Date): boolean {
 	);
 }
 
-/**
- * An event occupies a day when it overlaps that day at all, so a multi-day trip shows on every
- * day it covers. The end is exclusive, matching the API.
- *
- * An all-day event is compared as dates, never as instants. Its instants are midnight in the
- * *calendar's* zone, and calendars disagree about that — some report UTC, some Europe/Madrid — so
- * converting them into the viewer's zone spreads a one-day event over two local days, which reads
- * as a duplicate. The dates from the API are the ones Google holds, and they are what a person
- * sees in Google.
- */
-export function occupiesDay(event: CalendarEvent, day: Date): boolean {
-	if (event.all_day && event.start_date && event.end_date) {
-		const date = toLocalDateString(day);
-		return date >= event.start_date && date < event.end_date;
-	}
+/** An item occupies a day when it overlaps that day at all; the end is exclusive. */
+export function occupiesDay(item: { start: string; end: string }, day: Date): boolean {
 	const dayStart = startOfDay(day).getTime();
 	const dayEnd = addDays(startOfDay(day), 1).getTime();
-	const start = new Date(event.starts_at).getTime();
-	const end = new Date(event.ends_at).getTime();
+	const start = new Date(item.start).getTime();
+	const end = new Date(item.end).getTime();
 	if (end === start) return start >= dayStart && start < dayEnd;
 	return start < dayEnd && end > dayStart;
+}
+
+const SOURCE_KEY = 'calendar.source';
+
+function storedSource(): CalendarSource {
+	try {
+		const value = localStorage.getItem(SOURCE_KEY);
+		if (value === 'events' || value === 'plans' || value === 'both') return value;
+	} catch {
+		// Storage can be blocked; the default is fine.
+	}
+	return 'both';
 }
 
 const titleMonth = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' });
@@ -69,42 +72,49 @@ const titleDay = new Intl.DateTimeFormat('en', {
 const titleRange = new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short' });
 
 /**
- * CalendarView owns everything the calendar page shows: which range is on screen, the events in
- * it, and the calendars they come from.
+ * CalendarView owns everything the calendar page shows: which range is on screen, the events and
+ * plan blocks in it, and which of the two are drawn.
  *
- * It exists as a controller rather than page state because three things can change the events
- * on screen — navigating, toggling a calendar, and a push notification arriving over SSE — and
- * they all have to funnel into the same single refetch of the same single range.
+ * An event with a plan block linked to it is one thing, not two: when both sources are shown it
+ * appears once, as the plan block (which carries the task and the hours actually planned).
  */
 export class CalendarView {
 	mode = $state<CalendarViewMode>('month');
 	/** Any instant inside the visible range; the range is derived from it and the mode. */
 	anchor = $state<Date>(startOfDay(new Date()));
-	calendars = $state<Calendar[]>([]);
 	events = $state<CalendarEvent[]>([]);
 	planBlocks = $state<PlanBlockResponse[]>([]);
 	freeBusy = $state<DayFreeBusy[]>([]);
+	source = $state<CalendarSource>('both');
 	loading = $state(false);
 	error = $state<string | null>(null);
-	/** Set while a push notification is being followed up, so the UI can show it is live. */
-	live = $state(false);
 
-	private stream: EventSource | null = null;
-	private refreshTimer: ReturnType<typeof setTimeout> | null = null;
 	private requestId = 0;
 
 	constructor(
-		calendars: Calendar[],
 		events: CalendarEvent[],
 		mode: CalendarViewMode = 'month',
 		planBlocks: PlanBlockResponse[] = [],
 		freeBusy: DayFreeBusy[] = []
 	) {
-		this.calendars = calendars;
 		this.events = events;
 		this.mode = mode;
 		this.planBlocks = planBlocks;
 		this.freeBusy = freeBusy;
+	}
+
+	/** Restores the saved source on the client; the server render always uses the default. */
+	restoreSource() {
+		this.source = storedSource();
+	}
+
+	setSource(source: CalendarSource) {
+		this.source = source;
+		try {
+			localStorage.setItem(SOURCE_KEY, source);
+		} catch {
+			// Not persisted; still applied.
+		}
 	}
 
 	// --- range -------------------------------------------------------------------------
@@ -193,7 +203,6 @@ export class CalendarView {
 				calendarApi.listEvents({
 					from: this.rangeStart.toISOString(),
 					to: this.rangeEnd.toISOString(),
-					visibleOnly: true,
 				}),
 				planApi.getRange(toLocalDateString(this.rangeStart), toLocalDateString(this.rangeEnd)),
 				capacityApi.getFreeBusy(toLocalDateString(today), toLocalDateString(addDays(today, 7))),
@@ -211,162 +220,59 @@ export class CalendarView {
 		}
 	}
 
-	/** Whether an event (by its instance_id) already has a plan block linked to it. */
-	hasPlan(instanceId: string): boolean {
-		return this.#plannedRefs.has(instanceId);
-	}
-
 	/** Every chip asks, so the linked refs are indexed once per load rather than scanned. */
 	#plannedRefs = $derived(
 		new Set(this.planBlocks.flatMap((b) => (b.event_ref ? [b.event_ref] : [])))
 	);
 
-	async reloadCalendars() {
-		try {
-			this.calendars = await calendarApi.listCalendars();
-		} catch (e) {
-			this.error = e instanceof Error ? e.message : 'Failed to load calendars';
-		}
+	/** Whether an event already has a plan block linked to it. */
+	hasPlan(eventId: number): boolean {
+		return this.#plannedRefs.has(String(eventId));
 	}
 
-	/** Hiding a calendar is a server-side preference, so every device agrees on it. */
-	async toggleCalendarVisible(calendar: Calendar) {
-		const next = !calendar.visible;
-		try {
-			const updated = await calendarApi.updateCalendar(calendar.id, { visible: next });
-			this.calendars = this.calendars.map((c) => (c.id === updated.id ? updated : c));
-			await this.load();
-		} catch (e) {
-			addToast(e instanceof Error ? e.message : 'Failed to update calendar', 'error');
-		}
-	}
+	/** What the grids draw, according to the selected source. */
+	items = $derived.by((): CalendarItem[] => {
+		const showEvents = this.source !== 'plans';
+		const showPlans = this.source !== 'events';
+		const items: CalendarItem[] = [];
 
-	async toggleCalendarSync(calendar: Calendar) {
-		const next = !calendar.sync_enabled;
-		try {
-			const updated = await calendarApi.updateCalendar(calendar.id, { sync_enabled: next });
-			this.calendars = this.calendars.map((c) => (c.id === updated.id ? updated : c));
-			if (next) await calendarApi.sync(calendar.id);
-			await this.load();
-			addToast(next ? `Syncing ${updated.summary}` : `Stopped syncing ${updated.summary}`);
-		} catch (e) {
-			addToast(e instanceof Error ? e.message : 'Failed to update calendar', 'error');
+		for (const event of this.events) {
+			const planned = this.hasPlan(event.id);
+			// With both sources on, a planned event is drawn by its plan block instead.
+			if (!showEvents || (showPlans && planned)) continue;
+			items.push({
+				key: `event-${event.id}`,
+				kind: 'event',
+				title: event.name,
+				start: event.start_time,
+				end: event.end_time,
+				event,
+				planned,
+				block: null,
+			});
 		}
-	}
 
-	async syncNow() {
-		try {
-			const result = await calendarApi.sync();
-			await this.load();
-			if (result.errors.length) {
-				addToast(result.errors[0], 'error');
-				return;
+		if (showPlans) {
+			const byId = new Map(this.events.map((e) => [String(e.id), e]));
+			for (const block of this.planBlocks) {
+				items.push({
+					key: `plan-${block.id}`,
+					kind: 'plan',
+					title: block.task_name || block.label,
+					start: block.started_at,
+					end: block.ended_at,
+					event: block.event_ref ? (byId.get(block.event_ref) ?? null) : null,
+					planned: false,
+					block,
+				});
 			}
-			addToast(
-				result.upserted || result.deleted
-					? `Synced: ${result.upserted} updated, ${result.deleted} removed`
-					: 'Already up to date'
-			);
-		} catch (e) {
-			addToast(e instanceof Error ? e.message : 'Sync failed', 'error');
 		}
-	}
+		return items;
+	});
 
-	// --- live updates ------------------------------------------------------------------
-
-	/**
-	 * Subscribes to the change stream, through this app's own server: the API takes a bearer
-	 * token and EventSource cannot send headers, so /api/calendar/stream proxies it with the
-	 * session's token attached.
-	 *
-	 * The stream only says *that* something changed; the range is refetched, which keeps one
-	 * code path for a fresh page and a live update.
-	 */
-	connect(): () => void {
-		if (typeof EventSource === 'undefined') return () => {};
-		this.stream = new EventSource('/api/calendar/stream');
-		this.stream.addEventListener('open', () => {
-			this.live = true;
-		});
-		this.stream.addEventListener('error', () => {
-			// EventSource reconnects on its own; the flag just stops the UI claiming to be live.
-			this.live = false;
-		});
-		const onChange = () => this.scheduleRefresh();
-		this.stream.addEventListener('calendar.changed', onChange);
-		this.stream.addEventListener('account.connected', () => {
-			void this.reloadCalendars();
-			this.scheduleRefresh();
-		});
-		this.stream.addEventListener('account.disconnected', () => {
-			void this.reloadCalendars();
-			this.scheduleRefresh();
-		});
-		this.stream.addEventListener('account.needs_reauth', () => {
-			void this.reloadCalendars();
-			addToast('A Google account needs to be reconnected', 'error');
-		});
-		return () => this.disconnect();
-	}
-
-	disconnect() {
-		if (this.refreshTimer) clearTimeout(this.refreshTimer);
-		this.refreshTimer = null;
-		this.stream?.close();
-		this.stream = null;
-		this.live = false;
-	}
-
-	/** One notification per change is the ideal; a burst is normal. Coalesce them. */
-	private scheduleRefresh() {
-		if (this.refreshTimer) clearTimeout(this.refreshTimer);
-		this.refreshTimer = setTimeout(() => {
-			this.refreshTimer = null;
-			void this.load();
-		}, 400);
-	}
-
-	// --- queries used by the views -----------------------------------------------------
-
-	eventsOn(day: Date): CalendarEvent[] {
-		return this.events.filter((e) => occupiesDay(e, day));
-	}
-
-	allDayOn(day: Date): CalendarEvent[] {
-		return this.eventsOn(day).filter((e) => e.all_day);
-	}
-
-	timedOn(day: Date): CalendarEvent[] {
-		return this.eventsOn(day)
-			.filter((e) => !e.all_day)
-			.sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
-	}
-
-	get writableCalendars(): Calendar[] {
-		return this.calendars.filter((c) => c.writable && !c.deleted && c.sync_enabled);
-	}
-
-	get defaultCalendarId(): number | undefined {
-		const primary = this.writableCalendars.find((c) => c.is_primary);
-		return (primary ?? this.writableCalendars[0])?.id;
-	}
-
-	calendarById(id: number): Calendar | undefined {
-		return this.calendars.find((c) => c.id === id);
-	}
-
-	/** Accounts in the order their calendars should be grouped, for the sidebar. */
-	get calendarsByAccount(): { email: string; status: string; calendars: Calendar[] }[] {
-		const groups = new Map<string, { email: string; status: string; calendars: Calendar[] }>();
-		for (const c of this.calendars) {
-			const group = groups.get(c.account_email) ?? {
-				email: c.account_email,
-				status: c.account_status,
-				calendars: [],
-			};
-			group.calendars.push(c);
-			groups.set(c.account_email, group);
-		}
-		return [...groups.values()];
+	itemsOn(day: Date): CalendarItem[] {
+		return this.items
+			.filter((item) => occupiesDay(item, day))
+			.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 	}
 }

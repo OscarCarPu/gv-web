@@ -22,7 +22,6 @@ src/
 │   ├── tasks/                 # /tasks
 │   │   └── projects/[id]/     # /tasks/projects/:id (project detail)
 │   ├── calendar/              # /calendar
-│   ├── api/calendar/stream/   # SSE proxy: adds the session token to the API's stream
 │   ├── logout/                # /logout
 │   ├── +layout.server.ts      # Root layout server load
 │   └── +layout.svelte         # Root layout (nav, global styles)

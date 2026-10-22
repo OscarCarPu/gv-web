@@ -23,13 +23,9 @@ export const load: PageServerLoad = async ({ cookies }) => {
 	const freeBusyTo = new Date();
 	freeBusyTo.setDate(freeBusyTo.getDate() + 7);
 
-	const [calendars, events, planRange, freeBusy] = await Promise.all([
-		calendarApi.listCalendars(token).catch((error) => {
-			console.error('Failed to load calendars:', error);
-			return [];
-		}),
+	const [events, planRange, freeBusy] = await Promise.all([
 		calendarApi
-			.listEvents({ from: from.toISOString(), to: to.toISOString(), visibleOnly: true }, token)
+			.listEvents({ from: from.toISOString(), to: to.toISOString() }, token)
 			.catch((error) => {
 				console.error('Failed to load events:', error);
 				return [];
@@ -46,5 +42,5 @@ export const load: PageServerLoad = async ({ cookies }) => {
 			}),
 	]);
 
-	return { calendars, events, planBlocks: planRange.blocks, freeBusy };
+	return { events, planBlocks: planRange.blocks, freeBusy };
 };

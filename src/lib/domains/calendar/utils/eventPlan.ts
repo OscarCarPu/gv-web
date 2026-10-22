@@ -18,8 +18,9 @@ export function planTaskChoiceValid(choice: PlanTaskChoice): boolean {
 }
 
 /**
- * Creates the plan block that hangs off `event` (via `event_ref`), creating the task first when
- * the choice asks for a new one. Without a task the block is labelled after the event.
+ * Creates the plan block that hangs off `event` (via `event_ref`, the event's id), creating the
+ * task first when the choice asks for a new one. Without a task the block is labelled after the
+ * event.
  */
 export async function createEventPlan(
 	event: CalendarEvent,
@@ -39,7 +40,7 @@ export async function createEventPlan(
 		started_at: startIso,
 		ended_at: endIso,
 		task_id: taskId,
-		label: taskId ? undefined : event.summary || 'Event',
-		event_ref: event.instance_id,
+		label: taskId ? undefined : event.name || 'Event',
+		event_ref: String(event.id),
 	});
 }

@@ -1,17 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/state';
-	import { replaceState } from '$app/navigation';
 	import Icon from '$lib/shared/components/Icon.svelte';
-	import { addToast } from '$lib/shared/stores/toast.svelte';
 	import { CalendarView } from '$lib/domains/calendar/calendarView.svelte';
 	import MonthGrid from '$lib/domains/calendar/components/MonthGrid.svelte';
 	import TimeGrid from '$lib/domains/calendar/components/TimeGrid.svelte';
-	import CalendarSidebar from '$lib/domains/calendar/components/CalendarSidebar.svelte';
-	import AccountsSheet from '$lib/domains/calendar/components/AccountsSheet.svelte';
+	import CapacityPanel from '$lib/domains/calendar/components/CapacityPanel.svelte';
 	import EventFormSheet from '$lib/domains/calendar/components/EventFormSheet.svelte';
 	import CreatePlanFromEventWizard from '$lib/domains/calendar/components/CreatePlanFromEventWizard.svelte';
-	import type { Calendar, CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
+	import type { CalendarEvent, CalendarSource } from '$lib/domains/calendar/types/Calendar.types';
 	import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
 	import type { FreeBusyRangeResponse } from '$lib/domains/capacity/types/Capacity.types';
 	import type { PlanTaskChoice } from '$lib/domains/calendar/utils/eventPlan';
@@ -20,7 +16,6 @@
 		data,
 	}: {
 		data: {
-			calendars: Calendar[];
 			events: CalendarEvent[];
 			planBlocks: PlanBlockResponse[];
 			freeBusy: FreeBusyRangeResponse;
@@ -30,7 +25,6 @@
 	// The SSR payload is a seed; the controller owns it from here on.
 	// svelte-ignore state_referenced_locally
 	const view = new CalendarView(
-		data.calendars ?? [],
 		data.events ?? [],
 		'month',
 		data.planBlocks ?? [],
@@ -40,30 +34,21 @@
 	let editing = $state<CalendarEvent | null>(null);
 	let creatingOn = $state<Date | null>(null);
 	let sheetOpen = $state(false);
-	let accountsOpen = $state(false);
 	let sidebarOpen = $state(false);
 	let planWizardOpen = $state(false);
 	let planChoice = $state<PlanTaskChoice | null>(null);
 
 	onMount(() => {
-		// The consent flow comes back through the API, which redirects here with the outcome.
-		const connected = page.url.searchParams.get('connected');
-		const failed = page.url.searchParams.get('error');
-		if (connected) {
-			addToast(`Connected ${connected}`);
-		} else if (failed) {
-			addToast(`Google refused the connection: ${failed}`, 'error');
-		}
-		if (connected || failed) {
-			// The page was just re-rendered by the API's redirect, so the server load already
-			// carries the new account; only the URL needs tidying.
-			replaceState('/calendar', {});
-		}
-
 		// No fetch here on purpose: the server load seeded this range, and the client token is
 		// installed by the root layout's effect, which has not run yet.
-		return view.connect();
+		view.restoreSource();
 	});
+
+	const sources: { value: CalendarSource; label: string }[] = [
+		{ value: 'events', label: 'Events' },
+		{ value: 'plans', label: 'Plans' },
+		{ value: 'both', label: 'Both' },
+	];
 
 	function openEvent(event: CalendarEvent) {
 		editing = event;
@@ -81,8 +66,6 @@
 		creatingOn = when;
 		sheetOpen = true;
 	}
-
-	const canCreate = $derived(view.writableCalendars.length > 0);
 </script>
 
 <svelte:head><title>Calendar</title></svelte:head>
@@ -93,8 +76,8 @@
 			<button
 				type="button"
 				class="btn-icon cal-sidebar-btn"
-				title="Calendars"
-				aria-label="Calendars"
+				title="Free time"
+				aria-label="Free time"
 				onclick={() => (sidebarOpen = !sidebarOpen)}><Icon name="folder" /></button
 			>
 			<div class="cal-nav">
@@ -127,6 +110,14 @@
 
 		<div class="cal-toolbar-right">
 			<div class="create-mode-toggle cal-mode-toggle">
+				{#each sources as source (source.value)}
+					<button
+						class:active={view.source === source.value}
+						onclick={() => view.setSource(source.value)}>{source.label}</button
+					>
+				{/each}
+			</div>
+			<div class="create-mode-toggle cal-mode-toggle">
 				<button class:active={view.mode === 'month'} onclick={() => view.setMode('month')}
 					>Month</button
 				>
@@ -135,13 +126,7 @@
 				>
 				<button class:active={view.mode === 'day'} onclick={() => view.setMode('day')}>Day</button>
 			</div>
-			<button
-				type="button"
-				class="btn-primary"
-				disabled={!canCreate}
-				title={canCreate ? 'New event' : 'No writable calendar is connected'}
-				onclick={() => openCreate()}
-			>
+			<button type="button" class="btn-primary" title="New event" onclick={() => openCreate()}>
 				<Icon name="plus" /> New
 			</button>
 		</div>
@@ -153,19 +138,13 @@
 
 	<div class="cal-body">
 		<div class="cal-sidebar-wrap" class:open={sidebarOpen}>
-			<CalendarSidebar {view} onmanage={() => (accountsOpen = true)} />
+			<aside class="cal-sidebar">
+				<CapacityPanel days={view.freeBusy} />
+			</aside>
 		</div>
 
 		<main class="cal-main">
-			{#if view.calendars.length === 0}
-				<div class="cal-empty">
-					<h2>No calendars yet</h2>
-					<p>Connect a Google account and its calendars will be mirrored here.</p>
-					<button class="btn-primary" onclick={() => (accountsOpen = true)}>
-						<Icon name="plus" /> Connect an account
-					</button>
-				</div>
-			{:else if view.mode === 'month'}
+			{#if view.mode === 'month'}
 				<MonthGrid {view} onselect={openEvent} oncreate={(day) => openCreate(day)} />
 			{:else}
 				<TimeGrid {view} onselect={openEvent} oncreate={(day, hour) => openCreate(day, hour)} />
@@ -179,19 +158,11 @@
 	onclose={() => (sheetOpen = false)}
 	event={editing}
 	day={creatingOn}
-	calendars={view.calendars}
-	defaultCalendarId={view.defaultCalendarId}
 	refresh={() => view.load()}
-	hasPlan={editing ? view.hasPlan(editing.instance_id) : false}
+	hasPlan={editing ? view.hasPlan(editing.id) : false}
 	oncreateplan={() => {
 		sheetOpen = false;
 		planChoice = null;
-		planWizardOpen = true;
-	}}
-	onplannew={(created, choice) => {
-		sheetOpen = false;
-		editing = created;
-		planChoice = choice;
 		planWizardOpen = true;
 	}}
 />
@@ -202,13 +173,4 @@
 	event={editing}
 	initialChoice={planChoice}
 	refresh={() => view.load()}
-/>
-
-<AccountsSheet
-	open={accountsOpen}
-	onclose={() => (accountsOpen = false)}
-	refresh={async () => {
-		await view.reloadCalendars();
-		await view.load();
-	}}
 />

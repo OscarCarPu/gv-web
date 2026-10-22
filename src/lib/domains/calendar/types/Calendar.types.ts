@@ -1,65 +1,38 @@
 import type * as z from 'zod';
-import type {
-	CalendarSchema,
-	CalendarEventSchema,
-	CalendarAccountSchema,
-	SyncStatusSchema,
-	SyncResultSchema,
-	MoveResultSchema,
-	AttendeeSchema,
-} from '../api/calendar.schemas';
+import type { CalendarEventSchema } from '../api/calendar.schemas';
+import type { PlanBlockResponse } from '$lib/domains/tasks/types/Plan.types';
 
-export type Calendar = z.infer<typeof CalendarSchema>;
 export type CalendarEvent = z.infer<typeof CalendarEventSchema>;
-export type CalendarAccount = z.infer<typeof CalendarAccountSchema>;
-export type SyncStatus = z.infer<typeof SyncStatusSchema>;
-export type SyncResult = z.infer<typeof SyncResultSchema>;
-export type MoveResult = z.infer<typeof MoveResultSchema>;
-export type Attendee = z.infer<typeof AttendeeSchema>;
-
-/** What a change touches on a recurring series. */
-export type EventScope = 'all' | 'instance' | 'following';
-
-/** Who gets mailed about the change. The API defaults to 'none'. */
-export type SendUpdates = 'none' | 'externalOnly' | 'all';
 
 export interface CreateEventRequest {
-	calendar_id: number;
-	summary: string;
-	description?: string;
-	location?: string;
-	all_day?: boolean;
-	/** RFC3339, or YYYY-MM-DD when all_day. */
-	starts_at: string;
-	ends_at?: string;
-	time_zone?: string;
-	recurrence?: string[];
-	send_updates?: SendUpdates;
+	name: string;
+	/** RFC3339. */
+	start_time: string;
+	end_time: string;
 }
 
 /** Absent fields are left alone — this is a patch, not a replace. */
 export interface UpdateEventRequest {
-	summary?: string;
-	description?: string;
-	location?: string;
-	all_day?: boolean;
-	starts_at?: string;
-	ends_at?: string;
-	time_zone?: string;
-	recurrence?: string[];
-	scope?: EventScope;
-	send_updates?: SendUpdates;
-}
-
-export interface UpdateCalendarRequest {
-	sync_enabled?: boolean;
-	visible?: boolean;
-	color_override?: string;
-}
-
-export interface UpdateAccountRequest {
-	label?: string;
-	color?: string;
+	name?: string;
+	start_time?: string;
+	end_time?: string;
 }
 
 export type CalendarViewMode = 'month' | 'week' | 'day';
+
+/** Which of the two sources the grids draw. */
+export type CalendarSource = 'events' | 'plans' | 'both';
+
+/** What a grid draws: a calendar event or a plan block, with the times it occupies. */
+export interface CalendarItem {
+	key: string;
+	kind: 'event' | 'plan';
+	title: string;
+	start: string;
+	end: string;
+	/** The event it opens: the item itself, or the event a plan block is linked to. */
+	event: CalendarEvent | null;
+	/** Whether a plan block is linked to this event. */
+	planned: boolean;
+	block: PlanBlockResponse | null;
+}

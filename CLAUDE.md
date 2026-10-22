@@ -115,24 +115,10 @@ Full detail in [docs/calendar.md](docs/calendar.md). The traps worth knowing bef
 - **Never use `toISOString` from `$shared/utils/datetime` for event times.** That helper keeps the
   wall clock and swaps the zone, which is right for a task's `due_at` and wrong for an
   appointment. Use `localInputToISO` from `$lib/domains/calendar/utils/datetime`
-- **All-day events are placed by `start_date`/`end_date`, not by `starts_at`/`ends_at`.** The
-  instants are midnight in the calendar's zone, which is `UTC` for some calendars and
-  `Europe/Madrid` for others; converting them into the viewer's zone smears a one-day event over
-  two days. Ends are exclusive: a single-day event is `D` → `D+1`, and the form shows the last day
-  covered
-- **Occurrences are addressed by `instance_id`** (`12@2026-08-20T07:00:00Z`, the original start).
-  Pass it back verbatim to PATCH/DELETE; recurring edits also take `scope=instance|following|all`,
-  and the rule itself only changes with `scope=all`
-- **The API expands recurrences**, so `GET /calendar/events` returns occurrences — never expand an
-  RRULE on this side
-- **Calendar visibility is a server preference**, not a local filter; events are fetched with
-  `visible_only=true`
-- **Colours are the API's `color` field** (gv assigns them; Google's own are identical across
-  accounts and unreadable on dark). Never hardcode the text colour on a chip — use `chipInk`,
-  and pass `--chip` / `--chip-ink`
-- **SSE goes through `/api/calendar/stream`**, a proxy that attaches the session token, because
-  `EventSource` cannot set headers. The stream only says something changed; the controller
-  refetches the range
+- **An event is a name and a time range** (`id`, `name`, `start_time`, `end_time`): no calendars,
+  colours, all-day, recurrence or live stream. Plan blocks link to it by `event_ref` = the event id
+- **The source toggle (Events / Plans / Both) lives in `CalendarView`**; `items` is the merged list
+  the grids draw, and an event that has a plan block is drawn once, as the block
 
 ## Money domain — quick rules
 

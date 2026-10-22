@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
+	import type { CalendarEvent, CalendarItem } from '$lib/domains/calendar/types/Calendar.types';
 	import { CalendarView, sameDay } from '$lib/domains/calendar/calendarView.svelte';
-	import { chipInk, eventTime } from '$lib/domains/calendar/utils/datetime';
+	import { eventTime } from '$lib/domains/calendar/utils/datetime';
 	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
@@ -33,20 +33,20 @@
 	$effect(() => {
 		if (!body) return;
 		const firsts = view.days
-			.flatMap((day) => view.timedOn(day).slice(0, 1))
-			.map((event) => new Date(event.starts_at).getHours());
+			.flatMap((day) => view.itemsOn(day).slice(0, 1))
+			.map((item) => new Date(item.start).getHours());
 		const hour = firsts.length ? Math.max(Math.min(...firsts) - 1, 0) : 8;
 		const hourPx = body.scrollHeight / 24;
 		body.scrollTop = hour * hourPx;
 	});
 
 	/** Minutes from midnight, clamped to the day: a multi-day event is drawn to the edges. */
-	function span(event: CalendarEvent, day: Date) {
+	function span(item: CalendarItem, day: Date) {
 		const dayStart = new Date(day);
 		dayStart.setHours(0, 0, 0, 0);
 		const dayEnd = dayStart.getTime() + 86_400_000;
-		const start = Math.max(new Date(event.starts_at).getTime(), dayStart.getTime());
-		const end = Math.min(new Date(event.ends_at).getTime(), dayEnd);
+		const start = Math.max(new Date(item.start).getTime(), dayStart.getTime());
+		const end = Math.min(new Date(item.end).getTime(), dayEnd);
 		const top = (start - dayStart.getTime()) / 60_000;
 		// A zero-length event still needs to be clickable.
 		const height = Math.max((end - start) / 60_000, 20);
@@ -54,22 +54,22 @@
 	}
 
 	/**
-	 * Lays overlapping events side by side. Events are walked in start order and each one takes
+	 * Lays overlapping items side by side. Items are walked in start order and each one takes
 	 * the first lane whose last event has already finished, which is enough to stop two
 	 * appointments at the same hour hiding one another.
 	 */
 	function laid(day: Date) {
-		const events = view.timedOn(day);
+		const items = view.itemsOn(day);
 		const laneEnds: number[] = [];
-		const placed = events.map((event) => {
-			const start = new Date(event.starts_at).getTime();
-			const end = new Date(event.ends_at).getTime();
+		const placed = items.map((item) => {
+			const start = new Date(item.start).getTime();
+			const end = new Date(item.end).getTime();
 			let lane = laneEnds.findIndex((laneEnd) => laneEnd <= start);
 			if (lane === -1) {
 				lane = laneEnds.length;
 			}
 			laneEnds[lane] = end;
-			return { event, lane };
+			return { item, lane };
 		});
 		return { placed, lanes: Math.max(laneEnds.length, 1) };
 	}
@@ -83,23 +83,6 @@
 				<button type="button" class="cal-col-label" onclick={() => view.openDay(day)}>
 					{dayLabel.format(day)}
 				</button>
-				<div class="cal-allday-row">
-					{#each view.allDayOn(day) as event (event.instance_id)}
-						<button
-							type="button"
-							class="cal-chip all-day"
-							class:planned={view.hasPlan(event.instance_id)}
-							style="--chip: {event.color}; --chip-ink: {chipInk(event.color)}"
-							title={`${event.summary} — ${event.calendar_name}`}
-							onclick={() => onselect(event)}
-						>
-							{#if view.hasPlan(event.instance_id)}
-								<span class="cal-planned" title="Has a plan"><Icon name="check-circle" /></span>
-							{/if}
-							<span class="cal-chip-title">{event.summary || '(no title)'}</span>
-						</button>
-					{/each}
-				</div>
 			</div>
 		{/each}
 	</div>
@@ -132,27 +115,22 @@
 					></div>
 				{/if}
 
-				{#each layout.placed as { event, lane } (event.instance_id)}
-					{@const box = span(event, day)}
+				{#each layout.placed as { item, lane } (item.key)}
+					{@const box = span(item, day)}
 					<button
 						type="button"
-						class="cal-event"
-						class:planned={view.hasPlan(event.instance_id)}
-						class:tentative={event.status === 'tentative'}
-						style="--top: {box.top}; --height: {box.height}; --lane: {lane}; --lanes: {layout.lanes}; --chip: {event.color}; --chip-ink: {chipInk(
-							event.color
-						)}"
-						title={`${event.summary} — ${event.calendar_name} (${event.account_email})`}
-						onclick={() => onselect(event)}
+						class="cal-event {item.kind}"
+						class:planned={item.planned}
+						class:static={!item.event}
+						style="--top: {box.top}; --height: {box.height}; --lane: {lane}; --lanes: {layout.lanes}"
+						title={item.title}
+						onclick={() => item.event && onselect(item.event)}
 					>
-						<span class="cal-event-time">{eventTime(event.starts_at)}</span>
-						{#if view.hasPlan(event.instance_id)}
+						<span class="cal-event-time">{eventTime(item.start)}</span>
+						{#if item.planned}
 							<span class="cal-planned" title="Has a plan"><Icon name="check-circle" /></span>
 						{/if}
-						<span class="cal-event-title">{event.summary || '(no title)'}</span>
-						{#if event.location}
-							<span class="cal-event-where">{event.location}</span>
-						{/if}
+						<span class="cal-event-title">{item.title || '(no title)'}</span>
 					</button>
 				{/each}
 			</div>

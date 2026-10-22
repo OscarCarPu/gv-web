@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { CalendarEvent } from '$lib/domains/calendar/types/Calendar.types';
+	import type { CalendarEvent, CalendarItem } from '$lib/domains/calendar/types/Calendar.types';
 	import { CalendarView, sameDay } from '$lib/domains/calendar/calendarView.svelte';
-	import { chipInk, eventTime } from '$lib/domains/calendar/utils/datetime';
+	import { eventTime } from '$lib/domains/calendar/utils/datetime';
 	import Icon from '$lib/shared/components/Icon.svelte';
 
 	interface Props {
@@ -22,8 +22,8 @@
 
 	const today = new Date();
 
-	function chips(day: Date): CalendarEvent[] {
-		return [...view.allDayOn(day), ...view.timedOn(day)];
+	function select(item: CalendarItem) {
+		if (item.event) onselect(item.event);
 	}
 </script>
 
@@ -36,7 +36,7 @@
 
 	<div class="cal-month-grid" style="--weeks: {view.monthWeeks}">
 		{#each view.days as day (day.getTime())}
-			{@const dayEvents = chips(day)}
+			{@const dayEvents = view.itemsOn(day)}
 			{@const visible = dayEvents.slice(0, MAX_PER_DAY)}
 			{@const hidden = dayEvents.length - visible.length}
 			<div
@@ -61,24 +61,20 @@
 				</div>
 
 				<div class="cal-day-events">
-					{#each visible as event (event.instance_id)}
+					{#each visible as item (item.key)}
 						<button
 							type="button"
-							class="cal-chip"
-							class:planned={view.hasPlan(event.instance_id)}
-							class:all-day={event.all_day}
-							class:declined={event.status === 'tentative'}
-							style="--chip: {event.color}; --chip-ink: {chipInk(event.color)}"
-							title={`${event.summary} — ${event.calendar_name} (${event.account_email})`}
-							onclick={() => onselect(event)}
+							class="cal-chip {item.kind}"
+							class:planned={item.planned}
+							class:static={!item.event}
+							title={item.title}
+							onclick={() => select(item)}
 						>
-							{#if !event.all_day}
-								<span class="cal-chip-time">{eventTime(event.starts_at)}</span>
-							{/if}
-							{#if view.hasPlan(event.instance_id)}
+							<span class="cal-chip-time">{eventTime(item.start)}</span>
+							{#if item.planned}
 								<span class="cal-planned" title="Has a plan"><Icon name="check-circle" /></span>
 							{/if}
-							<span class="cal-chip-title">{event.summary || '(no title)'}</span>
+							<span class="cal-chip-title">{item.title || '(no title)'}</span>
 						</button>
 					{/each}
 					{#if hidden > 0}
