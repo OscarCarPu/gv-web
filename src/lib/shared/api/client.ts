@@ -20,6 +20,11 @@ export function isUnavailableOnFailover(e: unknown): boolean {
 	return e instanceof ApiError && e.code === 'unavailable_on_failover';
 }
 
+/** The backend is restoring data after a failover and refuses everything but the report screen. */
+export function isMergePending(e: unknown): boolean {
+	return e instanceof ApiError && e.code === 'merge_pending';
+}
+
 let clientToken: string | undefined;
 
 export function setClientToken(token: string | undefined) {
@@ -68,6 +73,9 @@ export async function fetchAPI<T>(
 	if (!response.ok) {
 		const errorData = await response.json().catch(() => ({}));
 		const message = errorData.error || `API Error: ${response.status} ${response.statusText}`;
+		if (browser && errorData.code === 'merge_pending' && !location.pathname.startsWith('/report')) {
+			location.assign('/report');
+		}
 		throw new ApiError(message, response.status, errorData.code);
 	}
 

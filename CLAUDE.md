@@ -44,11 +44,12 @@ SvelteKit 2 + Svelte 5 (runes API) personal productivity app with habit tracking
 ### Domain-Driven Structure
 
 ```
-src/lib/domains/{auth,habits,tasks,money}/
+src/lib/domains/{auth,habits,tasks,money,report}/
   api/       — API methods + Zod response schemas
   types/     — TypeScript interfaces and request types
   components/ — Domain-specific Svelte components
   utils/     — Domain helpers (e.g. money/utils/categoryTree.ts)
+src/lib/server/ — server-only helpers (e.g. failoverStatus.ts, used by the root layout)
 src/lib/shared/
   api/client.ts   — fetchAPI<T>(endpoint, schema, options?) core HTTP client
   components/     — Reusable UI (BottomSheet, RightSheet, Modal, DatetimePicker, chart/*)
@@ -69,7 +70,7 @@ Login (password) returns `{ token, kind: 'tmp' | 'semi' }` (`LoginResponseSchema
 - **Public** (`PUBLIC_ROUTES`): `/`, `/login`, `/login/2fa` — accessible without auth; redirect to `/tasks` if `session` valid, to `/domotics` if `semiprivate` valid. There is no landing page: `/` is a `+server.ts` that 303s anonymous visitors to `/login`.
 - **Semiprivate** (`SEMIPRIVATE_ROUTES`): `/domotics`, `/printers`, `/rutas` — accessible with either `session` or `semiprivate`.
 - **Auth-only** (`AUTH_ONLY_ROUTES`): `/logout` — passes through regardless of auth state; the action clears both cookies and redirects to `/login`.
-- **Private** (everything else): requires valid `session`.
+- **Private** (everything else): requires valid `session`. That includes `/report`.
 
 ### Styling System
 
@@ -214,6 +215,18 @@ it; see `gv-api/docs/api/lights.md` for the real thing.
   SSR read timed out, because nothing could be added to an empty list
 - **Polling pauses while a scan runs** — a scan owns the radio for its whole window, and reads
   fired into it just time out and slow the scan down
+
+## Report domain — quick rules
+
+After a failover gv-api restores the backup server's data on home and keeps a report of what home had besides. This app only reads it. The backend side is `gv-api/internal/{report,restore,failover}`; the whole design is in `aws-failover-plan/Restore.md`.
+
+- **Route `/report`** (private: needs the full `session`; a semiprivate login cannot open it). `+page.server.ts` seeds the status, `ReportScreen` (`reportScreen.svelte.ts`) owns it from then on and polls every 3 s only while the app is held. `report.css` is imported by `/report/+layout.svelte`, not by the root layout.
+- **API**: `GET /report` returns `{ mode, merge, error?, report }`; `DELETE /report` dismisses the report (204). `mode` is `normal | hold | merge`, `merge` is `'' | running | done | failed`. While `mode` is not `normal` gv-api answers every other route with 503 `merge_pending`.
+- **Views** (`ReportScreen.view`): `waiting` (held, restore not started), `running`, `failed`, `report` (normal and the report has items or an `error`), `none`. `hasContent()` decides the last two. An empty report is not shown and gets no nav link.
+- **Items are whole objects** (`base`, `home`, `ec2`, plus `related`, the row each single-column foreign key points at). `changedFields(item, all)` lists only the differing fields unless `all`; `rowTitle` and `relatedTitles` name the row and what it points at; `opLabel` says what home did and what the restored data holds. A new table needs no edit, but a friendly name goes in `LABELS` of `rowTitle.ts`.
+- **Root layout**: `+layout.server.ts` calls `failoverStatus(token)` (`src/lib/server/failoverStatus.ts`), which returns `{ locked, report }`. Locked redirects every page except `/report` there; `showReport` puts the Report link in the nav while the app is held or a report is waiting. An unlocked answer is cached 5 s, a locked one never, and an unreachable answer counts as unlocked.
+- **`merge_pending` in `fetchAPI`**: any call that answers 503 with `code: 'merge_pending'` sends the browser to `/report` (unless already there) and still throws an `ApiError`; `isMergePending(e)` tests for it.
+- Dismissing goes to `/tasks` with `invalidateAll`, so the nav link goes away (the cache may keep it up to 5 s).
 
 ## Deployment
 

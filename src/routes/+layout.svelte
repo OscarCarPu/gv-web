@@ -29,6 +29,11 @@
 {#if data.token || data.semiprivateToken}
 	<header class="app-header">
 		<nav class="app-nav">
+			{#if data.showReport}
+				<a href="/report" class="nav-link" class:active={page.url.pathname.startsWith('/report')}
+					>Report</a
+				>
+			{/if}
 			{#if data.token}
 				<a href="/tasks" class="nav-link" class:active={page.url.pathname.startsWith('/tasks')}
 					>Tasks</a

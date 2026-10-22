@@ -1,0 +1,84 @@
+@reference "./app.css";
+
+.report-page {
+	@apply mx-auto flex max-w-3xl flex-col gap-4 px-4 py-8;
+
+	h1 {
+		@apply text-2xl font-bold;
+		margin: 0;
+	}
+}
+
+.report-lead {
+	@apply text-text-muted;
+	margin: 0;
+}
+
+.report-error {
+	@apply bg-danger/15 text-danger rounded-lg px-4 py-3;
+	margin: 0;
+}
+
+.report-card {
+	@apply bg-bg-light flex flex-col gap-3 rounded-xl p-4;
+	border: 1px solid var(--color-border);
+}
+
+.report-card-header {
+	h3 {
+		@apply text-lg font-semibold;
+		margin: 0.125rem 0 0;
+		overflow-wrap: anywhere;
+	}
+
+	p {
+		@apply text-text-muted;
+		margin: 0.25rem 0 0;
+	}
+}
+
+.report-kind {
+	@apply text-primary text-xs font-semibold tracking-wide uppercase;
+}
+
+.report-group {
+	@apply mt-4 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase;
+	color: var(--color-text-muted);
+	margin-bottom: 0;
+}
+
+.report-count {
+	@apply bg-primary/15 text-primary rounded-full px-2 py-0.5 text-xs tabular-nums;
+}
+
+.report-fields {
+	@apply w-full border-collapse text-sm;
+
+	th,
+	td {
+		@apply px-2 py-1 text-left align-top;
+		border-bottom: 1px solid var(--color-border);
+		overflow-wrap: anywhere;
+	}
+
+	thead th {
+		@apply text-text-muted font-medium whitespace-nowrap;
+	}
+
+	tbody th {
+		@apply font-medium whitespace-nowrap;
+		overflow-wrap: normal;
+	}
+}
+
+.report-toggle {
+	@apply text-primary self-start text-sm;
+	background: none;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+}
+
+.report-actions {
+	@apply flex items-center gap-3;
+}
