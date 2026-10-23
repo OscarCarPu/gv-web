@@ -133,8 +133,15 @@ export function truncateDueSoonGroups(groups: DueSoonGroup[], limit: number): Du
 	return result;
 }
 
-function formatHoursShort(hours: number): string {
+export function formatHoursShort(hours: number): string {
 	return Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`;
+}
+
+/** "3h" from an API decimal string; null when absent or not a number. */
+export function formatRemaining(hours: string | null | undefined): string | null {
+	if (hours == null) return null;
+	const n = parseFloat(hours);
+	return Number.isFinite(n) ? formatHoursShort(n) : null;
 }
 
 function daysBetween(fromStr: string, toStr: string): number {

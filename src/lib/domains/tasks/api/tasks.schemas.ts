@@ -244,6 +244,11 @@ const TaskByDueDateResponseSchema = z.object({
 		.array(TaskDepRefSchema)
 		.nullable()
 		.transform((v) => v ?? []),
+	dependency_hours: z
+		.array(TaskDepRefSchema.extend({ remaining_hours: z.string(), cumulative_hours: z.string() }))
+		.nullable()
+		.optional()
+		.transform((v) => v ?? []),
 	blocks: z
 		.array(TaskDepRefSchema)
 		.nullable()

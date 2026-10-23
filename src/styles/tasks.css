@@ -282,6 +282,10 @@
 	.task-time {
 		@apply text-text-muted;
 	}
+
+	.task-remaining {
+		@apply text-text font-semibold;
+	}
 }
 
 .task-urgency-note {
@@ -497,6 +501,18 @@
 
 .blocked-icon {
 	@apply text-text-muted text-xs;
+}
+
+.blocked-label {
+	@apply text-text-muted text-xs font-semibold uppercase;
+}
+
+.dep-hours {
+	@apply flex flex-wrap gap-1;
+}
+
+.dep-hours-figures {
+	@apply text-text-muted ml-1 font-normal;
 }
 
 /* --- Dependency badges --- */

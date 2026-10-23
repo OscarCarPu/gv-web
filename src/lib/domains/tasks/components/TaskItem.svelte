@@ -2,7 +2,7 @@
 	import type { TaskByDueDateResponse } from '$lib/domains/tasks/types/Task.types';
 	import type { TimerTask } from '$lib/domains/tasks/taskTimer.svelte';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
-	import { buildUrgencyPhrase } from '$lib/domains/tasks/utils/dueSoonGrouping';
+	import { buildUrgencyPhrase, formatRemaining } from '$lib/domains/tasks/utils/dueSoonGrouping';
 	import DepBadges from './DepBadges.svelte';
 	import { formatDateShort } from '$shared/utils/datetime';
 	import Icon from '$lib/shared/components/Icon.svelte';
@@ -55,6 +55,7 @@
 	const hasOwnDue = $derived(ownDue !== null);
 	const hasProjectDue = $derived(!hasOwnDue && task.project_due_at !== null);
 	const urgencyPhrase = $derived(buildUrgencyPhrase(task));
+	const remainingLabel = $derived(formatRemaining(task.remaining_hours));
 </script>
 
 <div class="task-item" class:today={isToday} class:overdue={isOverdue} class:urgent={task.urgent}>
@@ -63,9 +64,24 @@
 			<button class="task-name-btn" onclick={() => ondetail?.(task.id)}>{task.name}</button>
 			{#if task.blocked}
 				<Icon name="ban" class="blocked-icon" title="Blocked" />
+				<span class="blocked-label">Blocked</span>
 			{/if}
 		</div>
-		{#if task.depends_on?.length}
+		{#if task.dependency_hours?.length}
+			<div class="dep-hours">
+				{#each task.dependency_hours as dep (dep.id)}
+					{@const own = formatRemaining(dep.remaining_hours)}
+					{@const total = formatRemaining(dep.cumulative_hours)}
+					<button class="dep-badge" onclick={() => ondetail?.(dep.id)}>
+						{dep.name}
+						<span class="dep-hours-figures">
+							{own ?? '0h'} left{#if total && total !== own}
+								· {total} with its deps{/if}
+						</span>
+					</button>
+				{/each}
+			</div>
+		{:else if task.depends_on?.length}
 			<DepBadges deps={task.depends_on} ondetail={(id) => ondetail?.(id)} />
 		{/if}
 		{#if task.project_name}
@@ -92,6 +108,9 @@
 				<span class="task-due"><Icon name="calendar" /> {formatDateShort(ownDue!)}</span>
 			{/if}
 			<span class="task-time"><Icon name="clock" /> {formattedTime()}</span>
+			{#if remainingLabel && !urgencyPhrase}
+				<span class="task-remaining">{remainingLabel} left</span>
+			{/if}
 			{#if urgencyPhrase}
 				<span class="task-urgency-note"><Icon name="circle-exclamation" /> {urgencyPhrase}</span>
 			{/if}
