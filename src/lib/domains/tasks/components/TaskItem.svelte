@@ -3,7 +3,6 @@
 	import type { TimerTask } from '$lib/domains/tasks/taskTimer.svelte';
 	import { getStatusLabel } from '$lib/domains/tasks/utils/statusLabel';
 	import { buildUrgencyPhrase, formatRemaining } from '$lib/domains/tasks/utils/dueSoonGrouping';
-	import DepBadges from './DepBadges.svelte';
 	import { formatDateShort } from '$shared/utils/datetime';
 	import Icon from '$lib/shared/components/Icon.svelte';
 
@@ -67,22 +66,20 @@
 				<span class="blocked-label">Blocked</span>
 			{/if}
 		</div>
-		{#if task.dependency_hours?.length}
+		{#if task.dependent_hours?.length}
 			<div class="dep-hours">
-				{#each task.dependency_hours as dep (dep.id)}
+				{#each task.dependent_hours as dep (dep.id)}
 					{@const own = formatRemaining(dep.remaining_hours)}
 					{@const total = formatRemaining(dep.cumulative_hours)}
 					<button class="dep-badge" onclick={() => ondetail?.(dep.id)}>
 						{dep.name}
 						<span class="dep-hours-figures">
 							{own ?? '0h'} left{#if total && total !== own}
-								· {total} with its deps{/if}
+								· {total} up to here{/if}
 						</span>
 					</button>
 				{/each}
 			</div>
-		{:else if task.depends_on?.length}
-			<DepBadges deps={task.depends_on} ondetail={(id) => ondetail?.(id)} />
 		{/if}
 		{#if task.project_name}
 			<span class="task-project">

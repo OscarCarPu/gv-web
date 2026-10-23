@@ -28,8 +28,10 @@ export interface TaskDepRef {
 	due_at: string | null;
 }
 
-/** An unfinished dependency with the hours still owed: its own, and its own plus everything upstream. */
-export interface DepRemaining extends TaskDepRef {
+/** A task this one blocks: its own remaining hours, and its own plus everything it waits on. */
+export interface DepRemaining {
+	id: number;
+	name: string;
 	remaining_hours: string;
 	cumulative_hours: string;
 }
@@ -183,7 +185,7 @@ export interface TaskByDueDateResponse {
 	project_name: string | null;
 	project_due_at: string | null;
 	depends_on: TaskDepRef[];
-	dependency_hours?: DepRemaining[];
+	dependent_hours?: DepRemaining[];
 	blocks: TaskDepRef[];
 	blocked: boolean;
 }

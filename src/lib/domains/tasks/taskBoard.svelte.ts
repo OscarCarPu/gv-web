@@ -94,7 +94,7 @@ export class TaskBoard {
 				? this.#getData().tasksByDueDate
 				: this.#getData().tasksByDueDate.filter((t) => t.priority <= this.duePriorityFilter!)
 		)
-			.filter((t) => !this.pendingTaskIds.has(t.id))
+			.filter((t) => !t.blocked && !this.pendingTaskIds.has(t.id))
 			.filter((t) => {
 				if (ids === null) return true;
 				return t.project_id !== null && ids.has(t.project_id);
