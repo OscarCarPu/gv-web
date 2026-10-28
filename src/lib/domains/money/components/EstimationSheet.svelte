@@ -57,7 +57,7 @@
 
 	<div class="money-tiles money-tiles-wrap">
 		<div class="money-tile">
-			<span class="detail-info-label">Current</span>
+			<span class="detail-info-label">Last month end</span>
 			<span class="detail-info-value">{formatMoney(est.lastActual.toFixed(2))}</span>
 		</div>
 		<div class="money-tile">
