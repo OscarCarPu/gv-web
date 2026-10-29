@@ -116,3 +116,15 @@ export type Recording = z.infer<typeof RecordingSchema>;
 
 export type PrinterFile = z.infer<typeof PrinterFileSchema>;
 export type PrinterStorage = z.infer<typeof PrinterStorageSchema>;
+
+export const PrintHistoryEntrySchema = z.object({
+	/** Prusa Connect job state: PRINTING, FIN_OK, FIN_ERROR, FIN_STOPPED, UNKNOWN. */
+	state: z.string(),
+	timePrinting: z.number().optional(),
+	fileName: z.string(),
+	material: z.string().optional(),
+});
+
+export const PrintHistorySchema = z.array(PrintHistoryEntrySchema);
+
+export type PrintHistoryEntry = z.infer<typeof PrintHistoryEntrySchema>;

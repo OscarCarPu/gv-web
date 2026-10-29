@@ -6,6 +6,7 @@
 	import { PrinterRecordingsController } from './printerRecordings.svelte';
 	import PrinterFiles from './PrinterFiles.svelte';
 	import PrinterRecordings from './PrinterRecordings.svelte';
+	import PrinterHistory from './PrinterHistory.svelte';
 
 	interface Props {
 		id: string;
@@ -257,6 +258,8 @@
 	</div>
 
 	<PrinterFiles {id} online={t?.online ?? false} />
+
+	<PrinterHistory {id} />
 
 	<PrinterRecordings controller={recordings} />
 

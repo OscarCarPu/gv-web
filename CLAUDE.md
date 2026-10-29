@@ -192,6 +192,7 @@ Route: `/domotics` (semiprivate), a shell with two tabs — `/domotics/printers`
 - **Uploads go browser → gv-api**, PUT up to 25 MiB, ordered PATCH chunks above that (the tunnel rejects bodies over 100 MB). The API answers 202 once the bytes are staged and the controller polls `/files/progress` for the printer leg
 - **Stopping a print is armed by a first click** (`.btn-stop-print.is-armed`) and stops on the second: the app has no confirmation dialogs, but a stray click must not throw away a six-hour print
 - **The recording controller holds no recording state of its own**, only what the API reports, so a returning page just sees it still going
+- **The print history is Prusa Connect's, not ours**: `PrinterHistory` and `PrinterHistoryController` read `GET /domotics/printers/{id}/history` (the last 10 prints, `{state, timePrinting, fileName, material}`), poll every 60 s and show the Connect job states `PRINTING`, `FIN_OK`, `FIN_ERROR` and `FIN_STOPPED` (anything else reads Unknown). gv-api logs in to Prusa Connect for it (unofficial), so nothing is stored here or there. A job whose file is gone has an empty `fileName` and shows as "Deleted file"; when Prusa asks for an emailed code the endpoint answers 502 with a message pointing at `make prusa-login` in gv-api, and the list shows `History unavailable: …`
 
 ### Lights tab (BLE bulbs)
 
