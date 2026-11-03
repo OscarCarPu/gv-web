@@ -1,6 +1,14 @@
 import { addToast } from '$shared/stores/toast.svelte';
 import { apiFetch } from '$shared/api/client';
-import { TelemetrySchema, type Telemetry } from './api/printers.schemas';
+import {
+	ChamberSchema,
+	TelemetrySchema,
+	type Chamber,
+	type Telemetry,
+} from './api/printers.schemas';
+
+/** The chamber comes from Prusa Connect (cached 10s server side), so it is polled on its own, slower. */
+const CHAMBER_POLL_MS = 15_000;
 
 // Controller for a single printer view: polls telemetry on an interval and
 // exposes reactive state. The camera feed is driven separately by the component
@@ -23,7 +31,10 @@ export class PrinterController {
 	error = $state<string | null>(null);
 	/** Set while a stop request is in flight, so the button cannot be double-fired. */
 	stopping = $state(false);
+	/** Null until loaded, or when Prusa Connect is not set up / unreachable. */
+	chamber = $state<Chamber | null>(null);
 	private timer: ReturnType<typeof setInterval> | null = null;
+	private chamberTimer: ReturnType<typeof setInterval> | null = null;
 
 	constructor(id: string) {
 		this.id = id;
@@ -37,6 +48,15 @@ export class PrinterController {
 			this.error = null;
 		} catch (e) {
 			this.error = e instanceof Error ? e.message : 'poll failed';
+		}
+	}
+
+	async pollChamber() {
+		try {
+			const res = await apiFetch(`/domotics/printers/${this.id}/chamber`);
+			this.chamber = res.ok ? ChamberSchema.parse(await res.json()) : null;
+		} catch {
+			this.chamber = null;
 		}
 	}
 
@@ -74,10 +94,14 @@ export class PrinterController {
 	start(intervalMs = 2000) {
 		this.poll();
 		this.timer = setInterval(() => this.poll(), intervalMs);
+		void this.pollChamber();
+		this.chamberTimer = setInterval(() => this.pollChamber(), CHAMBER_POLL_MS);
 	}
 
 	stop() {
 		if (this.timer) clearInterval(this.timer);
+		if (this.chamberTimer) clearInterval(this.chamberTimer);
 		this.timer = null;
+		this.chamberTimer = null;
 	}
 }

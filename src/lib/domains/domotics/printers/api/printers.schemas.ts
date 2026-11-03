@@ -47,7 +47,40 @@ export const PrinterFileSchema = z.object({
 	readOnly: z.boolean().optional(),
 	/** Last modified, epoch ms. */
 	modifiedAt: z.number().optional(),
+	/** Signed link that streams the file from the printer. */
+	downloadUrl: z.string().optional(),
+	/** Only from printers whose PrusaLink reports gcode metadata; the CORE One's comes from FileMetaSchema. */
+	printSeconds: z.number().optional(),
+	material: z.string().optional(),
+	filamentGrams: z.number().optional(),
+	filamentMeters: z.number().optional(),
 });
+
+/** Print estimate and filament for one file, from Prusa Connect. */
+export const FileMetaSchema = z.object({
+	printSeconds: z.number().optional(),
+	material: z.string().optional(),
+	filamentGrams: z.number().optional(),
+	filamentMeters: z.number().optional(),
+});
+
+/** Keyed by the file's `name` in PrinterFilesSchema. */
+export const FilesMetaSchema = z.object({
+	files: z
+		.record(z.string(), FileMetaSchema)
+		.nullable()
+		.transform((v) => v ?? {}),
+});
+
+export type FileMeta = z.infer<typeof FileMetaSchema>;
+
+/** Chamber temperature, from Prusa Connect: PrusaLink does not expose it. */
+export const ChamberSchema = z.object({
+	temp: z.number().optional(),
+	targetTemp: z.number().optional(),
+});
+
+export type Chamber = z.infer<typeof ChamberSchema>;
 
 export const PrinterStorageSchema = z.object({
 	name: z.string(),
@@ -69,7 +102,7 @@ export const PrinterFilesSchema = z.object({
 
 /** Progress + outcome of the gv-web → printer leg of an upload. */
 export const UploadProgressSchema = z.object({
-	status: z.enum(['forwarding', 'done', 'error', 'unknown']),
+	status: z.enum(['queued', 'downloading', 'forwarding', 'done', 'error', 'unknown']),
 	sent: z.number(),
 	total: z.number(),
 	error: z.string().optional(),
@@ -83,6 +116,8 @@ export const ActiveUploadsSchema = z.object({
 			UploadProgressSchema.extend({
 				uploadId: z.string(),
 				name: z.string(),
+				/** Set when the transfer is a rename: the old display name. */
+				from: z.string().optional(),
 			})
 		)
 		.nullable()
@@ -123,6 +158,8 @@ export const PrintHistoryEntrySchema = z.object({
 	timePrinting: z.number().optional(),
 	fileName: z.string(),
 	material: z.string().optional(),
+	filamentGrams: z.number().optional(),
+	filamentMeters: z.number().optional(),
 });
 
 export const PrintHistorySchema = z.array(PrintHistoryEntrySchema);

@@ -6,7 +6,9 @@ import { addToast } from '$shared/stores/toast.svelte';
 import { apiFetch, apiUrl, authHeaders } from '$shared/api/client';
 import {
 	ActiveUploadsSchema,
+	FilesMetaSchema,
 	PrinterFilesSchema,
+	type FileMeta,
 	UploadProgressSchema,
 	type PrinterFile,
 	type PrinterStorage,
@@ -114,13 +116,45 @@ export function arrangeFiles(
 		});
 }
 
-export type UploadStatus = 'uploading' | 'sending' | 'done' | 'error' | 'conflict';
+/**
+ * `queued`: waiting in this browser for the previous file's upload. `waiting`: on the server,
+ * queued behind another transfer to the printer. `reading`: a rename copying the file off the
+ * printer. `sending`: the server writing to the printer.
+ */
+export type UploadStatus =
+	| 'queued'
+	| 'uploading'
+	| 'waiting'
+	| 'reading'
+	| 'sending'
+	| 'done'
+	| 'error'
+	| 'conflict';
+
+/** States in which the row is still moving. */
+export function isActive(status: UploadStatus): boolean {
+	return (
+		status === 'queued' ||
+		status === 'uploading' ||
+		status === 'waiting' ||
+		status === 'reading' ||
+		status === 'sending'
+	);
+}
+
+const SERVER_STATUS: Record<string, UploadStatus> = {
+	queued: 'waiting',
+	downloading: 'reading',
+	forwarding: 'sending',
+};
 
 export type Upload = {
 	id: number;
 	/** Server-side id, used to poll progress and to recognise an upload after a reload. */
 	serverId: string;
 	name: string;
+	/** Set for a rename: the name the file had before. */
+	from?: string;
 	size: number;
 	/** Bytes the browser has sent to gv-web. */
 	sent: number;
@@ -148,6 +182,8 @@ export class PrinterFilesController {
 	error = $state<string | null>(null);
 	loading = $state(true);
 	uploads = $state<Upload[]>([]);
+	/** Print estimates from Prusa Connect, by file name. Loaded after the list so it never waits. */
+	meta = $state<Record<string, FileMeta>>({});
 	/** Name of the file a print/delete is currently in flight for. */
 	busy = $state<string | null>(null);
 	/** Files marked for a bulk delete, by name. */
@@ -167,6 +203,11 @@ export class PrinterFilesController {
 	private cancelled = new Set<number>();
 	/** Progress pollers, keyed by server-side upload id. */
 	private watchers = new Map<string, ReturnType<typeof setInterval>>();
+	/**
+	 * Browser → server legs run one after another: each link resolves once its file is on the
+	 * server, and the server then sends to the printer in arrival order.
+	 */
+	private queue: Promise<void> = Promise.resolve();
 
 	constructor(id: string) {
 		this.id = id;
@@ -189,12 +230,28 @@ export class PrinterFilesController {
 			this.storage = data.storage ?? null;
 			this.online = data.online;
 			this.error = data.error ?? null;
+			if (data.files.some((f) => !(f.name in this.meta))) void this.loadMeta();
 		} catch (e) {
 			this.online = false;
 			this.error = e instanceof Error ? e.message : 'Could not list files';
 		} finally {
 			this.loading = false;
 		}
+	}
+
+	async loadMeta(): Promise<void> {
+		try {
+			const res = await apiFetch(`${this.base}/meta`, { headers: { Accept: 'application/json' } });
+			if (!res.ok) return;
+			this.meta = FilesMetaSchema.parse(await res.json()).files;
+		} catch {
+			// Optional detail: the list is complete without it.
+		}
+	}
+
+	/** What is known about printing a file, whichever source reported it. */
+	metaOf(f: PrinterFile): FileMeta {
+		return this.meta[f.name] ?? f;
 	}
 
 	/** True when the printer will accept an upload right now. */
@@ -223,8 +280,34 @@ export class PrinterFilesController {
 				addToast(`${file.name} is empty`, 'error');
 				continue;
 			}
-			void this.upload(file);
+			this.enqueue(file);
 		}
+	}
+
+	/** Adds a row now and starts its upload once every earlier one has reached the server. */
+	enqueue(file: File, overwrite = false): void {
+		const entry = this.addEntry({
+			serverId: crypto.randomUUID(),
+			name: file.name,
+			size: file.size,
+			sent: 0,
+			forwarded: 0,
+			status: 'queued',
+			file,
+		});
+		this.queue = this.queue.then(() => {
+			if (this.cancelled.has(entry.id) || !this.uploads.some((u) => u.id === entry.id)) {
+				this.cancelled.delete(entry.id);
+				return;
+			}
+			return this.upload(entry, file, overwrite);
+		});
+	}
+
+	/** Appends a row and hands back its reactive proxy: mutating the literal would not notify. */
+	private addEntry(fields: Omit<Upload, 'id'>): Upload {
+		this.uploads = [...this.uploads, { id: nextUploadId++, ...fields }];
+		return this.uploads[this.uploads.length - 1];
 	}
 
 	/**
@@ -241,22 +324,21 @@ export class PrinterFilesController {
 			const { uploads } = ActiveUploadsSchema.parse(await res.json());
 
 			for (const u of uploads) {
-				if (u.status !== 'forwarding') continue; // settled ones have nothing left to show
+				const status = SERVER_STATUS[u.status];
+				if (!status) continue; // settled ones have nothing left to show
 				if (this.uploads.some((e) => e.serverId === u.uploadId)) continue;
 
-				this.uploads = [
-					...this.uploads,
-					{
-						id: nextUploadId++,
+				this.watch(
+					this.addEntry({
 						serverId: u.uploadId,
 						name: u.name,
+						from: u.from,
 						size: u.total,
 						sent: u.total, // the browser leg is necessarily finished
 						forwarded: u.sent,
-						status: 'sending',
-					},
-				];
-				this.watch(this.uploads[this.uploads.length - 1]);
+						status,
+					})
+				);
 			}
 		} catch {
 			// Not critical — the page just will not show pre-existing uploads.
@@ -267,7 +349,7 @@ export class PrinterFilesController {
 	 * Polls the server for an upload's forwarding progress and its final outcome. The PUT only
 	 * returns 202, so this is where success, failure and a 409 name conflict actually surface.
 	 */
-	private watch(entry: Upload, onSettled?: () => void): void {
+	private watch(entry: Upload): void {
 		if (this.watchers.has(entry.serverId)) return;
 
 		let missing = 0;
@@ -282,7 +364,6 @@ export class PrinterFilesController {
 			const t = this.watchers.get(entry.serverId);
 			if (t) clearInterval(t);
 			this.watchers.delete(entry.serverId);
-			onSettled?.();
 		};
 		const fail = (message: string, status: UploadStatus = 'error') => {
 			entry.status = status;
@@ -292,7 +373,7 @@ export class PrinterFilesController {
 		const succeed = () => {
 			entry.forwarded = entry.size;
 			entry.status = 'done';
-			addToast(`${entry.name} uploaded`);
+			addToast(entry.from ? `${entry.from} renamed to ${entry.name}` : `${entry.name} uploaded`);
 			void this.refresh();
 			// Drop the finished row once the file itself has appeared in the list.
 			setTimeout(() => this.dismiss(entry.id), 1500);
@@ -310,6 +391,18 @@ export class PrinterFilesController {
 				if (!res.ok) return;
 				const p = UploadProgressSchema.parse(await res.json());
 
+				// Each server phase counts its bytes from zero, so a new phase restarts the bar and the
+				// rate it is timed against.
+				const phase = SERVER_STATUS[p.status];
+				if (phase && phase !== entry.status) {
+					entry.status = phase;
+					entry.forwarded = p.sent;
+					entry.etaSeconds = undefined;
+					lastAt = Date.now();
+					lastBytes = p.sent;
+					rate = 0;
+				}
+				if (p.total > 0) entry.size = p.total;
 				if (p.sent > entry.forwarded) entry.forwarded = p.sent;
 
 				if (p.sent > lastBytes) {
@@ -352,26 +445,10 @@ export class PrinterFilesController {
 	 * progress in a browser, and it covers only the browser → gv-web leg. The server then replies
 	 * 202 and forwards to the printer, so watch() reports the rest.
 	 */
-	upload(file: File, overwrite = false): Promise<void> {
-		const id = nextUploadId++;
-		const uploadId = crypto.randomUUID();
-		this.uploads = [
-			...this.uploads,
-			{
-				id,
-				serverId: uploadId,
-				name: file.name,
-				size: file.size,
-				sent: 0,
-				forwarded: 0,
-				status: 'uploading',
-				file,
-			},
-		];
-
-		// Read the entry back out of the reactive array: mutating the object literal above would
-		// not notify, only its $state proxy does.
-		const entry = this.uploads[this.uploads.length - 1];
+	private upload(entry: Upload, file: File, overwrite: boolean): Promise<void> {
+		const id = entry.id;
+		const uploadId = entry.serverId;
+		entry.status = 'uploading';
 
 		if (file.size > CHUNK_SIZE) return this.uploadChunked(file, entry, id, uploadId, overwrite);
 
@@ -381,6 +458,7 @@ export class PrinterFilesController {
 
 			const finish = () => {
 				this.xhrs.delete(id);
+				this.cancelled.delete(id);
 				resolve();
 			};
 			const fail = (message: string, status: UploadStatus = 'error') => {
@@ -388,7 +466,7 @@ export class PrinterFilesController {
 				entry.error = message;
 				finish();
 			};
-			const startPolling = () => this.watch(entry, finish);
+			const startPolling = () => this.watch(entry);
 
 			const url = overwrite ? `${this.base}?overwrite=1` : this.base;
 			xhr.open('PUT', apiUrl(url));
@@ -402,10 +480,7 @@ export class PrinterFilesController {
 			xhr.upload.onprogress = (e) => {
 				if (!e.lengthComputable) return;
 				entry.sent = e.loaded;
-				if (e.loaded >= e.total) {
-					entry.status = 'sending';
-					startPolling();
-				}
+				if (e.loaded >= e.total) startPolling();
 			};
 
 			xhr.onload = () => {
@@ -413,8 +488,9 @@ export class PrinterFilesController {
 					// 202: gv-web has the bytes but the printer does not yet. Keep the row alive and
 					// let the poller report the real outcome.
 					entry.sent = entry.size;
-					entry.status = 'sending';
+					if (entry.status === 'uploading') entry.status = 'waiting';
 					startPolling();
+					finish();
 					return;
 				}
 
@@ -523,8 +599,9 @@ export class PrinterFilesController {
 						retries = 0;
 						if (res.status === 202) {
 							entry.sent = entry.size;
-							entry.status = 'sending';
-							this.watch(entry, finish);
+							entry.status = 'waiting';
+							this.watch(entry);
+							finish();
 							return;
 						}
 						const received = res.body?.received;
@@ -559,19 +636,57 @@ export class PrinterFilesController {
 		const file = entry.file;
 		if (!file) return;
 		this.dismiss(entry.id);
-		void this.upload(file, true);
+		this.enqueue(file, true);
 	}
 
 	retry(entry: Upload): void {
 		const file = entry.file;
 		if (!file) return;
 		this.dismiss(entry.id);
-		void this.upload(file);
+		this.enqueue(file);
 	}
 
 	cancel(entry: Upload): void {
 		this.cancelled.add(entry.id);
+		if (entry.status === 'queued') {
+			this.dismiss(entry.id);
+			return;
+		}
 		this.xhrs.get(entry.id)?.abort();
+	}
+
+	/**
+	 * Renames a file on the printer. PrusaLink has no rename, so the server copies the file off the
+	 * printer and back under the new name: a queued transfer like an upload, shown as a row.
+	 */
+	async rename(file: PrinterFile, newName: string): Promise<boolean> {
+		this.busy = file.name;
+		try {
+			const res = await apiFetch(`${this.base}/rename`, {
+				method: 'POST',
+				headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name: file.name, newName }),
+			});
+			const body = await res.json().catch(() => null);
+			if (!res.ok) throw new Error(body?.error ?? `status ${res.status}`);
+			this.watch(
+				this.addEntry({
+					serverId: body.uploadId,
+					name: body.name,
+					from: file.displayName,
+					size: file.size ?? 0,
+					sent: file.size ?? 0,
+					forwarded: 0,
+					status: 'waiting',
+				})
+			);
+			return true;
+		} catch (e) {
+			addToast(e instanceof Error ? e.message : 'Could not rename the file', 'error');
+			return false;
+		} finally {
+			this.busy = null;
+		}
 	}
 
 	dismiss(uploadId: number): void {

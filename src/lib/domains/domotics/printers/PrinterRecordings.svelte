@@ -31,7 +31,7 @@
 	const active = $derived(controller.active);
 	const elapsed = $derived(active ? formatClock(now - new Date(active.startedAt).getTime()) : '');
 
-	const saved = $derived(controller.recordings.filter((r) => !r.recording));
+	const saved = $derived(controller.saved);
 	const visible = $derived(expanded ? saved : saved.slice(0, FOLD_AT));
 	const hidden = $derived(Math.max(0, saved.length - FOLD_AT));
 
@@ -40,6 +40,33 @@
 	}
 
 	const downloadUrl = (r: Recording) => `${apiUrl(r.url)}&download=1`;
+
+	// Same two-step confirm as the file list's bulk delete.
+	let deleteArmed = $state(false);
+	let deleteArmTimer: ReturnType<typeof setTimeout> | null = null;
+
+	function disarmDelete() {
+		if (deleteArmTimer) clearTimeout(deleteArmTimer);
+		deleteArmTimer = null;
+		deleteArmed = false;
+	}
+
+	function onDeleteSelected() {
+		if (!deleteArmed) {
+			deleteArmed = true;
+			deleteArmTimer = setTimeout(disarmDelete, 4000);
+			return;
+		}
+		disarmDelete();
+		void controller.removeSelected();
+	}
+
+	$effect(() => {
+		void controller.selected.size;
+		disarmDelete();
+	});
+
+	$effect(() => disarmDelete);
 </script>
 
 <div class="printer-recordings">
@@ -89,9 +116,42 @@
 	{:else if saved.length === 0}
 		<p class="files-empty">No saved recordings yet.</p>
 	{:else}
+		<div class="files-bulk">
+			<label class="files-select-all">
+				<input
+					type="checkbox"
+					checked={controller.allSelected}
+					indeterminate={controller.selected.size > 0 && !controller.allSelected}
+					disabled={controller.deletingSelected}
+					onchange={() => controller.toggleAll()}
+				/>
+				Select all
+			</label>
+			{#if controller.selected.size > 0}
+				<button
+					class="btn-inline btn-stop-print"
+					class:is-armed={deleteArmed}
+					disabled={controller.deletingSelected}
+					onclick={onDeleteSelected}
+					onblur={disarmDelete}
+				>
+					<Icon name="trash" />
+					{controller.deletingSelected
+						? 'Deleting…'
+						: deleteArmed
+							? `Confirm delete ${controller.selected.size}`
+							: `Delete ${controller.selected.size}`}
+				</button>
+			{/if}
+		</div>
+
 		<ul class="rec-list">
 			{#each visible as r (r.name)}
-				<li class="rec-item" class:is-busy={controller.deleting === r.name}>
+				<li
+					class="rec-item"
+					class:is-busy={controller.deleting === r.name}
+					class:is-selected={controller.selected.has(r.name)}
+				>
 					<button
 						class="rec-thumb"
 						onclick={() => (playing = r)}
@@ -104,7 +164,17 @@
 						<span class="rec-thumb-time">{formatClock(r.durationMs)}</span>
 					</button>
 					<div class="rec-meta">
-						<span class="file-name">{formatDateFull(r.startedAt)}</span>
+						<label class="rec-select">
+							<input
+								type="checkbox"
+								class="file-check"
+								aria-label="Select recording from {formatDateFull(r.startedAt)}"
+								checked={controller.selected.has(r.name)}
+								disabled={controller.deletingSelected}
+								onchange={() => controller.toggle(r.name)}
+							/>
+							<span class="file-name">{formatDateFull(r.startedAt)}</span>
+						</label>
 						<div class="rec-meta-row">
 							<span class="file-size">{formatBytes(r.sizeBytes)}</span>
 							<div class="file-actions">

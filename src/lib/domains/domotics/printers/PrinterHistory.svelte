@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { PrinterHistoryController } from './printerHistory.svelte';
-	import { formatEta } from './format';
+	import { formatEta, formatFilament } from './format';
+	import type { PrintHistoryEntry } from './api/printers.schemas';
 
 	interface Props {
 		id: string;
@@ -30,6 +31,16 @@
 				return { label: 'Unknown', cls: 'is-idle' };
 		}
 	}
+
+	function details(job: PrintHistoryEntry): string {
+		// A stopped or failed job's amount is pro-rated from its printing time, so it is approximate.
+		const partial = job.state === 'FIN_STOPPED' || job.state === 'FIN_ERROR';
+		const amount = formatFilament(job.filamentGrams, job.filamentMeters);
+		const used = amount && partial ? `~${amount}` : amount;
+		return [job.material || '—', used, job.timePrinting != null ? formatEta(job.timePrinting) : '—']
+			.filter(Boolean)
+			.join(' · ');
+	}
 </script>
 
 <div class="printer-history">
@@ -50,9 +61,7 @@
 				<li class="history-item">
 					<div class="history-main">
 						<span class="file-name">{job.fileName || 'Deleted file'}</span>
-						<span class="file-size">
-							{job.material || '—'} · {job.timePrinting != null ? formatEta(job.timePrinting) : '—'}
-						</span>
+						<span class="file-size">{details(job)}</span>
 					</div>
 					<span class="state-badge {o.cls}">{o.label}</span>
 				</li>

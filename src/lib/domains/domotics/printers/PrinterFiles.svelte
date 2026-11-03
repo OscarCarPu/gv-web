@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
+	import { apiUrl } from '$shared/api/client';
 	import Icon from '$shared/components/Icon.svelte';
-	import { formatBytes as size, formatEta } from './format';
+	import { formatBytes as size, formatEta, formatFilament } from './format';
 	import {
 		ACCEPT_ATTR,
 		PrinterFilesController,
 		type FileSortKey,
 		type Upload,
 	} from './printerFiles.svelte';
+	import type { PrinterFile } from './api/printers.schemas';
 
 	interface Props {
 		id: string;
@@ -64,6 +66,8 @@
 		day: 'numeric',
 		month: 'short',
 		year: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
 	});
 	const timeFmt = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -133,24 +137,89 @@
 		target.value = ''; // let the same file be picked again
 	}
 
-	// Two sequential legs: browser → gv-web (XHR progress), then gv-web → printer (polled).
-	// The bar shows whichever leg is currently running.
+	// Sequential legs: browser → gv-api (XHR progress), then gv-api → printer (polled); a rename
+	// first reads the file off the printer. The bar shows whichever leg is currently running.
 	function uploadPct(u: Upload): number {
 		if (u.status === 'done') return 100;
 		if (!u.size) return 0;
-		const bytes = u.status === 'sending' ? u.forwarded : u.sent;
+		const bytes = u.status === 'sending' || u.status === 'reading' ? u.forwarded : u.sent;
 		return Math.min(100, Math.round((bytes / u.size) * 100));
 	}
 
 	function uploadLabel(u: Upload): string {
-		if (u.status === 'sending') {
-			const left = u.etaSeconds != null ? ` · ${formatEta(u.etaSeconds)} left` : '';
-			return `Sending to printer… ${uploadPct(u)}% · ${size(u.forwarded)} of ${size(u.size)}${left}`;
+		const left = u.etaSeconds != null ? ` · ${formatEta(u.etaSeconds)} left` : '';
+		switch (u.status) {
+			case 'queued':
+				return 'Waiting for the previous upload';
+			case 'waiting':
+				return 'Queued for the printer';
+			case 'reading':
+				return `Reading from printer… ${uploadPct(u)}% · ${size(u.forwarded)} of ${size(u.size)}${left}`;
+			case 'sending':
+				return `Sending to printer… ${uploadPct(u)}% · ${size(u.forwarded)} of ${size(u.size)}${left}`;
+			case 'done':
+				return u.from ? 'Renamed' : 'Uploaded';
+			case 'conflict':
+				return u.error ?? 'Already on the printer';
+			case 'error':
+				return u.error ?? (u.from ? 'Rename failed' : 'Upload failed');
+			default:
+				return `Uploading… ${uploadPct(u)}% · ${size(u.sent)} of ${size(u.size)}`;
 		}
-		if (u.status === 'done') return 'Uploaded';
-		if (u.status === 'conflict') return u.error ?? 'Already on the printer';
-		if (u.status === 'error') return u.error ?? 'Upload failed';
-		return `Uploading… ${uploadPct(u)}% · ${size(u.sent)} of ${size(u.size)}`;
+	}
+
+	const showsBar = (u: Upload) =>
+		u.status === 'uploading' ||
+		u.status === 'reading' ||
+		u.status === 'sending' ||
+		u.status === 'done';
+
+	function fileMeta(file: PrinterFile): string {
+		const f = controller.metaOf(file);
+		const parts = [
+			f.printSeconds != null ? formatEta(f.printSeconds) : '',
+			f.material ?? '',
+			formatFilament(f.filamentGrams, f.filamentMeters),
+		];
+		return parts.filter(Boolean).join(' · ');
+	}
+
+	// Rename edits the stem only; the extension is fixed (the server enforces the same rule).
+	let renaming = $state<string | null>(null);
+	let draft = $state('');
+
+	function splitName(name: string): [string, string] {
+		const lower = name.toLowerCase();
+		const ext = ['.bgcode', '.gcode', '.bgc', '.gco', '.g'].find((e) => lower.endsWith(e)) ?? '';
+		return [name.slice(0, name.length - ext.length), name.slice(name.length - ext.length)];
+	}
+
+	function startRename(f: PrinterFile) {
+		renaming = f.name;
+		draft = splitName(f.displayName)[0];
+	}
+
+	async function submitRename(f: PrinterFile) {
+		const stem = draft.trim();
+		if (!stem || stem === splitName(f.displayName)[0]) {
+			renaming = null;
+			return;
+		}
+		if (await controller.rename(f, stem + splitName(f.displayName)[1])) renaming = null;
+	}
+
+	function onRenameKey(e: KeyboardEvent, f: PrinterFile) {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			void submitRename(f);
+		} else if (e.key === 'Escape') {
+			renaming = null;
+		}
+	}
+
+	function focusSelect(node: HTMLInputElement) {
+		node.focus();
+		node.select();
 	}
 </script>
 
@@ -199,11 +268,11 @@
 	{#each controller.uploads as u (u.id)}
 		<div class="upload-row" class:is-error={u.status === 'error' || u.status === 'conflict'}>
 			<div class="upload-info">
-				<span class="file-name">{u.name}</span>
+				<span class="file-name">{u.from ? `${u.from} → ${u.name}` : u.name}</span>
 				<span class="upload-status">{uploadLabel(u)}</span>
 			</div>
 
-			{#if u.status === 'uploading' || u.status === 'sending' || u.status === 'done'}
+			{#if showsBar(u)}
 				<div class="progress upload-progress">
 					<div class="progress-bar" style="width: {uploadPct(u)}%"></div>
 					<span class="progress-label">{uploadPct(u)}%</span>
@@ -222,7 +291,7 @@
 					>
 						<Icon name="rotate-left" />
 					</button>
-				{:else if u.status === 'uploading' || u.status === 'sending'}
+				{:else if u.status === 'queued' || u.status === 'uploading'}
 					<button
 						class="btn-icon"
 						title="Cancel"
@@ -330,7 +399,43 @@
 						disabled={f.readOnly === true || controller.deleting}
 						onchange={() => controller.toggle(f.name)}
 					/>
-					<span class="file-name">{f.displayName}</span>
+					{#if renaming === f.name}
+						<span class="file-rename">
+							<input
+								class="files-search file-rename-input"
+								aria-label="New name for {f.displayName}"
+								bind:value={draft}
+								use:focusSelect
+								onkeydown={(e) => onRenameKey(e, f)}
+								disabled={controller.busy === f.name}
+							/>
+							<span class="file-size">{splitName(f.displayName)[1]}</span>
+							<button
+								class="btn-icon"
+								title="Save name"
+								aria-label="Save new name"
+								disabled={controller.busy !== null}
+								onclick={() => submitRename(f)}
+							>
+								<Icon name="check" />
+							</button>
+							<button
+								class="btn-icon"
+								title="Cancel"
+								aria-label="Cancel rename"
+								onclick={() => (renaming = null)}
+							>
+								<Icon name="xmark" />
+							</button>
+						</span>
+					{:else}
+						<span class="file-main">
+							<span class="file-name">{f.displayName}</span>
+							{#if fileMeta(f)}
+								<span class="file-meta">{fileMeta(f)}</span>
+							{/if}
+						</span>
+					{/if}
 					<span
 						class="file-date"
 						title={f.modifiedAt != null ? timeFmt.format(f.modifiedAt) : undefined}
@@ -339,6 +444,26 @@
 					</span>
 					<span class="file-size">{size(f.size)}</span>
 					<span class="file-actions">
+						{#if f.downloadUrl}
+							<a
+								class="btn-icon"
+								href={apiUrl(f.downloadUrl)}
+								download={f.displayName}
+								title="Download"
+								aria-label="Download {f.displayName}"
+							>
+								<Icon name="download" />
+							</a>
+						{/if}
+						<button
+							class="btn-icon"
+							title="Rename"
+							aria-label="Rename {f.displayName}"
+							disabled={controller.busy !== null || f.readOnly === true}
+							onclick={() => startRename(f)}
+						>
+							<Icon name="pen" />
+						</button>
 						<button
 							class="btn-icon"
 							title="Print"

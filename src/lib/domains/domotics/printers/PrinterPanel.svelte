@@ -236,6 +236,12 @@
 			<span class="stat-value">{temp(t?.temps.bed, t?.temps.bedTarget)}</span>
 		</div>
 		<div class="stat">
+			<span class="stat-label">Chamber</span>
+			<span class="stat-value"
+				>{temp(controller.chamber?.temp, controller.chamber?.targetTemp)}</span
+			>
+		</div>
+		<div class="stat">
 			<span class="stat-label">Print fan</span>
 			<span class="stat-value">{fan(t?.fans.print, PRINT_FAN_MAX)}</span>
 		</div>

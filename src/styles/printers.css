@@ -531,6 +531,65 @@
 	white-space: nowrap;
 }
 
+.file-main {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.file-meta {
+	font-size: 0.7rem;
+	color: var(--color-text-muted);
+	font-variant-numeric: tabular-nums;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.file-rename {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	min-width: 0;
+}
+
+.file-rename-input {
+	flex: 1 1 auto;
+	padding: 0.2rem 0.45rem;
+}
+
+/* Phone width: date and size drop under the name so the name keeps room next to four actions. */
+@media (max-width: 600px) {
+	.file-row {
+		grid-template-columns: auto auto minmax(0, 1fr) auto;
+		grid-template-areas:
+			'check main main actions'
+			'check date size actions';
+		row-gap: 0.1rem;
+	}
+
+	.file-row > .file-check {
+		grid-area: check;
+	}
+
+	.file-row > .file-main,
+	.file-row > .file-rename {
+		grid-area: main;
+	}
+
+	.file-row > .file-date {
+		grid-area: date;
+	}
+
+	.file-row > .file-size {
+		grid-area: size;
+	}
+
+	.file-row > .file-actions {
+		grid-area: actions;
+	}
+}
+
 /* ---- File list toolbar: search, sort, bulk select ---- */
 .files-toolbar {
 	display: flex;
@@ -796,6 +855,19 @@
 
 .rec-item.is-busy {
 	opacity: 0.55;
+}
+
+.rec-item.is-selected {
+	border-color: color-mix(in srgb, var(--color-danger) 55%, transparent);
+	background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-light));
+}
+
+.rec-select {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	min-width: 0;
+	cursor: pointer;
 }
 
 /* Poster tile. The play affordance sits on top of the still; when ffmpeg could not extract one

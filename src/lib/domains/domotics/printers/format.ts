@@ -35,3 +35,10 @@ export function formatClock(ms: number): string {
 	const pad = (n: number) => String(n).padStart(2, '0');
 	return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
+
+/** Filament amount: grams when known (`18.4 g`), else length (`6.12 m`). Empty when neither. */
+export function formatFilament(grams?: number, meters?: number): string {
+	if (grams != null) return `${grams < 10 ? grams.toFixed(1) : Math.round(grams)} g`;
+	if (meters != null) return `${meters.toFixed(2)} m`;
+	return '';
+}

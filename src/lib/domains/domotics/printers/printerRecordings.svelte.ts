@@ -4,6 +4,7 @@
 // what the backend reports. Closing the page, reloading or losing the network never stops a
 // recording, and a page that comes back simply sees it still running.
 
+import { SvelteSet } from 'svelte/reactivity';
 import { addToast } from '$shared/stores/toast.svelte';
 import { apiFetch } from '$shared/api/client';
 import { RecordingsSchema, type Recording } from './api/printers.schemas';
@@ -25,6 +26,10 @@ export class PrinterRecordingsController {
 	busy = $state(false);
 	/** Name of the recording a delete is running for. */
 	deleting = $state<string | null>(null);
+	/** Recordings marked for a bulk delete, by name. */
+	selected = new SvelteSet<string>();
+	/** True while a bulk delete is running. */
+	deletingSelected = $state(false);
 
 	private timer: ReturnType<typeof setTimeout> | null = null;
 	private running = false;
@@ -52,6 +57,10 @@ export class PrinterRecordingsController {
 			if (!res.ok) throw new Error(`status ${res.status}`);
 			const data = RecordingsSchema.parse(await res.json());
 			this.recordings = data.recordings;
+			for (const name of this.selected) {
+				if (!data.recordings.some((r) => r.name === name && !r.recording))
+					this.selected.delete(name);
+			}
 			this.usedBytes = data.usedBytes;
 			this.maxBytes = data.maxBytes;
 			this.error = null;
@@ -105,6 +114,60 @@ export class PrinterRecordingsController {
 			addToast(e instanceof Error ? e.message : 'Could not delete the recording', 'error');
 		} finally {
 			this.deleting = null;
+		}
+	}
+
+	/** Saved recordings, the only ones that can be selected (the live one cannot be deleted). */
+	get saved(): Recording[] {
+		return this.recordings.filter((r) => !r.recording);
+	}
+
+	get allSelected(): boolean {
+		const saved = this.saved;
+		return saved.length > 0 && saved.every((r) => this.selected.has(r.name));
+	}
+
+	toggle(name: string): void {
+		if (this.selected.has(name)) this.selected.delete(name);
+		else this.selected.add(name);
+	}
+
+	toggleAll(): void {
+		if (this.allSelected) {
+			this.selected.clear();
+			return;
+		}
+		for (const r of this.saved) this.selected.add(r.name);
+	}
+
+	/** Deletes every marked recording in one request; the server reports which ones failed. */
+	async removeSelected(): Promise<void> {
+		const names = [...this.selected];
+		if (names.length === 0 || this.deletingSelected) return;
+		this.deletingSelected = true;
+		try {
+			const q = names.map((n) => `name=${encodeURIComponent(n)}`).join('&');
+			const res = await apiFetch(`${this.base}?${q}`, {
+				method: 'DELETE',
+				headers: { Accept: 'application/json' },
+			});
+			const body = await res.json().catch(() => null);
+			if (!res.ok) throw new Error(body?.error ?? `status ${res.status}`);
+			const deleted: string[] = body?.deleted ?? [];
+			const failed: Record<string, string> = body?.failed ?? {};
+			for (const n of deleted) this.selected.delete(n);
+			if (deleted.length > 0) {
+				addToast(`${deleted.length} recording${deleted.length === 1 ? '' : 's'} deleted`);
+			}
+			const errors = Object.values(failed);
+			if (errors.length > 0) {
+				addToast(`${errors.length} could not be deleted. ${errors[0]}`, 'error');
+			}
+		} catch (e) {
+			addToast(e instanceof Error ? e.message : 'Could not delete the recordings', 'error');
+		} finally {
+			this.deletingSelected = false;
+			await this.refresh();
 		}
 	}
 
