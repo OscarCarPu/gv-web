@@ -139,10 +139,16 @@ const ProjectChildNodeSchema = z.object({
 	time_spent: z.number(),
 	parent_id: z.number().nullable().optional(),
 	project_id: z.number().nullable().optional(),
-	task_type: z.string().optional(),
+	task_type: z
+		.string()
+		.nullish()
+		.transform((v) => v ?? undefined),
 	recurrence: z.number().nullable().optional(),
 	priority: z.number().nullable().optional(),
-	todos: z.array(TodoResponseSchema).optional(),
+	todos: z
+		.array(TodoResponseSchema)
+		.nullish()
+		.transform((v) => v ?? undefined),
 	depends_on: z
 		.array(TaskDepRefSchema)
 		.nullable()
@@ -180,10 +186,16 @@ const ActiveTreeNodeSchema: z.ZodType<ActiveTreeNode> = z.lazy(() =>
 		description: z.string().nullable().optional(),
 		due_at: z.string().nullable().optional(),
 		started_at: z.string().nullable().optional(),
-		task_type: z.string().optional(),
+		task_type: z
+			.string()
+			.nullish()
+			.transform((v) => v ?? undefined),
 		recurrence: z.number().nullable().optional(),
 		priority: z.number().nullable().optional(),
-		children: z.array(ActiveTreeNodeSchema).optional(),
+		children: z
+			.array(ActiveTreeNodeSchema)
+			.nullish()
+			.transform((v) => v ?? undefined),
 		depends_on: z
 			.array(TaskDepRefSchema)
 			.nullable()

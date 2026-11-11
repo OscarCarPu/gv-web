@@ -27,13 +27,13 @@ export const ReportSchema = z.object({
 		.array(z.string())
 		.nullish()
 		.transform((v) => v ?? []),
-	error: z.string().optional(),
+	error: z.string().nullish(),
 });
 
 export const ReportStatusSchema = z.object({
 	mode: z.enum(['normal', 'hold', 'merge']),
 	merge: z.enum(['', 'running', 'done', 'failed']),
-	error: z.string().optional(),
+	error: z.string().nullish(),
 	report: ReportSchema.nullish().transform((v) => v ?? null),
 });
 

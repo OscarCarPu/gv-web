@@ -33,11 +33,11 @@ export class ReportScreen {
 	}
 
 	get error(): string | undefined {
-		return this.#status.error;
+		return this.#status.error ?? undefined;
 	}
 
 	get reportError(): string | undefined {
-		return this.#status.report?.error;
+		return this.#status.report?.error ?? undefined;
 	}
 
 	get busy(): boolean {
