@@ -130,6 +130,10 @@ export const moneyApi = {
 		return fetchAPI(`/finance/transactions${suffix}`, TransactionListSchema, { token });
 	},
 
+	async getTransaction(id: number, token?: string): Promise<Transaction> {
+		return fetchAPI(`/finance/transactions/${id}`, TransactionSchema, { token });
+	},
+
 	async createTransaction(input: CreateTransactionRequest, token?: string): Promise<Transaction> {
 		return fetchAPI('/finance/transactions', TransactionSchema, {
 			method: 'POST',

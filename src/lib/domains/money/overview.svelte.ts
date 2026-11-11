@@ -17,6 +17,7 @@ type StatsSheet = 'netWorth' | 'categoryBreakdown' | 'monthlyTrend' | 'estimatio
 
 interface MoneyOverviewApi {
 	listTransactions: (params?: { accountId?: number }) => Promise<Transaction[]>;
+	getTransaction: (id: number) => Promise<Transaction>;
 	deleteTransaction: (id: number) => Promise<void>;
 }
 
@@ -185,18 +186,12 @@ export class MoneyOverview {
 		if (this.filtering) void this.#loadHistory();
 	}
 
-	/** Edit a transaction: fetch the full list, find it, open the sheet (guarded). */
+	/** Edit a transaction: fetch it, open the sheet (guarded). */
 	async openEdit(id: number): Promise<void> {
 		if (this.loadingEdit) return;
 		this.loadingEdit = true;
 		try {
-			const list = await this.#api.listTransactions();
-			const found = list.find((t) => t.id === id) ?? null;
-			if (!found) {
-				addToast('Transaction not found', 'error');
-				return;
-			}
-			this.editingTx = found;
+			this.editingTx = await this.#api.getTransaction(id);
 			this.sheetOpen = true;
 		} catch {
 			addToast('Error loading transaction', 'error');
